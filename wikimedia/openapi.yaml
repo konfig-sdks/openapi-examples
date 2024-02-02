@@ -1,8 +1,6 @@
 openapi: 3.0.0
 info:
-  contact:
-    name: the Wikimedia Services team
-    url: http://mediawiki.org/wiki/REST_API
+  title: Wikimedia
   description: >
     This API provides cacheable and straightforward access to Wikimedia content
     and data, in machine-readable formats.
@@ -36,27 +34,47 @@ info:
       change policy, according to
       [our API version policy](https://www.mediawiki.org/wiki/API_versioning).
     - Endpoint specific usage limits.
+  version: 1.0.0
+  contact:
+    name: the Wikimedia Services team
+    url: http://mediawiki.org/wiki/REST_API
   license:
     name: Software available under the Apache 2 license
     url: http://www.apache.org/licenses/LICENSE-2.0
   termsOfService: https://wikimediafoundation.org/wiki/Terms_of_Use
-  title: Wikimedia
-  version: 1.0.0
   x-apisguru-categories:
     - media
   x-logo:
     url: https://twitter.com/Wikipedia/profile_image?size=original
   x-origin:
-    - format: swagger
+    - version: '2.0'
+      format: swagger
       url: https://wikimedia.org/api/rest_v1/?spec
-      version: '2.0'
   x-providerName: wikimedia.org
+  x-konfig-ignore:
+    object-with-no-properties: true
+servers:
+  - url: https://wikimedia.org/api/rest_v1
 tags:
+  - name: Transform
+  - name: Edited pages data
+  - name: Bytes difference data
+  - name: Editors data
+  - name: Pageviews data
   - description: formula rendering
     name: Math
+  - name: Edits data
+  - name: Feed content availability
+  - name: Legacy data
+  - name: Registered users data
+  - name: Unique devices data
 paths:
   /feed/availability:
     get:
+      tags:
+        - Feed content availability
+      summary: Gets availability of featured feed content for the apps by wiki domain.
+      operationId: FeedContentAvailability_getByWikiDomain
       description: >
         Gets availability of featured feed content for the apps by wiki domain.
 
@@ -84,12 +102,13 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/problem'
-      summary: Gets availability of featured feed content for the apps by wiki domain.
-      tags:
-        - Feed content availability
       x-monitor: false
   /media/math/check/{type}:
     post:
+      tags:
+        - Math
+      summary: Check and normalize a TeX formula.
+      operationId: Math_checkFormula
       description: >
         Checks the supplied TeX formula for correctness and returns the
 
@@ -123,13 +142,7 @@ paths:
         content:
           application/x-www-form-urlencoded:
             schema:
-              type: object
-              properties:
-                q:
-                  description: The formula to check
-                  type: string
-              required:
-                - q
+              $ref: '#/components/schemas/MathCheckFormulaRequest'
         required: true
       responses:
         '200':
@@ -152,11 +165,9 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/problem'
-      summary: Check and normalize a TeX formula.
-      tags:
-        - Math
       x-amples:
-        - request:
+        - title: Mathoid - check test formula
+          request:
             body:
               q: E=mc^{2}
             params:
@@ -171,10 +182,13 @@ paths:
               content-type: /^application\/json/
               x-resource-location: /.+/
             status: 200
-          title: Mathoid - check test formula
       x-monitor: true
   /media/math/formula/{hash}:
     get:
+      tags:
+        - Math
+      summary: Get a previously-stored formula
+      operationId: Math_getFormulaByHash
       description: >
         Returns the previously-stored formula via `/media/math/check/{type}` for
 
@@ -212,12 +226,13 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/problem'
-      summary: Get a previously-stored formula
-      tags:
-        - Math
       x-monitor: false
   /media/math/render/{format}/{hash}:
     get:
+      tags:
+        - Math
+      summary: Get rendered formula in the given format.
+      operationId: Math_renderFormulaByHash
       description: >
         Given a request hash, renders a TeX formula into its mathematic
 
@@ -283,12 +298,17 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/problem'
-      summary: Get rendered formula in the given format.
-      tags:
-        - Math
       x-monitor: false
   /metrics/bytes-difference/absolute/aggregate/{project}/{editor-type}/{page-type}/{granularity}/{start}/{end}:
     get:
+      tags:
+        - Bytes difference data
+      summary: >
+        Get the sum of absolute value of text bytes difference between current
+        edit and
+
+        previous one.
+      operationId: BytesDifferenceData_getAbsoluteAggregateByProjectAndDateRange
       description: >
         Given a Mediawiki project and a date range, returns a timeseries of
         absolute bytes
@@ -404,7 +424,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/absolute-bytes-difference'
+                $ref: >-
+                  #/components/schemas/BytesDifferenceDataGetAbsoluteAggregateByProjectAndDateRangeResponse
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/absolute-bytes-difference'
@@ -417,16 +438,13 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/problem'
-      summary: >
-        Get the sum of absolute value of text bytes difference between current
-        edit and
-
-        previous one.
-      tags:
-        - Bytes difference data
       x-monitor: false
   /metrics/bytes-difference/absolute/per-page/{project}/{page-title}/{editor-type}/{granularity}/{start}/{end}:
     get:
+      tags:
+        - Bytes difference data
+      summary: Get the sum of absolute text bytes difference per page.
+      operationId: BytesDifferenceData_getAbsolutePerPage
       description: >
         Given a Mediawiki project, a page-title prefixed with canonical
         namespace (for
@@ -532,7 +550,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/absolute-bytes-difference-per-page'
+                $ref: >-
+                  #/components/schemas/BytesDifferenceDataGetAbsolutePerPageResponse
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/absolute-bytes-difference-per-page'
@@ -545,12 +564,15 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/problem'
-      summary: Get the sum of absolute text bytes difference per page.
-      tags:
-        - Bytes difference data
       x-monitor: false
   /metrics/bytes-difference/net/aggregate/{project}/{editor-type}/{page-type}/{granularity}/{start}/{end}:
     get:
+      tags:
+        - Bytes difference data
+      summary: >-
+        Get the sum of net text bytes difference between current edit and
+        previous one.
+      operationId: BytesDifferenceData_getNetAggregateByProjectAndDateRange
       description: >
         Given a Mediawiki project and a date range, returns a timeseries of
         bytes difference net
@@ -666,7 +688,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/net-bytes-difference'
+                $ref: >-
+                  #/components/schemas/BytesDifferenceDataGetNetAggregateByProjectAndDateRangeResponse
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/net-bytes-difference'
@@ -679,14 +702,13 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/problem'
-      summary: >-
-        Get the sum of net text bytes difference between current edit and
-        previous one.
-      tags:
-        - Bytes difference data
       x-monitor: false
   /metrics/bytes-difference/net/per-page/{project}/{page-title}/{editor-type}/{granularity}/{start}/{end}:
     get:
+      tags:
+        - Bytes difference data
+      summary: Get the sum of net text bytes difference per page.
+      operationId: BytesDifferenceData_getSumNetTextBytesDifferencePerPage
       description: >
         Given a Mediawiki project, a page-title prefixed with canonical
         namespace (for
@@ -792,7 +814,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/net-bytes-difference-per-page'
+                $ref: >-
+                  #/components/schemas/BytesDifferenceDataGetSumNetTextBytesDifferencePerPageResponse
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/net-bytes-difference-per-page'
@@ -805,12 +828,13 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/problem'
-      summary: Get the sum of net text bytes difference per page.
-      tags:
-        - Bytes difference data
       x-monitor: false
   /metrics/edited-pages/aggregate/{project}/{editor-type}/{page-type}/{activity-level}/{granularity}/{start}/{end}:
     get:
+      tags:
+        - Edited pages data
+      summary: Get edited-pages counts for a project.
+      operationId: EditedPagesData_getAggregateByProjectAndDateRange
       description: >
         Given a Mediawiki project and a date range, returns a timeseries of its
         edited-pages counts.
@@ -947,7 +971,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/edited-pages'
+                $ref: >-
+                  #/components/schemas/EditedPagesDataGetAggregateByProjectAndDateRangeResponse
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/edited-pages'
@@ -960,12 +985,13 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/problem'
-      summary: Get edited-pages counts for a project.
-      tags:
-        - Edited pages data
       x-monitor: false
   /metrics/edited-pages/new/{project}/{editor-type}/{page-type}/{granularity}/{start}/{end}:
     get:
+      tags:
+        - Edited pages data
+      summary: Get new pages counts for a project.
+      operationId: EditedPagesData_getNewPagesCountsForProject
       description: >
         Given a Mediawiki project and a date range, returns a timeseries of its
         new pages counts.
@@ -1083,7 +1109,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/new-pages'
+                $ref: >-
+                  #/components/schemas/EditedPagesDataGetNewPagesCountsForProjectResponse
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/new-pages'
@@ -1096,12 +1123,13 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/problem'
-      summary: Get new pages counts for a project.
-      tags:
-        - Edited pages data
       x-monitor: false
   /metrics/edited-pages/top-by-absolute-bytes-difference/{project}/{editor-type}/{page-type}/{year}/{month}/{day}:
     get:
+      tags:
+        - Edited pages data
+      summary: Get top 100 edited-pages by absolute bytes-difference.
+      operationId: EditedPagesData_getTopByAbsoluteBytesDifference
       description: >
         Given a Mediawiki project and a date (day or month), returns a
         timeseries of the top 100
@@ -1214,7 +1242,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/top-edited-pages-by-abs-bytes-diff'
+                $ref: >-
+                  #/components/schemas/EditedPagesDataGetTopByAbsoluteBytesDifferenceResponse
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/top-edited-pages-by-abs-bytes-diff'
@@ -1227,12 +1256,13 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/problem'
-      summary: Get top 100 edited-pages by absolute bytes-difference.
-      tags:
-        - Edited pages data
       x-monitor: false
   /metrics/edited-pages/top-by-edits/{project}/{editor-type}/{page-type}/{year}/{month}/{day}:
     get:
+      tags:
+        - Edited pages data
+      summary: Get top 100 edited-pages by edits count.
+      operationId: EditedPagesData_getTopByEditsCount
       description: >
         Given a Mediawiki project and a date (day or month), returns a
         timeseries of the top
@@ -1347,7 +1377,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/top-edited-pages-by-edits'
+                $ref: '#/components/schemas/EditedPagesDataGetTopByEditsCountResponse'
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/top-edited-pages-by-edits'
@@ -1360,12 +1390,13 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/problem'
-      summary: Get top 100 edited-pages by edits count.
-      tags:
-        - Edited pages data
       x-monitor: false
   /metrics/edited-pages/top-by-net-bytes-difference/{project}/{editor-type}/{page-type}/{year}/{month}/{day}:
     get:
+      tags:
+        - Edited pages data
+      summary: Get top 100 edited-pages by net bytes-difference.
+      operationId: EditedPagesData_getTopByNetBytesDifference
       description: >
         Given a Mediawiki project and a date (day or month), returns a
         timeseries of the top 100
@@ -1478,7 +1509,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/top-edited-pages-by-net-bytes-diff'
+                $ref: >-
+                  #/components/schemas/EditedPagesDataGetTopByNetBytesDifferenceResponse
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/top-edited-pages-by-net-bytes-diff'
@@ -1491,12 +1523,13 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/problem'
-      summary: Get top 100 edited-pages by net bytes-difference.
-      tags:
-        - Edited pages data
       x-monitor: false
   /metrics/editors/aggregate/{project}/{editor-type}/{page-type}/{activity-level}/{granularity}/{start}/{end}:
     get:
+      tags:
+        - Editors data
+      summary: Get editors counts for a project.
+      operationId: EditorsData_getEditorsCountsForProject
       description: >
         Given a Mediawiki project and a date range, returns a timeseries of its
         editors counts.
@@ -1633,7 +1666,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/editors'
+                $ref: >-
+                  #/components/schemas/EditorsDataGetEditorsCountsForProjectResponse
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/editors'
@@ -1646,12 +1680,13 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/problem'
-      summary: Get editors counts for a project.
-      tags:
-        - Editors data
       x-monitor: false
   /metrics/editors/top-by-absolute-bytes-difference/{project}/{editor-type}/{page-type}/{year}/{month}/{day}:
     get:
+      tags:
+        - Editors data
+      summary: Get top 100 editors by absolute bytes-difference.
+      operationId: EditorsData_getTopByAbsoluteBytesDifference
       description: >
         Given a Mediawiki project and a date (day or month), returns a
         timeseries of the top 100
@@ -1769,7 +1804,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/top-editors-by-abs-bytes-diff'
+                $ref: >-
+                  #/components/schemas/EditorsDataGetTopByAbsoluteBytesDifferenceResponse
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/top-editors-by-abs-bytes-diff'
@@ -1782,12 +1818,13 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/problem'
-      summary: Get top 100 editors by absolute bytes-difference.
-      tags:
-        - Editors data
       x-monitor: false
   /metrics/editors/top-by-edits/{project}/{editor-type}/{page-type}/{year}/{month}/{day}:
     get:
+      tags:
+        - Editors data
+      summary: Get top 100 editors by edits count.
+      operationId: EditorsData_getTopEditorsByEditsCount
       description: >
         Given a Mediawiki project and a date (day or month), returns a
         timeseries of the top
@@ -1905,7 +1942,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/top-editors-by-edits'
+                $ref: >-
+                  #/components/schemas/EditorsDataGetTopEditorsByEditsCountResponse
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/top-editors-by-edits'
@@ -1918,12 +1956,13 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/problem'
-      summary: Get top 100 editors by edits count.
-      tags:
-        - Editors data
       x-monitor: false
   /metrics/editors/top-by-net-bytes-difference/{project}/{editor-type}/{page-type}/{year}/{month}/{day}:
     get:
+      tags:
+        - Editors data
+      summary: Get top 100 editors by net bytes-difference.
+      operationId: EditorsData_getTopByNetBytesDifference
       description: >
         Given a Mediawiki project and a date (day or month), returns a
         timeseries of the top 100
@@ -2041,7 +2080,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/top-editors-by-net-bytes-diff'
+                $ref: >-
+                  #/components/schemas/EditorsDataGetTopByNetBytesDifferenceResponse
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/top-editors-by-net-bytes-diff'
@@ -2054,12 +2094,13 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/problem'
-      summary: Get top 100 editors by net bytes-difference.
-      tags:
-        - Editors data
       x-monitor: false
   /metrics/edits/aggregate/{project}/{editor-type}/{page-type}/{granularity}/{start}/{end}:
     get:
+      tags:
+        - Edits data
+      summary: Get edits counts for a project.
+      operationId: EditsData_getEditsCountsForProject
       description: >
         Given a Mediawiki project and a date range, returns a timeseries of
         edits counts.
@@ -2177,7 +2218,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/edits'
+                $ref: '#/components/schemas/EditsDataGetEditsCountsForProjectResponse'
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/edits'
@@ -2190,12 +2231,13 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/problem'
-      summary: Get edits counts for a project.
-      tags:
-        - Edits data
       x-monitor: false
   /metrics/edits/per-page/{project}/{page-title}/{editor-type}/{granularity}/{start}/{end}:
     get:
+      tags:
+        - Edits data
+      summary: Get edit counts for a page in a project.
+      operationId: EditsData_getPageEditCounts
       description: >
         Given a Mediawiki project, a page-title prefixed with its canonical
         namespace (for
@@ -2300,7 +2342,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/edits-per-page'
+                $ref: '#/components/schemas/EditsDataGetPageEditCountsResponse'
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/edits-per-page'
@@ -2313,12 +2355,12 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/problem'
-      summary: Get edit counts for a page in a project.
-      tags:
-        - Edits data
       x-monitor: false
   /metrics/legacy/pagecounts/aggregate/{project}/{access-site}/{granularity}/{start}/{end}:
     get:
+      tags:
+        - Legacy data
+      operationId: LegacyData_getPagecountsAggregateByProjectAndDateRange
       description: >
         Given a project and a date range, returns a timeseries of pagecounts.
 
@@ -2404,7 +2446,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/pagecounts-project'
+                $ref: >-
+                  #/components/schemas/LegacyDataGetPagecountsAggregateByProjectAndDateRangeResponse
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/pagecounts-project'
@@ -2417,11 +2460,13 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/problem'
-      tags:
-        - Legacy data
       x-monitor: false
   /metrics/pageviews/aggregate/{project}/{access}/{agent}/{granularity}/{start}/{end}:
     get:
+      tags:
+        - Pageviews data
+      summary: Get pageview counts for a project.
+      operationId: PageviewsData_getPageviewCountsByProject
       description: >
         Given a date range, returns a timeseries of pageview counts. You can
         filter by project,
@@ -2520,7 +2565,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/pageview-project'
+                $ref: >-
+                  #/components/schemas/PageviewsDataGetPageviewCountsByProjectResponse
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/pageview-project'
@@ -2533,11 +2579,9 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/problem'
-      summary: Get pageview counts for a project.
-      tags:
-        - Pageviews data
       x-amples:
-        - request:
+        - title: Get aggregate page views
+          request:
             params:
               access: all-access
               agent: all-agents
@@ -2558,10 +2602,13 @@ paths:
             headers:
               content-type: application/json
             status: 200
-          title: Get aggregate page views
       x-monitor: true
   /metrics/pageviews/per-article/{project}/{access}/{agent}/{article}/{granularity}/{start}/{end}:
     get:
+      tags:
+        - Pageviews data
+      summary: Get pageview counts for a page.
+      operationId: PageviewsData_getPageviewCountsByArticleDateRange
       description: >
         Given a Mediawiki article and a date range, returns a daily timeseries
         of its pageview
@@ -2669,7 +2716,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/pageview-article'
+                $ref: >-
+                  #/components/schemas/PageviewsDataGetPageviewCountsByArticleDateRangeResponse
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/pageview-article'
@@ -2682,12 +2730,13 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/problem'
-      summary: Get pageview counts for a page.
-      tags:
-        - Pageviews data
       x-monitor: false
   /metrics/pageviews/top-by-country/{project}/{access}/{year}/{month}:
     get:
+      tags:
+        - Pageviews data
+      summary: Get pageviews by country and access method.
+      operationId: PageviewsData_listByCountryAndAccess
       description: >
         Lists the pageviews to this project, split by country of origin for a
         given month.
@@ -2754,7 +2803,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/by-country'
+                $ref: >-
+                  #/components/schemas/PageviewsDataListByCountryAndAccessResponse
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/by-country'
@@ -2767,12 +2817,13 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/problem'
-      summary: Get pageviews by country and access method.
-      tags:
-        - Pageviews data
       x-monitor: false
   /metrics/pageviews/top/{project}/{access}/{year}/{month}/{day}:
     get:
+      tags:
+        - Pageviews data
+      summary: Get the most viewed articles for a project.
+      operationId: PageviewsData_listMostViewedArticlesByProjectAndTimespan
       description: >
         Lists the 1000 most viewed articles for a given project and timespan
         (month or day).
@@ -2848,7 +2899,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/pageview-tops'
+                $ref: >-
+                  #/components/schemas/PageviewsDataListMostViewedArticlesByProjectAndTimespanResponse
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/pageview-tops'
@@ -2861,12 +2913,13 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/problem'
-      summary: Get the most viewed articles for a project.
-      tags:
-        - Pageviews data
       x-monitor: false
   /metrics/registered-users/new/{project}/{granularity}/{start}/{end}:
     get:
+      tags:
+        - Registered users data
+      summary: Get newly registered users counts for a project.
+      operationId: RegisteredUsersData_getNewUserCountsByProjectAndDateRange
       description: >
         Given a Mediawiki project and a date range, returns a timeseries of its
         newly registered
@@ -2939,7 +2992,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/new-registered-users'
+                $ref: >-
+                  #/components/schemas/RegisteredUsersDataGetNewUserCountsByProjectAndDateRangeResponse
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/new-registered-users'
@@ -2952,12 +3006,13 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/problem'
-      summary: Get newly registered users counts for a project.
-      tags:
-        - Registered users data
       x-monitor: false
   /metrics/unique-devices/{project}/{access-site}/{granularity}/{start}/{end}:
     get:
+      tags:
+        - Unique devices data
+      summary: Get unique devices count per project
+      operationId: UniqueDevicesData_getByProjectAndDateRange
       description: >
         Given a project and a date range, returns a timeseries of unique devices
         counts.
@@ -3033,7 +3088,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/unique-devices'
+                $ref: >-
+                  #/components/schemas/UniqueDevicesDataGetByProjectAndDateRangeResponse
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/unique-devices'
@@ -3046,13 +3102,14 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/problem'
-      summary: Get unique devices count per project
-      tags:
-        - Unique devices data
       x-monitor: false
   /transform/html/from/{from_lang}/to/{to_lang}:
     parameters: []
     post:
+      tags:
+        - Transform
+      summary: Machine-translate content
+      operationId: Transform_contentMachineTranslate
       description: >
         Fetches the machine translation for the posted content from the source
 
@@ -3095,13 +3152,14 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/problem'
-      summary: Machine-translate content
-      tags:
-        - Transform
       x-monitor: false
   /transform/html/from/{from_lang}/to/{to_lang}/{provider}:
     parameters: []
     post:
+      tags:
+        - Transform
+      summary: Machine-translate content
+      operationId: Transform_contentMachineTranslate
       description: >
         Fetches the machine translation for the posted content from the source
 
@@ -3154,76 +3212,14 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/problem'
-      summary: Machine-translate content
-      tags:
-        - Transform
-      x-monitor: false
-  /transform/list/languagepairs/:
-    get:
-      description: >
-        Fetches the list of language pairs the back-end service can translate
-
-
-        Stability:
-        [unstable](https://www.mediawiki.org/wiki/API_versioning#Unstable)
-      responses:
-        '200':
-          description: the list of source and target languages supported by the API
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/cx_languagepairs'
-      summary: Lists the language pairs supported by the back-end
-      tags:
-        - Transform
-      x-monitor: false
-  /transform/list/pair/{from}/{to}/:
-    get:
-      description: >
-        Fetches the list of tools that are available for the given pair of
-        languages.
-
-
-        Stability:
-        [unstable](https://www.mediawiki.org/wiki/API_versioning#Unstable)
-      parameters:
-        - description: The source language code
-          in: path
-          name: from
-          required: true
-          schema:
-            type: string
-        - description: The target language code
-          in: path
-          name: to
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: the list of tools available for the language pair
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/cx_list_tools'
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/cx_list_tools'
-        default:
-          description: Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/problem'
-            application/problem+json:
-              schema:
-                $ref: '#/components/schemas/problem'
-      summary: Lists the tools available for a language pair
-      tags:
-        - Transform
       x-monitor: false
   /transform/list/tool/{tool}:
+    parameters: []
     get:
+      tags:
+        - Transform
+      summary: Lists the tools and language pairs available for the given tool category
+      operationId: Transform_getListToolLanguagePairs
       description: >
         Fetches the list of tools and all of the language pairs it can translate
 
@@ -3246,7 +3242,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/cx_list_pairs_for_tool'
+                $ref: '#/components/schemas/TransformGetListToolLanguagePairsResponse'
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/cx_list_pairs_for_tool'
@@ -3259,13 +3255,14 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/problem'
-      summary: Lists the tools and language pairs available for the given tool category
+      x-monitor: false
+  /transform/list/tool/{tool}/{from}:
+    parameters: []
+    get:
       tags:
         - Transform
-      x-monitor: false
-    parameters: []
-  /transform/list/tool/{tool}/{from}:
-    get:
+      summary: Lists the tools and language pairs available for the given tool category
+      operationId: Transform_toolLanguagePairsList
       description: >
         Fetches the list of tools and all of the language pairs it can translate
 
@@ -3294,7 +3291,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/cx_list_pairs_for_tool'
+                $ref: '#/components/schemas/TransformToolLanguagePairsListResponse'
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/cx_list_pairs_for_tool'
@@ -3307,13 +3304,14 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/problem'
-      summary: Lists the tools and language pairs available for the given tool category
+      x-monitor: false
+  /transform/list/tool/{tool}/{from}/{to}:
+    parameters: []
+    get:
       tags:
         - Transform
-      x-monitor: false
-    parameters: []
-  /transform/list/tool/{tool}/{from}/{to}:
-    get:
+      summary: Lists the tools and language pairs available for the given tool category
+      operationId: Transform_toolLanguagePairsList
       description: >
         Fetches the list of tools and all of the language pairs it can translate
 
@@ -3348,7 +3346,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/cx_list_pairs_for_tool'
+                $ref: '#/components/schemas/TransformToolLanguagePairsList200Response'
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/cx_list_pairs_for_tool'
@@ -3361,13 +3359,14 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/problem'
-      summary: Lists the tools and language pairs available for the given tool category
+      x-monitor: false
+  /transform/word/from/{from_lang}/to/{to_lang}/{word}:
+    parameters: []
+    get:
       tags:
         - Transform
-      x-monitor: false
-    parameters: []
-  /transform/word/from/{from_lang}/to/{to_lang}/{word}:
-    get:
+      summary: Fetch the dictionary meaning of a word
+      operationId: Transform_getDictionaryMeaning
       description: >
         Fetches the dictionary meaning of a word from a language and displays
 
@@ -3414,13 +3413,14 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/problem'
-      summary: Fetch the dictionary meaning of a word
+      x-monitor: false
+  /transform/word/from/{from_lang}/to/{to_lang}/{word}/{provider}:
+    parameters: []
+    get:
       tags:
         - Transform
-      x-monitor: false
-    parameters: []
-  /transform/word/from/{from_lang}/to/{to_lang}/{word}/{provider}:
-    get:
+      summary: Fetch the dictionary meaning of a word
+      operationId: Transform_getDictionaryMeaning
       description: >
         Fetches the dictionary meaning of a word from a language and displays
 
@@ -3476,29 +3476,80 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/problem'
-      summary: Fetch the dictionary meaning of a word
+      x-monitor: false
+  /transform/list/languagepairs:
+    get:
       tags:
         - Transform
+      summary: Lists the language pairs supported by the back-end
+      operationId: Transform_listLanguagePairs
+      description: >
+        Fetches the list of language pairs the back-end service can translate
+
+
+        Stability:
+        [unstable](https://www.mediawiki.org/wiki/API_versioning#Unstable)
+      responses:
+        '200':
+          description: the list of source and target languages supported by the API
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/cx_languagepairs'
       x-monitor: false
-    parameters: []
-x-default-params: {}
-x-host-basePath: /api/rest_v1
-servers:
-  - url: https://wikimedia.org/api/rest_v1
+  /transform/list/pair/{from}/{to}:
+    get:
+      tags:
+        - Transform
+      summary: Lists the tools available for a language pair
+      operationId: Transform_languagePairList
+      description: >
+        Fetches the list of tools that are available for the given pair of
+        languages.
+
+
+        Stability:
+        [unstable](https://www.mediawiki.org/wiki/API_versioning#Unstable)
+      parameters:
+        - description: The source language code
+          in: path
+          name: from
+          required: true
+          schema:
+            type: string
+        - description: The target language code
+          in: path
+          name: to
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: the list of tools available for the language pair
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/cx_list_tools'
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/cx_list_tools'
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/problem'
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/problem'
+      x-monitor: false
 components:
   requestBodies:
     postTransformHtmlFrom_fromLang_to_toLang_:
       content:
         application/x-www-form-urlencoded:
           schema:
-            type: object
-            properties:
-              html:
-                description: The HTML content to translate
-                type: string
-                x-textarea: true
-            required:
-              - html
+            $ref: '#/components/schemas/TransformContentMachineTranslateRequest'
       required: true
   securitySchemes:
     mediawiki_auth:
@@ -3509,6 +3560,64 @@ components:
       x-internal-request-whitelist:
         - /http:\/\/[a-zA-Z0-9\.]+\/w\/api\.php/
   schemas:
+    summary:
+      properties:
+        title:
+          description: The page title
+          type: string
+        description:
+          description: Wikidata description for the page
+          example: American poet
+          type: string
+        coordinates:
+          description: The coordinates of the item
+          properties:
+            lat:
+              description: The latitude
+              type: number
+            lon:
+              description: The longitude
+              type: number
+          required:
+            - lat
+            - lon
+          type: object
+        dir:
+          description: The page language direction code
+          example: ltr
+          type: string
+        displaytitle:
+          description: The page title how it should be shown to the user
+          type: string
+        extract:
+          description: First several sentences of an article in plain text
+          type: string
+        extract_html:
+          description: First several sentences of an article in simple HTML format
+          type: string
+        lang:
+          description: The page language code
+          example: en
+          type: string
+        originalimage:
+          $ref: '#/components/schemas/originalimage'
+        pageid:
+          description: The page ID
+          type: integer
+        thumbnail:
+          $ref: '#/components/schemas/thumbnail'
+        timestamp:
+          description: >-
+            The time when the page was last editted in the [ISO
+            8601](https://en.wikipedia.org/wiki/ISO_8601) format
+          example: '1970-01-01T00:00:00.000Z'
+          type: string
+      required:
+        - title
+        - extract
+        - lang
+        - dir
+      type: object
     absolute-bytes-difference:
       properties:
         items:
@@ -4044,78 +4153,20 @@ components:
           type: array
     problem:
       properties:
+        title:
+          type: string
         detail:
           type: string
         method:
           type: string
         status:
           type: integer
-        title:
-          type: string
         type:
           type: string
         uri:
           type: string
       required:
         - type
-    summary:
-      properties:
-        coordinates:
-          description: The coordinates of the item
-          properties:
-            lat:
-              description: The latitude
-              type: number
-            lon:
-              description: The longitude
-              type: number
-          required:
-            - lat
-            - lon
-          type: object
-        description:
-          description: Wikidata description for the page
-          example: American poet
-          type: string
-        dir:
-          description: The page language direction code
-          example: ltr
-          type: string
-        displaytitle:
-          description: The page title how it should be shown to the user
-          type: string
-        extract:
-          description: First several sentences of an article in plain text
-          type: string
-        extract_html:
-          description: First several sentences of an article in simple HTML format
-          type: string
-        lang:
-          description: The page language code
-          example: en
-          type: string
-        originalimage:
-          $ref: '#/components/schemas/originalimage'
-        pageid:
-          description: The page ID
-          type: integer
-        thumbnail:
-          $ref: '#/components/schemas/thumbnail'
-        timestamp:
-          description: >-
-            The time when the page was last editted in the [ISO
-            8601](https://en.wikipedia.org/wiki/ISO_8601) format
-          example: '1970-01-01T00:00:00.000Z'
-          type: string
-        title:
-          description: The page title
-          type: string
-      required:
-        - title
-        - extract
-        - lang
-        - dir
-      type: object
     thumbnail:
       properties:
         height:
@@ -4341,3 +4392,122 @@ components:
               timestamp:
                 type: string
           type: array
+    MathCheckFormulaRequest:
+      type: object
+      properties:
+        q:
+          description: The formula to check
+          type: string
+      required:
+        - q
+    TransformContentMachineTranslateRequest:
+      type: object
+      properties:
+        html:
+          description: The HTML content to translate
+          type: string
+          x-textarea: true
+      required:
+        - html
+    BytesDifferenceDataGetAbsoluteAggregateByProjectAndDateRangeResponse:
+      type: object
+      properties: {}
+      example: {}
+    BytesDifferenceDataGetAbsolutePerPageResponse:
+      type: object
+      properties: {}
+      example: {}
+    BytesDifferenceDataGetNetAggregateByProjectAndDateRangeResponse:
+      type: object
+      properties: {}
+      example: {}
+    BytesDifferenceDataGetSumNetTextBytesDifferencePerPageResponse:
+      type: object
+      properties: {}
+      example: {}
+    EditedPagesDataGetAggregateByProjectAndDateRangeResponse:
+      type: object
+      properties: {}
+      example: {}
+    EditedPagesDataGetNewPagesCountsForProjectResponse:
+      type: object
+      properties: {}
+      example: {}
+    EditedPagesDataGetTopByAbsoluteBytesDifferenceResponse:
+      type: object
+      properties: {}
+      example: {}
+    EditedPagesDataGetTopByEditsCountResponse:
+      type: object
+      properties: {}
+      example: {}
+    EditedPagesDataGetTopByNetBytesDifferenceResponse:
+      type: object
+      properties: {}
+      example: {}
+    EditorsDataGetEditorsCountsForProjectResponse:
+      type: object
+      properties: {}
+      example: {}
+    EditorsDataGetTopByAbsoluteBytesDifferenceResponse:
+      type: object
+      properties: {}
+      example: {}
+    EditorsDataGetTopEditorsByEditsCountResponse:
+      type: object
+      properties: {}
+      example: {}
+    EditorsDataGetTopByNetBytesDifferenceResponse:
+      type: object
+      properties: {}
+      example: {}
+    EditsDataGetEditsCountsForProjectResponse:
+      type: object
+      properties: {}
+      example: {}
+    EditsDataGetPageEditCountsResponse:
+      type: object
+      properties: {}
+      example: {}
+    LegacyDataGetPagecountsAggregateByProjectAndDateRangeResponse:
+      type: object
+      properties: {}
+      example: {}
+    PageviewsDataGetPageviewCountsByProjectResponse:
+      type: object
+      properties: {}
+      example: {}
+    PageviewsDataGetPageviewCountsByArticleDateRangeResponse:
+      type: object
+      properties: {}
+      example: {}
+    PageviewsDataListByCountryAndAccessResponse:
+      type: object
+      properties: {}
+      example: {}
+    PageviewsDataListMostViewedArticlesByProjectAndTimespanResponse:
+      type: object
+      properties: {}
+      example: {}
+    RegisteredUsersDataGetNewUserCountsByProjectAndDateRangeResponse:
+      type: object
+      properties: {}
+      example: {}
+    UniqueDevicesDataGetByProjectAndDateRangeResponse:
+      type: object
+      properties: {}
+      example: {}
+    TransformGetListToolLanguagePairsResponse:
+      type: object
+      properties: {}
+      example: {}
+    TransformToolLanguagePairsListResponse:
+      type: object
+      properties: {}
+      example: {}
+    TransformToolLanguagePairsList200Response:
+      type: object
+      properties: {}
+      example: {}
+x-default-params: {}
+x-host-basePath: /api/rest_v1
