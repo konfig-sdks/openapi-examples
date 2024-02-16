@@ -1,6 +1,5 @@
 openapi: 3.0.0
 info:
-  version: 3.0.0
   title: Books API
   description: >
     The Books API provides information about book reviews and The New York Times
@@ -89,16 +88,24 @@ info:
     https://api.nytimes.com/svc/books/v3/reviews.json?author=Stephen+King&api-key=yourkey
 
     ```
+  version: 3.0.0
+servers:
+  - url: https://api.nytimes.com/svc/books/v3
+tags:
+  - name: List
+  - name: Review
 paths:
   /lists.json:
     get:
+      tags:
+        - List
       summary: Best Sellers List
+      operationId: List_getBestSellers
+      security:
+        - api-key: []
       description: Get Best Sellers list.  If no date is provided returns the latest list.
-      operationId: GET_lists-format
       parameters:
-        - name: list
-          in: query
-          description: >-
+        - description: >-
             The name of the Times best sellers list (hardcover-fiction,
             paperback-nonfiction, ...).
 
@@ -106,13 +113,13 @@ paths:
 
             The encoded list names are lower case with hyphens instead of spaces
             (e.g. e-book-fiction, instead of E-Book Fiction).
+          name: list
+          in: query
           required: true
           schema:
             type: string
             default: hardcover-fiction
-        - name: bestsellers-date
-          in: query
-          description: >-
+        - description: >-
             YYYY-MM-DD
 
 
@@ -122,26 +129,28 @@ paths:
             For additional information, see the explanation at the bottom of any
             best-seller list page on NYTimes.com (example: Hardcover Fiction,
             published Dec. 5 but reflecting sales to Nov. 29).
+          name: bestsellers-date
+          in: query
           schema:
             type: string
             pattern: ^\d{4}-\d{2}-\d{2}$
-        - name: published-date
-          in: query
-          description: >-
+        - description: >-
             YYYY-MM-DD
 
 
             The date the best sellers list was published on NYTimes.com
             (different than bestsellers-date).  Use "current" for latest list.
+          name: published-date
+          in: query
           schema:
             type: string
             pattern: ^\d{4}-\d{2}-\d{2}$
-        - name: offset
-          in: query
-          description: >-
+        - description: >-
             Sets the starting point of the result set (0, 20, ...).  Used to
             paginate thru books if list has more than 20. Defaults to 0.  The
             num_results field indicates how many books are in the list.
+          name: offset
+          in: query
           schema:
             type: integer
             multipleOf: 20
@@ -151,88 +160,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                  copyright:
-                    type: string
-                  num_results:
-                    type: integer
-                  last_modified:
-                    type: string
-                  results:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        list_name:
-                          type: string
-                        display_name:
-                          type: string
-                        bestsellers_date:
-                          type: string
-                        published_date:
-                          type: string
-                        rank:
-                          type: integer
-                        rank_last_week:
-                          type: integer
-                        weeks_on_list:
-                          type: integer
-                        asterisk:
-                          type: integer
-                        dagger:
-                          type: integer
-                        amazon_product_url:
-                          type: string
-                        isbns:
-                          type: array
-                          items:
-                            type: object
-                            properties:
-                              isbn10:
-                                type: string
-                              isbn13:
-                                type: string
-                        book_details:
-                          type: array
-                          items:
-                            type: object
-                            properties:
-                              title:
-                                type: string
-                              description:
-                                type: string
-                              contributor:
-                                type: string
-                              author:
-                                type: string
-                              contributor_note:
-                                type: string
-                              price:
-                                type: integer
-                              age_group:
-                                type: string
-                              publisher:
-                                type: string
-                              primary_isbn13:
-                                type: string
-                              primary_isbn10:
-                                type: string
-                        reviews:
-                          type: array
-                          items:
-                            type: object
-                            properties:
-                              book_review_link:
-                                type: string
-                              first_chapter_link:
-                                type: string
-                              sunday_review_link:
-                                type: string
-                              article_chapter_link:
-                                type: string
+                $ref: '#/components/schemas/ListGetBestSellersResponse'
               examples:
                 response:
                   value:
@@ -275,40 +203,42 @@ paths:
                             first_chapter_link: ''
                             sunday_review_link: ''
                             article_chapter_link: ''
-      security:
-        - api-key: []
   /lists/{date}/{list}.json:
     get:
+      tags:
+        - List
       summary: Best Sellers List by Date
+      operationId: List_getByDate
+      security:
+        - api-key: []
       description: Get Best Sellers list by date.
-      operationId: GET_lists-date-list-json
       parameters:
-        - name: date
-          in: path
-          description: >-
+        - description: >-
             YYYY-MM-DD or "current"
 
 
             The date the best sellers list was published on NYTimes.com.  Use
             "current" to get latest list.
+          name: date
+          in: path
           required: true
           schema:
             type: string
             pattern: ^(\d{4}-\d{2}-\d{2}|current)$
-        - name: list
-          in: path
-          description: >-
+        - description: >-
             Name of the Best Sellers List (e.g. hardcover-fiction). You can get
             the full list of names from the /lists/names.json service.
+          name: list
+          in: path
           required: true
           schema:
             type: string
-        - name: offset
-          in: query
-          description: >-
+        - description: >-
             Sets the starting point of the result set (0, 20, ...).  Used to
             paginate thru books if list has more than 20. Defaults to 0.  The
             num_results field indicates how many books are in the list.
+          name: offset
+          in: query
           schema:
             type: integer
             multipleOf: 20
@@ -318,92 +248,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                  copyright:
-                    type: string
-                  num_results:
-                    type: integer
-                  last_modified:
-                    type: string
-                  results:
-                    type: object
-                    properties:
-                      list_name:
-                        type: string
-                      bestsellers_date:
-                        type: string
-                      published_date:
-                        type: string
-                      display_name:
-                        type: string
-                      normal_list_ends_at:
-                        type: integer
-                      updated:
-                        type: string
-                      books:
-                        type: array
-                        items:
-                          type: object
-                          properties:
-                            rank:
-                              type: integer
-                            rank_last_week:
-                              type: integer
-                            weeks_on_list:
-                              type: integer
-                            asterisk:
-                              type: integer
-                            dagger:
-                              type: integer
-                            primary_isbn10:
-                              type: string
-                            primary_isbn13:
-                              type: string
-                            publisher:
-                              type: string
-                            description:
-                              type: string
-                            price:
-                              type: integer
-                            title:
-                              type: string
-                            author:
-                              type: string
-                            contributor:
-                              type: string
-                            contributor_note:
-                              type: string
-                            book_image:
-                              type: string
-                            amazon_product_url:
-                              type: string
-                            age_group:
-                              type: string
-                            book_review_link:
-                              type: string
-                            first_chapter_link:
-                              type: string
-                            sunday_review_link:
-                              type: string
-                            article_chapter_link:
-                              type: string
-                            isbns:
-                              type: array
-                              items:
-                                type: object
-                                properties:
-                                  isbn10:
-                                    type: string
-                                  isbn13:
-                                    type: string
-                      corrections:
-                        type: array
-                        items:
-                          type: object
-                          properties: {}
+                $ref: '#/components/schemas/ListGetByDateResponse'
               examples:
                 response:
                   value:
@@ -421,7 +266,11 @@ paths:
                       normal_list_ends_at: 10
                       updated: WEEKLY
                       books:
-                        - rank: 1
+                        - title: THE MARTIAN
+                          description: >-
+                            Separated from his crew, an astronaut embarks on a
+                            quest to stay alive on Mars. The basis of the movie.
+                          rank: 1
                           rank_last_week: 0
                           weeks_on_list: 60
                           asterisk: 0
@@ -429,11 +278,7 @@ paths:
                           primary_isbn10: 553418025
                           primary_isbn13: '9780553418026'
                           publisher: Broadway
-                          description: >-
-                            Separated from his crew, an astronaut embarks on a
-                            quest to stay alive on Mars. The basis of the movie.
                           price: 0
-                          title: THE MARTIAN
                           author: Andy Weir
                           contributor: by Andy Weir
                           contributor_note: ''
@@ -450,17 +295,17 @@ paths:
                             - isbn10: 804139024
                               isbn13: '9780804139021'
                       corrections: []
-      security:
-        - api-key: []
   /lists/full-overview.json:
     get:
+      tags:
+        - List
       summary: Best Sellers List Full Overview
+      operationId: List_getAllBestSellers
+      security:
+        - api-key: []
       description: Get all books for all the Best Sellers lists for specified date.
-      operationId: GET_lists-full-overview-format
       parameters:
-        - name: published_date
-          in: query
-          description: >-
+        - description: >-
             YYYY-MM-DD
 
 
@@ -475,6 +320,8 @@ paths:
 
             If you do not include a published date, the current week's best
             sellers lists will be returned.
+          name: published_date
+          in: query
           schema:
             type: string
             pattern: ^\d{4}-\d{2}-\d{2}$
@@ -485,17 +332,17 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/OverviewResponse'
-      security:
-        - api-key: []
   /lists/overview.json:
     get:
+      tags:
+        - List
       summary: Best Sellers List Overview
+      operationId: List_getBestSellersOverview
+      security:
+        - api-key: []
       description: Get top 5 books for all the Best Sellers lists for specified date.
-      operationId: GET_lists-overview-format
       parameters:
-        - name: published_date
-          in: query
-          description: >-
+        - description: >-
             YYYY-MM-DD
 
 
@@ -510,6 +357,8 @@ paths:
 
             If you do not include a published date, the current week's best
             sellers lists will be returned.
+          name: published_date
+          in: query
           schema:
             type: string
             pattern: ^\d{4}-\d{2}-\d{2}$
@@ -539,65 +388,40 @@ paths:
                           list_image: >-
                             http://du.ec2.nytimes.com.s3.amazonaws.com/prd/books/9780399175954.jpg
                           books:
-                            - age_group: ''
-                              author: Clive Cussler and Justin Scott
-                              contributor: by Clive Cussler and Justin Scott
-                              contributor_note: ''
-                              created_date: '2016-03-10 12:00:22'
+                            - title: THE GANGSTER
                               description: >-
                                 In the ninth book in this series, set in 1906,
                                 the New York detective Isaac Bell contends with
                                 a crime boss passing as a respectable
                                 businessman and a tycoon’s plot against
                                 President Theodore Roosevelt.
+                              age_group: ''
+                              author: Clive Cussler and Justin Scott
+                              contributor: by Clive Cussler and Justin Scott
+                              contributor_note: ''
+                              created_date: '2016-03-10 12:00:22'
                               price: 0
                               primary_isbn13: '9780698406421'
                               primary_isbn10: 698406427
                               publisher: Putnam
                               rank: 1
-                              title: THE GANGSTER
                               updated_date: '2016-03-10 17:00:21'
-      security:
-        - api-key: []
   /lists/names.json:
     get:
+      tags:
+        - List
       summary: Best Sellers List Names
+      operationId: List_getNames
+      security:
+        - api-key: []
       description: Get Best Sellers list names.
-      operationId: GET_lists-names-format
       responses:
         '200':
           description: Get Best Sellers list names.
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                  copyright:
-                    type: string
-                  num_results:
-                    type: integer
-                  results:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        list_name:
-                          type: string
-                        display_name:
-                          type: string
-                        list_name_encoded:
-                          type: string
-                        oldest_published_date:
-                          type: string
-                        newest_published_date:
-                          type: string
-                        updated:
-                          type: string
-                          enum:
-                            - WEEKLY
-                            - MONTHLY
+                $ref: '#/components/schemas/ListGetNamesResponse'
               examples:
                 response:
                   value:
@@ -613,22 +437,22 @@ paths:
                         oldest_published_date: '2011-02-13'
                         newest_published_date: '2016-03-20'
                         updated: WEEKLY
-      security:
-        - api-key: []
   /lists/best-sellers/history.json:
     get:
+      tags:
+        - List
       summary: Best Sellers List History
+      operationId: List_getHistory
+      security:
+        - api-key: []
       description: Get Best Sellers list history.
-      operationId: GET_lists-best-sellers-history-json
       parameters:
-        - name: age-group
+        - description: The target age group for the best seller.
+          name: age-group
           in: query
-          description: The target age group for the best seller.
           schema:
             type: string
-        - name: author
-          in: query
-          description: >-
+        - description: >-
             The author of the best seller. The author field does not include
             additional contributors (see Data Structure for more details about
             the author and contributor fields).
@@ -640,11 +464,11 @@ paths:
 
             When sort-by is set to author, the results will be sorted by
             author's first name.
+          name: author
+          in: query
           schema:
             type: string
-        - name: contributor
-          in: query
-          description: >-
+        - description: >-
             The author of the best seller, as well as other contributors such as
             the illustrator (to search or sort by author name only, use author
             instead).
@@ -656,11 +480,11 @@ paths:
 
             When sort-by is set to contributor, the results will be sorted by
             the first name of the first contributor listed.
+          name: contributor
+          in: query
           schema:
             type: string
-        - name: isbn
-          in: query
-          description: >-
+        - description: >-
             International Standard Book Number, 10 or 13 digits
 
 
@@ -668,37 +492,39 @@ paths:
             have multiple ISBNs of each type. To search on multiple ISBNs,
             separate the ISBNs with semicolons (example:
             9780446579933;0061374229).
+          name: isbn
+          in: query
           schema:
             type: string
-        - name: offset
-          in: query
-          description: >-
+        - description: >-
             Sets the starting point of the result set (0, 20, ...).  Used to
             paginate thru results if there are more than 20. Defaults to 0. The
             num_results field indicates how many results there are total.
+          name: offset
+          in: query
           schema:
             type: integer
             multipleOf: 20
-        - name: price
-          in: query
-          description: >-
+        - description: >-
             The publisher's list price of the best seller, including decimal
             point.
+          name: price
+          in: query
           schema:
             type: string
-        - name: publisher
+        - description: The standardized name of the publisher
+          name: publisher
           in: query
-          description: The standardized name of the publisher
           schema:
             type: string
-        - name: title
-          in: query
-          description: >-
+        - description: >-
             The title of the best seller
 
 
             When searching, you can specify a portion of a title or a full
             title.
+          name: title
+          in: query
           schema:
             type: string
       responses:
@@ -707,84 +533,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                  copyright:
-                    type: string
-                  num_results:
-                    type: integer
-                  results:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        title:
-                          type: string
-                        description:
-                          type: string
-                        contributor:
-                          type: string
-                        author:
-                          type: string
-                        contributor_note:
-                          type: string
-                        price:
-                          type: integer
-                        age_group:
-                          type: string
-                        publisher:
-                          type: string
-                        isbns:
-                          type: array
-                          items:
-                            type: object
-                            properties:
-                              isbn10:
-                                type: string
-                              isbn13:
-                                type: string
-                        ranks_history:
-                          type: array
-                          items:
-                            type: object
-                            properties:
-                              primary_isbn10:
-                                type: string
-                              primary_isbn13:
-                                type: string
-                              rank:
-                                type: integer
-                              list_name:
-                                type: string
-                              display_name:
-                                type: string
-                              published_date:
-                                type: string
-                              bestsellers_date:
-                                type: string
-                              weeks_on_list:
-                                type: integer
-                              ranks_last_week:
-                                nullable: true
-                              asterisk:
-                                type: integer
-                              dagger:
-                                type: integer
-                        reviews:
-                          type: array
-                          items:
-                            type: object
-                            properties:
-                              book_review_link:
-                                type: string
-                              first_chapter_link:
-                                type: string
-                              sunday_review_link:
-                                type: string
-                              article_chapter_link:
-                                type: string
+                $ref: '#/components/schemas/ListGetHistoryResponse'
               examples:
                 response:
                   value:
@@ -822,33 +571,35 @@ paths:
                             first_chapter_link: ''
                             sunday_review_link: ''
                             article_chapter_link: ''
-      security:
-        - api-key: []
   /reviews.json:
     get:
+      tags:
+        - Review
       summary: Reviews
+      operationId: Review_getBookReviews
+      security:
+        - api-key: []
       description: Get book reviews.
-      operationId: GET_reviews-format
       parameters:
-        - name: isbn
-          in: query
-          description: >-
+        - description: >-
             Searching by ISBN is the recommended method. You can enter 10- or
             13-digit ISBNs.
+          name: isbn
+          in: query
           schema:
             type: integer
-        - name: title
-          in: query
-          description: >-
+        - description: >-
             You’ll need to enter the full title of the book. Spaces in the title
             will be converted into the characters %20.
+          name: title
+          in: query
           schema:
             type: string
-        - name: author
-          in: query
-          description: >-
+        - description: >-
             You’ll need to enter the author’s first and last name, separated by
             a space. This space will be converted into the characters %20.
+          name: author
+          in: query
           schema:
             type: string
       responses:
@@ -857,35 +608,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                  copyright:
-                    type: string
-                  num_results:
-                    type: integer
-                  results:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        url:
-                          type: string
-                        publication_dt:
-                          type: string
-                        byline:
-                          type: string
-                        book_title:
-                          type: string
-                        book_author:
-                          type: string
-                        summary:
-                          type: string
-                        isbn13:
-                          type: array
-                          items:
-                            type: string
+                $ref: '#/components/schemas/ReviewGetBookReviewsResponse'
               examples:
                 response:
                   value:
@@ -895,21 +618,17 @@ paths:
                       Reserved.
                     num_results: 2
                     results:
-                      - url: >-
+                      - summary: >-
+                          In “1Q84,” the Japanese novelist Haruki Murakami
+                          writes about characters in a Tokyo with two moons.
+                        url: >-
                           http://www.nytimes.com/2011/11/10/books/1q84-by-haruki-murakami-review.html
                         publication_dt: '2011-11-10'
                         byline: JANET MASLIN
                         book_title: 1Q84
                         book_author: Haruki Murakami
-                        summary: >-
-                          In “1Q84,” the Japanese novelist Haruki Murakami
-                          writes about characters in a Tokyo with two moons.
                         isbn13:
                           - '9780307476463'
-      security:
-        - api-key: []
-servers:
-  - url: https://api.nytimes.com/svc/books/v3
 components:
   securitySchemes:
     api-key:
@@ -953,6 +672,10 @@ components:
                     items:
                       type: object
                       properties:
+                        title:
+                          type: string
+                        description:
+                          type: string
                         age_group:
                           type: string
                         author:
@@ -962,8 +685,6 @@ components:
                         contributor_note:
                           type: string
                         created_date:
-                          type: string
-                        description:
                           type: string
                         price:
                           type: integer
@@ -975,7 +696,313 @@ components:
                           type: string
                         rank:
                           type: integer
-                        title:
-                          type: string
                         updated_date:
                           type: string
+    ListGetBestSellersResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        copyright:
+          type: string
+        num_results:
+          type: integer
+        last_modified:
+          type: string
+        results:
+          type: array
+          items:
+            type: object
+            properties:
+              list_name:
+                type: string
+              display_name:
+                type: string
+              bestsellers_date:
+                type: string
+              published_date:
+                type: string
+              rank:
+                type: integer
+              rank_last_week:
+                type: integer
+              weeks_on_list:
+                type: integer
+              asterisk:
+                type: integer
+              dagger:
+                type: integer
+              amazon_product_url:
+                type: string
+              isbns:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    isbn10:
+                      type: string
+                    isbn13:
+                      type: string
+              book_details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    title:
+                      type: string
+                    description:
+                      type: string
+                    contributor:
+                      type: string
+                    author:
+                      type: string
+                    contributor_note:
+                      type: string
+                    price:
+                      type: integer
+                    age_group:
+                      type: string
+                    publisher:
+                      type: string
+                    primary_isbn13:
+                      type: string
+                    primary_isbn10:
+                      type: string
+              reviews:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    book_review_link:
+                      type: string
+                    first_chapter_link:
+                      type: string
+                    sunday_review_link:
+                      type: string
+                    article_chapter_link:
+                      type: string
+    ListGetByDateResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        copyright:
+          type: string
+        num_results:
+          type: integer
+        last_modified:
+          type: string
+        results:
+          type: object
+          properties:
+            list_name:
+              type: string
+            bestsellers_date:
+              type: string
+            published_date:
+              type: string
+            display_name:
+              type: string
+            normal_list_ends_at:
+              type: integer
+            updated:
+              type: string
+            books:
+              type: array
+              items:
+                type: object
+                properties:
+                  title:
+                    type: string
+                  description:
+                    type: string
+                  rank:
+                    type: integer
+                  rank_last_week:
+                    type: integer
+                  weeks_on_list:
+                    type: integer
+                  asterisk:
+                    type: integer
+                  dagger:
+                    type: integer
+                  primary_isbn10:
+                    type: string
+                  primary_isbn13:
+                    type: string
+                  publisher:
+                    type: string
+                  price:
+                    type: integer
+                  author:
+                    type: string
+                  contributor:
+                    type: string
+                  contributor_note:
+                    type: string
+                  book_image:
+                    type: string
+                  amazon_product_url:
+                    type: string
+                  age_group:
+                    type: string
+                  book_review_link:
+                    type: string
+                  first_chapter_link:
+                    type: string
+                  sunday_review_link:
+                    type: string
+                  article_chapter_link:
+                    type: string
+                  isbns:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        isbn10:
+                          type: string
+                        isbn13:
+                          type: string
+            corrections:
+              type: array
+              items:
+                type: object
+                properties: {}
+    ListGetNamesResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        copyright:
+          type: string
+        num_results:
+          type: integer
+        results:
+          type: array
+          items:
+            type: object
+            properties:
+              list_name:
+                type: string
+              display_name:
+                type: string
+              list_name_encoded:
+                type: string
+              oldest_published_date:
+                type: string
+              newest_published_date:
+                type: string
+              updated:
+                type: string
+                enum:
+                  - WEEKLY
+                  - MONTHLY
+    ListGetHistoryResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        copyright:
+          type: string
+        num_results:
+          type: integer
+        results:
+          type: array
+          items:
+            type: object
+            properties:
+              title:
+                type: string
+              description:
+                type: string
+              contributor:
+                type: string
+              author:
+                type: string
+              contributor_note:
+                type: string
+              price:
+                type: integer
+              age_group:
+                type: string
+              publisher:
+                type: string
+              isbns:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    isbn10:
+                      type: string
+                    isbn13:
+                      type: string
+              ranks_history:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    primary_isbn10:
+                      type: string
+                    primary_isbn13:
+                      type: string
+                    rank:
+                      type: integer
+                    list_name:
+                      type: string
+                    display_name:
+                      type: string
+                    published_date:
+                      type: string
+                    bestsellers_date:
+                      type: string
+                    weeks_on_list:
+                      type: integer
+                    ranks_last_week:
+                      nullable: true
+                    asterisk:
+                      type: integer
+                    dagger:
+                      type: integer
+              reviews:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    book_review_link:
+                      type: string
+                    first_chapter_link:
+                      type: string
+                    sunday_review_link:
+                      type: string
+                    article_chapter_link:
+                      type: string
+    ReviewGetBookReviewsResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        copyright:
+          type: string
+        num_results:
+          type: integer
+        results:
+          type: array
+          items:
+            type: object
+            properties:
+              summary:
+                type: string
+              url:
+                type: string
+              publication_dt:
+                type: string
+              byline:
+                type: string
+              book_title:
+                type: string
+              book_author:
+                type: string
+              isbn13:
+                type: array
+                items:
+                  type: string

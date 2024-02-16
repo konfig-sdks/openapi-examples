@@ -1,9 +1,9 @@
 openapi: 3.0.0
 info:
+  title: Postmark API
   description: |
     Postmark makes sending and receiving email
     incredibly easy.
-  title: Postmark API
   version: 1.0.0
   x-apisguru-categories:
     - email
@@ -11,24 +11,33 @@ info:
     url: >-
       https://pbs.twimg.com/profile_images/879295889185157120/ZYlwxzeY_400x400.jpg
   x-origin:
-    - format: swagger
+    - version: '2.0'
+      format: swagger
       url: https://postmarkapp.com/swagger/server.yml
-      version: '2.0'
   x-providerName: postmarkapp.com
   x-serviceName: server
+  x-konfig-ignore:
+    object-with-no-properties: true
+servers:
+  - url: api.postmarkapp.com
+tags:
+  - name: Stats API
+  - name: Messages API
+  - name: Templates API
+  - name: Bounces API
+  - name: Sending API
+  - name: Inbound Rules API
+  - name: Server Configuration API
 paths:
   /bounces:
     get:
-      operationId: getBounces
+      tags:
+        - Bounces API
+      summary: Get bounces
+      operationId: BouncesApi_listBounces
+      security:
+        - serverToken: []
       parameters:
-        - description: >-
-            The token associated with the Server on which this request will
-            operate.
-          in: header
-          name: X-Postmark-Server-Token
-          required: true
-          schema:
-            type: string
         - description: Number of bounces to return per request. Max 500.
           in: query
           name: count
@@ -117,21 +126,15 @@ paths:
           $ref: '#/components/responses/422'
         '500':
           $ref: '#/components/responses/500'
-      summary: Get bounces
-      tags:
-        - Bounces API
   /bounces/{bounceid}:
     get:
-      operationId: getSingleBounce
+      tags:
+        - Bounces API
+      summary: Get a single bounce
+      operationId: BouncesApi_getBounce
+      security:
+        - serverToken: []
       parameters:
-        - description: >-
-            The token associated with the Server on which this request will
-            operate.
-          in: header
-          name: X-Postmark-Server-Token
-          required: true
-          schema:
-            type: string
         - description: The ID of the bounce to retrieve.
           in: path
           name: bounceid
@@ -145,26 +148,20 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BounceInfoResponse'
+                $ref: '#/components/schemas/BouncesApiGetBounceResponse'
         '422':
           $ref: '#/components/responses/422'
         '500':
           $ref: '#/components/responses/500'
-      summary: Get a single bounce
-      tags:
-        - Bounces API
   /bounces/{bounceid}/activate:
     put:
-      operationId: activateBounce
+      tags:
+        - Bounces API
+      summary: Activate a bounce
+      operationId: BouncesApi_activateBounce
+      security:
+        - serverToken: []
       parameters:
-        - description: >-
-            The token associated with the Server on which this request will
-            operate.
-          in: header
-          name: X-Postmark-Server-Token
-          required: true
-          schema:
-            type: string
         - description: The ID of the Bounce to activate.
           in: path
           name: bounceid
@@ -178,25 +175,20 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BounceActivationResponse'
+                $ref: '#/components/schemas/BouncesApiActivateBounceResponse'
         '422':
           $ref: '#/components/responses/422'
         '500':
           $ref: '#/components/responses/500'
-      summary: Activate a bounce
-      tags:
-        - Bounces API
   /bounces/{bounceid}/dump:
     get:
+      tags:
+        - Bounces API
+      summary: Get bounce dump
+      operationId: BouncesApi_getDump
+      security:
+        - serverToken: []
       parameters:
-        - description: >-
-            The token associated with the Server on which this request will
-            operate.
-          in: header
-          name: X-Postmark-Server-Token
-          required: true
-          schema:
-            type: string
         - description: The ID for the bounce dump to retrieve.
           in: path
           name: bounceid
@@ -210,26 +202,20 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BounceDumpResponse'
+                $ref: '#/components/schemas/BouncesApiGetDumpResponse'
         '422':
           $ref: '#/components/responses/422'
         '500':
           $ref: '#/components/responses/500'
-      summary: Get bounce dump
-      tags:
-        - Bounces API
   /deliverystats:
     get:
-      operationId: getDeliveryStats
-      parameters:
-        - description: >-
-            The token associated with the Server on which this request will
-            operate.
-          in: header
-          name: X-Postmark-Server-Token
-          required: true
-          schema:
-            type: string
+      tags:
+        - Bounces API
+      summary: Get delivery stats
+      operationId: BouncesApi_getDeliveryStats
+      security:
+        - serverToken: []
+      parameters: []
       responses:
         '200':
           description: OK
@@ -241,21 +227,15 @@ paths:
           $ref: '#/components/responses/422'
         '500':
           $ref: '#/components/responses/500'
-      summary: Get delivery stats
-      tags:
-        - Bounces API
   /email:
     post:
-      operationId: sendEmail
-      parameters:
-        - description: >-
-            The token associated with the Server on which this request will
-            operate.
-          in: header
-          name: X-Postmark-Server-Token
-          required: true
-          schema:
-            type: string
+      tags:
+        - Sending API
+      summary: Send a single email
+      operationId: SendingApi_sendSingleEmail
+      security:
+        - serverToken: []
+      parameters: []
       requestBody:
         content:
           application/json:
@@ -272,21 +252,15 @@ paths:
           $ref: '#/components/responses/422'
         '500':
           $ref: '#/components/responses/500'
-      summary: Send a single email
-      tags:
-        - Sending API
   /email/batch:
     post:
-      operationId: sendEmailBatch
-      parameters:
-        - description: >-
-            The token associated with the Server on which this request will
-            operate.
-          in: header
-          name: X-Postmark-Server-Token
-          required: true
-          schema:
-            type: string
+      tags:
+        - Sending API
+      summary: Send a batch of emails
+      operationId: SendingApi_sendBatchEmails
+      security:
+        - serverToken: []
+      parameters: []
       requestBody:
         content:
           application/json:
@@ -303,21 +277,16 @@ paths:
           $ref: '#/components/responses/422'
         '500':
           $ref: '#/components/responses/500'
-      summary: Send a batch of emails
-      tags:
-        - Sending API
   /email/batchWithTemplates:
     post:
-      operationId: sendEmailBatchWithTemplates
-      parameters:
-        - description: >-
-            The token associated with the Server on which this request will
-            operate.
-          in: header
-          name: X-Postmark-Server-Token
-          required: true
-          schema:
-            type: string
+      tags:
+        - Sending API
+        - Templates API
+      summary: Send a batch of email using templates.
+      operationId: SendingApi_sendBatchWithTemplates
+      security:
+        - serverToken: []
+      parameters: []
       requestBody:
         content:
           application/json:
@@ -335,22 +304,16 @@ paths:
           $ref: '#/components/responses/422'
         '500':
           $ref: '#/components/responses/500'
-      summary: Send a batch of email using templates.
+  /email/withTemplate:
+    post:
       tags:
         - Sending API
         - Templates API
-  /email/withTemplate:
-    post:
-      operationId: sendEmailWithTemplate
-      parameters:
-        - description: >-
-            The token associated with the Server on which this request will
-            operate.
-          in: header
-          name: X-Postmark-Server-Token
-          required: true
-          schema:
-            type: string
+      summary: Send an email using a Template
+      operationId: SendingApi_sendEmailTemplate
+      security:
+        - serverToken: []
+      parameters: []
       requestBody:
         content:
           application/json:
@@ -368,22 +331,15 @@ paths:
           $ref: '#/components/responses/422'
         '500':
           $ref: '#/components/responses/500'
-      summary: Send an email using a Template
-      tags:
-        - Sending API
-        - Templates API
   /messages/inbound:
     get:
-      operationId: searchInboundMessages
+      tags:
+        - Messages API
+      summary: Inbound message search
+      operationId: MessagesApi_searchInboundMessages
+      security:
+        - serverToken: []
       parameters:
-        - description: >-
-            The token associated with the Server on which this request will
-            operate.
-          in: header
-          name: X-Postmark-Server-Token
-          required: true
-          schema:
-            type: string
         - description: Number of messages to return per request. Max 500.
           in: query
           name: count
@@ -459,21 +415,15 @@ paths:
           $ref: '#/components/responses/422'
         '500':
           $ref: '#/components/responses/500'
-      summary: Inbound message search
-      tags:
-        - Messages API
   /messages/inbound/{messageid}/bypass:
     put:
-      operationId: bypassRulesForInboundMessage
+      tags:
+        - Messages API
+      summary: Bypass rules for a blocked inbound message
+      operationId: MessagesApi_updateBypassRulesForInboundMessage
+      security:
+        - serverToken: []
       parameters:
-        - description: >-
-            The token associated with the Server on which this request will
-            operate.
-          in: header
-          name: X-Postmark-Server-Token
-          required: true
-          schema:
-            type: string
         - description: The ID of the message which should bypass inbound rules.
           in: path
           name: messageid
@@ -491,21 +441,15 @@ paths:
           $ref: '#/components/responses/422'
         '500':
           $ref: '#/components/responses/500'
-      summary: Bypass rules for a blocked inbound message
-      tags:
-        - Messages API
   /messages/inbound/{messageid}/details:
     get:
-      operationId: getInboundMessageDetails
+      tags:
+        - Messages API
+      summary: Inbound message details
+      operationId: MessagesApi_getInboundMessageDetails
+      security:
+        - serverToken: []
       parameters:
-        - description: >-
-            The token associated with the Server on which this request will
-            operate.
-          in: header
-          name: X-Postmark-Server-Token
-          required: true
-          schema:
-            type: string
         - description: The ID of the message for which to details will be retrieved.
           in: path
           name: messageid
@@ -518,26 +462,21 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/InboundMessageFullDetailsResponse'
+                $ref: >-
+                  #/components/schemas/MessagesApiGetInboundMessageDetailsResponse
         '422':
           $ref: '#/components/responses/422'
         '500':
           $ref: '#/components/responses/500'
-      summary: Inbound message details
-      tags:
-        - Messages API
   /messages/inbound/{messageid}/retry:
     put:
-      operationId: retryInboundMessageProcessing
+      tags:
+        - Messages API
+      summary: Retry a failed inbound message for processing
+      operationId: MessagesApi_retryInboundMessage
+      security:
+        - serverToken: []
       parameters:
-        - description: >-
-            The token associated with the Server on which this request will
-            operate.
-          in: header
-          name: X-Postmark-Server-Token
-          required: true
-          schema:
-            type: string
         - description: The ID of the inbound message on which we should retry processing.
           in: path
           name: messageid
@@ -555,21 +494,15 @@ paths:
           $ref: '#/components/responses/422'
         '500':
           $ref: '#/components/responses/500'
-      summary: Retry a failed inbound message for processing
-      tags:
-        - Messages API
   /messages/outbound:
     get:
-      operationId: searchOutboundMessages
+      tags:
+        - Messages API
+      summary: Outbound message search
+      operationId: MessagesApi_searchOutboundMessages
+      security:
+        - serverToken: []
       parameters:
-        - description: >-
-            The token associated with the Server on which this request will
-            operate.
-          in: header
-          name: X-Postmark-Server-Token
-          required: true
-          schema:
-            type: string
         - description: Number of messages to return per request. Max 500.
           in: query
           name: count
@@ -630,21 +563,15 @@ paths:
           $ref: '#/components/responses/422'
         '500':
           $ref: '#/components/responses/500'
-      summary: Outbound message search
-      tags:
-        - Messages API
   /messages/outbound/clicks:
     get:
-      operationId: searchClicksForOutboundMessages
+      tags:
+        - Messages API
+      summary: Clicks for a all messages
+      operationId: MessagesApi_getAllClicks
+      security:
+        - serverToken: []
       parameters:
-        - description: >-
-            The token associated with the Server on which this request will
-            operate.
-          in: header
-          name: X-Postmark-Server-Token
-          required: true
-          schema:
-            type: string
         - description: Number of message clicks to return per request. Max 500.
           in: query
           name: count
@@ -745,26 +672,20 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MessageClickSearchResponse'
+                $ref: '#/components/schemas/MessagesApiGetAllClicksResponse'
         '422':
           $ref: '#/components/responses/422'
         '500':
           $ref: '#/components/responses/500'
-      summary: Clicks for a all messages
-      tags:
-        - Messages API
   /messages/outbound/clicks/{messageid}:
     get:
-      operationId: getClicksForSingleOutboundMessage
+      tags:
+        - Messages API
+      summary: Retrieve Message Clicks
+      operationId: MessagesApi_getMessageClicks
+      security:
+        - serverToken: []
       parameters:
-        - description: >-
-            The token associated with the Server on which this request will
-            operate.
-          in: header
-          name: X-Postmark-Server-Token
-          required: true
-          schema:
-            type: string
         - description: >-
             The ID of the Outbound Message for which click statistics should be
             retrieved.
@@ -796,26 +717,20 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MessageClickSearchResponse'
+                $ref: '#/components/schemas/MessagesApiGetMessageClicksResponse'
         '422':
           $ref: '#/components/responses/422'
         '500':
           $ref: '#/components/responses/500'
-      summary: Retrieve Message Clicks
-      tags:
-        - Messages API
   /messages/outbound/opens:
     get:
-      operationId: searchOpensForOutboundMessages
+      tags:
+        - Messages API
+      summary: Opens for all messages
+      operationId: MessagesApi_listOpensForOutbound
+      security:
+        - serverToken: []
       parameters:
-        - description: >-
-            The token associated with the Server on which this request will
-            operate.
-          in: header
-          name: X-Postmark-Server-Token
-          required: true
-          schema:
-            type: string
         - description: Number of message opens to return per request. Max 500.
           in: query
           name: count
@@ -916,26 +831,20 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MessageOpenSearchResponse'
+                $ref: '#/components/schemas/MessagesApiListOpensForOutboundResponse'
         '422':
           $ref: '#/components/responses/422'
         '500':
           $ref: '#/components/responses/500'
-      summary: Opens for all messages
-      tags:
-        - Messages API
   /messages/outbound/opens/{messageid}:
     get:
-      operationId: getOpensForSingleOutboundMessage
+      tags:
+        - Messages API
+      summary: Retrieve Message Opens
+      operationId: MessagesApi_getMessageOpens
+      security:
+        - serverToken: []
       parameters:
-        - description: >-
-            The token associated with the Server on which this request will
-            operate.
-          in: header
-          name: X-Postmark-Server-Token
-          required: true
-          schema:
-            type: string
         - description: >-
             The ID of the Outbound Message for which open statistics should be
             retrieved.
@@ -967,26 +876,20 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MessageOpenSearchResponse'
+                $ref: '#/components/schemas/MessagesApiGetMessageOpensResponse'
         '422':
           $ref: '#/components/responses/422'
         '500':
           $ref: '#/components/responses/500'
-      summary: Retrieve Message Opens
-      tags:
-        - Messages API
   /messages/outbound/{messageid}/details:
     get:
-      operationId: getOutboundMessageDetails
+      tags:
+        - Messages API
+      summary: Outbound message details
+      operationId: MessagesApi_getOutboundMessageDetails
+      security:
+        - serverToken: []
       parameters:
-        - description: >-
-            The token associated with the Server on which this request will
-            operate.
-          in: header
-          name: X-Postmark-Server-Token
-          required: true
-          schema:
-            type: string
         - description: The ID of the message for which to retrieve details.
           in: path
           name: messageid
@@ -999,26 +902,21 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OutboundMessageDetailsResponse'
+                $ref: >-
+                  #/components/schemas/MessagesApiGetOutboundMessageDetailsResponse
         '422':
           $ref: '#/components/responses/422'
         '500':
           $ref: '#/components/responses/500'
-      summary: Outbound message details
-      tags:
-        - Messages API
   /messages/outbound/{messageid}/dump:
     get:
-      operationId: getOutboundMessageDump
+      tags:
+        - Messages API
+      summary: Outbound message dump
+      operationId: MessagesApi_getMessageDump
+      security:
+        - serverToken: []
       parameters:
-        - description: >-
-            The token associated with the Server on which this request will
-            operate.
-          in: header
-          name: X-Postmark-Server-Token
-          required: true
-          schema:
-            type: string
         - description: The ID of the message for which to retrieve a dump.
           in: path
           name: messageid
@@ -1031,83 +929,67 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OutboundMessageDumpResponse'
+                $ref: '#/components/schemas/MessagesApiGetMessageDumpResponse'
         '422':
           $ref: '#/components/responses/422'
         '500':
           $ref: '#/components/responses/500'
-      summary: Outbound message dump
-      tags:
-        - Messages API
   /server:
     get:
-      operationId: getCurrentServerConfiguration
-      parameters:
-        - description: >-
-            The token associated with the Server on which this request will
-            operate.
-          in: header
-          name: X-Postmark-Server-Token
-          required: true
-          schema:
-            type: string
+      tags:
+        - Server Configuration API
+      summary: Get Server Configuration
+      operationId: ServerConfigurationApi_getConfiguration
+      security:
+        - serverToken: []
+      parameters: []
       responses:
         '200':
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ServerConfigurationResponse'
+                $ref: >-
+                  #/components/schemas/ServerConfigurationApiGetConfigurationResponse
         '422':
           $ref: '#/components/responses/422'
         '500':
           $ref: '#/components/responses/500'
-      summary: Get Server Configuration
+    put:
       tags:
         - Server Configuration API
-    put:
-      operationId: editCurrentServerConfiguration
-      parameters:
-        - description: >-
-            The token associated with the Server on which this request will
-            operate.
-          in: header
-          name: X-Postmark-Server-Token
-          required: true
-          schema:
-            type: string
+      summary: Edit Server Configuration
+      operationId: ServerConfigurationApi_updateConfiguration
+      security:
+        - serverToken: []
+      parameters: []
       requestBody:
+        description: The settings that should be modified for the current server.
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/EditServerConfigurationRequest'
-        description: The settings that should be modified for the current server.
       responses:
         '200':
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ServerConfigurationResponse'
+                $ref: >-
+                  #/components/schemas/ServerConfigurationApiUpdateConfigurationResponse
         '422':
           $ref: '#/components/responses/422'
         '500':
           $ref: '#/components/responses/500'
-      summary: Edit Server Configuration
-      tags:
-        - Server Configuration API
   /stats/outbound:
     get:
-      operationId: getOutboundOverviewStatistics
+      tags:
+        - Stats API
+      summary: Get outbound overview
+      operationId: StatsApi_getOutboundOverview
+      security:
+        - serverToken: []
       parameters:
-        - description: >-
-            The token associated with the Server on which this request will
-            operate.
-          in: header
-          name: X-Postmark-Server-Token
-          required: true
-          schema:
-            type: string
         - description: Filter by tag
           in: query
           name: tag
@@ -1136,21 +1018,15 @@ paths:
           $ref: '#/components/responses/422'
         '500':
           $ref: '#/components/responses/500'
-      summary: Get outbound overview
-      tags:
-        - Stats API
   /stats/outbound/bounces:
     get:
-      operationId: getBounceCounts
+      tags:
+        - Stats API
+      summary: Get bounce counts
+      operationId: StatsApi_getBounceCounts
+      security:
+        - serverToken: []
       parameters:
-        - description: >-
-            The token associated with the Server on which this request will
-            operate.
-          in: header
-          name: X-Postmark-Server-Token
-          required: true
-          schema:
-            type: string
         - description: Filter by tag
           in: query
           name: tag
@@ -1174,48 +1050,20 @@ paths:
           content:
             application/json:
               schema:
-                properties:
-                  Days:
-                    items:
-                      properties:
-                        Date:
-                          type: string
-                        HardBounce:
-                          type: integer
-                        SMTPApiError:
-                          type: integer
-                        SoftBounce:
-                          type: integer
-                        Transient:
-                          type: integer
-                    type: array
-                  HardBounce:
-                    type: integer
-                  SMTPApiError:
-                    type: integer
-                  SoftBounce:
-                    type: integer
-                  Transient:
-                    type: integer
+                $ref: '#/components/schemas/StatsApiGetBounceCountsResponse'
         '422':
           $ref: '#/components/responses/422'
         '500':
           $ref: '#/components/responses/500'
-      summary: Get bounce counts
-      tags:
-        - Stats API
   /stats/outbound/clicks:
     get:
-      operationId: getOutboundClickCounts
+      tags:
+        - Stats API
+      summary: Get click counts
+      operationId: StatsApi_getOutboundClickCounts
+      security:
+        - serverToken: []
       parameters:
-        - description: >-
-            The token associated with the Server on which this request will
-            operate.
-          in: header
-          name: X-Postmark-Server-Token
-          required: true
-          schema:
-            type: string
         - description: Filter by tag
           in: query
           name: tag
@@ -1239,26 +1087,20 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DynamicResponse'
+                $ref: '#/components/schemas/StatsApiGetOutboundClickCountsResponse'
         '422':
           $ref: '#/components/responses/422'
         '500':
           $ref: '#/components/responses/500'
-      summary: Get click counts
-      tags:
-        - Stats API
   /stats/outbound/clicks/browserfamilies:
     get:
-      operationId: getOutboundClickCountsByBrowserFamily
+      tags:
+        - Stats API
+      summary: Get browser usage by family
+      operationId: StatsApi_getOutboundClicksBrowserFamilies
+      security:
+        - serverToken: []
       parameters:
-        - description: >-
-            The token associated with the Server on which this request will
-            operate.
-          in: header
-          name: X-Postmark-Server-Token
-          required: true
-          schema:
-            type: string
         - description: Filter by tag
           in: query
           name: tag
@@ -1282,26 +1124,21 @@ paths:
           content:
             application/json:
               schema:
-                type: object
+                $ref: >-
+                  #/components/schemas/StatsApiGetOutboundClicksBrowserFamiliesResponse
         '422':
           $ref: '#/components/responses/422'
         '500':
           $ref: '#/components/responses/500'
-      summary: Get browser usage by family
-      tags:
-        - Stats API
   /stats/outbound/clicks/location:
     get:
-      operationId: getOutboundClickCountsByLocation
+      tags:
+        - Stats API
+      summary: Get clicks by body location
+      operationId: StatsApi_getOutboundClicksLocation
+      security:
+        - serverToken: []
       parameters:
-        - description: >-
-            The token associated with the Server on which this request will
-            operate.
-          in: header
-          name: X-Postmark-Server-Token
-          required: true
-          schema:
-            type: string
         - description: Filter by tag
           in: query
           name: tag
@@ -1325,26 +1162,20 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DynamicResponse'
+                $ref: '#/components/schemas/StatsApiGetOutboundClicksLocationResponse'
         '422':
           $ref: '#/components/responses/422'
         '500':
           $ref: '#/components/responses/500'
-      summary: Get clicks by body location
-      tags:
-        - Stats API
   /stats/outbound/clicks/platforms:
     get:
-      operationId: getOutboundClickCountsByPlatform
+      tags:
+        - Stats API
+      summary: Get browser plaform usage
+      operationId: StatsApi_getBrowserPlatformUsage
+      security:
+        - serverToken: []
       parameters:
-        - description: >-
-            The token associated with the Server on which this request will
-            operate.
-          in: header
-          name: X-Postmark-Server-Token
-          required: true
-          schema:
-            type: string
         - description: Filter by tag
           in: query
           name: tag
@@ -1368,26 +1199,20 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DynamicResponse'
+                $ref: '#/components/schemas/StatsApiGetBrowserPlatformUsageResponse'
         '422':
           $ref: '#/components/responses/422'
         '500':
           $ref: '#/components/responses/500'
-      summary: Get browser plaform usage
-      tags:
-        - Stats API
   /stats/outbound/opens:
     get:
-      operationId: getOutboundOpenCounts
+      tags:
+        - Stats API
+      summary: Get email open counts
+      operationId: StatsApi_getEmailOpenCounts
+      security:
+        - serverToken: []
       parameters:
-        - description: >-
-            The token associated with the Server on which this request will
-            operate.
-          in: header
-          name: X-Postmark-Server-Token
-          required: true
-          schema:
-            type: string
         - description: Filter by tag
           in: query
           name: tag
@@ -1411,40 +1236,20 @@ paths:
           content:
             application/json:
               schema:
-                properties:
-                  Days:
-                    items:
-                      properties:
-                        Date:
-                          type: string
-                        Opens:
-                          type: integer
-                        Unique:
-                          type: integer
-                    type: array
-                  Opens:
-                    type: integer
-                  Unique:
-                    type: integer
+                $ref: '#/components/schemas/StatsApiGetEmailOpenCountsResponse'
         '422':
           $ref: '#/components/responses/422'
         '500':
           $ref: '#/components/responses/500'
-      summary: Get email open counts
-      tags:
-        - Stats API
   /stats/outbound/opens/emailclients:
     get:
-      operationId: getOutboundOpenCountsByEmailClient
+      tags:
+        - Stats API
+      summary: Get email client usage
+      operationId: StatsApi_getEmailClientUsage
+      security:
+        - serverToken: []
       parameters:
-        - description: >-
-            The token associated with the Server on which this request will
-            operate.
-          in: header
-          name: X-Postmark-Server-Token
-          required: true
-          schema:
-            type: string
         - description: Filter by tag
           in: query
           name: tag
@@ -1468,38 +1273,20 @@ paths:
           content:
             application/json:
               schema:
-                properties:
-                  Days:
-                    items:
-                      $ref: '#/components/schemas/DynamicResponse'
-                    type: array
-                  Desktop:
-                    type: integer
-                  Mobile:
-                    type: integer
-                  Unknown:
-                    type: integer
-                  WebMail:
-                    type: integer
+                $ref: '#/components/schemas/StatsApiGetEmailClientUsageResponse'
         '422':
           $ref: '#/components/responses/422'
         '500':
           $ref: '#/components/responses/500'
-      summary: Get email client usage
-      tags:
-        - Stats API
   /stats/outbound/opens/platforms:
     get:
-      operationId: getOutboundOpenCountsByPlatform
+      tags:
+        - Stats API
+      summary: Get email platform usage
+      operationId: StatsApi_getEmailPlatformUsage
+      security:
+        - serverToken: []
       parameters:
-        - description: >-
-            The token associated with the Server on which this request will
-            operate.
-          in: header
-          name: X-Postmark-Server-Token
-          required: true
-          schema:
-            type: string
         - description: Filter by tag
           in: query
           name: tag
@@ -1523,48 +1310,20 @@ paths:
           content:
             application/json:
               schema:
-                properties:
-                  Days:
-                    items:
-                      properties:
-                        Date:
-                          type: string
-                        Desktop:
-                          type: integer
-                        Mobile:
-                          type: integer
-                        Unknown:
-                          type: integer
-                        WebMail:
-                          type: integer
-                    type: array
-                  Desktop:
-                    type: integer
-                  Mobile:
-                    type: integer
-                  Unknown:
-                    type: integer
-                  WebMail:
-                    type: integer
+                $ref: '#/components/schemas/StatsApiGetEmailPlatformUsageResponse'
         '422':
           $ref: '#/components/responses/422'
         '500':
           $ref: '#/components/responses/500'
-      summary: Get email platform usage
-      tags:
-        - Stats API
   /stats/outbound/sends:
     get:
-      operationId: getSentCounts
+      tags:
+        - Stats API
+      summary: Get sent counts
+      operationId: StatsApi_getSentCounts
+      security:
+        - serverToken: []
       parameters:
-        - description: >-
-            The token associated with the Server on which this request will
-            operate.
-          in: header
-          name: X-Postmark-Server-Token
-          required: true
-          schema:
-            type: string
         - description: Filter by tag
           in: query
           name: tag
@@ -1593,21 +1352,15 @@ paths:
           $ref: '#/components/responses/422'
         '500':
           $ref: '#/components/responses/500'
-      summary: Get sent counts
-      tags:
-        - Stats API
   /stats/outbound/spam:
     get:
-      operationId: getSpamComplaints
+      tags:
+        - Stats API
+      summary: Get spam complaints
+      operationId: StatsApi_getSpamComplaints
+      security:
+        - serverToken: []
       parameters:
-        - description: >-
-            The token associated with the Server on which this request will
-            operate.
-          in: header
-          name: X-Postmark-Server-Token
-          required: true
-          schema:
-            type: string
         - description: Filter by tag
           in: query
           name: tag
@@ -1631,36 +1384,20 @@ paths:
           content:
             application/json:
               schema:
-                properties:
-                  Days:
-                    items:
-                      properties:
-                        Date:
-                          type: string
-                        SpamComplaint:
-                          type: integer
-                    type: array
-                  SpamComplaint:
-                    type: integer
+                $ref: '#/components/schemas/StatsApiGetSpamComplaintsResponse'
         '422':
           $ref: '#/components/responses/422'
         '500':
           $ref: '#/components/responses/500'
-      summary: Get spam complaints
-      tags:
-        - Stats API
   /stats/outbound/tracked:
     get:
-      operationId: getTrackedEmailCounts
+      tags:
+        - Stats API
+      summary: Get tracked email counts
+      operationId: StatsApi_getTrackedEmailCounts
+      security:
+        - serverToken: []
       parameters:
-        - description: >-
-            The token associated with the Server on which this request will
-            operate.
-          in: header
-          name: X-Postmark-Server-Token
-          required: true
-          schema:
-            type: string
         - description: Filter by tag
           in: query
           name: tag
@@ -1684,36 +1421,20 @@ paths:
           content:
             application/json:
               schema:
-                properties:
-                  Days:
-                    items:
-                      properties:
-                        Date:
-                          type: string
-                        Tracked:
-                          type: integer
-                    type: array
-                  Tracked:
-                    type: integer
+                $ref: '#/components/schemas/StatsApiGetTrackedEmailCountsResponse'
         '422':
           $ref: '#/components/responses/422'
         '500':
           $ref: '#/components/responses/500'
-      summary: Get tracked email counts
-      tags:
-        - Stats API
   /templates:
     get:
-      operationId: listTemplates
+      tags:
+        - Templates API
+      summary: Get the Templates associated with this Server
+      operationId: TemplatesApi_listTemplates
+      security:
+        - serverToken: []
       parameters:
-        - description: >-
-            The token associated with the Server on which this request will
-            operate.
-          in: header
-          name: X-Postmark-Server-Token
-          required: true
-          schema:
-            type: string
         - description: The number of Templates to return
           in: query
           name: Count
@@ -1734,24 +1455,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TemplateListingResponse'
+                $ref: '#/components/schemas/TemplatesApiListTemplatesResponse'
         '422':
           $ref: '#/components/responses/422'
         '500':
           $ref: '#/components/responses/500'
-      summary: Get the Templates associated with this Server
+    post:
       tags:
         - Templates API
-    post:
-      parameters:
-        - description: >-
-            The token associated with the Server on which this request will
-            operate.
-          in: header
-          name: X-Postmark-Server-Token
-          required: true
-          schema:
-            type: string
+      summary: Create a Template
+      operationId: TemplatesApi_createTemplate
+      security:
+        - serverToken: []
+      parameters: []
       requestBody:
         content:
           application/json:
@@ -1764,26 +1480,20 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TemplateRecordResponse'
+                $ref: '#/components/schemas/TemplatesApiCreateTemplateResponse'
         '422':
           $ref: '#/components/responses/422'
         '500':
           $ref: '#/components/responses/500'
-      summary: Create a Template
-      tags:
-        - Templates API
   /templates/validate:
     post:
-      operationId: testTemplateContent
-      parameters:
-        - description: >-
-            The token associated with the Server on which this request will
-            operate.
-          in: header
-          name: X-Postmark-Server-Token
-          required: true
-          schema:
-            type: string
+      tags:
+        - Templates API
+      summary: Test Template Content
+      operationId: TemplatesApi_validateTemplateContent
+      security:
+        - serverToken: []
+      parameters: []
       requestBody:
         content:
           application/json:
@@ -1795,26 +1505,21 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TemplateValidationResponse'
+                $ref: >-
+                  #/components/schemas/TemplatesApiValidateTemplateContentResponse
         '422':
           $ref: '#/components/responses/422'
         '500':
           $ref: '#/components/responses/500'
-      summary: Test Template Content
-      tags:
-        - Templates API
   /templates/{templateIdOrAlias}:
     delete:
-      operationId: deleteTemplate
+      tags:
+        - Templates API
+      summary: Delete a Template
+      operationId: TemplatesApi_deleteTemplate
+      security:
+        - serverToken: []
       parameters:
-        - description: >-
-            The token associated with the Server on which this request will
-            operate.
-          in: header
-          name: X-Postmark-Server-Token
-          required: true
-          schema:
-            type: string
         - description: >-
             The 'TemplateID' or 'Alias' value for the Template you wish to
             delete.
@@ -1829,25 +1534,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TemplateDetailResponse'
+                $ref: '#/components/schemas/TemplatesApiDeleteTemplateResponse'
         '422':
           $ref: '#/components/responses/422'
         '500':
           $ref: '#/components/responses/500'
-      summary: Delete a Template
+    get:
       tags:
         - Templates API
-    get:
-      operationId: getSingleTemplate
+      summary: Get a Template
+      operationId: TemplatesApi_getTemplateById
+      security:
+        - serverToken: []
       parameters:
-        - description: >-
-            The token associated with the Server on which this request will
-            operate.
-          in: header
-          name: X-Postmark-Server-Token
-          required: true
-          schema:
-            type: string
         - description: >-
             The 'TemplateID' or 'Alias' value for the Template you wish to
             retrieve.
@@ -1862,25 +1561,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TemplateDetailResponse'
+                $ref: '#/components/schemas/TemplatesApiGetTemplateByIdResponse'
         '422':
           $ref: '#/components/responses/422'
         '500':
           $ref: '#/components/responses/500'
-      summary: Get a Template
+    put:
       tags:
         - Templates API
-    put:
-      operationId: updateTemplate
+      summary: Update a Template
+      operationId: TemplatesApi_updateTemplate
+      security:
+        - serverToken: []
       parameters:
-        - description: >-
-            The token associated with the Server on which this request will
-            operate.
-          in: header
-          name: X-Postmark-Server-Token
-          required: true
-          schema:
-            type: string
         - description: >-
             The 'TemplateID' or 'Alias' value for the Template you wish to
             update.
@@ -1901,26 +1594,20 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TemplateRecordResponse'
+                $ref: '#/components/schemas/TemplatesApiUpdateTemplateResponse'
         '422':
           $ref: '#/components/responses/422'
         '500':
           $ref: '#/components/responses/500'
-      summary: Update a Template
-      tags:
-        - Templates API
   /triggers/inboundrules:
     get:
-      operationId: listInboundRules
+      tags:
+        - Inbound Rules API
+      summary: List inbound rule triggers
+      operationId: InboundRulesApi_listTriggers
+      security:
+        - serverToken: []
       parameters:
-        - description: >-
-            The token associated with the Server on which this request will
-            operate.
-          in: header
-          name: X-Postmark-Server-Token
-          required: true
-          schema:
-            type: string
         - description: Number of records to return per request.
           in: query
           name: count
@@ -1939,36 +1626,19 @@ paths:
           content:
             application/json:
               schema:
-                properties:
-                  InboundRules:
-                    items:
-                      properties:
-                        ID:
-                          type: integer
-                        Rule:
-                          format: email
-                          type: string
-                    type: array
-                  TotalCount:
-                    type: integer
+                $ref: '#/components/schemas/InboundRulesApiListTriggersResponse'
         '422':
           $ref: '#/components/responses/422'
         '500':
           $ref: '#/components/responses/500'
-      summary: List inbound rule triggers
+    post:
       tags:
         - Inbound Rules API
-    post:
-      operationId: createInboundRule
-      parameters:
-        - description: >-
-            The token associated with the Server on which this request will
-            operate.
-          in: header
-          name: X-Postmark-Server-Token
-          required: true
-          schema:
-            type: string
+      summary: Create an inbound rule trigger
+      operationId: InboundRulesApi_createTrigger
+      security:
+        - serverToken: []
+      parameters: []
       requestBody:
         content:
           application/json:
@@ -1980,30 +1650,20 @@ paths:
           content:
             application/json:
               schema:
-                properties:
-                  ID:
-                    type: integer
-                  Rule:
-                    type: string
+                $ref: '#/components/schemas/InboundRulesApiCreateTriggerResponse'
         '422':
           $ref: '#/components/responses/422'
         '500':
           $ref: '#/components/responses/500'
-      summary: Create an inbound rule trigger
-      tags:
-        - Inbound Rules API
   /triggers/inboundrules/{triggerid}:
     delete:
-      operationId: deleteInboundRule
+      tags:
+        - Inbound Rules API
+      summary: Delete a single trigger
+      operationId: InboundRulesApi_deleteSingleTrigger
+      security:
+        - serverToken: []
       parameters:
-        - description: >-
-            The token associated with the Server on which this request will
-            operate.
-          in: header
-          name: X-Postmark-Server-Token
-          required: true
-          schema:
-            type: string
         - description: The ID of the Inbound Rule that should be deleted.
           in: path
           name: triggerid
@@ -2021,11 +1681,6 @@ paths:
           $ref: '#/components/responses/422'
         '500':
           $ref: '#/components/responses/500'
-      summary: Delete a single trigger
-      tags:
-        - Inbound Rules API
-servers:
-  - url: api.postmarkapp.com
 components:
   responses:
     '422':
@@ -2934,7 +2589,6 @@ components:
             information on the syntax for this field.
           type: string
         InlineCssForHtmlTestRender:
-          default: true
           description: >
             When HtmlBody is specified, the test render will have style blocks
 
@@ -2942,6 +2596,7 @@ components:
             disable
 
             the css inlining behavior by passing false for this parameter.
+          default: true
           type: boolean
         Subject:
           description: |
@@ -2980,6 +2635,126 @@ components:
           items:
             $ref: '#/components/schemas/TemplateValidationError'
           type: array
+    BouncesApiGetBounceResponse:
+      type: object
+      properties: {}
+      example: {}
+    BouncesApiActivateBounceResponse:
+      type: object
+      properties: {}
+      example: {}
+    BouncesApiGetDumpResponse:
+      type: object
+      properties: {}
+      example: {}
+    MessagesApiGetInboundMessageDetailsResponse:
+      type: object
+      properties: {}
+      example: {}
+    MessagesApiGetAllClicksResponse:
+      type: object
+      properties: {}
+      example: {}
+    MessagesApiGetMessageClicksResponse:
+      type: object
+      properties: {}
+      example: {}
+    MessagesApiListOpensForOutboundResponse:
+      type: object
+      properties: {}
+      example: {}
+    MessagesApiGetMessageOpensResponse:
+      type: object
+      properties: {}
+      example: {}
+    MessagesApiGetOutboundMessageDetailsResponse:
+      type: object
+      properties: {}
+      example: {}
+    MessagesApiGetMessageDumpResponse:
+      type: object
+      properties: {}
+      example: {}
+    ServerConfigurationApiGetConfigurationResponse:
+      type: object
+      properties: {}
+      example: {}
+    ServerConfigurationApiUpdateConfigurationResponse:
+      type: object
+      properties: {}
+      example: {}
+    StatsApiGetBounceCountsResponse:
+      type: object
+      properties: {}
+      example: {}
+    StatsApiGetOutboundClickCountsResponse:
+      type: object
+      properties: {}
+      example: {}
+    StatsApiGetOutboundClicksBrowserFamiliesResponse:
+      type: object
+      properties: {}
+      example: {}
+    StatsApiGetOutboundClicksLocationResponse:
+      type: object
+      properties: {}
+      example: {}
+    StatsApiGetBrowserPlatformUsageResponse:
+      type: object
+      properties: {}
+      example: {}
+    StatsApiGetEmailOpenCountsResponse:
+      type: object
+      properties: {}
+      example: {}
+    StatsApiGetEmailClientUsageResponse:
+      type: object
+      properties: {}
+      example: {}
+    StatsApiGetEmailPlatformUsageResponse:
+      type: object
+      properties: {}
+      example: {}
+    StatsApiGetSpamComplaintsResponse:
+      type: object
+      properties: {}
+      example: {}
+    StatsApiGetTrackedEmailCountsResponse:
+      type: object
+      properties: {}
+      example: {}
+    TemplatesApiListTemplatesResponse:
+      type: object
+      properties: {}
+      example: {}
+    TemplatesApiCreateTemplateResponse:
+      type: object
+      properties: {}
+      example: {}
+    TemplatesApiValidateTemplateContentResponse:
+      type: object
+      properties: {}
+      example: {}
+    TemplatesApiDeleteTemplateResponse:
+      type: object
+      properties: {}
+      example: {}
+    TemplatesApiGetTemplateByIdResponse:
+      type: object
+      properties: {}
+      example: {}
+    TemplatesApiUpdateTemplateResponse:
+      type: object
+      properties: {}
+      example: {}
+    InboundRulesApiListTriggersResponse:
+      type: object
+      properties: {}
+      example: {}
+    InboundRulesApiCreateTriggerResponse:
+      type: object
+      properties: {}
+      example: {}
   securitySchemes:
     serverToken:
       type: apiKey
