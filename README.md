@@ -1,6 +1,6 @@
 <div align="center">
 
-![Header](./header.png)
+![Banner](./banner.png)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
