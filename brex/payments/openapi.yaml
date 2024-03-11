@@ -1,0 +1,1485 @@
+openapi: 3.0.1
+info:
+  title: Payments API
+  description: >
+
+    The payments API allows you to initiate and manage payments and vendors from
+    your Brex business accounts.
+  version: '1.0'
+  contact:
+    name: Admin
+    url: https://brex.com
+    email: developer-access@brex.com
+servers:
+  - description: Production
+    url: https://platform.brexapis.com
+  - description: >-
+      Staging (Note: This is not a sandbox. It will not work with customer
+      tokens.)
+    url: https://platform.staging.brexapps.com
+tags:
+  - description: Endpoints to manage vendors
+    name: Vendors
+  - description: >-
+      Endpoints to initiate transfers and view transfer statuses. Note that for
+      all transfer endpoints, the 'money' field is positive or unsigned for
+      outgoing transfers (debits), and negative for incoming transfers
+      (credits).
+    name: Transfers
+  - description: Endpoint to view connected linked accounts
+    name: Linked Accounts
+paths:
+  /v1/incoming_transfers:
+    post:
+      tags:
+        - Transfers
+      summary: |
+
+        Create incoming transfer
+      operationId: Transfers_createIncomingTransfer
+      security:
+        - OAuth2:
+            - incoming_transfers
+      description: >
+
+        This endpoint creates a new incoming transfer. You may use use any
+        eligible bank account connection to fund (ACH Debit) 
+
+        any active Brex business account.
+
+
+        **Reminder**: You may not use the Brex API for any activity that
+        requires a license or registration from any 
+
+        governmental authority without Brex's prior review and approval. This
+        includes but is not limited to any money services
+
+        business or money transmission activity.
+
+
+        Please review the <a
+        href="https://www.brex.com/legal/developer-portal/">Brex Access
+        Agreement</a> and contact us if 
+
+        you have any questions.
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateIncomingTransferRequest'
+        required: true
+      responses:
+        '200':
+          description: createIncomingTransfer 200 response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transfer'
+  /v1/linked_accounts:
+    get:
+      tags:
+        - Linked Accounts
+      summary: |
+
+        Lists linked accounts
+      operationId: LinkedAccounts_list
+      security:
+        - OAuth2:
+            - linked_accounts.readonly
+      description: >
+
+        This endpoint lists all bank connections that are eligible to make ACH
+        transfers to Brex business account
+      parameters:
+        - name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+            nullable: true
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            nullable: true
+      responses:
+        '200':
+          description: listLinkedAccounts 200 response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Page_BankConnection_'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+  /v1/transfers:
+    get:
+      tags:
+        - Transfers
+      summary: |
+
+        Lists transfers 
+      operationId: Transfers_list
+      security:
+        - OAuth2:
+            - transfers.readonly
+            - incoming_transfers
+      description: >
+
+        This endpoint lists existing transfers for an account.
+
+
+        Currently, the API can only return transfers for the following payment
+        rails:
+
+        - ACH
+
+        - DOMESTIC_WIRE
+
+        - CHEQUE
+
+        - INTERNATIONAL_WIRE
+      parameters:
+        - name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+            nullable: true
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            nullable: true
+      responses:
+        '200':
+          description: listTransfers 200 response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Page_Transfer_'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal server error
+    post:
+      tags:
+        - Transfers
+      summary: |
+
+        Create transfer
+      operationId: Transfers_createTransfer
+      security:
+        - OAuth2:
+            - transfers
+      description: >
+
+        This endpoint creates a new transfer.
+
+
+        Currently, the API can only create transfers for the following payment
+        rails:
+
+        - ACH
+
+        - DOMESTIC_WIRE
+
+        - CHEQUE
+
+        - INTERNATIONAL_WIRES (For vendors already created through dashboard.
+        Rate limited to 100/day - Please reach out to developer-support@brex.com
+        if you need to do more)
+
+
+        **Transaction Descriptions**
+
+        * For outgoing check payments, a successful transfer will return a
+        response containing a description value with a format of `Check #<check
+        number> to <recipient_name> - <external_memo>`.
+
+        * For book transfers (from one Brex Business account to another), the
+        recipient value will have a format of `<customer_account.dba_name> -
+        <external_memo>` and the sender will have a format of `<target customer
+        account's dba name> - <external_memo>`.
+
+        * For other payment rails, the format will be `<counterparty_name> -
+        <external_memo>`, where Counterparty name is
+        `payment_instrument.beneficiary_name` or `contact.name`
+
+        For vendors created from the Payments API, the `counterparty_name` will
+        be the `company_name`
+        [field](https://developer.brex.com/openapi/payments_api/).
+
+
+        **Reminder**: You may not use the Brex API for any activity that
+        requires a license or registration from any 
+
+        governmental authority without Brex's prior review and approval. This
+        includes but is not limited to any money services
+
+        business or money transmission activity.
+
+
+        Please review the <a
+        href="https://www.brex.com/legal/developer-portal/">Brex Access
+        Agreement</a> and contact us if 
+
+        you have any questions.
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTransferRequest'
+        required: true
+      responses:
+        '200':
+          description: createTransfer 200 response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transfer'
+  /v1/transfers/{id}:
+    get:
+      tags:
+        - Transfers
+      summary: |
+
+        Get transfer
+      operationId: Transfers_getById
+      security:
+        - OAuth2:
+            - transfers.readonly
+            - incoming_transfers
+      description: >
+
+        This endpoint gets a transfer by ID.
+
+
+        Currently, the API can only return transfers for the following payment
+        rails:
+
+        - ACH
+
+        - DOMESTIC_WIRE
+
+        - CHEQUE
+
+        - INTERNATIONAL_WIRE
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: getTransfersById 200 response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transfer'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal server error
+  /v1/vendors:
+    get:
+      tags:
+        - Vendors
+      summary: |
+
+        Lists vendors 
+      operationId: Vendors_list
+      security:
+        - OAuth2:
+            - vendors.readonly
+      description: |
+
+        This endpoint lists all existing vendors for an account.
+        Takes an optional parameter to match by vendor name.
+      parameters:
+        - name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+            nullable: true
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            nullable: true
+        - name: name
+          in: query
+          required: false
+          schema:
+            type: string
+            nullable: true
+      responses:
+        '200':
+          description: listVendors 200 response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Page_VendorResponse_'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+    post:
+      tags:
+        - Vendors
+      summary: |
+
+        Create vendor
+      operationId: Vendors_createNewVendor
+      security:
+        - OAuth2:
+            - vendors
+      description: |
+
+        This endpoint creates a new vendor.
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateVendorRequest'
+        required: true
+      responses:
+        '200':
+          description: createVendor 200 response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VendorResponse'
+  /v1/vendors/{id}:
+    get:
+      tags:
+        - Vendors
+      summary: |
+
+        Get vendor
+      operationId: Vendors_getById
+      security:
+        - OAuth2:
+            - vendors.readonly
+      description: |
+
+        This endpoint gets a vendor by ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: getVendorById 200 response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VendorResponse'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal server error
+    put:
+      tags:
+        - Vendors
+      summary: Update vendor
+      operationId: Vendors_updateById
+      security:
+        - OAuth2:
+            - vendors
+      description: |2
+
+            Updates an existing vendor by ID.
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: false
+          schema:
+            type: string
+            nullable: true
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateVendorRequest'
+        required: true
+      responses:
+        '200':
+          description: updateVendor 200 response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VendorResponse'
+    delete:
+      tags:
+        - Vendors
+      summary: |
+
+        Delete vendor.
+      operationId: Vendors_deleteVendorById
+      security:
+        - OAuth2:
+            - vendors
+      description: |
+
+        This endpoint deletes a vendor by ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: deleteVendor 200 response
+components:
+  schemas:
+    ACHDetailsRequest:
+      allOf:
+        - $ref: '#/components/schemas/PaymentAccountDetails'
+        - required:
+            - account_class
+            - account_number
+            - account_type
+            - routing_number
+            - type
+          type: object
+          properties:
+            type:
+              $ref: '#/components/schemas/PaymentDetailsTypeRequest'
+            routing_number:
+              description: The routing number must follow proper format.
+              type: string
+            account_number:
+              type: string
+            account_type:
+              $ref: '#/components/schemas/AccountType'
+            account_class:
+              $ref: '#/components/schemas/AccountClass'
+            beneficiary_name:
+              type: string
+              nullable: true
+    ACHDetailsResponse:
+      allOf:
+        - $ref: '#/components/schemas/PaymentAccountDetailsResponse'
+        - required:
+            - account_number
+            - payment_instrument_id
+            - routing_number
+            - type
+          type: object
+          properties:
+            type:
+              $ref: '#/components/schemas/PaymentDetailsTypeResponse'
+            payment_instrument_id:
+              description: >
+                Payment Instrument ID that can be passed to the /transfers
+                endpoint to trigger a transfer.
+
+                The type of the payment instrument dictates the method.
+              type: string
+            routing_number:
+              type: string
+            account_number:
+              type: string
+            account_type:
+              allOf:
+                - $ref: '#/components/schemas/AccountType'
+                - nullable: true
+            account_class:
+              allOf:
+                - $ref: '#/components/schemas/AccountClass'
+                - nullable: true
+    AccountClass:
+      type: string
+      enum:
+        - BUSINESS
+        - PERSONAL
+    AccountType:
+      type: string
+      enum:
+        - CHECKING
+        - SAVING
+    Address:
+      description: >-
+        Company business address (must be in the US; no PO box or
+        virtual/forwarding addresses allowed).
+      type: object
+      properties:
+        line1:
+          description: Address line 1, no PO Box.
+          type: string
+          nullable: true
+        line2:
+          description: Address line 2 (e.g., apartment, suite, unit, or building).
+          type: string
+          nullable: true
+        city:
+          description: City, district, suburb, town, or village.
+          type: string
+          nullable: true
+        state:
+          description: >-
+            For US-addressed the 2-letter State abbreviation. For
+            international-addresses the county, providence, or region.
+          type: string
+          nullable: true
+        country:
+          description: Two-letter country code (ISO 3166-1 alpha-2).
+          type: string
+          nullable: true
+        postal_code:
+          description: ZIP or postal code.
+          type: string
+          nullable: true
+        phone_number:
+          description: Phone number.
+          type: string
+          nullable: true
+    ApprovalType:
+      description: >-
+        Specifies the approval type for the transaction. 
+
+        `MANUAL` requires a cash admin to approve the transaction before
+        disbursing funds. 
+
+        When not set, the default policy will apply.
+      type: string
+      enum:
+        - MANUAL
+    Balance:
+      required:
+        - amount
+        - as_of_date
+      type: object
+      properties:
+        amount:
+          $ref: '#/components/schemas/Money'
+        as_of_date:
+          type: string
+          format: date
+    BankAccountDetailsResponse:
+      allOf:
+        - $ref: '#/components/schemas/CounterPartyResponse'
+        - required:
+            - type
+          type: object
+          properties:
+            description:
+              description: Description of the transfer.
+              type: string
+              nullable: true
+            type:
+              $ref: '#/components/schemas/CounterPartyResponseType'
+            routing_number:
+              description: >-
+                Routing number of a bank account (or SWIFT/BIC code for
+                international transfer). For incoming cheques, this field might
+                be null.
+              type: string
+              nullable: true
+            account_number:
+              description: >-
+                Account number of a bank account (or IBAN code for international
+                transfer). For incoming cheques, this field might be null.
+              type: string
+              nullable: true
+            beneficiary_bank:
+              allOf:
+                - $ref: '#/components/schemas/BeneficiaryBank'
+                - description: Beneficiary Bank information
+                  nullable: true
+            fed_reference_number:
+              description: Fed reference number for incoming wires
+              type: string
+              nullable: true
+            external_memo:
+              description: External Memo populated by the sender
+              type: string
+              nullable: true
+    BankConnection:
+      required:
+        - id
+        - last_four
+      type: object
+      properties:
+        id:
+          type: string
+        bank_details:
+          $ref: '#/components/schemas/BankDetails'
+        brex_account_id:
+          description: |
+            Brex business account ID
+          type: string
+          nullable: true
+        last_four:
+          type: string
+        available_balance:
+          allOf:
+            - $ref: '#/components/schemas/Balance'
+            - nullable: true
+        current_balance:
+          allOf:
+            - $ref: '#/components/schemas/Balance'
+            - nullable: true
+    BankDetails:
+      type: object
+      properties:
+        name:
+          description: |
+            The name of the bank
+          type: string
+        type:
+          $ref: '#/components/schemas/BankType'
+    BankType:
+      type: string
+      enum:
+        - CHECKING
+        - SAVING
+    BeneficiaryBank:
+      type: object
+      properties:
+        name:
+          type: string
+          nullable: true
+        address:
+          allOf:
+            - $ref: '#/components/schemas/Address'
+            - nullable: true
+    BookTransferDetails:
+      allOf:
+        - $ref: '#/components/schemas/CounterParty'
+        - required:
+            - recipient
+            - type
+          type: object
+          properties:
+            type:
+              $ref: '#/components/schemas/CounterPartyType'
+            recipient:
+              $ref: '#/components/schemas/Recipient'
+    BookTransferDetailsResponse:
+      allOf:
+        - $ref: '#/components/schemas/CounterPartyResponse'
+        - required:
+            - deposit_account_id
+            - type
+          type: object
+          properties:
+            type:
+              $ref: '#/components/schemas/CounterPartyResponseType'
+            deposit_account_id:
+              description: >-
+                This feature is currently limited to certain customers, please
+                reach out if you are interested
+              type: string
+    BrexCashAccountDetails:
+      allOf:
+        - $ref: '#/components/schemas/OriginatingAccount'
+        - required:
+            - id
+            - type
+          type: object
+          properties:
+            type:
+              $ref: '#/components/schemas/OriginatingAccountType'
+            id:
+              description: >
+
+                ID of the Brex Business account: Can be found from the
+                `/accounts` endpoint
+
+                where instrument type is `CASH`.
+              type: string
+    BrexCashAccountDetailsResponse:
+      allOf:
+        - $ref: '#/components/schemas/OriginatingAccountResponse'
+        - required:
+            - id
+            - type
+          type: object
+          properties:
+            type:
+              $ref: '#/components/schemas/OriginatingAccountResponseType'
+            id:
+              description: |
+
+                ID of the Brex Business account.
+              type: string
+    BrexCashDetails:
+      allOf:
+        - $ref: '#/components/schemas/ReceivingAccount'
+        - required:
+            - id
+            - type
+          type: object
+          properties:
+            type:
+              $ref: '#/components/schemas/ReceivingAccountType'
+            id:
+              description: >
+
+                ID of the Brex business account: Can be found from the [List
+                business
+                accounts](https://developer.brex.com/openapi/payments_api/)
+                endpoint
+              type: string
+    ChequeDetailsRequest:
+      allOf:
+        - $ref: '#/components/schemas/PaymentAccountDetails'
+        - required:
+            - mailing_address
+            - recipient_name
+            - type
+          type: object
+          properties:
+            type:
+              $ref: '#/components/schemas/PaymentDetailsTypeRequest'
+            mailing_address:
+              $ref: '#/components/schemas/Address'
+            recipient_name:
+              maxLength: 40
+              type: string
+            beneficiary_name:
+              type: string
+              nullable: true
+    ChequeDetailsResponse:
+      allOf:
+        - $ref: '#/components/schemas/PaymentAccountDetailsResponse'
+        - required:
+            - mailing_address
+            - payment_instrument_id
+            - recipient_name
+            - type
+          type: object
+          properties:
+            type:
+              $ref: '#/components/schemas/PaymentDetailsTypeResponse'
+            payment_instrument_id:
+              description: >
+                Payment Instrument ID that can be passed to the /transfers
+                endpoint to trigger a transfer.
+
+                The type of the payment instrument dictates the method.
+              type: string
+            mailing_address:
+              $ref: '#/components/schemas/Address'
+            recipient_name:
+              type: string
+    CounterParty:
+      description: Counterparty Details for the transfer
+      type: object
+      discriminator:
+        propertyName: type
+        mapping:
+          BOOK_TRANSFER: '#/components/schemas/BookTransferDetails'
+          VENDOR: '#/components/schemas/VendorDetails'
+      oneOf:
+        - $ref: '#/components/schemas/VendorDetails'
+        - $ref: '#/components/schemas/BookTransferDetails'
+    CounterPartyBankDetails:
+      allOf:
+        - $ref: '#/components/schemas/CounterPartyIncomingTransfer'
+        - required:
+            - id
+            - type
+          type: object
+          properties:
+            type:
+              $ref: '#/components/schemas/CounterPartyIncomingTransferType'
+            id:
+              description: >
+
+                The financial account id: Can be found from the [List linked
+                accounts](https://developer.brex.com/openapi/payments_api/)
+                endpoint
+              type: string
+    CounterPartyIncomingTransfer:
+      description: Counterparty Details for the transfer
+      type: object
+      discriminator:
+        propertyName: type
+        mapping:
+          BANK: '#/components/schemas/CounterPartyBankDetails'
+      oneOf:
+        - $ref: '#/components/schemas/CounterPartyBankDetails'
+    CounterPartyIncomingTransferType:
+      type: string
+      enum:
+        - BANK
+    CounterPartyResponse:
+      description: >-
+        Counterparty Details for the transfer - Currently only supports vendors
+        that are returned in the 
+
+        response from the /vendors endpoint
+
+        BOOK_TRANSFER is a limited feature. Please reach out if you are
+        interested.
+            
+      type: object
+      discriminator:
+        propertyName: type
+        mapping:
+          BANK_ACCOUNT: '#/components/schemas/BankAccountDetailsResponse'
+          BOOK_TRANSFER: '#/components/schemas/BookTransferDetailsResponse'
+          VENDOR: '#/components/schemas/VendorDetailsResponse'
+      oneOf:
+        - $ref: '#/components/schemas/VendorDetailsResponse'
+    CounterPartyResponseType:
+      type: string
+      enum:
+        - VENDOR
+        - BOOK_TRANSFER
+        - BANK_ACCOUNT
+    CounterPartyType:
+      type: string
+      enum:
+        - VENDOR
+        - BOOK_TRANSFER
+    CreateIncomingTransferRequest:
+      required:
+        - amount
+        - counterparty
+        - description
+        - receiving_account
+      type: object
+      properties:
+        description:
+          description: >2
+             
+            Description of the transfer for internal use. Not exposed
+            externally. 
+          type: string
+        counterparty:
+          $ref: '#/components/schemas/CounterPartyIncomingTransfer'
+        receiving_account:
+          $ref: '#/components/schemas/ReceivingAccount'
+        amount:
+          $ref: '#/components/schemas/Money'
+    CreateTransferRequest:
+      required:
+        - amount
+        - counterparty
+        - description
+        - external_memo
+        - originating_account
+      type: object
+      properties:
+        description:
+          description: >-
+            Description of the transfer for internal use. Not exposed
+            externally.
+          type: string
+        counterparty:
+          $ref: '#/components/schemas/CounterParty'
+        amount:
+          $ref: '#/components/schemas/Money'
+        external_memo:
+          description: >
+            External memo for the transfer. `Payment Instructions` for Wires and
+            the `Entry Description` for ACH payments. 
+
+            Must be at most 90 characters for `ACH` and `WIRE` transactions
+
+            and at most 40 characters for `CHEQUES`
+          maxLength: 90
+          type: string
+        originating_account:
+          allOf:
+            - $ref: '#/components/schemas/OriginatingAccount'
+            - description: >
+                Brex originating account details. Account IDs are returned by
+                the /accounts
+
+                endpoint. This endpoint currently only supports accounts with
+                instrument type `CASH` (Brex business accounts)
+
+                Currently only USD transfers are supported and amount should be
+                positive
+        approval_type:
+          allOf:
+            - $ref: '#/components/schemas/ApprovalType'
+            - nullable: true
+    CreateVendorRequest:
+      required:
+        - company_name
+      type: object
+      properties:
+        company_name:
+          description: Name for vendor. The name must be unique.
+          type: string
+        email:
+          description: Email for vendor.
+          type: string
+          format: email
+          nullable: true
+        phone:
+          description: Phone number for vendor.
+          type: string
+          nullable: true
+        payment_accounts:
+          description: Payment accounts associated with the vendor.
+          type: array
+          nullable: true
+          items:
+            $ref: '#/components/schemas/PaymentAccountRequest'
+    DomesticWireDetailsRequest:
+      allOf:
+        - $ref: '#/components/schemas/PaymentAccountDetails'
+        - required:
+            - account_number
+            - address
+            - routing_number
+            - type
+          type: object
+          properties:
+            type:
+              $ref: '#/components/schemas/PaymentDetailsTypeRequest'
+            routing_number:
+              description: The routing number must follow proper format.
+              type: string
+            account_number:
+              type: string
+            address:
+              $ref: '#/components/schemas/Address'
+            beneficiary_name:
+              type: string
+              nullable: true
+    DomesticWireDetailsResponse:
+      allOf:
+        - $ref: '#/components/schemas/PaymentAccountDetailsResponse'
+        - required:
+            - account_number
+            - address
+            - payment_instrument_id
+            - routing_number
+            - type
+          type: object
+          properties:
+            type:
+              $ref: '#/components/schemas/PaymentDetailsTypeResponse'
+            payment_instrument_id:
+              description: >
+                Payment Instrument ID that can be passed to the /transfers
+                endpoint to trigger a transfer.
+
+                The type of the payment instrument dictates the method.
+              type: string
+            routing_number:
+              type: string
+            account_number:
+              type: string
+            address:
+              $ref: '#/components/schemas/Address'
+    InternationalWireDetailsResponse:
+      allOf:
+        - $ref: '#/components/schemas/PaymentAccountDetailsResponse'
+        - required:
+            - address
+            - iban
+            - payment_instrument_id
+            - swift_code
+            - type
+          type: object
+          properties:
+            type:
+              $ref: '#/components/schemas/PaymentDetailsTypeResponse'
+            payment_instrument_id:
+              description: >
+                Payment Instrument ID that can be passed to the /transfers
+                endpoint to trigger a transfer.
+
+                The type of the payment instrument dictates the method.
+              type: string
+            swift_code:
+              description: Counterparty's `SWIFT` code
+              type: string
+            iban:
+              description: Counterparty's international bank account number
+              type: string
+            beneficiary_bank_name:
+              description: Name of counterparty's bank
+              type: string
+              nullable: true
+            address:
+              $ref: '#/components/schemas/Address'
+    Money:
+      description: >
+
+        Money fields can be signed or unsigned. Fields are signed (an unsigned
+        value will be interpreted as positive). The amount of money will be
+        represented in the smallest denomination
+
+        of the currency indicated. For example, USD 7.00 will be represented in
+        cents with an amount of 700.
+      type: object
+      properties:
+        amount:
+          description: >-
+            The amount of money, in the smallest denomination of the currency
+            indicated by currency. For example, when currency is USD, amount is
+            in cents.
+          type: integer
+          format: int64
+        currency:
+          description: >-
+            The type of currency, in ISO 4217 format. Default to USD if not
+            specified
+          type: string
+          nullable: true
+    OriginatingAccount:
+      description: Originating account details for the transfer
+      type: object
+      discriminator:
+        propertyName: type
+        mapping:
+          BREX_CASH: '#/components/schemas/BrexCashAccountDetails'
+      oneOf:
+        - $ref: '#/components/schemas/BrexCashAccountDetails'
+    OriginatingAccountResponse:
+      description: Originating account details for the transfer
+      type: object
+      discriminator:
+        propertyName: type
+        mapping:
+          BREX_CASH: '#/components/schemas/BrexCashAccountDetailsResponse'
+      oneOf:
+        - $ref: '#/components/schemas/BrexCashAccountDetailsResponse'
+    OriginatingAccountResponseType:
+      type: string
+      enum:
+        - BREX_CASH
+    OriginatingAccountType:
+      type: string
+      enum:
+        - BREX_CASH
+    Page_BankConnection_:
+      required:
+        - items
+      type: object
+      properties:
+        next_cursor:
+          type: string
+          nullable: true
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/BankConnection'
+    Page_Transfer_:
+      required:
+        - items
+      type: object
+      properties:
+        next_cursor:
+          type: string
+          nullable: true
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Transfer'
+    Page_VendorResponse_:
+      required:
+        - items
+      type: object
+      properties:
+        next_cursor:
+          type: string
+          nullable: true
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/VendorResponse'
+    PaymentAccountDetails:
+      description: >
+        Payment Instruments associated with the vendor.
+
+        Each vendor can only have one payment account per payment instrument
+        type. For instance, a vendor may have associated details for each of
+        ACH, DOMESTIC_WIRE, and CHEQUE, but they cannot have 2 entries for ACH.
+        If you modify a vendor's existing payment instrument type with new
+        details, it will overwrite any previous data.
+      type: object
+      discriminator:
+        propertyName: type
+        mapping:
+          DOMESTIC_WIRE: '#/components/schemas/DomesticWireDetailsRequest'
+          ACH: '#/components/schemas/ACHDetailsRequest'
+          CHEQUE: '#/components/schemas/ChequeDetailsRequest'
+      oneOf:
+        - $ref: '#/components/schemas/ACHDetailsRequest'
+        - $ref: '#/components/schemas/DomesticWireDetailsRequest'
+        - $ref: '#/components/schemas/ChequeDetailsRequest'
+    PaymentAccountDetailsResponse:
+      type: object
+      discriminator:
+        propertyName: type
+        mapping:
+          DOMESTIC_WIRE: '#/components/schemas/DomesticWireDetailsResponse'
+          ACH: '#/components/schemas/ACHDetailsResponse'
+          CHEQUE: '#/components/schemas/ChequeDetailsResponse'
+          INTERNATIONAL_WIRE: '#/components/schemas/InternationalWireDetailsResponse'
+      oneOf:
+        - $ref: '#/components/schemas/ACHDetailsResponse'
+        - $ref: '#/components/schemas/DomesticWireDetailsResponse'
+        - $ref: '#/components/schemas/ChequeDetailsResponse'
+        - $ref: '#/components/schemas/InternationalWireDetailsResponse'
+    PaymentAccountRequest:
+      required:
+        - details
+      type: object
+      properties:
+        details:
+          $ref: '#/components/schemas/PaymentAccountDetails'
+    PaymentAccountResponse:
+      required:
+        - details
+      type: object
+      properties:
+        details:
+          $ref: '#/components/schemas/PaymentAccountDetailsResponse'
+    PaymentDetailsTypeRequest:
+      type: string
+      enum:
+        - ACH
+        - DOMESTIC_WIRE
+        - CHEQUE
+    PaymentDetailsTypeResponse:
+      type: string
+      enum:
+        - ACH
+        - DOMESTIC_WIRE
+        - CHEQUE
+        - INTERNATIONAL_WIRE
+    PaymentType:
+      type: string
+      enum:
+        - ACH
+        - DOMESTIC_WIRE
+        - CHEQUE
+        - INTERNATIONAL_WIRE
+        - BOOK_TRANSFER
+    ReceivingAccount:
+      description: Receiving account details for the transfer
+      type: object
+      discriminator:
+        propertyName: type
+        mapping:
+          BREX_CASH: '#/components/schemas/BrexCashDetails'
+      oneOf:
+        - $ref: '#/components/schemas/BrexCashDetails'
+    ReceivingAccountType:
+      type: string
+      enum:
+        - BREX_CASH
+    Recipient:
+      required:
+        - id
+        - type
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/RecipientType'
+        id:
+          type: string
+    RecipientType:
+      description: >
+        Specifies the type of the recipient. 
+
+        `ACCOUNT_ID` is the ID of a Brex Business account.
+
+        `PAYMENT_INSTRUMENT_ID` is the ID of Payment Instrument of the receiving
+        Brex account.
+      type: string
+      enum:
+        - ACCOUNT_ID
+        - PAYMENT_INSTRUMENT_ID
+    Transfer:
+      required:
+        - amount
+        - id
+        - originating_account
+        - payment_type
+        - status
+      type: object
+      properties:
+        description:
+          description: Description of the transfer
+          type: string
+          nullable: true
+        id:
+          description: Unique ID associated with the transfer
+          type: string
+        counterparty:
+          allOf:
+            - $ref: '#/components/schemas/CounterPartyResponse'
+            - nullable: true
+        payment_type:
+          $ref: '#/components/schemas/PaymentType'
+        amount:
+          $ref: '#/components/schemas/Money'
+        process_date:
+          description: Transaction processing date
+          type: string
+          format: date
+          nullable: true
+        originating_account:
+          $ref: '#/components/schemas/OriginatingAccountResponse'
+        status:
+          $ref: '#/components/schemas/TransferStatus'
+        cancellation_reason:
+          allOf:
+            - $ref: '#/components/schemas/TransferCancellationReason'
+            - nullable: true
+        estimated_delivery_date:
+          description: Estimated delivery date for transfer
+          type: string
+          format: date
+          nullable: true
+        creator_user_id:
+          description: User ID of the transfer initiator
+          type: string
+          nullable: true
+        created_at:
+          description: Date of transfer creation
+          type: string
+          format: date
+          nullable: true
+        display_name:
+          description: Human readable name for the transaction
+          type: string
+          nullable: true
+        external_memo:
+          description: >
+            External memo for the transfer. `Payment Instructions` for Wires and
+            the `Entry Description` for ACH payments. 
+
+            Must be at most 90 characters for `ACH` and `WIRE` transactions
+
+            and at most 40 characters for `CHEQUES`
+          maxLength: 90
+          type: string
+          nullable: true
+    TransferCancellationReason:
+      description: >
+        `USER_CANCELLED`: The transfer was canceled.
+
+        `INSUFFICIENT_FUNDS`: The transfer could not be sent due to insufficient
+        funds.
+
+        `APPROVAL_DENIED`: The transfer was not sent because it was denied.
+
+        `BLOCKED_BY_POSITIVE_PAY`: The transfer was blocked because of the ACH
+        debit settings.
+      type: string
+      enum:
+        - USER_CANCELLED
+        - INSUFFICIENT_FUNDS
+        - APPROVAL_DENIED
+        - BLOCKED_BY_POSITIVE_PAY
+    TransferStatus:
+      description: >
+        `PROCESSING`: We have started to process the sending or receiving of
+        this transaction.
+
+        `SCHEDULED`: The transaction is scheduled to enter the `PROCESSING`
+        status.
+
+        `PENDING_APPROVAL`: The transaction requires approval before it can
+        enter the `SCHEDULED` or `PROCESSING` status.
+
+        `FAILED`: A grouping of multiple terminal states that prevented the
+        transaction from completing.
+
+        This includes a a user-cancellation, approval being denied, insufficient
+        funds, failed verifications, etc.
+
+        `PROCESSED`: The money movement has been fully completed, which could
+        mean money sent has arrived.
+      type: string
+      enum:
+        - PROCESSING
+        - SCHEDULED
+        - PENDING_APPROVAL
+        - FAILED
+        - PROCESSED
+    UpdateVendorRequest:
+      type: object
+      properties:
+        company_name:
+          description: Name for vendor
+          type: string
+          nullable: true
+        email:
+          description: Email for vendor
+          type: string
+          format: email
+          nullable: true
+        phone:
+          description: Phone number for vendor
+          type: string
+          nullable: true
+        payment_accounts:
+          description: >
+            To update payment instruments, we require the entire payload for
+            each payment instrument that is being updated.
+          type: array
+          nullable: true
+          items:
+            $ref: '#/components/schemas/PaymentAccountRequest'
+        beneficiary_name:
+          description: Name for the Beneficiary
+          type: string
+          nullable: true
+    VendorDetails:
+      allOf:
+        - $ref: '#/components/schemas/CounterParty'
+        - required:
+            - payment_instrument_id
+            - type
+          type: object
+          properties:
+            type:
+              $ref: '#/components/schemas/CounterPartyType'
+            payment_instrument_id:
+              description: >
+                ID of the vendor's payment instrument: this will dictate the
+                payment method and the
+
+                counterparty of the transaction.
+
+                The payment instrument ID is returned from the /vendors response
+                and the type of the
+
+                instrument will dictate the payment method.
+
+                eg. Passing an instrument ID of type ACH will trigger an ACH
+                payment to the associated vendor.
+
+                Since a payment instrument can be updated while retaining the
+                same payment_instrument_id, 
+
+                please make sure to double check the details.
+              type: string
+    VendorDetailsResponse:
+      allOf:
+        - $ref: '#/components/schemas/CounterPartyResponse'
+        - required:
+            - id
+            - payment_instrument_id
+            - type
+          type: object
+          properties:
+            type:
+              $ref: '#/components/schemas/CounterPartyResponseType'
+            payment_instrument_id:
+              type: string
+            id:
+              description: Vendor ID returned from `/vendors` endpoint
+              type: string
+            routing_number:
+              description: >-
+                Routing number of a bank account (or SWIFT/BIC code for
+                international transfer).
+              type: string
+              nullable: true
+            account_number:
+              description: >-
+                Account number of a bank account (or IBAN code for international
+                transfer).
+              type: string
+              nullable: true
+    VendorResponse:
+      required:
+        - id
+      type: object
+      properties:
+        id:
+          description: >
+            Vendor ID: Can be passed to /transfers endpoint to specify
+            counterparty.
+          type: string
+        company_name:
+          type: string
+          nullable: true
+        email:
+          type: string
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+        payment_accounts:
+          type: array
+          nullable: true
+          items:
+            $ref: '#/components/schemas/PaymentAccountResponse'
+  securitySchemes:
+    OAuth2:
+      description: OAuth2 security scheme
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://accounts-api.brex.com/oauth2/default/v1/authorize
+          tokenUrl: https://accounts-api.brex.com/oauth2/default/v1/token
+          scopes:
+            openid: openid
+            offline_access: offline access
+            vendors: View and manage vendor data
+            vendors.readonly: View vendor data
+            transfers: View and manage transfer data
+            transfers.readonly: View transfer data
+            incoming_transfers: View and manage incoming transfer data
+            linked_accounts.readonly: View linked accounts
+security:
+  - OAuth2: []
+x-explorer-enabled: false

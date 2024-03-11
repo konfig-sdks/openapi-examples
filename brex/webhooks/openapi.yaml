@@ -1,0 +1,775 @@
+openapi: 3.0.1
+info:
+  title: Webhooks API
+  description: >
+
+    Brex uses webhooks to send real-time notifications when events happen in the
+    accounts that you manage.
+
+    Use webhook subscriptions to subscribe to different webhook events.
+  version: '0.1'
+  contact:
+    name: Admin
+    url: https://brex.com
+    email: developer-access@brex.com
+servers:
+  - description: Production
+    url: https://platform.brexapis.com
+  - description: >-
+      Staging (Note: This is not a sandbox. It will not work with customer
+      tokens.)
+    url: https://platform.staging.brexapps.com
+tags:
+  - description: Manage webhook subscriptions.
+    name: Webhook Subscriptions
+paths:
+  /v1/webhooks:
+    get:
+      tags:
+        - Webhook Subscriptions
+      summary: List Webhooks
+      operationId: WebhookSubscriptions_list
+      description: List the webhooks you have registered
+      parameters:
+        - name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+            nullable: true
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            nullable: true
+      responses:
+        '200':
+          description: listSubscription 200 response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Page_WebhookSubscription_'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal server error
+    post:
+      tags:
+        - Webhook Subscriptions
+      summary: Register Webhook
+      operationId: WebhookSubscriptions_registerEndpoint
+      description: Register an endpoint to start receiving selected webhook events
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateWebhookSubscriptionRequest'
+        required: true
+      responses:
+        '200':
+          description: createSubscription 200 response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookSubscription'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal server error
+  /v1/webhooks/secrets:
+    get:
+      tags:
+        - Webhook Subscriptions
+      summary: List Webhook Secrets
+      operationId: WebhookSubscriptions_listSecrets
+      description: >
+
+        This endpoint returns a set of webhook signing secrets used to validate
+        the webhook.
+
+        Usually only one key will be returned in the response. After key
+        rotation, this endpoint will return two keys:
+
+        the new key, and the key that will be revoked soon. There will also be
+        two signatures in the 'Webhook-Signature' request header.
+
+        Your application should use all keys available to validate the webhook
+        request. If validation passes for any
+
+        of the keys returned, the webhook payload is valid.
+      parameters: []
+      responses:
+        '200':
+          description: listSecrets 200 response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookSubscriptionsListSecretsResponse'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal server error
+  /v1/webhooks/{id}:
+    get:
+      tags:
+        - Webhook Subscriptions
+      summary: Get Webhook
+      operationId: WebhookSubscriptions_getDetails
+      description: Get details of a webhook
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: getSubscriptionById 200 response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookSubscription'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal server error
+    put:
+      tags:
+        - Webhook Subscriptions
+      summary: Update Webhook
+      operationId: WebhookSubscriptions_updateWebhook
+      description: >
+        Update a webhook.
+
+        You can update the endpoint url, event types that the endpoint receives,
+        or temporarily deactivate the webhook.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateWebhookSubscriptionRequest'
+        required: true
+      responses:
+        '200':
+          description: updateSubscription 200 response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookSubscription'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal server error
+    delete:
+      tags:
+        - Webhook Subscriptions
+      summary: Unregister Webhook
+      operationId: WebhookSubscriptions_unregisterWebhook
+      description: Unregister a webhook if you want to stop receiving webhook events
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: deleteSubscription 200 response
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '500':
+          description: Internal server error
+components:
+  schemas:
+    ApplicationStatus:
+      description: >
+        Application status of a product.
+
+
+        `NO_ACCOUNT` - There is no active application, and the product account
+        is not provisioned.
+
+
+        `ACTIVE` - The application is approved, and the product account is
+        provisioned.
+
+
+        `NOT_SUBMITTED` - The application is started but not yet submitted.
+
+
+        `INFORMATION_PENDING` - The application is submitted and additional
+        information is requested.
+
+
+        `MANUAL_REVIEW` - The application is under manual review.
+
+
+        `PROCESSING` - The application is submitted and is under review.
+
+
+        `REJECTED` - The application is rejected.
+
+
+        `CLOSED` - The product account is closed.
+      type: string
+      enum:
+        - NO_ACCOUNT
+        - ACTIVE
+        - NOT_SUBMITTED
+        - INFORMATION_PENDING
+        - MANUAL_REVIEW
+        - PROCESSING
+        - REJECTED
+        - CLOSED
+    CreateWebhookSubscriptionRequest:
+      required:
+        - event_types
+        - url
+      type: object
+      properties:
+        url:
+          type: string
+        event_types:
+          description: >-
+            The Brex API sends webhooks for the events listed below.
+
+            For more details, see the [webhook
+            guide](https://developer.brex.com/openapi/webhooks_api/) and
+
+            [webhook events API
+            reference](https://developer.brex.com/openapi/webhooks_api/).
+          required:
+            - 'true'
+          type: array
+          items:
+            $ref: '#/components/schemas/WebhookEventType'
+    ExpensePaymentEvent:
+      type: object
+      discriminator:
+        propertyName: event_type
+        mapping:
+          EXPENSE_PAYMENT_UPDATED: '#/components/schemas/ExpensePaymentStatusUpdatedEvent'
+      oneOf:
+        - $ref: '#/components/schemas/ExpensePaymentStatusUpdatedEvent'
+    ExpensePaymentStatus:
+      description: >
+        `PENDING`:The transaction is yet to be captured. It may be approved, yet
+        to be approved, or yet to be declined.
+
+
+        `DECLINED`: The transaction was declined.
+      type: string
+      enum:
+        - PENDING
+        - DECLINED
+    ExpensePaymentStatusUpdatedEvent:
+      description: >-
+        The webhook will be sent when an expense payment changes status.
+
+        Account must be on Brex Empower to receive these events. Subscription
+        must be registered with a user with the CARD_ADMIN role.
+      required:
+        - event_type
+        - expense_id
+        - payment_status
+        - payment_type
+      type: object
+      properties:
+        event_type:
+          $ref: '#/components/schemas/WebhookEventType'
+        expense_id:
+          type: string
+        payment_status:
+          $ref: '#/components/schemas/ExpensePaymentStatus'
+        payment_type:
+          $ref: '#/components/schemas/ExpensePaymentType'
+        company_id:
+          description: >
+
+            This is the `id` returned in the [Get
+            Company](https://developer.brex.com/openapi/webhooks_api/) endpoint.
+
+            You can use the `company_id` to determine which access token to use
+            when you get the details from our API endpoints.
+          type: string
+        amount:
+          allOf:
+            - $ref: '#/components/schemas/Money'
+            - nullable: true
+        payment_description:
+          description: The name of the card acceptor.
+          type: string
+        card_id:
+          description: The ID of the card that is associated with the expense.
+          type: string
+    ExpensePaymentType:
+      description: >
+        `PURCHASE`: A pending transaction for making a purchase.
+
+
+        `REFUND`: A pending transaction for a refund.
+
+
+        `WITHDRAWAL`: A pending transaction for a withdrawal.
+
+
+        `DECLINED`: A pending transaction that was declined and will not be
+        completed.
+      type: string
+      enum:
+        - PURCHASE
+        - REFUND
+        - WITHDRAWAL
+        - DECLINED
+    Money:
+      description: >
+
+        Money fields can be signed or unsigned. Fields are signed (an unsigned
+        value will be interpreted as positive). The amount of money will be
+        represented in the smallest denomination
+
+        of the currency indicated. For example, USD 7.00 will be represented in
+        cents with an amount of 700.
+      type: object
+      properties:
+        amount:
+          description: >-
+            The amount of money, in the smallest denomination of the currency
+            indicated by currency. For example, when currency is USD, amount is
+            in cents.
+          type: integer
+          format: int64
+        currency:
+          description: >-
+            The type of currency, in ISO 4217 format. Default to USD if not
+            specified
+          type: string
+          nullable: true
+    Page_WebhookSubscription_:
+      required:
+        - items
+      type: object
+      properties:
+        next_cursor:
+          type: string
+          nullable: true
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/WebhookSubscription'
+    PaymentType:
+      description: >-
+        Only ACH, DOMESTIC_WIRE, CHEQUE, INTERNATIONAL_WIRE and BOOK_TRANSFER
+        details can be retrieved from the Payments API.
+      type: string
+      enum:
+        - ACH
+        - DOMESTIC_WIRE
+        - CHEQUE
+        - INTERNATIONAL_WIRE
+        - BOOK_TRANSFER
+        - ACH_RETURN
+        - WIRE_RETURN
+        - CHEQUE_RETURN
+    ProductApplication:
+      required:
+        - cash
+      type: object
+      properties:
+        cash:
+          $ref: '#/components/schemas/ApplicationStatus'
+    ReferralActivatedEvent:
+      description: The webhook will be sent when a user signs up with the referral link.
+      required:
+        - event_type
+        - referral_id
+      type: object
+      properties:
+        event_type:
+          $ref: '#/components/schemas/WebhookEventType'
+        referral_id:
+          type: string
+    ReferralApplicationStatusChangedEvent:
+      description: The webhook will be sent when the application status is changed.
+      required:
+        - application
+        - event_type
+        - referral_id
+      type: object
+      properties:
+        event_type:
+          $ref: '#/components/schemas/WebhookEventType'
+        referral_id:
+          type: string
+        application:
+          $ref: '#/components/schemas/ProductApplication'
+    ReferralCreatedEvent:
+      description: The webhook will be sent when a referral is created.
+      required:
+        - event_type
+        - referral_id
+      type: object
+      properties:
+        event_type:
+          $ref: '#/components/schemas/WebhookEventType'
+        referral_id:
+          type: string
+    ReferralEvent:
+      type: object
+      discriminator:
+        propertyName: event_type
+        mapping:
+          REFERRAL_ACTIVATED: '#/components/schemas/ReferralActivatedEvent'
+          REFERRAL_CREATED: '#/components/schemas/ReferralCreatedEvent'
+          REFERRAL_APPLICATION_STATUS_CHANGED: '#/components/schemas/ReferralApplicationStatusChangedEvent'
+      oneOf:
+        - $ref: '#/components/schemas/ReferralCreatedEvent'
+        - $ref: '#/components/schemas/ReferralActivatedEvent'
+        - $ref: '#/components/schemas/ReferralApplicationStatusChangedEvent'
+    TransferEvent:
+      required:
+        - company_id
+        - payment_type
+      type: object
+      properties:
+        company_id:
+          type: string
+        payment_type:
+          $ref: '#/components/schemas/PaymentType'
+        return_for_id:
+          type: string
+          nullable: true
+      discriminator:
+        propertyName: event_type
+        mapping:
+          TRANSFER_FAILED: '#/components/schemas/TransferFailedEvent'
+          TRANSFER_PROCESSED: '#/components/schemas/TransferProcessedEvent'
+      oneOf:
+        - $ref: '#/components/schemas/TransferProcessedEvent'
+        - $ref: '#/components/schemas/TransferFailedEvent'
+    TransferFailedEvent:
+      description: The webhook will be sent when a transfer failed.
+      required:
+        - event_type
+        - payment_type
+        - transfer_id
+      type: object
+      properties:
+        event_type:
+          $ref: '#/components/schemas/WebhookEventType'
+        transfer_id:
+          type: string
+        payment_type:
+          $ref: '#/components/schemas/PaymentType'
+        return_for_id:
+          description: >-
+            The original transaction ID that is returned when the payment type
+            is ACH_RETURN, WIRE_RETURN and CHEQUE_RETURN.
+          type: string
+          nullable: true
+        company_id:
+          description: >
+
+            This is the `id` returned in the [Get
+            Company](https://developer.brex.com/openapi/webhooks_api/) endpoint.
+
+            You can use the `company_id` to determine which access token to use
+            when you get the details from our API endpoints.
+          type: string
+    TransferProcessedEvent:
+      description: The webhook will be sent when a transfer is processed.
+      required:
+        - event_type
+        - payment_type
+        - transfer_id
+      type: object
+      properties:
+        event_type:
+          $ref: '#/components/schemas/WebhookEventType'
+        transfer_id:
+          type: string
+        payment_type:
+          $ref: '#/components/schemas/PaymentType'
+        return_for_id:
+          description: >-
+            The original transaction ID that is returned when the payment type
+            is ACH_RETURN, WIRE_RETURN and CHEQUE_RETURN.
+          type: string
+          nullable: true
+        company_id:
+          description: >
+
+            This is the `id` returned in the [Get
+            Company](https://developer.brex.com/openapi/webhooks_api/) endpoint.
+
+            You can use the `company_id` to determine which access token to use
+            when you get the details from our API endpoints.
+          type: string
+    UpdateWebhookSubscriptionRequest:
+      required:
+        - event_types
+        - status
+        - url
+      type: object
+      properties:
+        url:
+          type: string
+        event_types:
+          type: array
+          items:
+            $ref: '#/components/schemas/WebhookEventType'
+        status:
+          $ref: '#/components/schemas/UpdateWebhookSubscriptionStatus'
+    UpdateWebhookSubscriptionStatus:
+      type: string
+      enum:
+        - ACTIVE
+        - INACTIVE
+    UserAttributes:
+      type: string
+      enum:
+        - STATUS
+        - MANAGER_ID
+        - DEPARTMENT_ID
+        - LOCATION_ID
+    UserEvent:
+      type: object
+      discriminator:
+        propertyName: event_type
+        mapping:
+          USER_UPDATED: '#/components/schemas/UserUpdatedEvent'
+      oneOf:
+        - $ref: '#/components/schemas/UserUpdatedEvent'
+    UserUpdatedEvent:
+      description: The webhook will be sent when a user is updated.
+      required:
+        - company_id
+        - event_type
+        - updated_attributes
+        - user_id
+      type: object
+      properties:
+        event_type:
+          $ref: '#/components/schemas/WebhookEventType'
+        user_id:
+          type: string
+        company_id:
+          type: string
+        updated_attributes:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserAttributes'
+    WebhookEventType:
+      type: string
+      enum:
+        - REFERRAL_CREATED
+        - REFERRAL_ACTIVATED
+        - REFERRAL_APPLICATION_STATUS_CHANGED
+        - TRANSFER_PROCESSED
+        - TRANSFER_FAILED
+        - EXPENSE_PAYMENT_UPDATED
+        - USER_UPDATED
+    WebhookSecret:
+      required:
+        - secret
+        - status
+      type: object
+      properties:
+        secret:
+          type: string
+        status:
+          $ref: '#/components/schemas/WebhookSecretStatus'
+    WebhookSecretStatus:
+      type: string
+      enum:
+        - ACTIVE
+        - PENDING_REVOKE
+    WebhookSubscription:
+      required:
+        - event_types
+        - id
+        - status
+        - url
+      type: object
+      properties:
+        id:
+          type: string
+        url:
+          type: string
+        event_types:
+          type: array
+          items:
+            $ref: '#/components/schemas/WebhookEventType'
+        status:
+          $ref: '#/components/schemas/WebhookSubscriptionStatus'
+    WebhookSubscriptionStatus:
+      type: string
+      enum:
+        - ACTIVE
+        - INACTIVE
+        - ERROR
+    WebhookSubscriptionsListSecretsResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/WebhookSecret'
+  securitySchemes:
+    OAuth2:
+      description: OAuth2 security scheme
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: https://accounts-api.brex.com/oauth2/default/v1/token
+          scopes:
+            openid: openid
+            offline_access: offline access
+        authorizationCode:
+          authorizationUrl: https://accounts-api.brex.com/oauth2/default/v1/authorize
+          tokenUrl: https://accounts-api.brex.com/oauth2/default/v1/token
+          scopes:
+            openid: openid
+            offline_access: offline access
+security:
+  - OAuth2: []
+x-webhooks:
+  x-webhooks/expensePayments:
+    post:
+      tags:
+        - Webhook Events
+      summary: Expense Payment Events
+      operationId: expensePaymentUpdatedEvents
+      security:
+        - OAuth2:
+            - expenses.card.readonly
+            - expenses.card
+      description: >-
+        Expense Payment Events. Transaction activity for expenses made on Brex
+        Card.
+
+
+        Account must be on Brex Empower to receive these events. Webhook
+        subscription must be registered using a token from a user with Card
+        Admin role.
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExpensePaymentEvent'
+      responses:
+        '200':
+          description: >-
+            Return this code if the callback was received and processed
+            successfully
+  x-webhooks/referrals:
+    post:
+      tags:
+        - Webhook Events
+      summary: Referral Events
+      operationId: referralEvent
+      security:
+        - OAuth2:
+            - https://onboarding.brexapis.com/referrals
+      description: >-
+        Referral Events. Reference the [Onboarding
+        API](https://developer.brex.com/openapi/webhooks_api/) for event
+        details.
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReferralEvent'
+      responses:
+        '200':
+          description: >-
+            Return this code if the callback was received and processed
+            successfully
+  x-webhooks/transfers:
+    post:
+      tags:
+        - Webhook Events
+      summary: Transfer Events
+      operationId: transferEvents
+      security:
+        - OAuth2:
+            - transfers.readonly
+            - transfers
+      description: >-
+        Transfer Events for both incoming and outgoing Brex Cash transactions.
+        Reference the [Payments
+        API](https://developer.brex.com/openapi/webhooks_api/) for event
+        details.
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransferEvent'
+      responses:
+        '200':
+          description: >-
+            Return this code if the callback was received and processed
+            successfully
+  x-webhooks/users:
+    post:
+      tags:
+        - Webhook Events
+      summary: User Updated Events
+      operationId: userEvent
+      security:
+        - OAuth2:
+            - users.readonly
+            - users
+      description: >-
+        User Updated Events. All accounts can receive user status update while
+        only accounts on Brex Empower can receive non-user-status updates.
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserEvent'
+      responses:
+        '200':
+          description: >-
+            Return this code if the callback was received and processed
+            successfully
+x-explorer-enabled: false

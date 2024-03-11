@@ -1,0 +1,801 @@
+openapi: 3.0.1
+info:
+  title: Expenses API
+  description: |
+
+    The Expenses API allows you to manage accounting and expenses information.
+  version: '0.1'
+  contact:
+    name: Admin
+    url: https://brex.com
+    email: developer-access@brex.com
+servers:
+  - description: Production
+    url: https://platform.brexapis.com
+  - description: >-
+      Staging (Note: This is not a sandbox. It will not work with customer
+      tokens.)
+    url: https://platform.staging.brexapps.com
+tags:
+  - description: View and manage card expenses data.
+    name: Card Expenses
+  - description: Upload receipt and match automatically.
+    name: Receipt Match
+  - name: Receipt Upload
+paths:
+  /v1/expenses/card:
+    get:
+      tags:
+        - Card Expenses
+      summary: List expenses
+      operationId: CardExpenses_list
+      security:
+        - OAuth2:
+            - expenses.card.readonly
+            - expenses.card
+      description: >-
+        List expenses under the same account. Admin and bookkeeper have access
+        to any expense, and regular users can only access their own.
+      parameters:
+        - description: >-
+            Get additional details for the expense, e.g. merchant mcc code, by
+            passing in `expand[]=merchant`. Query parameters include `location`,
+            `department`, `merchant`, `receipts.download_uris`, `user`, `budget`
+            and `payment`.
+          name: expand[]
+          in: query
+          required: false
+          schema:
+            type: array
+            nullable: true
+            items:
+              type: string
+          example: |
+
+            ?expand[]=merchant&expand[]=location
+        - description: Get expenses belong to provided user(s).
+          name: user_id[]
+          in: query
+          required: false
+          schema:
+            type: array
+            nullable: true
+            items:
+              type: string
+        - description: Get itemized expenses belong to provided parent expenses ID(s).
+          name: parent_expense_id[]
+          in: query
+          required: false
+          schema:
+            type: array
+            nullable: true
+            items:
+              type: string
+        - name: budget_id[]
+          in: query
+          required: false
+          schema:
+            type: array
+            nullable: true
+            items:
+              type: string
+        - name: status[]
+          in: query
+          required: false
+          schema:
+            type: array
+            nullable: true
+            items:
+              $ref: '#/components/schemas/ExpenseStatus'
+        - name: payment_status[]
+          in: query
+          required: false
+          schema:
+            type: array
+            nullable: true
+            items:
+              $ref: '#/components/schemas/ExpensePaymentStatus'
+        - description: >
+
+            Shows only expenses with a `purchased_at` on or after this
+            date-time. This parameter is the date-time notation as defined by
+            [RFC 3339, section
+            5.6](https://tools.ietf.org/html/rfc3339#section-5.6), e.g.
+            2022-11-12T23:59:59.999
+          name: purchased_at_start
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+            nullable: true
+          example: |
+
+            2023-01-01T23:59:59.999
+        - description: >
+
+            Shows only expenses with a `purchased_at` on or before this
+            date-time. This parameter is the date-time notation as defined by
+            [RFC 3339, section
+            5.6](https://tools.ietf.org/html/rfc3339#section-5.6), e.g.
+            2022-11-12T23:59:59.999
+          name: purchased_at_end
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+            nullable: true
+          example: |
+
+            2023-01-10T23:59:59.999
+        - description: >
+
+            The cursor to use for pagination. This is the `next_cursor` value
+            returned from the previous response.
+          name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+            nullable: true
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            nullable: true
+      responses:
+        '200':
+          description: listExpenses 200 response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Page_ExpandableExpense_'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+  /v1/expenses/card/receipt_match:
+    post:
+      tags:
+        - Receipt Match
+      summary: Create a new receipt match
+      operationId: ReceiptMatch_createNewReceiptMatch
+      description: >
+
+        The `uri` will be a pre-signed S3 URL allowing you to upload the receipt
+        securely. This URL can only be used for a `PUT` operation and expires 30
+        minutes after its creation. Once your upload is complete, we will try to
+        match the receipt with existing expenses.
+
+
+        Refer to these
+        [docs](https://docs.aws.amazon.com/AmazonS3/latest/dev/PresignedUrlUploadObject.html)
+        on how to upload to this pre-signed S3 URL. We highly recommend using
+        one of AWS SDKs if they're available for your language to upload these
+        files.
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReceiptMatchRequest'
+        required: true
+      responses:
+        '200':
+          description: receiptMatch 200 response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateAsyncFileUploadResponse'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+  /v1/expenses/card/{expense_id}:
+    get:
+      tags:
+        - Card Expenses
+      summary: Get an expense
+      operationId: CardExpenses_getById
+      security:
+        - OAuth2:
+            - expenses.card.readonly
+            - expenses.card
+      description: Get an expense by its ID.
+      parameters:
+        - name: expense_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - description: >-
+            Get additional details for the expense, e.g. merchant mcc code, by
+            passing in `expand[]=merchant`. Query parameters include `location`,
+            `department`, `merchant`, `receipts.download_uris`, `user`, `budget`
+            and `payment`.
+          name: expand[]
+          in: query
+          required: false
+          schema:
+            type: array
+            nullable: true
+            items:
+              type: string
+          example: |
+
+            ?expand[]=merchant&expand[]=location
+      responses:
+        '200':
+          description: getExpense 200 response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExpandableExpense'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not Found
+    put:
+      tags:
+        - Card Expenses
+      summary: Update an expense
+      operationId: CardExpenses_updateExpense
+      security:
+        - OAuth2:
+            - expenses.card
+      description: >-
+        Update an expense. Admin and bookkeeper have access to any expense, and
+        regular users can only access their own.
+      parameters:
+        - name: expense_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateExpenseRequest'
+        required: true
+      responses:
+        '200':
+          description: updateExpense 200 response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Expense'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not Found
+  /v1/expenses/card/{expense_id}/receipt_upload:
+    post:
+      tags:
+        - Receipt Upload
+      summary: Create a new receipt upload
+      operationId: ReceiptUpload_createNewReceipt
+      description: >
+
+        The `uri` will be a pre-signed S3 URL allowing you to upload the receipt
+        securely. This URL can only be used for a `PUT` operation and expires 30
+        minutes after its creation. Once your upload is complete, we will try to
+        match the receipt with existing expenses.
+
+
+        Refer to these
+        [docs](https://docs.aws.amazon.com/AmazonS3/latest/dev/PresignedUrlUploadObject.html)
+        on how to upload to this pre-signed S3 URL. We highly recommend using
+        one of AWS SDKs if they're available for your language to upload these
+        files.
+      parameters:
+        - name: expense_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReceiptUploadRequest'
+        required: true
+      responses:
+        '200':
+          description: receiptUpload 200 response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateAsyncFileUploadResponse'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not Found
+components:
+  schemas:
+    Budget:
+      required:
+        - id
+        - name
+      type: object
+      properties:
+        id:
+          description: Unique ID for the Budget.
+          required:
+            - 'true'
+          type: string
+        name:
+          description: Name for the Budget.
+          required:
+            - 'true'
+          type: string
+    Category:
+      description: The category of expenses.
+      type: string
+      enum:
+        - ADVERTISING_AND_MARKETING
+        - GROCERY
+        - TELEPHONY
+        - OFFICE_SUPPLIES
+        - PRIVATE_AIR_TRAVEL
+        - CLOTHING
+        - CAR_RENTAL
+        - VEHICLE_EXPENSES
+        - RESTAURANTS
+        - GAMBLING
+        - FLOWERS
+        - ELECTRONICS
+        - LEGAL_SERVICES
+        - UTILITIES
+        - FURNITURE
+        - BARS_AND_NIGHTLIFE
+        - LAUNDRY
+        - EVENT_EXPENSES
+        - SHIPPING
+        - OTHER_TRAVEL_EXPENSES
+        - CHARITY
+        - SOFTWARE_NON_RECURRING
+        - LODGING
+        - FACILITIES_EXPENSES
+        - SERVERS
+        - CONFERENCES
+        - FOOD_DELIVERY
+        - RENT
+        - AIRLINE_EXPENSES
+        - OTHER_BUSINESS_EXPENSES
+        - BANK_AND_FINANCIAL_FEES
+        - BOOKS_AND_NEWSPAPERS
+        - CONSULTANT_AND_CONTRACTOR
+        - CORPORATE_INSURANCE
+        - DIGITAL_GOODS
+        - FEES_AND_LICENSES_AND_TAXES
+        - GAS_AND_FUEL
+        - GENERAL_MERCHANDISE
+        - MEDICAL
+        - MEMBERSHIPS_AND_CLUBS
+        - PARKING_EXPENSES
+        - POLITICAL_DONATIONS
+        - PUBLIC_TRANSPORTATION
+        - RECURRING_SOFTWARE_AND_SAAS
+        - RIDESHARE_AND_TAXI
+        - TOLL_AND_BRIDGE_FEES
+        - TRAINING_AND_EDUCATION
+        - TRAVEL_WIFI
+    ExpensePaymentStatus:
+      type: string
+      enum:
+        - NOT_STARTED
+        - PROCESSING
+        - CANCELED
+        - DECLINED
+        - CLEARED
+        - REFUNDING
+        - REFUNDED
+        - CASH_ADVANCE
+        - CREDITED
+        - AWAITING_PAYMENT
+    ExpenseStatus:
+      type: string
+      enum:
+        - DRAFT
+        - SUBMITTED
+        - APPROVED
+        - OUT_OF_POLICY
+        - VOID
+        - CANCELED
+        - SPLIT
+        - SETTLED
+    CreateAsyncFileUploadResponse:
+      description: |
+        The pre-signed file upload URI and unique identifier of the request.
+      required:
+        - id
+        - uri
+      type: object
+      properties:
+        id:
+          description: The unique identifier for the request.
+          required:
+            - 'true'
+          type: string
+        uri:
+          description: |
+            The pre-signed S3 link that should be used to upload the file.
+            The maximum size accepted for this document is 50 MB.
+          required:
+            - 'true'
+          type: string
+    Department:
+      description: The department associated with the expense.
+      required:
+        - id
+        - name
+      type: object
+      properties:
+        id:
+          description: The unique identifier for the department.
+          required:
+            - 'true'
+          type: string
+        name:
+          description: The name of the department.
+          required:
+            - 'true'
+          type: string
+    ExpandableExpense:
+      description: >-
+        The expense object that has expandable fields, e.g., `location`,
+        `department`, and `receipts`.
+      required:
+        - id
+        - updated_at
+      type: object
+      properties:
+        id:
+          description: Unique ID associated with the expense.
+          required:
+            - 'true'
+          type: string
+        memo:
+          description: The memo of the expense.
+          type: string
+          nullable: true
+        location_id:
+          type: string
+          nullable: true
+        location:
+          allOf:
+            - $ref: '#/components/schemas/Location'
+            - nullable: true
+        department_id:
+          type: string
+          nullable: true
+        department:
+          allOf:
+            - $ref: '#/components/schemas/Department'
+            - nullable: true
+        updated_at:
+          description: The last time the expense was updated.
+          required:
+            - 'true'
+          type: string
+          format: date-time
+        category:
+          allOf:
+            - $ref: '#/components/schemas/Category'
+            - nullable: true
+        merchant_id:
+          type: string
+          nullable: true
+        merchant:
+          allOf:
+            - $ref: '#/components/schemas/Merchant'
+            - nullable: true
+        receipts:
+          description: A list of receipts associated with the expense.
+          type: array
+          nullable: true
+          items:
+            $ref: '#/components/schemas/Receipt'
+        budget_id:
+          type: string
+          nullable: true
+        budget:
+          allOf:
+            - $ref: '#/components/schemas/Budget'
+            - nullable: true
+        original_amount:
+          description: >-
+            The original amount of the expense is the amount that the employee
+            submitted or incurred for reimbursements or card spends.
+          $ref: '#/components/schemas/Money'
+        purchased_at:
+          description: The time the purchase was made.
+          required:
+            - 'true'
+          type: string
+          format: date-time
+        status:
+          allOf:
+            - $ref: '#/components/schemas/ExpenseStatus'
+            - nullable: true
+        payment_status:
+          allOf:
+            - $ref: '#/components/schemas/ExpensePaymentStatus'
+            - nullable: true
+        user_id:
+          type: string
+          nullable: true
+        user:
+          allOf:
+            - $ref: '#/components/schemas/User'
+            - nullable: true
+        payment:
+          allOf:
+            - $ref: '#/components/schemas/Payment'
+            - nullable: true
+    Expense:
+      required:
+        - id
+        - updated_at
+      type: object
+      properties:
+        id:
+          description: Unique ID associated with the expense.
+          required:
+            - 'true'
+          type: string
+        memo:
+          description: The memo of the expense.
+          type: string
+          nullable: true
+        location_id:
+          type: string
+          nullable: true
+        department_id:
+          type: string
+          nullable: true
+        updated_at:
+          description: The last time the expense was updated.
+          required:
+            - 'true'
+          type: string
+          format: date-time
+        category:
+          allOf:
+            - $ref: '#/components/schemas/Category'
+            - nullable: true
+        merchant_id:
+          type: string
+          nullable: true
+        budget_id:
+          type: string
+          nullable: true
+        original_amount:
+          description: >-
+            The original amount of the expense is the amount that the employee
+            submitted or incurred for reimbursements or card spends.
+          $ref: '#/components/schemas/Money'
+        purchased_at:
+          description: The time the purchase was made.
+          required:
+            - 'true'
+          type: string
+          format: date-time
+        status:
+          allOf:
+            - $ref: '#/components/schemas/ExpenseStatus'
+            - nullable: true
+        payment_status:
+          allOf:
+            - $ref: '#/components/schemas/ExpensePaymentStatus'
+            - nullable: true
+    Location:
+      description: The location associated with the expense.
+      required:
+        - id
+        - name
+      type: object
+      properties:
+        id:
+          description: The unique identifier for the location.
+          required:
+            - 'true'
+          type: string
+        name:
+          description: The name of the location.
+          required:
+            - 'true'
+          type: string
+    Merchant:
+      required:
+        - mcc
+        - raw_descriptor
+      type: object
+      properties:
+        raw_descriptor:
+          description: Merchant descriptor
+          required:
+            - 'true'
+          type: string
+        mcc:
+          description: https://en.wikipedia.org/wiki/Merchant_category_code
+          required:
+            - 'true'
+          type: string
+    Money:
+      description: >
+
+        Money fields can be signed or unsigned. Fields are signed (an unsigned
+        value will be interpreted as positive). The amount of money will be
+        represented in the smallest denomination
+
+        of the currency indicated. For example, USD 7.00 will be represented in
+        cents with an amount of 700.
+      type: object
+      properties:
+        amount:
+          description: >-
+            The amount of money, in the smallest denomination of the currency
+            indicated by currency. For example, when currency is USD, amount is
+            in cents.
+          type: integer
+          format: int64
+        currency:
+          description: >-
+            The type of currency, in ISO 4217 format. Default to USD if not
+            specified
+          type: string
+          nullable: true
+    Page_ExpandableExpense_:
+      required:
+        - items
+      type: object
+      properties:
+        next_cursor:
+          type: string
+          nullable: true
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExpandableExpense'
+    Payment:
+      required:
+        - id
+        - payment_instrument
+      type: object
+      properties:
+        id:
+          description: Unique ID for the payment.
+          required:
+            - 'true'
+          type: string
+        payment_instrument:
+          $ref: '#/components/schemas/PaymentInstrument'
+    PaymentInstrument:
+      type: object
+      properties:
+        type:
+          description: The type of payment instrument.
+          type: string
+          enum:
+            - CARD
+      discriminator:
+        propertyName: type
+        mapping:
+          card: '#/components/schemas/CardPaymentInstrument'
+      oneOf:
+        - $ref: '#/components/schemas/PaymentInstrument'
+    Receipt:
+      description: The receipt associated with the expense.
+      required:
+        - id
+      type: object
+      properties:
+        id:
+          description: The unique identifier for the receipt.
+          required:
+            - 'true'
+          type: string
+        download_uris:
+          description: >-
+            [Presigned S3
+            link](https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-presigned-url.html)(s)
+            to download file(s) of the receipt. Link(s) expire in 15 minutes.
+          type: array
+          nullable: true
+          items:
+            type: string
+    ReceiptMatchRequest:
+      description: The parameter for creating a receipt match.
+      required:
+        - receipt_name
+      type: object
+      properties:
+        receipt_name:
+          description: >-
+            The name of the receipt (with the file extension). It will be used
+            in the matching result email.
+          required:
+            - 'true'
+          type: string
+    ReceiptUploadRequest:
+      description: The parameter for creating a receipt upload.
+      required:
+        - receipt_name
+      type: object
+      properties:
+        receipt_name:
+          description: The name of the receipt (with the file extension).
+          required:
+            - 'true'
+          type: string
+    UpdateExpenseRequest:
+      description: The parameter for updating an expense.
+      type: object
+      properties:
+        memo:
+          description: Expense memo.
+          type: string
+          nullable: true
+    User:
+      required:
+        - id
+        - first_name
+        - last_name
+      type: object
+      properties:
+        id:
+          description: Unique ID for the User.
+          required:
+            - 'true'
+          type: string
+        first_name:
+          description: First name of the User.
+          required:
+            - 'true'
+          type: string
+        last_name:
+          description: Last name of the User.
+          required:
+            - 'true'
+          type: string
+        department_id:
+          type: string
+          nullable: true
+        location_id:
+          type: string
+          nullable: true
+  securitySchemes:
+    OAuth2:
+      description: OAuth2 security scheme
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://accounts-api.brex.com/oauth2/default/v1/authorize
+          tokenUrl: https://accounts-api.brex.com/oauth2/default/v1/token
+          scopes:
+            openid: openid
+            offline_access: offline access
+            expenses.card: View and manage card expenses data
+            expenses.card.readonly: View card expenses data
+security:
+  - OAuth2: []
+x-explorer-enabled: false

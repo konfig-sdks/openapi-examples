@@ -1,0 +1,720 @@
+openapi: 3.0.1
+info:
+  title: Transactions API
+  description: >
+
+    The transactions API lets you view your transactions, accounts, and
+    statements.
+  version: '1.0'
+  contact:
+    name: Admin
+    url: https://brex.com
+    email: developer-access@brex.com
+servers:
+  - description: Production
+    url: https://platform.brexapis.com
+  - description: >-
+      Staging (Note: This is not a sandbox. It will not work with customer
+      tokens.)
+    url: https://platform.staging.brexapps.com
+tags:
+  - description: Endpoints for account data.
+    name: Accounts
+  - description: Endpoints for transaction data.
+    name: Transactions
+paths:
+  /v2/accounts/card:
+    get:
+      tags:
+        - Accounts
+      summary: |
+
+        List card accounts
+      operationId: Accounts_listCardAccounts
+      security:
+        - OAuth2:
+            - accounts.card.readonly
+      description: |
+
+        This endpoint lists all accounts of card type.
+      parameters: []
+      responses:
+        '200':
+          description: listCardAccounts 200 response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountsListCardAccountsResponse'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+  /v2/accounts/card/primary/statements:
+    get:
+      tags:
+        - Accounts
+      summary: |
+
+        List primary card account statements. 
+      operationId: Accounts_listPrimaryCardStatements
+      security:
+        - OAuth2:
+            - statements.card.readonly
+      description: >
+
+        This endpoint lists all finalized statements for the primary card
+        account.
+      parameters:
+        - name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+            nullable: true
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            nullable: true
+      responses:
+        '200':
+          description: listPrimaryCardStatements 200 response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Page_Statement_'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+  /v2/accounts/cash:
+    get:
+      tags:
+        - Accounts
+      summary: |
+
+        List cash accounts
+      operationId: Accounts_listCashAccounts
+      security:
+        - OAuth2:
+            - accounts.cash.readonly
+      description: |
+
+        This endpoint lists all the existing cash accounts with their status.
+      parameters: []
+      responses:
+        '200':
+          description: listAccounts 200 response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Page_CashAccount_'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+  /v2/accounts/cash/primary:
+    get:
+      tags:
+        - Accounts
+      summary: |
+
+        Get primary cash account
+      operationId: Accounts_status
+      security:
+        - OAuth2:
+            - accounts.cash.readonly
+      description: >
+
+        This endpoint returns the primary cash account with its status. There
+        will always be only one primary account.
+      parameters: []
+      responses:
+        '200':
+          description: getPrimaryAccount 200 response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CashAccount'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+  /v2/accounts/cash/{id}:
+    get:
+      tags:
+        - Accounts
+      summary: |
+
+        Get cash account by ID
+      operationId: Accounts_getCashAccount
+      security:
+        - OAuth2:
+            - accounts.cash.readonly
+      description: >
+
+        This endpoint returns the cash account associated with the provided ID
+        with its status.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: getAccount 200 response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CashAccount'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+  /v2/accounts/cash/{id}/statements:
+    get:
+      tags:
+        - Accounts
+      summary: |
+
+        List cash account statements.    
+      operationId: Accounts_listCashStatements
+      security:
+        - OAuth2:
+            - statements.cash.readonly
+      description: |
+
+        This endpoint lists all finalized statements for the cash account by ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+            nullable: true
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            nullable: true
+      responses:
+        '200':
+          description: listCashStatements 200 response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Page_Statement_'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+  /v2/transactions/card/primary:
+    get:
+      tags:
+        - Transactions
+      summary: |
+
+        List transactions for all card accounts.
+      operationId: Transactions_listAllCardTransactions
+      security:
+        - OAuth2:
+            - transactions.card.readonly
+      description: >
+
+        This endpoint lists all settled transactions for all card accounts.
+
+        Regular users may only fetch their own "PURCHASE","REFUND" and
+        "CHARGEBACK" settled transactions.
+      parameters:
+        - name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+            nullable: true
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            nullable: true
+        - name: user_ids
+          in: query
+          required: false
+          schema:
+            type: array
+            nullable: true
+            items:
+              type: string
+        - description: >
+
+            Shows only transactions with a `posted_at_date` on or after this
+            date-time. This parameter is the date-time notation as defined by
+            [RFC 3339, section
+            5.6](https://tools.ietf.org/html/rfc3339#section-5.6)
+          name: posted_at_start
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+            nullable: true
+          example: |
+
+            2022-12-12T23:59:59.999
+        - name: expand[]
+          in: query
+          required: false
+          schema:
+            description: >-
+              `expense_id` can be passed to `expand[]` query parameter to get
+              expanded, e.g., `?expand[]=expense_id`.
+            type: array
+            nullable: true
+            items:
+              type: string
+      responses:
+        '200':
+          description: listPrimaryCardTransactions 200 response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Page_CardTransaction_'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+  /v2/transactions/cash/{id}:
+    get:
+      tags:
+        - Transactions
+      summary: |
+
+        List transactions for the selected cash account.
+      operationId: Transactions_listById
+      security:
+        - OAuth2:
+            - transactions.cash.readonly
+      description: >
+
+        This endpoint lists all transactions for the cash account with the
+        selected ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+            nullable: true
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            nullable: true
+        - description: >
+
+            Shows only transactions with a `posted_at_date` on or after this
+            date-time. This parameter is the date-time notation as defined by
+            [RFC 3339, section
+            5.6](https://tools.ietf.org/html/rfc3339#section-5.6)
+          name: posted_at_start
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+            nullable: true
+          example: |
+
+            2022-12-12T23:59:59.999
+      responses:
+        '200':
+          description: listCashTransactions 200 response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Page_CashTransaction_'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+components:
+  schemas:
+    CardAccount:
+      required:
+        - current_statement_period
+        - id
+      type: object
+      properties:
+        id:
+          description: ID of the card account
+          required:
+            - 'true'
+          type: string
+        status:
+          allOf:
+            - $ref: '#/components/schemas/Status'
+            - nullable: true
+        current_balance:
+          allOf:
+            - $ref: '#/components/schemas/Money'
+            - nullable: true
+        available_balance:
+          allOf:
+            - $ref: '#/components/schemas/Money'
+            - nullable: true
+        account_limit:
+          allOf:
+            - $ref: '#/components/schemas/Money'
+            - nullable: true
+        current_statement_period:
+          $ref: '#/components/schemas/StatementPeriod'
+    CardTransaction:
+      required:
+        - amount
+        - description
+        - id
+        - initiated_at_date
+        - posted_at_date
+      type: object
+      properties:
+        description:
+          description: Description of the transaction
+          required:
+            - 'true'
+          type: string
+        id:
+          type: string
+        card_id:
+          description: >-
+            ID of the card used for the transaction. Null when type is
+            REWARDS_CREDIT or COLLECTION.
+          type: string
+          nullable: true
+        amount:
+          $ref: '#/components/schemas/Money'
+        initiated_at_date:
+          description: ISO 8601 date string
+          required:
+            - 'true'
+          type: string
+          format: date
+        posted_at_date:
+          description: ISO 8601 date string
+          required:
+            - 'true'
+          type: string
+          format: date
+        type:
+          allOf:
+            - $ref: '#/components/schemas/CardTransactionType'
+            - nullable: true
+        merchant:
+          allOf:
+            - $ref: '#/components/schemas/Merchant'
+            - nullable: true
+        card_metadata:
+          description: >
+
+            Set of key value pairs associated with this object. Please do not
+            store any personally identifiable or sensitive information here.
+
+            Limitations: maximum of 50 keys, keys cannot exceed 40 characters,
+            values cannot exceed 500 characters. 
+          type: object
+          additionalProperties:
+            type: string
+          nullable: true
+        expense_id:
+          description: The expense ID related to the card transaction.
+          type: string
+          nullable: true
+    CardTransactionType:
+      type: string
+      enum:
+        - PURCHASE
+        - REFUND
+        - CHARGEBACK
+        - REWARDS_CREDIT
+        - COLLECTION
+        - BNPL_FEE
+    CashAccount:
+      required:
+        - account_number
+        - available_balance
+        - current_balance
+        - id
+        - name
+        - primary
+        - routing_number
+      type: object
+      properties:
+        id:
+          description: ID of the cash account
+          required:
+            - 'true'
+          type: string
+        name:
+          type: string
+        status:
+          allOf:
+            - $ref: '#/components/schemas/Status'
+            - nullable: true
+        current_balance:
+          $ref: '#/components/schemas/Money'
+        available_balance:
+          $ref: '#/components/schemas/Money'
+        account_number:
+          type: string
+        routing_number:
+          type: string
+        primary:
+          description: >-
+            Whether or not this account is the primary account. There will
+            always be only one primary account.
+          required:
+            - 'true'
+          type: boolean
+    CashTransaction:
+      required:
+        - description
+        - id
+        - initiated_at_date
+        - posted_at_date
+      type: object
+      properties:
+        description:
+          description: Description of the transaction
+          required:
+            - 'true'
+          type: string
+        id:
+          type: string
+        amount:
+          allOf:
+            - $ref: '#/components/schemas/Money'
+            - nullable: true
+        initiated_at_date:
+          description: ISO 8601 date of when the payment is initiated
+          required:
+            - 'true'
+          type: string
+          format: date
+        posted_at_date:
+          description: ISO 8601 date of when the payment is posted
+          required:
+            - 'true'
+          type: string
+          format: date
+        type:
+          allOf:
+            - $ref: '#/components/schemas/CashTransactionType'
+            - nullable: true
+        transfer_id:
+          description: >-
+            Transfer ID to fetch additional metadata about the transaction using
+            `https://developer.brex.com/openapi/payments_api/#operation/getTransfersById`
+          type: string
+          nullable: true
+    CashTransactionType:
+      type: string
+      enum:
+        - PAYMENT
+        - DIVIDEND
+        - FEE
+        - ADJUSTMENT
+        - INTEREST
+        - CARD_COLLECTION
+        - REWARDS_REDEMPTION
+        - RECEIVABLES_OFFERS_ADVANCE
+        - FBO_TRANSFER
+        - RECEIVABLES_OFFERS_REPAYMENT
+        - RECEIVABLES_OFFERS_COLLECTION
+        - BREX_OPERATIONAL_TRANSFER
+        - INTRA_CUSTOMER_ACCOUNT_BOOK_TRANSFER
+        - BOOK_TRANSFER
+        - CRYPTO_BRIDGE
+    Merchant:
+      required:
+        - mcc
+        - raw_descriptor
+      type: object
+      properties:
+        raw_descriptor:
+          description: Merchant descriptor
+          required:
+            - 'true'
+          type: string
+        mcc:
+          description: https://en.wikipedia.org/wiki/Merchant_category_code
+          required:
+            - 'true'
+          type: string
+    Money:
+      description: >
+
+        Money fields can be signed or unsigned. Fields are signed (an unsigned
+        value will be interpreted as positive). The amount of money will be
+        represented in the smallest denomination
+
+        of the currency indicated. For example, USD 7.00 will be represented in
+        cents with an amount of 700.
+      type: object
+      properties:
+        amount:
+          description: >-
+            The amount of money, in the smallest denomination of the currency
+            indicated by currency. For example, when currency is USD, amount is
+            in cents.
+          type: integer
+          format: int64
+        currency:
+          description: >-
+            The type of currency, in ISO 4217 format. Default to USD if not
+            specified
+          type: string
+          nullable: true
+    Page_CardTransaction_:
+      required:
+        - items
+      type: object
+      properties:
+        next_cursor:
+          type: string
+          nullable: true
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CardTransaction'
+    Page_CashAccount_:
+      required:
+        - items
+      type: object
+      properties:
+        next_cursor:
+          type: string
+          nullable: true
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CashAccount'
+    Page_CashTransaction_:
+      required:
+        - items
+      type: object
+      properties:
+        next_cursor:
+          type: string
+          nullable: true
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CashTransaction'
+    Page_Statement_:
+      required:
+        - items
+      type: object
+      properties:
+        next_cursor:
+          type: string
+          nullable: true
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Statement'
+    Statement:
+      required:
+        - id
+        - period
+      type: object
+      properties:
+        id:
+          type: string
+        start_balance:
+          allOf:
+            - $ref: '#/components/schemas/Money'
+            - nullable: true
+        end_balance:
+          allOf:
+            - $ref: '#/components/schemas/Money'
+            - nullable: true
+        period:
+          $ref: '#/components/schemas/StatementPeriod'
+    StatementPeriod:
+      required:
+        - end_date
+        - start_date
+      type: object
+      properties:
+        start_date:
+          description: Start date of the statement period
+          required:
+            - 'true'
+          type: string
+          format: date
+        end_date:
+          description: End date of the statement period
+          required:
+            - 'true'
+          type: string
+          format: date
+    Status:
+      type: string
+      enum:
+        - ACTIVE
+    AccountsListCardAccountsResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/CardAccount'
+  securitySchemes:
+    OAuth2:
+      description: OAuth2 security scheme
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://accounts-api.brex.com/oauth2/default/v1/authorize
+          tokenUrl: https://accounts-api.brex.com/oauth2/default/v1/token
+          scopes:
+            openid: openid
+            offline_access: offline access
+            transactions.card.readonly: View card transaction data
+            statements.card.readonly: View card statement data
+            accounts.card.readonly: View card account data
+            accounts.cash.readonly: View cash account data
+security:
+  - OAuth2: []
+x-explorer-enabled: false
