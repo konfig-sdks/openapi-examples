@@ -6,6 +6,7 @@ info:
 servers:
   - url: https://api.baseten.co
 tags:
+  - name: AutoscalingSetting
   - name: Deployment
   - name: Secret
 paths:
@@ -54,9 +55,7 @@ paths:
         - Deployment
       summary: Gets a model's development deployment
       operationId: Deployment_getDevelopmentDetails
-      description: >-
-        Gets a model's development deployment and returns the deployment's
-        details.
+      description: Gets a model's development deployment and returns the deployment.
       responses:
         '200':
           description: A deployment of a model.
@@ -72,9 +71,7 @@ paths:
         - Deployment
       summary: Gets a model's production deployment
       operationId: Deployment_getProductionDetails
-      description: >-
-        Gets a model's production deployment and returns the deployment's
-        details.
+      description: Gets a model's production deployment and returns the deployment.
       responses:
         '200':
           description: A deployment of a model.
@@ -91,7 +88,7 @@ paths:
         - Deployment
       summary: Gets a model's deployment by id
       operationId: Deployment_detailsGet
-      description: Gets a model's deployment by id and returns the deployment's details.
+      description: Gets a model's deployment by id and returns the deployment.
       responses:
         '200':
           description: A deployment of a model.
@@ -99,6 +96,79 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DeploymentV1'
+  /v1/models/{model_id}/deployments/development/autoscaling_settings:
+    parameters:
+      - $ref: '#/components/parameters/model_id'
+    patch:
+      tags:
+        - AutoscalingSetting
+      summary: Updates a development deployment's autoscaling settings
+      operationId: AutoscalingSetting_updateDevelopmentSetting
+      description: >-
+        Updates a development deployment's autoscaling settings and returns the
+        update status.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAutoscalingSettingsV1'
+        required: true
+      responses:
+        '200':
+          description: The response to a request to update autoscaling settings.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateAutoscalingSettingsResponseV1'
+  /v1/models/{model_id}/deployments/production/autoscaling_settings:
+    parameters:
+      - $ref: '#/components/parameters/model_id'
+    patch:
+      tags:
+        - AutoscalingSetting
+      summary: Updates a production deployment's autoscaling settings
+      operationId: AutoscalingSetting_updateStatus
+      description: >-
+        Updates a production deployment's autoscaling settings and returns the
+        update status.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAutoscalingSettingsV1'
+        required: true
+      responses:
+        '200':
+          description: The response to a request to update autoscaling settings.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateAutoscalingSettingsResponseV1'
+  /v1/models/{model_id}/deployments/{deployment_id}/autoscaling_settings:
+    parameters:
+      - $ref: '#/components/parameters/model_id'
+      - $ref: '#/components/parameters/deployment_id'
+    patch:
+      tags:
+        - AutoscalingSetting
+      summary: Updates a deployment's autoscaling settings
+      operationId: AutoscalingSetting_updateDeploymentSettings
+      description: >-
+        Updates a deployment's autoscaling settings and returns the update
+        status.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAutoscalingSettingsV1'
+        required: true
+      responses:
+        '200':
+          description: The response to a request to update autoscaling settings.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateAutoscalingSettingsResponseV1'
 components:
   parameters:
     model_id:
@@ -120,10 +190,12 @@ components:
       properties:
         created:
           title: Created
+          description: UTC time the secret was created
           format: date-time
           type: string
         name:
           title: Name
+          description: Name of the secret
           type: string
       required:
         - created
@@ -147,9 +219,11 @@ components:
       properties:
         name:
           title: Name
+          description: Name of the new or existing secret
           type: string
         value:
           title: Value
+          description: Value of the secret
           type: string
       required:
         - name
@@ -157,35 +231,34 @@ components:
       type: object
     AutoscalingSettingsV1:
       title: AutoscalingSettingsV1
-      description: >-
-        Autoscaling settings for a deployment. All fields are optional, and we
-        only update ones passed in.
+      description: Autoscaling settings for a deployment.
       properties:
         min_replica:
           title: Min Replica
-          default: null
+          description: Minimum number of replicas
           type: integer
-          nullable: true
         max_replica:
           title: Max Replica
-          default: null
+          description: Maximum number of replicas
           type: integer
-          nullable: true
         autoscaling_window:
           title: Autoscaling Window
-          default: null
+          description: Timeframe of traffic considered for autoscaling decisions
           type: integer
-          nullable: true
         scale_down_delay:
           title: Scale Down Delay
-          default: null
+          description: Waiting period before scaling down any active replica
           type: integer
-          nullable: true
         concurrency_target:
           title: Concurrency Target
-          default: null
+          description: Number of requests per replica before scaling up
           type: integer
-          nullable: true
+      required:
+        - min_replica
+        - max_replica
+        - autoscaling_window
+        - scale_down_delay
+        - concurrency_target
       type: object
     DeploymentStatusV1:
       title: DeploymentStatusV1
@@ -194,16 +267,15 @@ components:
         - BUILDING
         - DEPLOYING
         - DEPLOY_FAILED
-        - LOADING
-        - READY
+        - LOADING_MODEL
+        - ACTIVE
         - UNHEALTHY
         - BUILD_FAILED
         - BUILD_STOPPED
         - DEACTIVATING
-        - DEACTIVATED
-        - DOES_NOT_EXIST
+        - INACTIVE
+        - FAILED
         - UPDATING
-        - MIGRATING
         - SCALED_TO_ZERO
         - WAKING_UP
       type: string
@@ -213,27 +285,34 @@ components:
       properties:
         id:
           title: Id
+          description: Unique identifier of the deployment
           type: string
         created_at:
           title: Created At
+          description: UTC time the deployment was created
           format: date-time
           type: string
         name:
           title: Name
+          description: Name of the deployment
           type: string
         model_id:
           title: Model Id
+          description: Unique identifier of the model
           type: string
         is_production:
           title: Is Production
+          description: Whether the deployment is the production deployment of the model
           type: boolean
         is_development:
           title: Is Development
+          description: Whether the deployment is the development deployment of the model
           type: boolean
         status:
           $ref: '#/components/schemas/DeploymentStatusV1'
         active_replicas:
           title: Active Replicas
+          description: Number of active replicas
           type: integer
         autoscaling_settings:
           $ref: '#/components/schemas/AutoscalingSettingsV1'
@@ -248,6 +327,70 @@ components:
         - active_replicas
         - autoscaling_settings
       type: object
+      x-konfig-properties:
+        status:
+          description: Status of the deployment
+        autoscaling_settings:
+          description: Autoscaling settings for the deployment
+    UpdateAutoscalingSettingsV1:
+      title: UpdateAutoscalingSettingsV1
+      description: >-
+        A request to update autoscaling settings for a deployment. All fields
+        are optional, and we only update ones passed in.
+      properties:
+        min_replica:
+          title: Min Replica
+          description: Minimum number of replicas
+          default: null
+          type: integer
+        max_replica:
+          title: Max Replica
+          description: Maximum number of replicas
+          default: null
+          type: integer
+        autoscaling_window:
+          title: Autoscaling Window
+          description: Timeframe of traffic considered for autoscaling decisions
+          default: null
+          type: integer
+        scale_down_delay:
+          title: Scale Down Delay
+          description: Waiting period before scaling down any active replica
+          default: null
+          type: integer
+        concurrency_target:
+          title: Concurrency Target
+          description: Number of requests per replica before scaling up
+          default: null
+          type: integer
+      type: object
+    UpdateAutoscalingSettingsStatusV1:
+      title: UpdateAutoscalingSettingsStatusV1
+      description: The status of a request to update autoscaling settings.
+      enum:
+        - ACCEPTED
+        - QUEUED
+        - UNCHANGED
+      type: string
+    UpdateAutoscalingSettingsResponseV1:
+      title: UpdateAutoscalingSettingsResponseV1
+      description: The response to a request to update autoscaling settings.
+      properties:
+        status:
+          $ref: '#/components/schemas/UpdateAutoscalingSettingsStatusV1'
+        message:
+          title: Message
+          description: >-
+            A message describing the status of the request to update autoscaling
+            settings
+          type: string
+      required:
+        - status
+        - message
+      type: object
+      x-konfig-properties:
+        status:
+          description: Status of the request to update autoscaling settings
   securitySchemes:
     ApiKeyAuth:
       description: >-

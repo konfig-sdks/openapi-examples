@@ -1,0 +1,2619 @@
+openapi: 3.0.3
+info:
+  title: Zapier Embed API
+  description: The Zapier Embed API.
+  version: 1.0.0
+  contact:
+    email: contact@zapier.com
+    name: Zapier
+    url: https://help.zapier.com/hc/en-us
+  x-api-id: 370df4a0-2f97-4972-873f-eef6ac607531
+  x-audience: external-partner
+  x-konfig-ignore:
+    potential-incorrect-type: true
+servers:
+  - description: Production
+    url: https://api.zapier.com/v2
+tags:
+  - description: Endpoints or functions that leverage Actions.
+    name: Actions
+  - description: Endpoints or functions that leverage Authentications.
+    name: Authentications
+  - description: Endpoints or functions that leverage Zaps.
+    name: Zaps
+  - description: Endpoints or functions that leverage Apps.
+    name: Apps
+  - description: Endpoints or functions under this category are in the experimental phase.
+    name: Experimental
+paths:
+  /actions:
+    parameters: []
+    get:
+      tags:
+        - Actions
+      summary: Get Actions
+      operationId: Actions_listAvailableActions
+      description: >-
+        Fetch the available actions for the provided App. It's typical to filter
+        by type so that only actions that make sense for a particular step are
+        shown. For example only showing reads for the first step in a Zap.
+
+
+        This endpoint requires the `zap` OAuth scope.
+
+
+        This API is rate limited by IP address (60 requests per min), or partner
+        (150 requests per min), whichever occurs first.
+      parameters:
+        - $ref: '#/components/parameters/app'
+        - $ref: '#/components/parameters/action_type'
+      responses:
+        '200':
+          description: A valid response for fetching available actions for the App.
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/ActionsListAvailableActionsResponse'
+              examples:
+                ActionsExample:
+                  value:
+                    links:
+                      next: null
+                      prev: null
+                    meta:
+                      limit: 10
+                      offset: 0
+                      count: 1
+                    data:
+                      - title: New Lead
+                        description: Triggers when a new lead is added to SuperExampleCRM
+                        type: action
+                        id: uag:1f188536-6dd0-4172-8414-2b90914ddee9
+                        key: new_lead
+                        action_type: READ
+                        app: 83b47c0e-adda-44da-a45d-42565fe521ef
+                        is_instant: true
+        '404':
+          $ref: '#/components/responses/FourOhFourError'
+        '406':
+          $ref: '#/components/responses/FourOhSixError'
+        '415':
+          $ref: '#/components/responses/FourFifteenError'
+        default:
+          $ref: '#/components/responses/DefaultError'
+  /authentications:
+    parameters: []
+    get:
+      tags:
+        - Authentications
+      summary: Get Authentications
+      operationId: Authentications_getAvailable
+      description: >-
+        Fetch the available Authentications for the provided App. This will only
+        return Authentications that are owned by the user and not those that are
+        shared with them, since it''s not possible to create Zaps with
+        Authentications you don''t own.
+
+
+        This endpoint requires the `authentication` OAuth scope.
+
+
+        This API is rate limited by IP address (60 requests per min), or partner
+        (150 requests per min), whichever occurs first.
+      parameters:
+        - $ref: '#/components/parameters/app'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+      responses:
+        '200':
+          description: >-
+            A successful request to get available Authentications for the
+            provided App.
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/AuthenticationsGetAvailableResponse'
+              examples:
+                AuthenticationsExample:
+                  value:
+                    links:
+                      next: null
+                      prev: null
+                    meta:
+                      limit: 10
+                      offset: 0
+                      count: 1
+                    data:
+                      - title: SuperExampleCRM (example@zapier.com)
+                        type: authentication
+                        id: b3eYnwl
+                        app: b61ae76e-487b-4622-8679-df3d3e20bccc
+                        is_expired: false
+        '404':
+          $ref: '#/components/responses/FourOhFourError'
+        '406':
+          $ref: '#/components/responses/FourOhSixError'
+        '415':
+          $ref: '#/components/responses/FourFifteenError'
+        default:
+          $ref: '#/components/responses/DefaultError'
+    post:
+      tags:
+        - Authentications
+      summary: Create Authentication
+      operationId: Authentications_createNewAuthentication
+      description: >-
+        Creates a new Authentication for the provided App.
+
+
+        This endpoint requires the `authentication:write` OAuth scope.
+
+
+        This API is rate limited by IP address (60 requests per min), or partner
+        (150 requests per min), whichever occurs first.
+      requestBody:
+        description: Inputs to create a new Authentication
+        required: true
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: >-
+                #/components/schemas/AuthenticationsCreateNewAuthenticationRequest
+      responses:
+        '201':
+          description: A successful response to create a new Authentication
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: >-
+                  #/components/schemas/AuthenticationsCreateNewAuthenticationResponse
+              examples:
+                AuthenticationsExample:
+                  value:
+                    links:
+                      next: null
+                      prev: null
+                    meta:
+                      limit: 10
+                      offset: 0
+                      count: 1
+                    data:
+                      - title: SuperExampleCRM (example@zapier.com)
+                        type: authentication
+                        id: b3eYnwlX
+                        app: b61ae76e-487b-4622-8679-df3d3e20bccc
+                        is_expired: false
+        '406':
+          $ref: '#/components/responses/FourOhSixError'
+        '415':
+          $ref: '#/components/responses/FourFifteenError'
+        default:
+          $ref: '#/components/responses/DefaultError'
+  /actions/{action}/inputs:
+    parameters:
+      - $ref: '#/components/parameters/action'
+    post:
+      tags:
+        - Actions
+      summary: Get Input Fields
+      operationId: Actions_getInputFields
+      description: >-
+        Get the Input Fields for a particular Action, using the provided
+        authentication and inputs.
+
+
+        This endpoint requires the `zap:write` OAuth scope.
+
+
+        This API is rate limited by IP address (60 requests per min), or partner
+        (150 requests per min), whichever occurs first.
+      parameters: []
+      requestBody:
+        $ref: '#/components/requestBodies/Inputs'
+        examples:
+          Example 1:
+            value:
+              authentication: b3eYnwl
+              inputs:
+                deal_pipeline: My Awesome Pipeline
+              limit: 10
+              offset: 0
+      responses:
+        '200':
+          description: >-
+            A successful response for getting the input fields for a particular
+            Action.
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/ActionsGetInputFieldsResponse'
+        '404':
+          $ref: '#/components/responses/FourOhFourError'
+        '406':
+          $ref: '#/components/responses/FourOhSixError'
+        '415':
+          $ref: '#/components/responses/FourFifteenError'
+        default:
+          $ref: '#/components/responses/DefaultError'
+      x-internal: false
+  /actions/{action}/outputs:
+    parameters:
+      - $ref: '#/components/parameters/action'
+    post:
+      tags:
+        - Actions
+      summary: Get Output Fields
+      operationId: Actions_getOutputFields
+      description: >-
+        Get the Output Fields for a particular Action, using the provided
+        authentication and inputs.
+
+
+        This endpoint requires the `zap:write` OAuth scope.
+
+
+        This API is rate limited by IP address (60 requests per min).
+      parameters: []
+      requestBody:
+        $ref: '#/components/requestBodies/Outputs'
+        examples:
+          Example 1:
+            value:
+              authentication: b3eYnwl
+              fetch_live_samples: true
+              inputs:
+                deal_pipeline: My Awesome Pipeline
+              limit: 10
+              offset: 0
+      responses:
+        '200':
+          description: A successful request to get the Output Fields for an Action.
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/ActionsGetOutputFieldsResponse'
+              examples:
+                OutputFieldsExample:
+                  value:
+                    meta:
+                      limit: 10
+                      offset: 0
+                      count: 1
+                    data:
+                      - title: First Name
+                        type: output_field
+                        id: first_name
+                        sample: Wade
+        '404':
+          $ref: '#/components/responses/FourOhFourError'
+        '406':
+          $ref: '#/components/responses/FourOhSixError'
+        '415':
+          $ref: '#/components/responses/FourFifteenError'
+        default:
+          $ref: '#/components/responses/DefaultError'
+      x-internal: false
+  /actions/{action}/inputs/{input}/choices:
+    parameters:
+      - description: An Action ID, as provided by the `/actions` endpoint.
+        name: action
+        in: path
+        required: true
+        schema:
+          type: string
+          example: uag:87b1c14e-ef30-43d5-9395-6c6514dbb123
+      - description: An Input Field ID, as provided by the `/inputs` endpoint.
+        schema:
+          type: string
+          example: lead_id
+        name: input
+        in: path
+        required: true
+    post:
+      tags:
+        - Actions
+      summary: Get Choices
+      operationId: Actions_getChoices
+      description: >-
+        Get the possible values for an Input Field that is marked as `SELECT`.
+
+
+        This endpoint requires the `zap` OAuth scope.
+
+
+        This API is rate limited by IP address (60 requests per min), or partner
+        (150 requests per min), whichever occurs first.
+      parameters:
+        - description: The page of choices to return, defaults to the first
+          schema:
+            type: string
+            default: '1'
+            example: '1'
+          in: query
+          name: page
+      requestBody:
+        description: ''
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '#/components/schemas/ActionsGetChoicesRequest'
+      responses:
+        '200':
+          description: A successful response for getting the requested Input Fields.
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/ActionsGetChoicesResponse'
+              examples:
+                GetChoicesExample:
+                  value:
+                    meta:
+                      page: 10
+                    data:
+                      - type: choice
+                        id: usa
+                        label: United States of America
+                        value: usa
+        '404':
+          $ref: '#/components/responses/FourOhFourError'
+        '406':
+          $ref: '#/components/responses/FourOhSixError'
+        '415':
+          $ref: '#/components/responses/FourFifteenError'
+        default:
+          $ref: '#/components/responses/DefaultError'
+      x-internal: false
+  /apps:
+    parameters: []
+    get:
+      tags:
+        - Apps
+      summary: Get Apps
+      operationId: Apps_listPopular
+      security:
+        - OAuth2: []
+      description: >-
+        This endpoint returns a list of popular apps.  Keep in mind that Zapier
+        built-in apps will not be returned and the order of the result is by app
+        popularity.
+
+
+        This endpoint requires the `zap` OAuth scope.
+
+
+        This API is rate limited by IP address (60 requests per min), or partner
+        (150 requests per min), whichever occurs first.
+      parameters:
+        - description: Used for paginating results. Specifies the amount of apps to return.
+          schema:
+            type: integer
+          in: query
+          name: limit
+        - description: >-
+            Used for paginating results. Specifies the offset of the apps to
+            return.
+          schema:
+            type: integer
+          in: query
+          name: offset
+        - description: >-
+            Categories that apps must have in order to be returned in the
+            response. E.g. Accounting (`accounting`), AI Tools (`ai-tools`), and
+            All (`all`).
+
+            The full list of valid categories can be retrieved using the
+            `category` endpoint, detailed
+            [here](https://platform.zapier.com/embed/partner-api#get-v1categories).
+          schema:
+            type: string
+          in: query
+          name: category
+        - description: >-
+            Parameter to limit the results to apps whose titles match the
+            provided query.
+          schema:
+            type: string
+          in: query
+          name: query
+        - description: >-
+            Parameter to restrict the results to apps whose ID matches those in
+            the provided comma-separated value. Cannot be combined with
+            `category`.
+          schema:
+            type: string
+          in: query
+          name: ids
+      responses:
+        '200':
+          description: OK
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/AppsListPopularResponse'
+              examples:
+                GetAppsExample:
+                  value:
+                    data:
+                      - title: HubSpot
+                        description: >-
+                          HubSpot is your all-in-one stop for all of your
+                          marketing software needs.
+                        type: app
+                        id: 1e4fcbf4-d80b-4ec3-b33b-c085f1ecbbaa
+                        categories:
+                          - slug: partners
+                        hex_color: 8bcbca
+                        image: >-
+                          https://zapier-images.imgix.net/storage/developer/cde9764aa8d19fdd6d591455dbe5a78d.png?auto=format%2Ccompress&ixlib=python-3.0.0&q=50
+                        images:
+                          url_16x16: >-
+                            https://zapier-images.imgix.net/storage/developer/cde9764aa8d19fdd6d591455dbe5a78d.png?auto=format%2Ccompress&fit=crop&h=16&ixlib=python-3.0.0&q=50&w=16
+                          url_32x32: >-
+                            https://zapier-images.imgix.net/storage/developer/cde9764aa8d19fdd6d591455dbe5a78d.png?auto=format%2Ccompress&fit=crop&h=32&ixlib=python-3.0.0&q=50&w=32
+                          url_64x64: >-
+                            https://zapier-images.imgix.net/storage/developer/cde9764aa8d19fdd6d591455dbe5a78d.png?auto=format%2Ccompress&fit=crop&h=64&ixlib=python-3.0.0&q=50&w=64
+                          url_128x128: >-
+                            https://zapier-images.imgix.net/storage/developer/cde9764aa8d19fdd6d591455dbe5a78d.png?auto=format%2Ccompress&fit=crop&h=128&ixlib=python-3.0.0&q=50&w=128
+                        links:
+                          connect_new_authentication: >-
+                            https://zapier.com/engine/auth/start/HubSpotCLIAPI@1.7.1?redirect=https%3A%2F%2Fapi.zapier.com%2Fv2%2Fauthentications%2Fredirect
+                    links:
+                      next: https://api.zapier.com/v2/apps?offset=20&limit=10
+                      prev: https://api.zapier.com/v2/apps?offset=0&limit=10
+                    meta:
+                      limit: 10
+                      offset: 10
+                      count: 133
+        '401':
+          description: Unauthorized
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/AppsListPopular401Response'
+        default:
+          $ref: '#/components/responses/DefaultError'
+  /zap-runs:
+    parameters: []
+    get:
+      tags:
+        - Experimental
+      summary: Get Zap Runs
+      operationId: Experimental_getZapRuns
+      description: >-
+        This endpoint is a first version tool that delivers basic yet essential
+        details about their executed Zap runs. As an evolving interface, this
+        first version serves foundational information about Zap runs.
+
+
+        _However, it's important to note that this is an initial implementation
+        and the **response payload is not definitive**. Our aim is to
+        continually iterate and enhance this API, refining its capabilities and
+        data output, to progressively deliver more valuable and useful
+        information in future versions._
+
+
+        This endpoint requires the `zap:runs` OAuth scope.
+
+
+        This API is rate limited by IP address (60 requests per min), or partner
+        (150 requests per min), whichever occurs first.
+
+
+        Please note that since this is an experimental tool, if you're
+        interested in gaining access, you must contact our support team.
+      parameters:
+        - description: >-
+            Find Zap runs equal to or newer than this date. If not provided,
+            results default to last 30 days' Zap Runs.
+          schema:
+            type: string
+            example: '2024-01-01T10:09:08.07'
+          in: query
+          name: from_date
+        - description: Find Zap runs less than this date.
+          schema:
+            type: string
+            example: '2023-01-02T11:10:09.08'
+          in: query
+          name: to_date
+        - description: Find Zap runs for the specified Zap ID.
+          schema:
+            type: string
+            example: 001fa849-dc8e-aca6-a09b-ba705bceada1
+          in: query
+          name: zap_id
+        - description: Maximum number of returned Zap Runs.
+          schema:
+            type: integer
+            example: 10
+          in: query
+          name: limit
+        - description: Number of Zap Runs to skip.
+          schema:
+            type: integer
+            example: 10
+          in: query
+          name: offset
+        - description: >-
+            Performs a text search against the `zap_title`, `data_in`, and
+            `data_out` fields, returning only zap runs that match the specified
+            keywords.
+          schema:
+            type: string
+            maxLength: 150
+          in: query
+          name: search
+        - description: >-
+            Accepts one or more status values separated by commas, enabling the
+            filtering of zap runs based on the specified status or statuses
+            provided.
+          schema:
+            type: string
+            example: throttled
+            enum:
+              - delayed
+              - scheduled
+              - pending
+              - error
+              - error_handled
+              - halted
+              - throttled
+              - held
+              - filtered
+              - skipped
+              - success
+          in: query
+          name: statuses
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentalGetZapRunsResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentalGetZapRuns401Response'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentalGetZapRuns403Response'
+      x-internal: false
+  /zaps:
+    parameters: []
+    get:
+      tags:
+        - Zaps
+      summary: Get Zaps
+      operationId: Zaps_getFilteredZaps
+      description: >-
+        This endpoint returns a list of Zaps for the authenticated Zapier user.
+
+
+        The `expand` array can be used to expand selected fields into full
+        objects in the response.  Inputs with keys can also be passed to filter
+        Zaps by certain criteria.
+
+
+        This endpoint requires the `zap` OAuth scope.
+
+
+        This API is rate limited by IP address (60 requests per min), or partner
+        (150 requests per min), whichever occurs first.
+      parameters:
+        - description: Used for paginating results. Specifies the amount of apps to return
+          schema:
+            type: integer
+          in: query
+          name: limit
+        - description: >-
+            Used for paginating results. Specifies the offset of the apps to
+            return
+          schema:
+            type: integer
+          in: query
+          name: offset
+        - description: >-
+            You may pass inputs[KEY]=VALUE1,VALUE2 to filter for Zaps that
+            contain those settings. For example, if your OAuth app is Trello you
+            may filter for Zaps that contain a certain Trello board using
+            inputs[board]=BOARD_ID — Keys are defined by your app on the
+            developer platform.
+          schema:
+            type: object
+            additionalProperties:
+              type: string
+          in: query
+          name: inputs
+          style: deepObject
+          allowReserved: true
+        - description: >-
+            A comma separated list of Zap fields that should be expanded from
+            ids to full objects in the response. If a field may not be expanded,
+            its encoded form will be returned instead.
+          schema:
+            type: string
+            example: steps.action
+          in: query
+          name: expand
+      responses:
+        '200':
+          description: OK
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/ZapsGetFilteredZapsResponse'
+              examples:
+                GetZapsExample:
+                  value:
+                    links:
+                      next: https://api.zapier.com/v2/zaps?offset=20&limit=10
+                      prev: https://api.zapier.com/v2/zaps?offset=0&limit=10
+                    meta:
+                      limit: 10
+                      offset: 10
+                      count: 133
+                    data:
+                      - title: My Zap
+                        type: zap
+                        id: 00000000-0000-c000-8000-000000012345
+                        is_enabled: false
+                        last_successful_run_date: '2019-08-24T14:15:22Z'
+                        steps:
+                          - action: uag:1f188536-6dd0-4172-8414-2b90914ddee9
+                            inputs:
+                              deal_stage: CLOSED_WON
+                            authentication: b3eYnwl
+                          - action: uag:1f188536-6dd0-4172-8414-2b90914ddaa7
+                            inputs:
+                              full_name: '{{customer__full_name}}'
+                            authentication: BRn9rRg
+                        links:
+                          html_editor: >-
+                            https://zapier.com/webintent/edit-zap/00000000-0000-c000-8000-000000012345
+                        updated_at: '2019-08-24T14:15:22Z'
+        '401':
+          description: Unauthorized
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/ZapsGetFilteredZaps401Response'
+        '403':
+          description: Forbidden
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/ZapsGetFilteredZaps403Response'
+        default:
+          $ref: '#/components/responses/DefaultError'
+    post:
+      tags:
+        - Zaps
+      summary: Create a Zap
+      operationId: Zaps_createZap
+      description: >-
+        This URL creates a new Zap based on a series of steps and a given title.
+        `is_enabled` must be set to true when creating a new Zap.
+
+
+        This endpoint requires the `zap:write` OAuth scope.
+
+
+        This API is rate limited by IP address (60 requests per min), or partner
+        (150 requests per min), whichever occurs first.
+      parameters:
+        - description: >-
+            A comma separated list of Zap fields that should be expanded from
+            ids to full objects in the response. If a field may not be expanded,
+            its encoded form will be returned instead.
+          schema:
+            type: string
+          in: query
+          name: expand
+      requestBody:
+        description: ''
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '#/components/schemas/ZapsCreateZapRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/ZapsCreateZapResponse'
+        default:
+          $ref: '#/components/responses/DefaultError'
+  /actions/{action}/test:
+    parameters:
+      - description: An Action ID, as provided by the `/actions` endpoint.
+        schema:
+          type: string
+        name: action
+        in: path
+        required: true
+    post:
+      tags:
+        - Actions
+      summary: Test an action (step)
+      operationId: Actions_testActionExecution
+      description: >-
+        Tests the action (step) in the third party api, using the provided
+        authentication and inputs. On a successful test returns 200 and the
+        result of executing the action, otherwise it returns a 400 and details
+        about the failure.
+
+
+        This endpoint requires the `zap:write` OAuth scope.
+
+
+        This API is rate limited by IP address (60 requests per min).
+      requestBody:
+        $ref: '#/components/requestBodies/TestAction'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionsTestActionExecutionResponse'
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/ActionsTestActionExecution200Response'
+        '404':
+          $ref: '#/components/responses/FourOhFourError'
+        '406':
+          $ref: '#/components/responses/FourOhSixError'
+      x-stoplight:
+        id: fgw9khltcrahx
+components:
+  parameters:
+    limit:
+      description: >-
+        Used for paginating results. Specifies the maximum number of items to
+        return per page. If this value is not set, it defaults to 10.
+      name: limit
+      in: query
+      required: false
+      schema:
+        type: integer
+        default: 10
+    offset:
+      description: Used for paginating results. Specifies the offset to use.
+      name: offset
+      in: query
+      required: false
+      schema:
+        type: integer
+    app:
+      description: A canonical App ID, as provided by the `/apps` endpoint.
+      name: app
+      in: query
+      required: true
+      schema:
+        type: string
+        format: uuid
+        example: 868f9d3c-2ea0-4f19-a32d-a61b276ab8de
+    action:
+      description: An Action ID, as provided by the `/actions` endpoint.
+      name: action
+      in: path
+      required: true
+      schema:
+        type: string
+        example: uag:87b1c14e-ef30-43d5-9395-6c6514dbb123
+    action_type:
+      description: The type of Action to filter for.
+      name: action_type
+      in: query
+      required: true
+      schema:
+        type: string
+        enum:
+          - READ
+          - WRITE
+        example: READ
+  responses:
+    DefaultError:
+      description: An unexpected error has occurred but details are available.
+      content:
+        application/vnd.api+json:
+          schema:
+            $ref: '#/components/schemas/ActionsListAvailableActionsdefaultResponse'
+    FourOhSixError:
+      description: This request is invalid.
+      content:
+        application/vnd.api+json:
+          schema:
+            $ref: '#/components/schemas/ActionsListAvailableActions406Response'
+    FourFifteenError:
+      description: This media type is unsupported.
+      content:
+        application/vnd.api+json:
+          schema:
+            $ref: '#/components/schemas/ActionsListAvailableActions415Response'
+    FourOhFourError:
+      description: Not found
+      content:
+        application/vnd.api+json:
+          schema:
+            $ref: '#/components/schemas/ActionsListAvailableActions404Response'
+  schemas:
+    InputsWithAuthenticationId:
+      description: The common data object that includes inputs and an authentication id.
+      type: object
+      properties:
+        authentication:
+          description: >-
+            An Authentication ID, as provided by the `/authentications`
+            endpoint.
+          type:
+            - string
+            - 'null'
+          x-stoplight:
+            id: x4243l2r0sn61
+        inputs:
+          description: >-
+            The current set of input fields in a JSON object, where each key is
+            the `id` of an Input Field, and the corresponding value the current
+            value of the field.
+          type: object
+        limit:
+          description: >-
+            Used for paginating results. Specifies the maximum number of items
+            to return per page.
+          type: integer
+          format: int32
+        offset:
+          description: Used for paginating results. Specifies the offset to use.
+          type: integer
+          format: int32
+      required:
+        - authentication
+        - inputs
+      examples:
+        authentication: BRn9rRg
+        inputs:
+          stage_name: CLOSED_WON
+        limit: 10
+        offset: 20
+    InputsWithAuthenticationIdAndFetchLiveSamples:
+      title: InputsWithAuthenticationIdAndFetchLiveSamples
+      description: The common data object that includes inputs and an authentication id.
+      x-stoplight:
+        id: slf9f11zlbpep
+      type: object
+      examples:
+        authentication: BRn9rRg
+        inputs:
+          stage_name: CLOSED_WON
+        limit: 10
+        offset: 20
+      properties:
+        authentication:
+          description: >-
+            An Authentication ID, as provided by the `/authentications`
+            endpoint.
+          type:
+            - string
+            - 'null'
+        inputs:
+          description: >-
+            The current set of input fields in a JSON object, where each key is
+            the `id` of an Input Field, and the corresponding value the current
+            value of the field.
+          type: object
+        fetch_live_samples:
+          description: Whether to retrieve live samples for the field
+          type: boolean
+          x-stoplight:
+            id: sztwd2jml2g66
+          default: false
+      required:
+        - authentication
+        - inputs
+    Links:
+      title: Links
+      description: The links object returned in paginated response bodies.
+      x-stoplight:
+        id: g3mw8odxd2a5b
+      type: object
+      properties:
+        next:
+          description: The URL of the next page of paginated results.
+          type:
+            - string
+            - 'null'
+          x-stoplight:
+            id: w5nhbvv8b1r4r
+          format: uri
+          pattern: ^https:\/\/api\.zapier\.com\/.*
+          example: https://api.zapier.com/v2/apps?offset=20&limit=10
+          readOnly: true
+          nullable: true
+          default: null
+        prev:
+          description: The URL of the previous page of paginated results.
+          type:
+            - string
+            - 'null'
+          x-stoplight:
+            id: 3rs1teh1vdfoz
+          format: uri
+          pattern: ^https:\/\/api\.zapier\.com\/.*
+          example: https://api.zapier.com/v2/apps?offset=0&limit=10
+          readOnly: true
+          nullable: true
+          default: null
+    Meta:
+      title: Meta
+      description: The meta object returned in paginated response bodies.
+      x-stoplight:
+        id: msk45ygr2wrc8
+      type: object
+      properties:
+        limit:
+          description: The limit value used in the request.
+          type: integer
+          x-stoplight:
+            id: 2fm9jmi21w2gp
+          minimum: 1
+          example: 10
+          readOnly: true
+          format: int32
+        offset:
+          description: The offset value used in the request.
+          type: integer
+          x-stoplight:
+            id: eio99why05ylu
+          minimum: 0
+          default: 0
+          example: 10
+          format: int32
+        count:
+          description: >-
+            The total number of objects in the collection represented by the
+            endpoint.
+          type: integer
+          x-stoplight:
+            id: nh8w20vy7kwk4
+          minimum: 0
+          example: 133
+          readOnly: true
+          format: int32
+    LinksWithPage:
+      title: LinksWithPage
+      description: The links object returned in paginated response bodies.
+      x-stoplight:
+        id: xzqnni6w46yxz
+      type: object
+      properties:
+        next:
+          description: The URL of the next page of paginated results.
+          type:
+            - string
+            - 'null'
+          x-stoplight:
+            id: 1qw4ipgciehf5
+          format: uri
+          pattern: ^https:\/\/api\.zapier\.com\/.*
+          example: >-
+            https://api.zapier.com/v2/actions/core:abcd/inputs/lead_id/choices?page=3
+          nullable: true
+          default: null
+          readOnly: true
+        prev:
+          description: The URL of the previous page of paginated results.
+          type:
+            - string
+            - 'null'
+          x-stoplight:
+            id: 00b22pohany81
+          format: uri
+          pattern: ^https:\/\/api\.zapier\.com\/.*
+          example: >-
+            https://api.zapier.com/v2/actions/core:abcd/inputs/lead_id/choices?page=1
+          nullable: true
+          default: null
+          readOnly: true
+    MetaWithPage:
+      title: MetaWithPage
+      description: >-
+        The meta object returned in paginated response bodies, for results using
+        cursor pagination.
+      x-stoplight:
+        id: ltgg98ltcua97
+      type: object
+      properties:
+        page:
+          description: The page of results requested
+          type: integer
+          format: int32
+          x-stoplight:
+            id: u85us29cgmyin
+          example: 10
+          default: 1
+          readOnly: true
+    InputsWithAuthenticationIdNoPage:
+      title: InputsWithAuthenticationIdNoPage
+      x-stoplight:
+        id: hngkbpz9wble3
+      type: object
+      properties:
+        authentication:
+          description: >-
+            An Authentication ID, as provided by the `/authentications`
+            endpoint.
+          type:
+            - string
+            - 'null'
+          x-stoplight:
+            id: xnxoa9djz4t00
+          example: BRn9rRg
+        inputs:
+          description: >-
+            The current set of input fields in a JSON object, where each key is
+            the `id` of an Input Field, and the corresponding value the current
+            value of the field.
+          type: object
+          x-stoplight:
+            id: b03fuc0a4gv7j
+      example:
+        authentication: BRn9rRg
+        inputs:
+          text: Hi there
+          channel: U036WM3E84D
+      x-examples:
+        - authentication: BRn9rRg
+          inputs:
+            text: Hi there
+            channel: U036WM3E84D
+        - authentication: BRn9rRg
+          inputs:
+            spreadsheet: 1eM41g5BqFpGi1O2BTlc7cA_MNj2mujLJ_QNRwuWQ-rc
+            worksheet: '0'
+    ZapRun:
+      title: ZapRun
+      type: object
+      properties:
+        id:
+          description: Zap Run Identifier.
+          type: string
+          format: uuid
+          example: 00946041-b63b-a34c-9c30-630c32f0c3a4
+        start_time:
+          description: The specific time when the Zap Run was initiated.
+          type: string
+          format: date-time
+          example: '2023-12-01T06:29:10.360000+00:00'
+          readOnly: true
+        end_time:
+          description: The specific time when the Zap Run was finished.
+          type: string
+          format: date-time
+          example: '2023-12-01T06:29:10.360000+00:00'
+          readOnly: true
+        status:
+          description: Represents the current state or progress of the Zap Run
+          enum:
+            - delayed
+            - scheduled
+            - pending
+            - error
+            - halted
+            - throttled
+            - held
+            - filtered
+            - skipped
+            - success
+          readOnly: true
+        zap_title:
+          description: >-
+            Refers to the name or title of the specific Zap that the run is
+            associated with.
+          type: string
+          example: Zap Title - New Item
+          readOnly: true
+        steps:
+          description: >-
+            The list of sequential actions or processes involved in the
+            execution of the associated Zap run.
+          type: array
+          items:
+            $ref: '#/components/schemas/ZapRunStep'
+        data_in:
+          description: >-
+            The information about the data inputted into and logged out from a
+            specific Zap Run during its execution.
+          type: string
+        data_out:
+          description: >-
+            The information logged out from a specific Zap Run during its
+            execution.
+          type: string
+    ZapRunStep:
+      title: ZapRunStep
+      type: object
+      properties:
+        status:
+          description: Represents the current state or progress of the Zap Run Step.
+          enum:
+            - delayed
+            - scheduled
+            - pending
+            - error
+            - halted
+            - throttled
+            - held
+            - filtered
+            - skipped
+            - success
+          readOnly: true
+        start_time:
+          description: >-
+            The specific time when the execution of the step in the Zap run
+            began.
+          type: string
+          format: date-time
+          example: '2023-12-01T06:29:15.870509+00:00'
+          readOnly: true
+    Action:
+      title: Action
+      description: >-
+        An Action is an operation that can be performed against a third-party
+        API; either a read or a write. A Zap is composed of a read, followed by
+        one or more writes.
+      x-stoplight:
+        id: 08691ffzj6wm3
+      type: object
+      x-internal: false
+      properties:
+        title:
+          description: The title of this Action.
+          type: string
+          x-stoplight:
+            id: 8cjkleeohsp4c
+          example: New Lead
+        description:
+          description: >-
+            A longer description of this Action, usually describing what it does
+            in more detail.
+          type: string
+          x-stoplight:
+            id: p1x8q39uuar4o
+          example: Triggers when a new lead is added to SuperExampleCRM
+        type:
+          description: The type of this object.
+          type: string
+          const: action
+          readOnly: true
+        id:
+          type: string
+          x-stoplight:
+            id: 13o2l55kldo76
+          example: uag:1f188536-6dd0-4172-8414-2b90914ddee9
+          pattern: ^[\w-]+:[\w-]+$
+        key:
+          description: The developer provided identifier for this Action.
+          type: string
+          x-stoplight:
+            id: 65d0qb3nozmz3
+          example: new_lead
+        action_type:
+          description: The type of this Action.
+          type: string
+          x-stoplight:
+            id: upjghxsarpry4
+          enum:
+            - READ
+            - WRITE
+          example: READ
+        app:
+          description: Expandable field for app.
+          x-stoplight:
+            id: u8nmq10dwcr51
+          oneOf:
+            - description: The id of the app associated with this action.
+              type:
+                - string
+              format: uuid
+              example: 83b47c0e-adda-44da-a45d-42565fe521ef
+            - description: The full app associated with this action.
+              $ref: '#/components/schemas/App'
+              x-stoplight:
+                id: rvaekq661wgle
+        is_instant:
+          description: >-
+            Will be set to `true` if this Action triggers instantly. May only be
+            `true` when `type` is `READ`.
+          type: boolean
+          x-stoplight:
+            id: xey6l2w9qt818
+      required:
+        - type
+        - id
+        - key
+        - action_type
+        - app
+        - description
+        - is_instant
+        - title
+      example:
+        title: New Lead
+        description: Triggers when a new lead is added to SuperExampleCRM
+        type: action
+        id: uag:1f188536-6dd0-4172-8414-2b90914ddee9X
+        key: new_lead
+        action_type: READ
+        app: 83b47c0e-adda-44da-a45d-42565fe521ef
+        is_instant: false
+      x-examples:
+        - title: New Lead
+          description: Triggers when a new lead is added to SuperExampleCRM
+          type: action
+          id: uag:1f188536-6dd0-4172-8414-2b90914ddee9X
+          key: new_lead
+          action_type: READ
+          app: 83b47c0e-adda-44da-a45d-42565fe521ef
+          is_instant: false
+        - title: New Deal
+          description: Triggers when a new deal is created.
+          type: action
+          id: uag:1f188536-6dd0-4172-8414-2b90914ddea7
+          key: new_deal
+          action_type: READ
+          app: 83b47c0e-adda-44da-a45d-42565fe521ef
+          is_instant: false
+        - title: New Deal
+          description: Triggers when a new deal is created.
+          type: action
+          id: uag:1f188536-6dd0-4172-8414-2b90914ddea7
+          key: new_deal
+          action_type: READ
+          app:
+            title: HubSpot
+            description: >-
+              HubSpot is your all-in-one stop for all of your marketing software
+              needs.
+            type: app
+            id: 1e4fcbf4-d80b-4ec3-b33b-c085f1ecbbaa
+            links:
+              connect_new_authentication: >-
+                https://zapier.com/engine/auth/start/HubSpotCLIAPI@1.7.1?redirect=https%3A%2F%2Fapi.zapier.com%2Fv2%2Fauthentications%2Fredirect
+            categories:
+              - slug: marketing-automation
+            image: >-
+              https://zapier-images.imgix.net/storage/developer/cde9764aa8d19fdd6d591455dbe5a78d.png?auto=format%2Ccompress&ixlib=python-3.0.0&q=50
+            images:
+              url_16x16: >-
+                https://zapier-images.imgix.net/storage/developer/cde9764aa8d19fdd6d591455dbe5a78d.png?auto=format%2Ccompress&fit=crop&h=16&ixlib=python-3.0.0&q=50&w=16
+              url_32x32: >-
+                https://zapier-images.imgix.net/storage/developer/cde9764aa8d19fdd6d591455dbe5a78d.png?auto=format%2Ccompress&fit=crop&h=32&ixlib=python-3.0.0&q=50&w=32
+              url_64x64: >-
+                https://zapier-images.imgix.net/storage/developer/cde9764aa8d19fdd6d591455dbe5a78d.png?auto=format%2Ccompress&fit=crop&h=64&ixlib=python-3.0.0&q=50&w=64
+              url_128x128: >-
+                https://zapier-images.imgix.net/storage/developer/cde9764aa8d19fdd6d591455dbe5a78d.png?auto=format%2Ccompress&fit=crop&h=128&ixlib=python-3.0.0&q=50&w=128
+            hex_color: 8bcbca
+          is_instant: true
+    App:
+      title: App
+      description: An app that integrates with Zapier.
+      x-stoplight:
+        id: vuqdljvf1dkfx
+      type: object
+      properties:
+        title:
+          description: Human readable name of the app
+          type: string
+          example: HubSpot
+        description:
+          description: Human readable description of the app.
+          type: string
+          example: >-
+            HubSpot is your all-in-one stop for all of your marketing software
+            needs.
+        type:
+          description: The type of this object.
+          type: string
+          const: app
+          readOnly: true
+        id:
+          description: Unique id of the app
+          type: string
+          example: 1e4fcbf4-d80b-4ec3-b33b-c085f1ecbbaa
+          format: uuid
+        categories:
+          description: >-
+            A list of categories to which this app belongs. Helpful in
+            identifying apps by type and functionality.
+          type: array
+          items:
+            x-stoplight:
+              id: zul06vozqt2gq
+            type: object
+            properties:
+              slug:
+                type: string
+                example: marketing-automation
+        hex_color:
+          description: A branded color that can be used to represent the app.
+          type: string
+          x-stoplight:
+            id: 9zj29g5ib8afy
+          pattern: ^([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$
+          example: 8bcbca
+        image:
+          description: Default image/icon to represent the app.
+          type: string
+          format: uri
+          example: >-
+            https://zapier-images.imgix.net/storage/developer/cde9764aa8d19fdd6d591455dbe5a78d.png?auto=format%2Ccompress&ixlib=python-3.0.0&q=50
+        images:
+          description: Images/icons of various resolutions to represent the app.
+          type: object
+          properties:
+            url_16x16:
+              type: string
+              format: uri
+              example: >-
+                https://zapier-images.imgix.net/storage/developer/cde9764aa8d19fdd6d591455dbe5a78d.png?auto=format%2Ccompress&fit=crop&h=16&ixlib=python-3.0.0&q=50&w=16
+            url_32x32:
+              type: string
+              format: uri
+              example: >-
+                https://zapier-images.imgix.net/storage/developer/cde9764aa8d19fdd6d591455dbe5a78d.png?auto=format%2Ccompress&fit=crop&h=32&ixlib=python-3.0.0&q=50&w=32
+            url_64x64:
+              type: string
+              format: uri
+              example: >-
+                https://zapier-images.imgix.net/storage/developer/cde9764aa8d19fdd6d591455dbe5a78d.png?auto=format%2Ccompress&fit=crop&h=64&ixlib=python-3.0.0&q=50&w=64
+            url_128x128:
+              type: string
+              format: uri
+              example: >-
+                https://zapier-images.imgix.net/storage/developer/cde9764aa8d19fdd6d591455dbe5a78d.png?auto=format%2Ccompress&fit=crop&h=128&ixlib=python-3.0.0&q=50&w=128
+        links:
+          type: object
+          properties:
+            connect_new_authentication:
+              description: >-
+                A url that, when visited, will direct the user to authenticate
+                with the app and allow Zapier access to the app, thus creating a
+                new Authentication.
+
+
+                If value is `null`, then no authentication is required to use
+                the app.
+              type:
+                - string
+                - 'null'
+              x-stoplight:
+                id: lkvty8v9do3ot
+              format: uri
+              example: >-
+                https://zapier.com/engine/auth/start/HubSpotCLIAPI@1.7.1?redirect=https%3A%2F%2Fapi.zapier.com%2Fv2%2Fauthentications%2Fredirect
+      required:
+        - type
+        - id
+      example:
+        title: HubSpot
+        description: >-
+          HubSpot is your all-in-one stop for all of your marketing software
+          needs.
+        type: app
+        id: 1e4fcbf4-d80b-4ec3-b33b-c085f1ecbbaaX
+        categories:
+          - slug: marketing-automation
+        hex_color: 8bcbca
+        image: >-
+          https://zapier-images.imgix.net/storage/developer/cde9764aa8d19fdd6d591455dbe5a78d.png?auto=format%2Ccompress&ixlib=python-3.0.0&q=50
+        images:
+          url_16x16: >-
+            https://zapier-images.imgix.net/storage/developer/cde9764aa8d19fdd6d591455dbe5a78d.png?auto=format%2Ccompress&fit=crop&h=16&ixlib=python-3.0.0&q=50&w=16
+          url_32x32: >-
+            https://zapier-images.imgix.net/storage/developer/cde9764aa8d19fdd6d591455dbe5a78d.png?auto=format%2Ccompress&fit=crop&h=32&ixlib=python-3.0.0&q=50&w=32
+          url_64x64: >-
+            https://zapier-images.imgix.net/storage/developer/cde9764aa8d19fdd6d591455dbe5a78d.png?auto=format%2Ccompress&fit=crop&h=64&ixlib=python-3.0.0&q=50&w=64
+          url_128x128: >-
+            https://zapier-images.imgix.net/storage/developer/cde9764aa8d19fdd6d591455dbe5a78d.png?auto=format%2Ccompress&fit=crop&h=128&ixlib=python-3.0.0&q=50&w=128
+        links:
+          connect_new_authentication: >-
+            https://zapier.com/engine/auth/start/HubSpotCLIAPI@1.7.1?redirect=https%3A%2F%2Fapi.zapier.com%2Fv2%2Fauthentications%2Fredirect
+      x-examples:
+        - title: HubSpot
+          description: >-
+            HubSpot is your all-in-one stop for all of your marketing software
+            needs.
+          type: app
+          id: 1e4fcbf4-d80b-4ec3-b33b-c085f1ecbbaaX
+          categories:
+            - slug: marketing-automation
+          hex_color: 8bcbca
+          image: >-
+            https://zapier-images.imgix.net/storage/developer/cde9764aa8d19fdd6d591455dbe5a78d.png?auto=format%2Ccompress&ixlib=python-3.0.0&q=50
+          images:
+            url_16x16: >-
+              https://zapier-images.imgix.net/storage/developer/cde9764aa8d19fdd6d591455dbe5a78d.png?auto=format%2Ccompress&fit=crop&h=16&ixlib=python-3.0.0&q=50&w=16
+            url_32x32: >-
+              https://zapier-images.imgix.net/storage/developer/cde9764aa8d19fdd6d591455dbe5a78d.png?auto=format%2Ccompress&fit=crop&h=32&ixlib=python-3.0.0&q=50&w=32
+            url_64x64: >-
+              https://zapier-images.imgix.net/storage/developer/cde9764aa8d19fdd6d591455dbe5a78d.png?auto=format%2Ccompress&fit=crop&h=64&ixlib=python-3.0.0&q=50&w=64
+            url_128x128: >-
+              https://zapier-images.imgix.net/storage/developer/cde9764aa8d19fdd6d591455dbe5a78d.png?auto=format%2Ccompress&fit=crop&h=128&ixlib=python-3.0.0&q=50&w=128
+          links:
+            connect_new_authentication: >-
+              https://zapier.com/engine/auth/start/HubSpotCLIAPI@1.7.1?redirect=https%3A%2F%2Fapi.zapier.com%2Fv2%2Fauthentications%2Fredirect
+        - title: Pipedrive
+          description: >-
+            Pipedrive is sales pipeline and CRM software for deal makers. Get
+            super-organized. Close deals in less time. iOS and Android apps let
+            you take your pipeline with you anywhere.
+          type: app
+          id: 1e4fcbf4-d80b-4ec3-b33b-c085f1ecbbbb
+          categories:
+            - slug: crm
+          hex_color: '414143'
+          image: >-
+            https://zapier-images.imgix.net/storage/developer/a70589f8db6a514b6820267b506409f0.png?auto=format%2Ccompress&ixlib=python-3.0.0&q=50
+          images:
+            url_16x16: >-
+              https://zapier-images.imgix.net/storage/developer/a70589f8db6a514b6820267b506409f0.png?auto=format%2Ccompress&fit=crop&h=16&ixlib=python-3.0.0&q=50&w=16
+            url_32x32: >-
+              https://zapier-images.imgix.net/storage/developer/a70589f8db6a514b6820267b506409f0.png?auto=format%2Ccompress&fit=crop&h=32&ixlib=python-3.0.0&q=50&w=32
+            url_64x64: >-
+              https://zapier-images.imgix.net/storage/developer/a70589f8db6a514b6820267b506409f0.png?auto=format%2Ccompress&fit=crop&h=64&ixlib=python-3.0.0&q=50&w=64
+            url_128x128: >-
+              https://zapier-images.imgix.net/storage/developer/a70589f8db6a514b6820267b506409f0.png?auto=format%2Ccompress&fit=crop&h=128&ixlib=python-3.0.0&q=50&w=128
+          links:
+            connect_new_authentication: >-
+              https://zapier.com/engine/auth/start/slackAPI?redirect=https%3A%2F%2Fapi.zapier.com%2Fv2%2Fauthentications%2Fredirect
+    Authentication:
+      title: Authentication
+      description: >-
+        An Authentication contains various fields, often credentials such as API
+        tokens, used to access Partner APIs on behalf of a user. The actual
+        fields are held securely by Zapier.
+      x-stoplight:
+        id: oglwzigsyobyg
+      type: object
+      properties:
+        title:
+          type: string
+          x-stoplight:
+            id: 9hh287r6y8kc5
+          example: SuperExampleCRM (example@zapier.com)
+        type:
+          description: The type of this object.
+          type: string
+          const: authentication
+          readOnly: true
+        id:
+          type: string
+          x-stoplight:
+            id: vjo26hmiyyinb
+          example: b3eYnwl
+          pattern: ^\w+
+        app:
+          x-stoplight:
+            id: grmncgmkbdbv9
+          oneOf:
+            - type: string
+              x-stoplight:
+                id: dbhhro3x7miu4
+              format: uuid
+              behavior: Read Only
+              example: b61ae76e-487b-4622-8679-df3d3e20bccc
+            - $ref: '#/components/schemas/App'
+              x-stoplight:
+                id: 896tsg3z0cxtd
+        is_expired:
+          description: >-
+            If `true`, this Authentication has expired. It will not be usable,
+            and the user needs to be directed to reconnect it.
+          type: boolean
+          x-stoplight:
+            id: 5upf21yg6jvup
+          readOnly: true
+      required:
+        - type
+        - id
+        - app
+        - is_expired
+        - title
+      example:
+        title: SuperExampleCRM (example@zapier.com)
+        type: authentication
+        id: b3eYnwlX
+        app: b61ae76e-487b-4622-8679-df3d3e20bccc
+        is_expired: false
+      x-examples:
+        - title: SuperExampleCRM (example@zapier.com)
+          type: authentication
+          id: b3eYnwlX
+          app: b61ae76e-487b-4622-8679-df3d3e20bccc
+          is_expired: false
+        - title: Hubspot (example@zapier.com)
+          type: authentication
+          id: BRn9rRg
+          app:
+            title: HubSpot
+            description: >-
+              HubSpot is your all-in-one stop for all of your marketing software
+              needs.
+            type: app
+            id: 1e4fcbf4-d80b-4ec3-b33b-c085f1ecbbaa
+            categories:
+              - slug: marketing-automation
+            hex_color: 8bcbca
+            image: >-
+              https://zapier-images.imgix.net/storage/developer/cde9764aa8d19fdd6d591455dbe5a78d.png?auto=format%2Ccompress&ixlib=python-3.0.0&q=50
+            images:
+              url_16x16: >-
+                https://zapier-images.imgix.net/storage/developer/cde9764aa8d19fdd6d591455dbe5a78d.png?auto=format%2Ccompress&fit=crop&h=16&ixlib=python-3.0.0&q=50&w=16
+              url_32x32: >-
+                https://zapier-images.imgix.net/storage/developer/cde9764aa8d19fdd6d591455dbe5a78d.png?auto=format%2Ccompress&fit=crop&h=32&ixlib=python-3.0.0&q=50&w=32
+              url_64x64: >-
+                https://zapier-images.imgix.net/storage/developer/cde9764aa8d19fdd6d591455dbe5a78d.png?auto=format%2Ccompress&fit=crop&h=64&ixlib=python-3.0.0&q=50&w=64
+              url_128x128: >-
+                https://zapier-images.imgix.net/storage/developer/cde9764aa8d19fdd6d591455dbe5a78d.png?auto=format%2Ccompress&fit=crop&h=128&ixlib=python-3.0.0&q=50&w=128
+            links:
+              connect_new_authentication: >-
+                https://zapier.com/engine/auth/start/HubSpotCLIAPI@1.7.1?redirect=https%3A%2F%2Fapi.zapier.com%2Fv2%2Fauthentications%2Fredirect
+          is_expired: false
+    Choice:
+      title: Choice
+      description: >-
+        A single element from a set of Choices, variants in an enumeration. For
+        example, selecting a country of residence in a dropdown of many
+        available countries.
+      x-stoplight:
+        id: lq9c04jbpe7a1
+      type: object
+      x-internal: false
+      properties:
+        type:
+          description: The type of this object.
+          type: string
+          const: choice
+          readOnly: true
+        id:
+          description: The ID of this variant.
+          type: string
+          example: usa
+          readOnly: true
+        label:
+          description: >-
+            An optional human-readable label for this variant. Useful if the
+            actual value is not a human-readable value, such as an identifier.
+          type: string
+          x-stoplight:
+            id: 5o6snntc752sb
+          example: United States of America
+        value:
+          description: The value of this variant.
+          type: string
+          x-stoplight:
+            id: luo7utbtozgta
+          example: usa
+      required:
+        - type
+        - id
+        - value
+      example:
+        type: choice
+        id: usaX
+        label: United States of America
+        value: usa
+      x-examples:
+        - type: choice
+          id: usaX
+          label: United States of America
+          value: usa
+        - type: choice
+          id: can
+          label: Canada
+          value: can
+        - type: choice
+          id: mex
+          label: Mexico
+          value: mex
+    Fieldset:
+      title: Fieldset
+      description: >-
+        A grouping of Input Fields and Info Fields. Usually displayed together
+        under the provided heading.
+      x-stoplight:
+        id: hhdrvc5sgwy4m
+      type: object
+      properties:
+        title:
+          description: The human readable title for this group of fields.
+          type: string
+          x-stoplight:
+            id: pi0vkrs14gvuw
+          example: Invoice
+        type:
+          description: The type of this object.
+          const: fieldset
+          type: string
+          readOnly: true
+        id:
+          type: string
+          x-stoplight:
+            id: zcpcw8q2cwpua
+          example: invoice
+        fields:
+          type: array
+          x-stoplight:
+            id: xxeeq1r8znmkr
+          minItems: 0
+          items:
+            x-stoplight:
+              id: hxizjvnqn3z67
+            anyOf:
+              - $ref: '#/components/schemas/Input-Field'
+                x-stoplight:
+                  id: 3zqy8q8a5wb1f
+              - $ref: '#/components/schemas/Info-Field'
+                x-stoplight:
+                  id: 4wqirmr4nab68
+      required:
+        - type
+        - id
+        - fields
+        - title
+    Info-Field:
+      title: Info Field
+      description: >-
+        A field that is intended to display some useful information to the user.
+        Often some longer form direction on how to configure further Input
+        Fields, or restrictions imposed by the third party API.
+      x-stoplight:
+        id: 22g4l4bd4w92z
+      type: object
+      properties:
+        description:
+          description: >-
+            A markdown formatted piece of text that provides helpful information
+            to the user.
+          type: string
+          x-stoplight:
+            id: n4pc37fsx9n6j
+          example: >-
+            Note that you can _only_ respond within 24 hours of a message sent
+            by a user.
+        type:
+          description: The type of this object.
+          const: info_field
+          type: string
+          readOnly: true
+        id:
+          type: string
+          x-stoplight:
+            id: hfp093gscz2lp
+          example: response_msg
+      required:
+        - type
+        - id
+        - description
+    Input-Field:
+      title: Input Field
+      description: >-
+        A field that is an input to an Action, often eventually used to form the
+        HTTP request that is made to a Partner API.
+      x-stoplight:
+        id: aa89vbos7u7bt
+      type: object
+      x-internal: false
+      properties:
+        title:
+          description: The title of this Input Field
+          type: string
+          x-stoplight:
+            id: jwgnpz282do20
+          example: Organisation
+        description:
+          description: >-
+            A longer markdown formatted description of this Input Field, often
+            containing helpful hints on how to fill this particular field in.
+          type: string
+          x-stoplight:
+            id: hrthwkkkz1ee9
+          example: Which organisation should new leads come from.
+        type:
+          description: The type of this object.
+          type: string
+          readOnly: true
+          enum:
+            - input_field
+            - info_field
+            - fieldset
+        id:
+          x-stoplight:
+            id: ptld3gl2q0z84
+          example: organisation
+          type: string
+        default_value:
+          description: The default value of this Input Field
+          type: string
+          example: My Organisation
+        depends_on:
+          description: >-
+            An array of ids that this field has a dependency on. If the value of
+            these fields changes, the value of this field is no longer valid.
+          type: array
+          x-stoplight:
+            id: g08w2x7p8m8j0
+          items:
+            x-stoplight:
+              id: e8nq7zmnf1yp0
+            type: string
+            example: workspace
+        format:
+          description: >-
+            An optional formatting hint, only provided when the `value_type`
+            field is `STRING`. Useful for displaying more friendly inputs to a
+            user. If the format is `SELECT`, you are expected to fetch the
+            possible Choices from the `/choices` endpoint.
+          type: string
+          x-stoplight:
+            id: 26jrzyp6b8qte
+          enum:
+            - DATETIME
+            - MULTILINE
+            - PASSWORD
+            - CODE
+            - FILE
+            - SELECT
+          example: MULTILINE
+        invalidates_input_fields:
+          description: >-
+            If true, changes to this field invalidate the presence of all other
+            fields for this action and they must be refetched.
+          type: boolean
+          x-stoplight:
+            id: 6dmhtkigi6928
+        is_required:
+          description: If true, this field must be filled in for the action to execute.
+          type: boolean
+          x-stoplight:
+            id: cf6yq2dcpjoik
+        items:
+          type: object
+          x-stoplight:
+            id: x60ayzr6dil0w
+          properties:
+            type:
+              description: >-
+                Only set when `type` is `ARRAY`. Specifies the `type` of the
+                elements of the array.
+              type: string
+              x-stoplight:
+                id: 36jutnzad1vni
+              enum:
+                - STRING
+                - NUMBER
+                - INTEGER
+                - BOOLEAN
+              example: STRING
+        placeholder:
+          description: A placeholder for this Input Field.
+          type: string
+          example: Type your Organisation name here!
+        value_type:
+          description: >-
+            The type of this Input Field. The `OBJECT` type accepts a flat
+            key-value dictionary where the values can only be strings. The
+            `ARRAY` type accepts an array of values - see `items` for the type.
+            All other types accept string values.
+          type: string
+          example: STRING
+          enum:
+            - STRING
+            - NUMBER
+            - INTEGER
+            - BOOLEAN
+            - ARRAY
+            - OBJECT
+          x-stoplight:
+            id: h9w5rc9ncwdqg
+      required:
+        - type
+        - id
+        - default_value
+        - depends_on
+        - description
+        - invalidates_input_fields
+        - is_required
+        - placeholder
+        - title
+        - value_type
+      example:
+        title: Organisation
+        description: Which organisation should new leads come from.
+        type: input_field
+        id: organisation
+        default_value: My Organisation
+        depends_on:
+          - workspace
+        invalidates_input_fields: true
+        is_required: true
+        placeholder: Type your Organisation name here!
+        value_type: STRING
+      x-examples:
+        - title: Organisation
+          description: Which organisation should new leads come from.
+          type: input_field
+          id: organisation
+          default_value: My Organisation
+          depends_on:
+            - workspace
+          invalidates_input_fields: true
+          is_required: true
+          placeholder: Type your Organisation name here!
+          value_type: STRING
+    JSON-Error:
+      title: JSON Error
+      type: object
+      x-examples:
+        - title: User Not Authenticated
+          status: '401'
+          code: unauthenticated
+          detail: User must be authenticated to access this resource
+          meta:
+            source: ZAPIER
+      properties:
+        title:
+          type: string
+          example: User Not Authenticated
+        status:
+          type: string
+          example: '401'
+          pattern: ^\d{3}
+        code:
+          type: string
+          example: unauthenticated
+        detail:
+          type: string
+          example: User must be authenticated to access this resource
+        meta:
+          type: object
+          x-stoplight:
+            id: 7dafj9ijy9rbh
+          properties:
+            source:
+              x-stoplight:
+                id: 1xvz8q83ku44e
+              enum:
+                - ZAPIER
+                - THIRD_PARTY
+              readOnly: true
+      example:
+        title: User Not Authenticated
+        status: '401'
+        code: unauthenticated
+        detail: User must be authenticated to access this resource
+        meta:
+          source: ZAPIER
+    Output-Field:
+      title: Output Field
+      description: >-
+        A field that is an output from an Action, often fields returned from a
+        call to a Partner API.
+      x-stoplight:
+        id: s11ejctoftpqj
+      type: object
+      x-internal: false
+      examples: []
+      properties:
+        title:
+          description: The title of this Output Field
+          type: string
+          example: First Name
+        type:
+          description: The type of this object.
+          type: string
+          const: output_field
+          readOnly: true
+        id:
+          type: string
+          x-stoplight:
+            id: k1d6ihtkkr55w
+          example: first_name
+        sample:
+          description: An optional sample of the data this Output Field might contain.
+          type: string
+          x-stoplight:
+            id: uksm0x6z9rtf8
+          example: Wade
+      required:
+        - type
+        - id
+        - title
+    Zap:
+      title: Zap
+      description: The definition of the Zap that will be created.
+      x-stoplight:
+        id: vw89ibjhro143
+      type: object
+      properties:
+        title:
+          description: The human readable name of the Zap.
+          type: string
+          x-stoplight:
+            id: mpl1ssngg9udx
+          example: My Zap
+        type:
+          description: The type of this object.
+          type: string
+          const: zap
+          readOnly: true
+        id:
+          description: A unique identifier of the Zap.
+          type: string
+          x-stoplight:
+            id: l4qxuok0cmebd
+          example: 00000000-0000-c000-8000-000000012345
+          format: uuid
+          readOnly: true
+        is_enabled:
+          description: Whether the Zap is enabled (running) or not.
+          type: boolean
+          x-stoplight:
+            id: fttr3poioh3a2
+          default: true
+        last_successful_run_date:
+          description: >-
+            The date/time at which this Zap last ran sucessfully. A null value
+            indicates that a Zap has never run successfully.
+          type:
+            - string
+            - 'null'
+          x-stoplight:
+            id: a9wvhqpq7jtna
+          format: date-time
+          readOnly: true
+        steps:
+          description: An ordered list of steps that define the logic of the Zap.
+          type: array
+          x-stoplight:
+            id: 6qmwdphlufjiy
+          minItems: 2
+          uniqueItems: true
+          items:
+            x-stoplight:
+              id: 7e9kkmuykf25n
+            type: object
+            properties:
+              title:
+                description: >-
+                  The custom title of a Zap Step. If a step has not been given a
+                  custom title by the user, then the value will be null.
+                x-stoplight:
+                  id: vk6hcwjt56em9
+                type:
+                  - string
+                  - 'null'
+                readOnly: true
+              action:
+                description: Expandable. The Action associated with this Zap step.
+                x-stoplight:
+                  id: 17r78o3clw7i9
+                oneOf:
+                  - description: The ID of the Action associated with this Zap step.
+                    type: string
+                    x-stoplight:
+                      id: 9hy7nxswu8fjx
+                    example: uag:1f188536-6dd0-4172-8414-2b90914ddee9
+                    pattern: ^[\w-]+:[\w-]+$
+                  - description: The full Action object associated with this Zap step.
+                    $ref: '#/components/schemas/Action'
+                    x-stoplight:
+                      id: hma580f0ue7v8
+              inputs:
+                type: object
+                x-stoplight:
+                  id: v7n5ic7azuqwv
+              authentication:
+                description: Expandable. The Authentication associated with this zap step.
+                x-stoplight:
+                  id: kpwkdn1f8ynyf
+                oneOf:
+                  - description: >-
+                      The ID of the Authentication associated with this Zap step
+                      (or null if the step requires no authentication).
+                    type:
+                      - string
+                      - 'null'
+                    example: b3eYnwl
+                  - description: >-
+                      The full Authentication object associated with this Zap
+                      step.
+                    $ref: '#/components/schemas/Authentication'
+                    x-stoplight:
+                      id: heks0kiakn29j
+            required:
+              - action
+              - inputs
+              - authentication
+        updated_at:
+          type: string
+          x-stoplight:
+            id: wowgqxucfqqgz
+          format: date-time
+          pattern: ^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$
+          readOnly: true
+        links:
+          type: object
+          x-stoplight:
+            id: uhxxzqjelbfwj
+          properties:
+            html_editor:
+              description: A link to open this Zap in the Zapier editor.
+              type: string
+              x-stoplight:
+                id: 6xn8sd4td5xox
+              format: uri
+              example: >-
+                https://zapier.com/webintent/edit-zap/00000000-0000-c000-8000-000000012345
+              readOnly: true
+      required:
+        - steps
+        - title
+      example:
+        title: My Zap
+        type: zap
+        id: 00000000-0000-c000-8000-000000012345X
+        is_enabled: true
+        last_successful_run_date: '2019-08-24T14:15:22Z'
+        steps:
+          - title: null
+            action: uag:1f188536-6dd0-4172-8414-2b90914ddee9
+            inputs: {}
+            authentication: b3eYnwl
+          - title: null
+            action: uag:1f188536-6dd0-4172-8414-2b90914ddaa7
+            inputs: {}
+            authentication: BRn9rRg
+        links:
+          html_editor: >-
+            https://zapier.com/webintent/edit-zap/00000000-0000-c000-8000-000000012345
+        updated_at: '2019-08-24T14:15:22Z'
+      x-examples:
+        - title: My Zap
+          type: zap
+          id: 00000000-0000-c000-8000-000000012345X
+          is_enabled: true
+          last_successful_run_date: '2019-08-24T14:15:22Z'
+          steps:
+            - title: null
+              action: uag:1f188536-6dd0-4172-8414-2b90914ddee9
+              inputs: {}
+              authentication: b3eYnwl
+            - title: null
+              action: uag:1f188536-6dd0-4172-8414-2b90914ddaa7
+              inputs: {}
+              authentication: BRn9rRg
+          links:
+            html_editor: >-
+              https://zapier.com/webintent/edit-zap/00000000-0000-c000-8000-000000012345
+          updated_at: '2019-08-24T14:15:22Z'
+        - title: My Zap
+          type: zap
+          id: 00000000-0000-c000-8000-000000012345
+          is_enabled: true
+          last_successful_run_date: '2019-08-24T14:15:22Z'
+          steps:
+            - title: null
+              action:
+                title: New Deal
+                description: Triggers when a new deal is created.
+                type: action
+                id: uag:1f188536-6dd0-4172-8414-2b90914ddee9
+                action_type: READ
+                app:
+                  title: HubSpot
+                  description: >-
+                    HubSpot is your all-in-one stop for all of your marketing
+                    software needs.
+                  type: app
+                  id: 1e4fcbf4-d80b-4ec3-b33b-c085f1ecbbaa
+                  links:
+                    connect_new_authentication: >-
+                      https://zapier.com/engine/auth/start/HubSpotCLIAPI@1.7.1?redirect=https%3A%2F%2Fapi.zapier.com%2Fv2%2Fauthentications%2Fredirect
+                  categories:
+                    - slug: marketing-automation
+                  image: >-
+                    https://zapier-images.imgix.net/storage/developer/cde9764aa8d19fdd6d591455dbe5a78d.png?auto=format%2Ccompress&ixlib=python-3.0.0&q=50
+                  images:
+                    url_16x16: >-
+                      https://zapier-images.imgix.net/storage/developer/cde9764aa8d19fdd6d591455dbe5a78d.png?auto=format%2Ccompress&fit=crop&h=16&ixlib=python-3.0.0&q=50&w=16
+                    url_32x32: >-
+                      https://zapier-images.imgix.net/storage/developer/cde9764aa8d19fdd6d591455dbe5a78d.png?auto=format%2Ccompress&fit=crop&h=32&ixlib=python-3.0.0&q=50&w=32
+                    url_64x64: >-
+                      https://zapier-images.imgix.net/storage/developer/cde9764aa8d19fdd6d591455dbe5a78d.png?auto=format%2Ccompress&fit=crop&h=64&ixlib=python-3.0.0&q=50&w=64
+                    url_128x128: >-
+                      https://zapier-images.imgix.net/storage/developer/cde9764aa8d19fdd6d591455dbe5a78d.png?auto=format%2Ccompress&fit=crop&h=128&ixlib=python-3.0.0&q=50&w=128
+                  hex_color: 8bcbca
+              inputs: {}
+              authentication:
+                title: Hubspot (example@zapier.com)
+                type: authentication
+                id: b3eYnwl
+                app:
+                  title: HubSpot
+                  description: >-
+                    HubSpot is your all-in-one stop for all of your marketing
+                    software needs.
+                  type: app
+                  id: 1e4fcbf4-d80b-4ec3-b33b-c085f1ecbbaa
+                  links:
+                    connect_new_authentication: >-
+                      https://zapier.com/engine/auth/start/HubSpotCLIAPI@1.7.1?redirect=https%3A%2F%2Fapi.zapier.com%2Fv2%2Fauthentications%2Fredirect
+                  categories:
+                    - slug: marketing-automation
+                  image: >-
+                    https://zapier-images.imgix.net/storage/developer/cde9764aa8d19fdd6d591455dbe5a78d.png?auto=format%2Ccompress&ixlib=python-3.0.0&q=50
+                  images:
+                    url_16x16: >-
+                      https://zapier-images.imgix.net/storage/developer/cde9764aa8d19fdd6d591455dbe5a78d.png?auto=format%2Ccompress&fit=crop&h=16&ixlib=python-3.0.0&q=50&w=16
+                    url_32x32: >-
+                      https://zapier-images.imgix.net/storage/developer/cde9764aa8d19fdd6d591455dbe5a78d.png?auto=format%2Ccompress&fit=crop&h=32&ixlib=python-3.0.0&q=50&w=32
+                    url_64x64: >-
+                      https://zapier-images.imgix.net/storage/developer/cde9764aa8d19fdd6d591455dbe5a78d.png?auto=format%2Ccompress&fit=crop&h=64&ixlib=python-3.0.0&q=50&w=64
+                    url_128x128: >-
+                      https://zapier-images.imgix.net/storage/developer/cde9764aa8d19fdd6d591455dbe5a78d.png?auto=format%2Ccompress&fit=crop&h=128&ixlib=python-3.0.0&q=50&w=128
+                  hex_color: 8bcbca
+            - title: null
+              action:
+                title: Create Ad Statistics Report
+                description: Creates a report of Ad Statistics
+                type: action
+                id: uag:1f188536-6dd0-4172-8414-2b90914ddaa7
+                action_type: WRITE
+                app:
+                  title: Facebook Lead Ads
+                  description: >-
+                    Facebook lead ads make signing up for business information
+                    easy for people and more valuable for businesses. The
+                    Facebook lead ad app is useful for marketers who want to
+                    automate actions on their leads.
+                  type: app
+                  id: 1e4fcbf4-d80b-4ec3-b33b-c085f1ecaacc
+                  url: >-
+                    https://api.zapier.com/v1/embed/apps/facebook-lead-ads-beta/integrations/facebook-lead-ads-beta
+                  links:
+                    connect_new_authentication: >-
+                      https://zapier.com/engine/auth/start/FacebookLeadAdsCLIAPI@1.6.1?redirect=https%3A%2F%2Fapi.zapier.com%2Fv2%2Fauthentications%2Fredirect
+                  categories:
+                    - slug: ads-conversion
+                  image: >-
+                    https://zapier-images.imgix.net/storage/services/f407c31b217aac6e0cd4171092d53a8c_3.png?auto=format%2Ccompress&ixlib=python-3.0.0&q=50
+                  images:
+                    url_16x16: >-
+                      https://zapier-images.imgix.net/storage/services/f407c31b217aac6e0cd4171092d53a8c_3.png?auto=format%2Ccompress&fit=crop&h=16&ixlib=python-3.0.0&q=50&w=16
+                    url_32x32: >-
+                      https://zapier-images.imgix.net/storage/services/f407c31b217aac6e0cd4171092d53a8c_3.png?auto=format%2Ccompress&fit=crop&h=32&ixlib=python-3.0.0&q=50&w=32
+                    url_64x64: >-
+                      https://zapier-images.imgix.net/storage/services/f407c31b217aac6e0cd4171092d53a8c_3.png?auto=format%2Ccompress&fit=crop&h=64&ixlib=python-3.0.0&q=50&w=64
+                    url_128x128: >-
+                      https://zapier-images.imgix.net/storage/services/f407c31b217aac6e0cd4171092d53a8c_3.png?auto=format%2Ccompress&fit=crop&h=128&ixlib=python-3.0.0&q=50&w=128
+                  hex_color: 1878f3
+              inputs: {}
+              authentication:
+                title: Facebook Lead Ads (example@zapier.com)
+                type: authentication
+                id: BRn9rRg
+                app:
+                  title: Facebook Lead Ads
+                  description: >-
+                    Facebook lead ads make signing up for business information
+                    easy for people and more valuable for businesses. The
+                    Facebook lead ad app is useful for marketers who want to
+                    automate actions on their leads.
+                  type: app
+                  id: 1e4fcbf4-d80b-4ec3-b33b-c085f1ecaacc
+                  url: >-
+                    https://api.zapier.com/v1/embed/apps/facebook-lead-ads-beta/integrations/facebook-lead-ads-beta
+                  links:
+                    connect_new_authentication: >-
+                      https://zapier.com/engine/auth/start/FacebookLeadAdsCLIAPI@1.6.1?redirect=https%3A%2F%2Fapi.zapier.com%2Fv2%2Fauthentications%2Fredirect
+                  categories:
+                    - slug: ads-conversion
+                  image: >-
+                    https://zapier-images.imgix.net/storage/services/f407c31b217aac6e0cd4171092d53a8c_3.png?auto=format%2Ccompress&ixlib=python-3.0.0&q=50
+                  images:
+                    url_16x16: >-
+                      https://zapier-images.imgix.net/storage/services/f407c31b217aac6e0cd4171092d53a8c_3.png?auto=format%2Ccompress&fit=crop&h=16&ixlib=python-3.0.0&q=50&w=16
+                    url_32x32: >-
+                      https://zapier-images.imgix.net/storage/services/f407c31b217aac6e0cd4171092d53a8c_3.png?auto=format%2Ccompress&fit=crop&h=32&ixlib=python-3.0.0&q=50&w=32
+                    url_64x64: >-
+                      https://zapier-images.imgix.net/storage/services/f407c31b217aac6e0cd4171092d53a8c_3.png?auto=format%2Ccompress&fit=crop&h=64&ixlib=python-3.0.0&q=50&w=64
+                    url_128x128: >-
+                      https://zapier-images.imgix.net/storage/services/f407c31b217aac6e0cd4171092d53a8c_3.png?auto=format%2Ccompress&fit=crop&h=128&ixlib=python-3.0.0&q=50&w=128
+                  hex_color: 1878f3
+          links:
+            html_editor: >-
+              https://zapier.com/webintent/edit-zap/00000000-0000-c000-8000-000000012345
+          updated_at: '2019-08-24T14:15:22Z'
+    AuthenticationsCreateNewAuthenticationRequest:
+      type: object
+      properties:
+        data:
+          type: object
+          x-stoplight:
+            id: ikchkp3loucw7
+          properties:
+            title:
+              description: The title of the authentication.
+              type: string
+              maxLength: 255
+              example: SuperExampleCRM (example@zapier.com)
+              x-stoplight:
+                id: qsah1luqpw3aw
+            app:
+              description: A canonical App ID, as provided by the `/apps` endpoint.
+              type: string
+              format: uuid
+              example: 868f9d3c-2ea0-4f19-a32d-a61b276ab8de
+              x-stoplight:
+                id: 4t3xjr9hkys93
+            authentication_fields:
+              description: >-
+                Required values to create an authentication. These values will
+                be used by the target integration to successfully create the
+                Authentication https://platform.zapier.com/build/auth.
+              type: object
+              x-stoplight:
+                id: qjdjpcuahd3ah
+          required:
+            - title
+            - app
+            - authentication_fields
+    ActionsGetInputFieldsRequest:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/InputsWithAuthenticationId'
+          x-stoplight:
+            id: k2qnaa3i5c3qb
+    ActionsGetOutputFieldsRequest:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/InputsWithAuthenticationIdAndFetchLiveSamples'
+          x-stoplight:
+            id: yi2s3ggfutlr0
+    ActionsGetChoicesRequest:
+      type: object
+      x-examples:
+        Example 1:
+          data:
+            authentication: J2PlD7Rt
+            inputs:
+              worksheet: 123_nKsdw34
+      properties:
+        data:
+          type: object
+          required:
+            - authentication
+          properties:
+            authentication:
+              type: string
+            inputs:
+              type: object
+      required:
+        - data
+    ZapsCreateZapRequest:
+      type: object
+      properties:
+        data:
+          description: The definition of the Zap that will be created.
+          $ref: '#/components/schemas/Zap'
+          x-stoplight:
+            id: vw89ibjhro143
+      required:
+        - data
+    ActionsTestActionExecutionRequest:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/InputsWithAuthenticationIdNoPage'
+          x-stoplight:
+            id: d4ph7lebgpk9p
+    ActionsListAvailableActionsResponse:
+      type: object
+      properties:
+        links:
+          $ref: '#/components/schemas/Links'
+        meta:
+          $ref: '#/components/schemas/Meta'
+        data:
+          x-stoplight:
+            id: y66uevss99ldk
+          type: array
+          items:
+            $ref: '#/components/schemas/Action'
+            x-stoplight:
+              id: 08691ffzj6wm3
+    ActionsListAvailableActions404Response:
+      type: object
+      properties:
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/JSON-Error'
+    ActionsListAvailableActions406Response:
+      type: object
+      properties:
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/JSON-Error'
+    ActionsListAvailableActions415Response:
+      type: object
+      properties:
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/JSON-Error'
+    ActionsListAvailableActionsdefaultResponse:
+      type: object
+      properties:
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/JSON-Error'
+            x-stoplight:
+              id: h3ihokmwh1x4o
+    AuthenticationsGetAvailableResponse:
+      type: object
+      properties:
+        links:
+          $ref: '#/components/schemas/Links'
+        meta:
+          $ref: '#/components/schemas/Meta'
+        data:
+          x-stoplight:
+            id: 8xv9pjeka9p4w
+          type: array
+          items:
+            $ref: '#/components/schemas/Authentication'
+            x-stoplight:
+              id: oglwzigsyobyg
+    AuthenticationsCreateNewAuthenticationResponse:
+      type: object
+      properties:
+        links:
+          $ref: '#/components/schemas/Links'
+          x-stoplight:
+            id: n7dl4exiymwf5
+        meta:
+          $ref: '#/components/schemas/Meta'
+          x-stoplight:
+            id: tnsnoe6rr38by
+        data:
+          type: array
+          x-stoplight:
+            id: sp4f7twbjuyvt
+          items:
+            $ref: '#/components/schemas/Authentication'
+            x-stoplight:
+              id: lxvorbxynz7q4
+    ActionsGetInputFieldsResponse:
+      type: object
+      properties:
+        meta:
+          $ref: '#/components/schemas/Meta'
+        data:
+          x-stoplight:
+            id: d12jbgm654li9
+          type: array
+          items:
+            x-stoplight:
+              id: oqly4mdn0oahi
+            anyOf:
+              - $ref: '#/components/schemas/Input-Field'
+                x-stoplight:
+                  id: aa89vbos7u7bt
+              - $ref: '#/components/schemas/Fieldset'
+                x-stoplight:
+                  id: hhdrvc5sgwy4m
+              - $ref: '#/components/schemas/Info-Field'
+                x-stoplight:
+                  id: 22g4l4bd4w92z
+    ActionsGetOutputFieldsResponse:
+      type: object
+      properties:
+        meta:
+          $ref: '#/components/schemas/Meta'
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Output-Field'
+    ActionsGetChoicesResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Choice'
+        meta:
+          $ref: '#/components/schemas/MetaWithPage'
+        links:
+          $ref: '#/components/schemas/LinksWithPage'
+          x-stoplight:
+            id: b7vo65yrboxrv
+    AppsListPopularResponse:
+      type: object
+      properties:
+        links:
+          $ref: '#/components/schemas/Links'
+        meta:
+          $ref: '#/components/schemas/Meta'
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/App'
+            x-stoplight:
+              id: vuqdljvf1dkfx
+    AppsListPopular401Response:
+      type: object
+      properties:
+        errors:
+          type: array
+          x-stoplight:
+            id: vdmg3yluafenr
+          items:
+            $ref: '#/components/schemas/JSON-Error'
+            x-stoplight:
+              id: l58vecxneaykz
+    ExperimentalGetZapRunsResponse:
+      type: object
+      properties:
+        data:
+          description: The list of Zap Runs.
+          type: array
+          items:
+            $ref: '#/components/schemas/ZapRun'
+        links:
+          $ref: '#/components/schemas/Links'
+        Meta:
+          $ref: '#/components/schemas/Meta'
+    ExperimentalGetZapRuns401Response:
+      type: object
+      properties:
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/JSON-Error'
+    ExperimentalGetZapRuns403Response:
+      type: object
+      properties:
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/JSON-Error'
+    ZapsGetFilteredZapsResponse:
+      type: object
+      properties:
+        links:
+          $ref: '#/components/schemas/Links'
+        meta:
+          $ref: '#/components/schemas/Meta'
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Zap'
+            x-stoplight:
+              id: sxhd9c6l6g7ua
+    ZapsGetFilteredZaps401Response:
+      type: object
+      properties:
+        errors:
+          type: array
+          x-stoplight:
+            id: vdmg3yluafenr
+          items:
+            $ref: '#/components/schemas/JSON-Error'
+            x-stoplight:
+              id: l58vecxneaykz
+    ZapsGetFilteredZaps403Response:
+      type: object
+      properties:
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/JSON-Error'
+    ZapsCreateZapResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/Zap'
+          x-stoplight:
+            id: oqmlg56a9ej8h
+    ActionsTestActionExecutionResponse:
+      type: object
+      properties:
+        '':
+          type: string
+          x-stoplight:
+            id: m15m1mdsk7bvc
+    ActionsTestActionExecution200Response:
+      type: object
+      properties:
+        data:
+          type: array
+          x-stoplight:
+            id: qlbm0e8jqc3ly
+          items:
+            x-stoplight:
+              id: x26i0e55dyp02
+            type: object
+        meta:
+          $ref: '#/components/schemas/Meta'
+          x-stoplight:
+            id: npiau31y6oeeh
+        links:
+          $ref: '#/components/schemas/Links'
+          x-stoplight:
+            id: zhn4igtrkhlyx
+  requestBodies:
+    Inputs:
+      description: Common inputs with inputs and an authentication id.
+      content:
+        application/vnd.api+json:
+          schema:
+            $ref: '#/components/schemas/ActionsGetInputFieldsRequest'
+          examples: {}
+    Outputs:
+      description: >-
+        Common inputs with inputs, an authentication id and a parameter to
+        optionally retrieve live samples for the field
+      content:
+        application/vnd.api+json:
+          schema:
+            $ref: '#/components/schemas/ActionsGetOutputFieldsRequest'
+    TestAction:
+      description: >-
+        Authentication id and inputs (such as `worksheet`, `spreadsheet` for
+        google sheets, `text` and `channel` for slack) used to test the action.
+      content:
+        application/vnd.api+json:
+          schema:
+            $ref: '#/components/schemas/ActionsTestActionExecutionRequest'
+  securitySchemes:
+    OAuth2:
+      description: >-
+        Contact Zapier support for your Client ID and Secret. More details are
+        available [here](https://platform.zapier.com/embed/partner-api).
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://zapier.com/oauth/authorize/
+          tokenUrl: https://zapier.com/oauth/token/
+          refreshUrl: https://zapier.com/oauth/token/
+          scopes:
+            profile: Read profile information about the currently-authenticated user
+            zap: Read Zaps
+            zap:write: Write Zaps
+            authentication: Read Authentications
+            authentication:write: Write Authentications
+            zap:runs: Read Zap Runs
+        implicit:
+          authorizationUrl: https://zapier.com/oauth/authorize/
+          scopes:
+            profile: Read profile information about the currently-authenticated user
+            zap: Read Zaps
+            zap:write: Write Zaps
+            authentication: Read Authentications
+            authentication:write: Write Authentications
+            zap:runs: Read Zap Runs
+x-stoplight:
+  id: v4f9fwzq9hclo

@@ -135,7 +135,6 @@ tags:
   - name: Analyze Order Delivery
   - name: Operate Order Status
   - name: Partner Management
-  - name: Customer Experience
   - name: Order Delivery Webhooks
   - name: ordering-universal-connector
   - name: Analyse Partner Performance
@@ -143,10 +142,10 @@ tags:
   - name: order-injection-status-updater
   - name: JET Connect for Manage Partner Availability
   - name: Manage Partner Devices
+  - name: Customer Experience
   - name: Order Acceptance Webhooks
   - name: restaurant-availability-api
   - name: Process Partner Onboarding
-  - name: Promote Partners to Customers
   - name: Attempted Delivery Webhooks
   - name: Manage Customer Information
   - name: JET Connect for Manage Product Catalogue
@@ -7199,471 +7198,6 @@ paths:
                     - description: Couldn't complete request
         '500':
           $ref: '#/components/responses/500ErrorResponseYaml'
-      x-status: Stable
-  /search/autocomplete/{tenant}:
-    get:
-      tags:
-        - Customer Experience
-        - Promote Partners to Customers
-        - publicly-accessible
-      summary: Get auto-completed search terms
-      operationId: CustomerExperience_getAutoCompletedSearchTerms
-      description: >-
-        Provides auto-completed search terms for restaurants, cuisines and
-        products available in a given location.
-      parameters:
-        - description: A valid country code, e.g. "uk".
-          schema:
-            type: string
-          in: path
-          required: true
-          name: tenant
-        - description: User's search term - at least one character required
-          schema:
-            type: string
-            minLength: 1
-            maxLength: 128
-          in: query
-          required: true
-          name: searchTerm
-        - description: >-
-            The latitude and longitude coordinates of the location in which to
-            search.
-
-            Specify the coordinates as latitude,longitude.
-          schema:
-            minItems: 2
-            items:
-              format: decimal
-              type: number
-            type: array
-            maxItems: 2
-          in: query
-          explode: false
-          style: form
-          name: latlong
-          example:
-            - 51.501285
-            - -0.1424422
-          required: true
-        - description: >-
-            Limit the number of auto-completed terms returned by the API.
-            Defaults to 7. Valid values 1 - 10
-          schema:
-            format: integer
-            type: number
-          in: query
-          required: false
-          name: limit
-        - description: |-
-            Filter autocomplete results by service type.
-            Valid values are "any", "delivery" and "collection".
-            Defaults to "any".
-          schema:
-            type: array
-            items:
-              $ref: '#/components/schemas/SearchServiceTypesYaml'
-          in: query
-          name: serviceType
-          required: false
-        - description: >-
-            Filter restaurants, dishes and cuisines by provided exclusion list.
-
-            Search filter will be applied only if this array contains the value
-            `alcohol`.
-          schema:
-            type: array
-            items:
-              type: string
-          in: query
-          name: excluded-result-types
-          required: false
-        - description: Descriptor of client or internal application
-          name: x-jet-application
-          in: header
-          schema:
-            type: string
-          required: false
-      responses:
-        '200':
-          description: Success
-          headers:
-            cache-control:
-              description: Information about how the response can be cached.
-              schema:
-                type: string
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SearchAutoCompleteSearchResponseYaml'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              example:
-                errors:
-                  - description: Validation failed on one or more fields
-                    errorCode: 400
-                    fields:
-                      - latlong
-                traceId: 0HLOCKDKQPKIU
-                faultId: 72d7036d-990a-4f84-9efa-ef5f40f6044b
-              schema:
-                $ref: >-
-                  #/components/schemas/CustomerExperienceGetAutoCompletedSearchTermsResponse
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              example:
-                errors:
-                  - errorCode: '401'
-                traceId: 0HLOCKDKQPKIU
-                faultId: 72d7036d-990a-4f84-9efa-ef5f40f6044b
-              schema:
-                $ref: '#/components/schemas/4XxErrorSchemaYaml'
-        '429':
-          description: >-
-            Too Many Requests : Request not completed as server has received too
-            many requests in a given amount of time.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/4XxErrorSchemaYaml'
-              example:
-                fault:
-                  traceId: 0HLOCKDKQPKIU
-                  faultId: 72d7036d-990a-4f84-9efa-ef5f40f6044b
-                  errors:
-                    - description: Couldn't complete request
-        '500':
-          $ref: '#/components/responses/500ErrorResponseYaml'
-        '503':
-          description: Service Unavailable
-          content:
-            application/json:
-              example:
-                traceId: 0HLOCKDKQPKIU
-                faultId: 72d7036d-990a-4f84-9efa-ef5f40f6044b
-              schema:
-                $ref: >-
-                  #/components/schemas/CustomerExperienceGetAutoCompletedSearchTerms503Response
-      x-status: Stable
-  /search/menu/{tenant}/{restaurantId}:
-    get:
-      tags:
-        - Customer Experience
-        - Promote Partners to Customers
-        - publicly-accessible
-      summary: Get Products from a menu
-      operationId: CustomerExperience_searchMenuProducts
-      description: >-
-        Provides a list of products that have matched the given search term
-        against the restaurants menu
-      parameters:
-        - description: A valid country code, e.g. "uk".
-          schema:
-            type: string
-          in: path
-          required: true
-          name: tenant
-        - description: The ID for a restaurant
-          schema:
-            type: string
-          in: path
-          required: true
-          name: restaurantId
-        - description: User's search term - at least one character required
-          schema:
-            type: string
-            minLength: 1
-            maxLength: 128
-          in: query
-          required: true
-          name: searchTerm
-        - description: Limit the number of terms returned by the API, defaults to 100
-          schema:
-            format: integer
-            type: number
-            default: 100
-            minimum: 1
-            maximum: 100
-          in: query
-          required: false
-          name: limit
-        - description: |-
-            Filter product results by service type.
-            Valid values are "any", "delivery" and "collection".
-            Defaults to "delivery".
-          schema:
-            type: array
-            default: delivery
-            items:
-              $ref: '#/components/schemas/SearchServiceTypesYaml'
-          in: query
-          name: serviceType
-          required: false
-        - description: >-
-            Filter dishes by provided exclusion list.
-
-            Search filter will be applied only if this array contains the value
-            `alcohol`.
-          schema:
-            type: array
-            items:
-              type: string
-          in: query
-          name: excluded-result-types
-          required: false
-        - description: Descriptor of client or internal application
-          name: x-jet-application
-          in: header
-          schema:
-            type: string
-          required: false
-      responses:
-        '200':
-          description: Success
-          headers:
-            cache-control:
-              description: Information about how the response can be cached.
-              schema:
-                type: string
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SearchMenuSearchResponseYaml'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/4XxErrorSchemaYaml'
-              example:
-                errors:
-                  - description: Validation failed on one or more fields
-                    errorCode: 400
-                    fields:
-                      - tenant
-                traceId: 0HLOCKDKQPKIU
-                faultId: 72d7036d-990a-4f84-9efa-ef5f40f6044b
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/4XxErrorSchemaYaml'
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/4XxErrorSchemaYaml'
-        '422':
-          description: Unprocessable Entity
-          content:
-            application/json:
-              example:
-                errors:
-                  - description: The search term is an allergen phrase
-                    errorCode: 422
-                traceId: 0HLOCKDKQPKIU
-                faultId: 72d7036d-990a-4f84-9efa-ef5f40f6044b
-              schema:
-                $ref: >-
-                  #/components/schemas/CustomerExperienceSearchMenuProductsResponse
-        '429':
-          description: >-
-            Too Many Requests : Request not completed as server has received too
-            many requests in a given amount of time.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/4XxErrorSchemaYaml'
-              example:
-                fault:
-                  traceId: 0HLOCKDKQPKIU
-                  faultId: 72d7036d-990a-4f84-9efa-ef5f40f6044b
-                  errors:
-                    - description: Couldn't complete request
-        '500':
-          $ref: '#/components/responses/500ErrorResponseYaml'
-        '503':
-          description: Service Unavailable
-          content:
-            application/json:
-              example:
-                traceId: 0HLOCKDKQPKIU
-                faultId: 72d7036d-990a-4f84-9efa-ef5f40f6044b
-              schema:
-                $ref: >-
-                  #/components/schemas/CustomerExperienceSearchMenuProducts503Response
-      x-status: Stable
-  /search/restaurants/{tenant}:
-    get:
-      tags:
-        - Customer Experience
-        - Promote Partners to Customers
-        - publicly-accessible
-      summary: Search restaurants
-      operationId: CustomerExperience_searchRestaurantsByLatLong
-      description: |-
-        Get restaurants available in a given lat-long which match a search term.
-        Matches can be found against the name, a cuisine or a product.
-      parameters:
-        - description: A valid country code, e.g. "uk".
-          schema:
-            type: string
-          in: path
-          required: true
-          name: tenant
-        - description: User's search term.
-          schema:
-            type: string
-            minLength: 1
-            maxLength: 128
-          in: query
-          required: true
-          name: searchTerm
-        - description: >-
-            The latitude and longitude coordinates of the location in which to
-            search.
-
-            Specify the coordinates as latitude,longitude.
-          schema:
-            minItems: 2
-            items:
-              format: decimal
-              type: number
-            type: array
-            maxItems: 2
-          in: query
-          explode: false
-          style: form
-          name: latlong
-          example:
-            - 51.501285
-            - -0.1424422
-          required: true
-        - description: |-
-            Limit the number of restaurants returned by the API.
-            Valid values are numbers between 1 and 500.
-            If not provided, the limit defaults to 300.
-          schema:
-            format: integer
-            type: number
-          in: query
-          required: false
-          name: limit
-        - description: Include test partners in results. Value can be true or false.
-          schema:
-            type: string
-          in: query
-          name: include-test-partners
-          required: false
-        - description: |-
-            Filter restaurant results by service type.
-            Valid values are "any", "delivery" and "collection".
-            Defaults to "any".
-          schema:
-            type: array
-            items:
-              $ref: '#/components/schemas/SearchServiceTypesYaml'
-          in: query
-          name: serviceType
-          required: false
-        - description: >-
-            Filter restaurants and dishes by provided exclusion list.
-
-            Search filter will be applied only if this array contains the value
-            `alcohol`.
-          schema:
-            type: array
-            items:
-              type: string
-          in: query
-          name: excluded-result-types
-          required: false
-        - description: Descriptor of client or internal application
-          name: x-jet-application
-          in: header
-          schema:
-            type: string
-          required: false
-      responses:
-        '200':
-          description: Success
-          headers:
-            cache-control:
-              description: Information about how the response can be cached.
-              schema:
-                type: string
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SearchRestaurantSearchResponseYaml'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              example:
-                errors:
-                  - description: Validation failed on one or more fields
-                    errorCode: 400
-                    fields:
-                      - latlong
-                traceId: 0HLOCKDKQPKIU
-                faultId: 72d7036d-990a-4f84-9efa-ef5f40f6044b
-              schema:
-                $ref: '#/components/schemas/4XxErrorSchemaYaml'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              example:
-                errors:
-                  - errorCode: '401'
-                traceId: 0HLOCKDKQPKIU
-                faultId: 72d7036d-990a-4f84-9efa-ef5f40f6044b
-              schema:
-                $ref: '#/components/schemas/4XxErrorSchemaYaml'
-        '422':
-          description: Unprocessable Entity - search term rejected
-          content:
-            application/json:
-              example:
-                errors:
-                  - errorCode: '422'
-                traceId: 0HLOCKDKQPKIU
-                faultId: 72d7036d-990a-4f84-9efa-ef5f40f6044b
-              schema:
-                $ref: '#/components/schemas/4XxErrorSchemaYaml'
-        '429':
-          description: >-
-            Too Many Requests : Request not completed as server has received too
-            many requests in a given amount of time.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/4XxErrorSchemaYaml'
-              example:
-                fault:
-                  traceId: 0HLOCKDKQPKIU
-                  faultId: 72d7036d-990a-4f84-9efa-ef5f40f6044b
-                  errors:
-                    - description: Couldn't complete request
-        '500':
-          $ref: '#/components/responses/500ErrorResponseYaml'
-        '503':
-          description: Service Unavailable
-          content:
-            application/json:
-              example:
-                traceId: 0HLOCKDKQPKIU
-                faultId: 72d7036d-990a-4f84-9efa-ef5f40f6044b
-              schema:
-                $ref: >-
-                  #/components/schemas/CustomerExperienceSearchRestaurantsByLatLongResponse
       x-status: Stable
   /send-to-pos-failed:
     post:
@@ -19656,6 +19190,10 @@ components:
     DaasDaaSAssistanceRequestYaml:
       description: The assistance request object.
       type: object
+      required:
+        - requestId
+        - collect
+        - reason
       properties:
         requestId:
           description: >-
@@ -19663,14 +19201,16 @@ components:
             delivery](https://uk.api.just-eat.io/docs/) endpoint
           type: string
           nullable: false
-        collectId:
+        collect:
           description: >-
             Collect point used to identify the pick-up address. Represents a
             restaurant, a grocery store, or any other collect point. The
             available collect points can be retrieved using the [Get Collect
             Points](https://uk.api.just-eat.io/docs/) endpoint.
           nullable: false
-          type: string
+          type: object
+          required:
+            - id
           properties:
             id:
               description: The collect point Id.
@@ -19712,6 +19252,8 @@ components:
     DaasDaaSCancelDeliveryRequestYaml:
       description: The cancel delivery object.
       type: object
+      required:
+        - requestId
       properties:
         requestId:
           description: >-
@@ -19740,6 +19282,10 @@ components:
       title: CancelJobStatus
       description: The status of a cancellation request.
       type: object
+      required:
+        - status
+        - message
+        - requestId
       properties:
         status:
           description: The status of a cancellation request.
@@ -19750,8 +19296,9 @@ components:
           nullable: false
         message:
           description: >-
-            The error message associated with a failed cancellation request(only
-            provided if the status is false).
+            The error message associated with a failed cancellation request
+            (only provided if the status is false, otherwise this property will
+            be empty).
           type: string
           nullable: false
         requestId:
@@ -19761,6 +19308,7 @@ components:
       example:
         status: true
         message: ''
+        requestId: e0d58b3a-f547-4013-a4e5-728263040f33
     DaasDaaSCollectPointAddressResponseYaml:
       description: The collect point address.
       type: object
@@ -19898,6 +19446,9 @@ components:
       title: CourierCollectionTime
       description: The Courier Collection Time ETA.
       type: object
+      required:
+        - courierETA
+        - requestId
       properties:
         courierETA:
           description: >-
@@ -19916,6 +19467,10 @@ components:
       title: CourierLocation
       description: The Courier Location.
       type: object
+      required:
+        - latitude
+        - longitude
+        - requestId
       properties:
         latitude:
           description: The courier's latitude.
@@ -19937,6 +19492,12 @@ components:
       title: CourierJobStatus
       description: The status of a delivery.
       type: object
+      required:
+        - status
+        - orderId
+        - requestId
+        - orderTrackerURL
+        - courier
       properties:
         status:
           description: The current status of a delivery.
@@ -19969,15 +19530,15 @@ components:
           type: string
           nullable: false
         courier:
-          description: >-
-            Details about the courier associated with the delivery.  Note --
-            This is not currently available for EU deliveries.
+          description: Details about the courier associated with the delivery.
           type: object
+          required:
+            - name
           properties:
             name:
               description: >-
                 Name of the courier.  Note -- This is not currently available
-                for EU deliveries.
+                for EU deliveries, and will be blank in this market.
               type: string
               nullable: false
       example:
@@ -19991,6 +19552,12 @@ components:
     DaasDaaSDeliveryAddressYaml:
       description: Delivery Point address.
       type: object
+      required:
+        - name
+        - emailAddress
+        - phoneNumber
+        - address
+        - city
       properties:
         name:
           description: Name of the delivery point.
@@ -20047,6 +19614,9 @@ components:
       title: DeliveryCreated
       description: The Skip order number for a DaaS order.
       type: object
+      required:
+        - requestId
+        - orderNumber
       properties:
         requestId:
           description: The request Id associated with the delivery.
@@ -20074,7 +19644,8 @@ components:
           type: number
           format: int32
           nullable: false
-          minimum: 0
+          minimum: 5
+          maximum: 60
         hasAlcohol:
           description: >-
             Whether the order contains alcohol or not. If not specified, the
@@ -20094,6 +19665,9 @@ components:
       title: DeliveryRejected
       description: Delivery Rejected request.
       type: object
+      required:
+        - message
+        - requestId
       properties:
         message:
           description: >-
@@ -20111,6 +19685,8 @@ components:
     DaasDaaSDeliveryRequestYaml:
       description: The delivery object.
       type: object
+      required:
+        - requestId
       properties:
         requestId:
           description: >-
@@ -20261,6 +19837,9 @@ components:
     DaasDaaSEstimateRequestYaml:
       description: The estimate delivery object.
       type: object
+      required:
+        - collect
+        - delivery
       properties:
         collect:
           description: >-
@@ -20269,6 +19848,8 @@ components:
             available collect points can be retrieved using the [Get Collect
             Points](https://uk.api.just-eat.io/docs/) endpoint.
           nullable: false
+          required:
+            - id
           type: object
           properties:
             id:
@@ -20280,11 +19861,11 @@ components:
         deliveryDetails:
           $ref: '#/components/schemas/DaasDaaSDeliveryDetailsYaml'
         targetDeliverTime:
-          description: >-
+          description: >
             Supply this parameter to set up an advance order. It is the time in
             UTC when the partners wish to have the order delivered to the
             customer and should be at least an hour in advance up to a maximum
-            of 5 days.
+            of 5 days.  **Note: Currently not supported for `EU` markets**
           nullable: true
           type: string
           format: date-time
@@ -20308,6 +19889,11 @@ components:
           city: Winnipeg
           province: Manitoba
           postalCode: R3B 3C5
+          geolocation:
+            coordinates:
+              - -37.8156
+              - 144.96292
+            type: point
         deliveryDetails:
           weightGrams: 100
           preparationDuration: 30
@@ -20375,6 +19961,11 @@ components:
     DaasDaaSNotificationConfigRequestYaml:
       description: The notification config object.
       type: object
+      required:
+        - email
+        - endpoint
+        - secret
+        - type
       properties:
         email:
           description: >-
@@ -20470,13 +20061,20 @@ components:
     DaasDaaSNotificationConfigWebhookRequestYaml:
       description: The webhook notification config object.
       type: object
+      required:
+        - id
+        - type
+        - timestamp
+        - data
       properties:
         id:
           description: Event UUID
           type: string
+          nullable: false
         type:
           description: Event Type
           type: string
+          nullable: false
           enum:
             - COURIERJOBSTATUS
             - CANCELJOBSTATUS
@@ -20487,12 +20085,14 @@ components:
         timestamp:
           description: The timestamp in UTC.
           type: string
+          nullable: false
           format: date-time
         data:
           description: >-
             The following data is dispatched to the partner through the webhook
             endpoint.  Please note that `CourierLocation` is not presently
             available for EU markets.
+          nullable: false
           anyOf:
             - $ref: '#/components/schemas/DaasDaaSCourierResponseYaml'
             - $ref: '#/components/schemas/DaasDaaSCancelJobStatusResponseYaml'
@@ -53297,7 +52897,7 @@ components:
       properties:
         coordinates:
           description: >-
-            The only two elements are longitude and latitude precisely in that
+            The only two elements are latitude and longitude precisely in that
             order and using decimal numbers.
           maxItems: 2
           minItems: 2
@@ -53956,6 +53556,10 @@ components:
           description: The voucher code.
           nullable: true
           type: string
+        displayName:
+          description: The user friendly voucher name (could be displayed to the customer)
+          nullable: true
+          type: string
         currency:
           description: The currency code in ISO-4217 format.
           nullable: true
@@ -54569,9 +54173,15 @@ components:
       type: object
       properties:
         globalUserId:
-          description: The user's globally unique ID.
+          description: >-
+            The user's globally unique ID. Must provide either global user id or
+            user id.
+          nullable: true
           type: string
-          example: 8It2lEaJjG82nJtxO00Iab0CoF0=
+        userId:
+          description: The user's unique ID. Must provide either user id or global user id.
+          nullable: true
+          type: string
     VoucherVoucherLockYaml:
       properties:
         RestaurantId:
@@ -55476,153 +55086,6 @@ components:
              at JE.SearchOrchestrator.Controllers.Filters.CacheControlFilter.OnActionExecuted(HttpActionExecutedContext actionExecutedContext) in \\Mac\Home\Documents\GitHub\SearchOrchestrator\src\JE.SearchOrchestrator\Controllers\Filters\CacheControlFilter.cs:line 18
              at System.Web.Http.Filters.ActionFilterAttribute.OnActionExecutedAsync(HttpActionExecutedContext actionExecutedContext, CancellationToken cancellationToken)
           --- End of stack
-    CustomerExperienceGetAutoCompletedSearchTermsResponse:
-      description: A HTTP 4xx error response
-      properties:
-        fault:
-          description: Details of the fault
-          properties:
-            errors:
-              items:
-                properties:
-                  description:
-                    description: >-
-                      Specific details about the error that may assist the you
-                      in resolving the issue
-                    type: string
-                  errorCode:
-                    description: >-
-                      A code that identifies the problem type. It will be
-                      supported by human-readable documentation that identifies
-                      how to resolve the error
-                    type: string
-                  fields:
-                    description: An array of invalid query fields
-                    items:
-                      type: string
-                    type: array
-                type: object
-              type: array
-            traceId:
-              description: >-
-                A value that helps identify the trace back to logs, so that we
-                can easily find what was happening on our system when the fault
-                was generated
-              type: string
-            faultId:
-              description: >-
-                A value that helps identify this response back to logs, so we
-                can easily find this specific fault
-              type: string
-          required:
-            - faultId
-          type: object
-      type: object
-    CustomerExperienceGetAutoCompletedSearchTerms503Response:
-      description: Service Unavailable
-      properties:
-        fault:
-          description: Details of the fault
-          properties:
-            traceId:
-              description: >-
-                A value that helps identify the trace back to logs, so that we
-                can easily find what was happening on our system when the fault
-                was generated
-              type: string
-            faultId:
-              description: >-
-                A value that helps identify this response back to logs, so we
-                can easily find this specific fault
-              type: string
-          required:
-            - faultId
-          type: object
-      type: object
-    CustomerExperienceSearchMenuProductsResponse:
-      description: A HTTP 4xx error response
-      properties:
-        fault:
-          description: Details of the fault
-          properties:
-            errors:
-              items:
-                properties:
-                  description:
-                    description: >-
-                      Specific details about the error that may assist the you
-                      in resolving the issue
-                    type: string
-                  errorCode:
-                    description: >-
-                      A code that identifies the problem type. It will be
-                      supported by human-readable documentation that identifies
-                      how to resolve the error
-                    type: string
-                  fields:
-                    description: An array of invalid query fields
-                    items:
-                      type: string
-                    type: array
-                type: object
-              type: array
-            traceId:
-              description: >-
-                A value that helps identify the trace back to logs, so that we
-                can easily find what was happening on our system when the fault
-                was generated
-              type: string
-            faultId:
-              description: >-
-                A value that helps identify this response back to logs, so we
-                can easily find this specific fault
-              type: string
-          required:
-            - faultId
-          type: object
-      type: object
-    CustomerExperienceSearchMenuProducts503Response:
-      description: Service Unavailable
-      properties:
-        fault:
-          description: Details of the fault
-          properties:
-            traceId:
-              description: >-
-                A value that helps identify the trace back to logs, so that we
-                can easily find what was happening on our system when the fault
-                was generated
-              type: string
-            faultId:
-              description: >-
-                A value that helps identify this response back to logs, so we
-                can easily find this specific fault
-              type: string
-          required:
-            - faultId
-          type: object
-      type: object
-    CustomerExperienceSearchRestaurantsByLatLongResponse:
-      description: Service Unavailable
-      properties:
-        fault:
-          description: Details of the fault
-          properties:
-            traceId:
-              description: >-
-                A value that helps identify the trace back to logs, so that we
-                can easily find what was happening on our system when the fault
-                was generated
-              type: string
-            faultId:
-              description: >-
-                A value that helps identify this response back to logs, so we
-                can easily find this specific fault
-              type: string
-          required:
-            - faultId
-          type: object
-      type: object
   headers:
     CacheControlYaml:
       description: Information about how the response can be cached.

@@ -5,7 +5,7 @@ info:
     improve your search experience.
   title: Meilisearch Core API
   description: Search documents, configure and manage the Meilisearch engine.
-  version: 1.6.0
+  version: 1.7.0
   contact:
     name: Meilisearch
     email: bonjour@Meilisearch.com
@@ -2844,7 +2844,8 @@ paths:
                 Default status of the features:
                   value:
                     vectorStore: false
-                    scoreDetails: false
+                    metrics: true
+                    exportPuffinReports: false
         '401':
           $ref: '#/components/responses/401'
     patch:
@@ -2866,7 +2867,8 @@ paths:
               Example:
                 value:
                   vectorStore: true
-                  scoreDetails: false
+                  metrics: false
+                  exportPuffinReports: false
       responses:
         '200':
           description: Ok
@@ -2879,7 +2881,8 @@ paths:
                 Updated status of the feature:
                   value:
                     vectorStore: true
-                    scoreDetails: false
+                    metrics: false
+                    exportPuffinReports: false
         '401':
           $ref: '#/components/responses/401'
   /metrics:
@@ -3458,8 +3461,8 @@ components:
       type: integer
     customRankingRuleDetails:
       description: >-
-        Custom rule in the form of either `attribute:direction` or
-        `_geoPoint(lat, lng):direction`.
+        Custom rule in the form of either `attribute:direction`,
+        `vectorSort(vector)` or `_geoPoint(lat, lng):direction`.
       type: object
       properties:
         order:
@@ -3475,6 +3478,12 @@ components:
             The distance between the target point and the geoPoint in the
             document
           type: number
+        similarity:
+          description: |
+            the similarity score between the target vector and the value vector.
+
+            1.0 means a perfect similarity, 0.0 a perfect dissimilarity.
+          type: number
       required:
         - order
         - value
@@ -3488,7 +3497,7 @@ components:
         should not return documents that don't match the query).
       type: number
     rankingScoreDetails:
-      description: (EXPERIMENTAL) The ranking score per ranking rule.
+      description: The ranking score per ranking rule.
       type: object
       properties:
         words:
@@ -3497,9 +3506,14 @@ components:
             order:
               $ref: '#/components/schemas/order'
             matchingWords:
-              description: the number of words from the query found
+              description: >-
+                number of words in the query that match in the document. The
+                higher the better.
               type: integer
             maxMatchingWords:
+              description: >-
+                max number of words in the query that can match in the document
+                for this iteration of the words ranking rule.
               type: integer
             score:
               $ref: '#/components/schemas/score'
@@ -3545,7 +3559,7 @@ components:
           properties:
             order:
               $ref: '#/components/schemas/order'
-            attribute_ranking_order_score:
+            attributeRankingOrderScore:
               description: >
                 Score computed depending on the first attribute each word of the
                 query appears in.
@@ -3554,7 +3568,7 @@ components:
                 The first attribute in the `searchableAttributes` list yields
                 the highest score, the last attribute the lowest.
               type: number
-            query_word_distance_score:
+            queryWordDistanceScore:
               description: >
                 Score computed depending on the position the attributes where
                 each word of the query appears in.
@@ -3570,8 +3584,8 @@ components:
               $ref: '#/components/schemas/score'
           required:
             - order
-            - attribute_ranking_order_score
-            - query_word_distance_score
+            - attributeRankingOrderScore
+            - queryWordDistanceScore
             - score
         exactness:
           type: object
@@ -3590,6 +3604,16 @@ components:
 
                 - `noExactMatch`: any other document.
               type: string
+            matchingWords:
+              description: >
+                for `noExactMatch`, the number of exact words contained in an
+                attribute. The higher the better.
+              type: integer
+            maxMatchingWords:
+              description: >
+                for `noExactMatch`, the maximum number of exact words contained
+                in an attribute
+              type: integer
             score:
               $ref: '#/components/schemas/score'
           required:
@@ -3678,8 +3702,8 @@ components:
           type: number
         _rankingScoreDetails:
           description: >-
-            (EXPERIMENTAL) Only present if showRankingScoreDetails = `true`. The
-            ranking score of each ranking rule for that document.
+            Only present if showRankingScoreDetails = `true`. The ranking score
+            of each ranking rule for that document.
           type: object
           properties:
             '':
@@ -4478,9 +4502,9 @@ components:
           default: false
         showRankingScoreDetails:
           description: >-
-            (EXPERIMENTAL) Defines whether a `_rankingScoreDetails` object
-            containing information about the score of that document for each
-            ranking rule should be returned or not.
+            Defines whether a `_rankingScoreDetails` object containing
+            information about the score of that document for each ranking rule
+            should be returned or not.
           type: boolean
           default: false
         matchingStrategy:
@@ -4850,7 +4874,9 @@ components:
       properties:
         vectorStore:
           type: boolean
-        scoreDetails:
+        metrics:
+          type: boolean
+        exportPuffinReports:
           type: boolean
     HealthCheckMeilisearchInstanceResponse:
       type: object
@@ -5040,21 +5066,27 @@ components:
       properties:
         vectorStore:
           type: boolean
-        scoreDetails:
+        metrics:
+          type: boolean
+        exportPuffinReports:
           type: boolean
       required:
         - vectorStore
-        - scoreDetails
+        - metrics
+        - exportPuffinReports
     ExperimentalSetRuntimeExperimentalFeaturesResponse:
       type: object
       properties:
         vectorStore:
           type: boolean
-        scoreDetails:
+        metrics:
+          type: boolean
+        exportPuffinReports:
           type: boolean
       required:
         - vectorStore
-        - scoreDetails
+        - metrics
+        - exportPuffinReports
   securitySchemes:
     apiKey:
       description: >-
