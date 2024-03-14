@@ -16,8 +16,87 @@ tags:
   - name: Database
   - name: User
   - name: Comment
+  - name: Token
   - name: Search
 paths:
+  /v1/oauth/token:
+    post:
+      tags:
+        - Token
+      summary: Create a token
+      operationId: Token_generateAccess
+      description: >-
+        Creates an access token that a third-party service can use to
+        authenticate with Notion.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenGenerateAccessRequest'
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              examples:
+                Result:
+                  value: |-
+                    {
+                      "access_token": "e202e8c9-0990-40af-855f-ff8f872b1ec6c",
+                      "bot_id": "b3414d659-1224-5ty7-6ffr-cc9d8773drt601288f",
+                      "duplicated_template_id": null,
+                      "owner": {
+                        "workspace": true
+                      },
+                      "workspace_icon": "https://website.domain/images/image.png",
+                      "workspace_id": "j565j4d7x3-2882-61bs-564a-jj9d9ui-c36hxfr7x",
+                      "workspace_name": "Ada's Notion Workspace"
+                    }
+              schema:
+                $ref: '#/components/schemas/TokenGenerateAccessResponse'
+        '400':
+          description: '400'
+          content:
+            application/json:
+              examples:
+                Result:
+                  value: |-
+                    {
+                        "error": "invalid_request",
+                        "error_description": "body failed validation: body.redirect_uri should be defined, instead was `undefined`."
+                    }
+              schema:
+                $ref: '#/components/schemas/TokenGenerateAccess400Response'
+      deprecated: false
+      x-readme:
+        code-samples:
+          - language: curl
+            code: >-
+              curl --location --request POST
+              'https://api.notion.com/v1/oauth/token' \
+
+              --header 'Authorization: Basic '"$BASE64_ENCODED_ID_AND_SECRET"''
+              \
+
+              --header 'Content-Type: application/json' \
+
+              --header 'Notion-Version: 2022-06-28' \
+
+              --data '{
+                "grant_type": "authorization_code",
+                "code": "e202e8c9-0990-40af-855f-ff8f872b1ec6",
+                "redirect_uri": "https://wwww.my-integration-endpoint.dev/callback",
+                 "external_account": {
+                      "key": "A83823453409384",
+                      "name": "Notion - team@makenotion.com"
+                  }
+              }'
+            name: Create a token for a Link Preview
+          - language: curl
+            code: "curl --location --request POST 'https://api.notion.com/v1/databases/' \\\n--header 'Authorization: Bearer '\"$NOTION_API_KEY\"'' \\\n--header 'Content-Type: application/json' \\\n--header 'Notion-Version: 2022-06-28' \\\n--data '{\n\t\"grant_type\": \"authorization_code\",\n  \"code\": \"e202e8c9-0990-40af-855f-ff8f872b1ec6\",\n  \"redirect_uri\": \"https://example.com/auth/notion/callback\"\n}'"
+            name: Create a token for a public integration
+        samples-languages:
+          - curl
   /v1/blocks/{block_id}/children:
     patch:
       tags:
@@ -2488,6 +2567,44 @@ components:
       type: http
       scheme: bearer
   schemas:
+    TokenGenerateAccessRequest:
+      type: object
+      required:
+        - code
+        - grant_type
+        - redirect_uri
+      properties:
+        code:
+          description: >-
+            A unique random code that Notion generates to authenticate with your
+            service, generated when a user initiates the OAuth flow.
+          type: string
+        grant_type:
+          description: 'A constant string: "authorization_code".'
+          type: string
+          default: '"authorization_code"'
+        redirect_uri:
+          description: >-
+            The `"redirect_uri"` that was provided in the OAuth Domain & URI
+            section of the integration's Authorization settings. Do not include
+            this field if a `"redirect_uri"` query param was not included in the
+            Authorization URL provided to users. In most cases, this field is
+            required.
+          type: string
+        external_account:
+          description: >-
+            Required if and only when building [Link
+            Preview](https://developers.notion.com/docs/link-previews)
+            integrations (otherwise ignored). An object with `key` and `name`
+            properties. `key` should be a unique identifier for the account.
+            Notion uses the `key` to determine whether or not the user is
+            re-connecting the same account. `name` should be some way for the
+            user to know which account they used to authenticate with your
+            service. If a user has authenticated Notion with your integration
+            before and `key` is the same but `name` is different, then Notion
+            updates the `name` associated with your integration.
+          type: object
+          properties: {}
     BlockAppendChildrenRequest:
       type: object
       required:
@@ -2753,6 +2870,43 @@ components:
           type: integer
           default: 100
           format: int32
+    TokenGenerateAccessResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+          example: e202e8c9-0990-40af-855f-ff8f872b1ec6c
+        bot_id:
+          type: string
+          example: b3414d659-1224-5ty7-6ffr-cc9d8773drt601288f
+        duplicated_template_id: {}
+        owner:
+          type: object
+          properties:
+            workspace:
+              type: boolean
+              example: true
+              default: true
+        workspace_icon:
+          type: string
+          example: https://website.domain/images/image.png
+        workspace_id:
+          type: string
+          example: j565j4d7x3-2882-61bs-564a-jj9d9ui-c36hxfr7x
+        workspace_name:
+          type: string
+          example: Ada's Notion Workspace
+    TokenGenerateAccess400Response:
+      type: object
+      properties:
+        error:
+          type: string
+          example: invalid_request
+        error_description:
+          type: string
+          example: >-
+            body failed validation: body.redirect_uri should be defined, instead
+            was `undefined`.
     BlockGetChildrenResponse:
       type: object
       properties:
