@@ -1,0 +1,503 @@
+openapi: 3.0.3
+info:
+  title: Tavus Developer API Collection
+  description: >-
+    We're an AI video research company making personalized video possible at
+    scale. Generate videos of yourself, and never record again! Available via
+    web app & developer APIs.
+  version: 1.0.0
+  contact: {}
+servers:
+  - url: https://tavusapi.com
+tags:
+  - name: Videos
+  - name: Replicas
+paths:
+  /v2/replicas:
+    post:
+      tags:
+        - Replicas
+      summary: Create Replica
+      operationId: Replicas_createNewReplica
+      description: >
+        This endpoint creates a new Replica that can be used to generate
+        personalized videos. 
+
+
+        The only required body parameter is `train_video_url`. This url must be
+        a download link such as a presigned S3 url. Please ensure you pass in a
+        video that meets the
+        [requirements](https://docs.tavusapi.com/api-reference) for training.
+
+
+        Replica training will fail without the following consent statement being
+        present at the beginning of the video:
+
+        > I, [FULL NAME], am currently speaking and consent Tavus to create an
+        AI clone of me by using the audio and video samples I provide. I
+        understand that this AI clone can be used to create videos that look and
+        sound like me.
+
+
+        Learn more about the consent statement
+        [here](https://docs.tavusapi.com/api-reference).
+
+
+        Learn more about training a personal Replica
+        [here](https://docs.tavusapi.com/api-reference).
+      requestBody:
+        content:
+          application/json:
+            examples:
+              Create Replica:
+                value:
+                  callback_url: ''
+                  replica_name: ''
+                  train_video_url: ''
+            schema:
+              $ref: '#/components/schemas/ReplicasCreateNewReplicaRequest'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplicasCreateNewReplicaResponse'
+    get:
+      tags:
+        - Replicas
+      summary: List Replicas
+      operationId: Replicas_list
+      description: >
+        This endpoint returns a list of all replicas that have been created by
+        the API Key in use. In the response, a root level `data` key will
+        contain the list of Replicas.
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplicasListResponse'
+  /v2/replicas/{replica_id}:
+    parameters:
+      - in: path
+        name: replica_id
+        required: true
+        schema:
+          type: string
+    get:
+      tags:
+        - Replicas
+      summary: Get Replica
+      operationId: Replicas_getReplicaById
+      description: >
+        This endpoint returns a single Replica by its unique identifier. 
+
+
+        Included in the response body is a `training_progress` string that
+        represents the progress of the Replica training. If there are any errors
+        during training, the `status` will be `error` and the `error_message`
+        will be populated.
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplicasGetReplicaByIdResponse'
+    delete:
+      tags:
+        - Replicas
+      summary: Delete Replica
+      operationId: Replicas_deleteByReplicaId
+      description: >
+        This endpoint deletes a single Replica by its unique identifier. Once
+        deleted, this Replica can not be used to generate videos.
+      responses:
+        '200': {}
+  /v2/replicas/{replica_id}/name:
+    parameters:
+      - in: path
+        name: replica_id
+        required: true
+        schema:
+          type: string
+    patch:
+      tags:
+        - Replicas
+      summary: Rename Replica
+      operationId: Replicas_renameReplicaById
+      description: |
+        This endpoint renames a single Replica by its unique identifier. 
+      requestBody:
+        content:
+          application/json:
+            examples:
+              Rename Replica:
+                value:
+                  replica_name: ''
+            schema:
+              $ref: '#/components/schemas/ReplicasRenameReplicaByIdRequest'
+      responses:
+        '200': {}
+  /v2/videos:
+    post:
+      tags:
+        - Videos
+      summary: Generate Video
+      operationId: Videos_createVideoFromReplicaAndScript
+      description: >
+        This endpoint generates a new video using a Replica and a script. 
+
+
+        The only required body parameters are `replica_id` and `script`. The
+        `replica_id` is a unique identifier for the Replica that will be used to
+        generate the video. The `script` is the text that will be spoken by the
+        Replica in the video.
+
+
+        If a `background_url` is provided, Tavus will record a video of the
+        website and use it as the background for the video. If a
+        `background_source_url` is provided, where the URL points to a download
+        link such as a presigned S3 URL, Tavus will use the video as the
+        background for the video. If neither are provided, the video will
+        consist of a full screen Replica.
+
+
+        To learn more about generating videos with Replicas, see
+        [here](https://docs.tavusapi.com/api-reference).
+
+
+        To learn more about writing an effective script for your video, see
+        [Scripting prompting](https://docs.tavusapi.com/api-reference).
+      requestBody:
+        content:
+          application/json:
+            examples:
+              Generate Video:
+                value:
+                  background_url: ''
+                  replica_id: ''
+                  script: ''
+                  video_name: ''
+            schema:
+              $ref: >-
+                #/components/schemas/VideosCreateVideoFromReplicaAndScriptRequest
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/VideosCreateVideoFromReplicaAndScriptResponse
+    get:
+      tags:
+        - Videos
+      summary: List Videos
+      operationId: Videos_getAll
+      description: >
+        This endpoint returns a list of all videos that have been generated by
+        the API Key in use. 
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VideosGetAllResponse'
+  /v2/videos/{video_id}:
+    parameters:
+      - in: path
+        name: video_id
+        required: true
+        schema:
+          type: string
+    get:
+      tags:
+        - Videos
+      summary: Get Video
+      operationId: Videos_getByVideoId
+      description: >
+        This endpoint returns a single video by its unique identifier. 
+
+
+        The response body will contain a `status` string that represents the
+        status of the video. If the video is ready, the response body will also
+        contain a `download_url`, `stream_url`, and `hosted_url` that can be
+        used to download, stream, and view the video respectively.
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VideosGetByVideoIdResponse'
+    delete:
+      tags:
+        - Videos
+      summary: Delete Video
+      operationId: Videos_deleteByVideoId
+      description: |
+        This endpoint deletes a single video by its unique identifier.
+      responses:
+        '200': {}
+  /v2/videos/{video_id}/name:
+    parameters:
+      - in: path
+        name: video_id
+        required: true
+        schema:
+          type: string
+    patch:
+      tags:
+        - Videos
+      summary: Rename Video
+      operationId: Videos_updateName
+      description: |
+        This endpoint renames a single video by its unique identifier.
+      requestBody:
+        content:
+          application/json:
+            examples:
+              Rename Video:
+                value:
+                  video_name: ''
+            schema:
+              $ref: '#/components/schemas/VideosUpdateNameRequest'
+      responses:
+        '200': {}
+components:
+  securitySchemes:
+    apiKey:
+      in: header
+      name: x-api-key
+      type: apiKey
+  schemas:
+    ReplicasCreateNewReplicaRequest:
+      properties:
+        callback_url:
+          description: >-
+            A url that will receive a callback on completion of replica training
+            or on error.
+          type: string
+        replica_name:
+          description: A name for the replica.
+          type: string
+        train_video_url:
+          description: >-
+            A direct link to a publicly accessible storage location such as an
+            S3 bucket. This video will be used for replica training.
+          type: string
+      required:
+        - train_video_url
+      type: object
+    ReplicasRenameReplicaByIdRequest:
+      properties:
+        replica_name:
+          type: string
+      required:
+        - replica_name
+      type: object
+    VideosCreateVideoFromReplicaAndScriptRequest:
+      properties:
+        background_source_url:
+          description: >-
+            A direct link to a video that is publicly accessible via a storage
+            location such as an S3 bucket. This will be used as the background
+            for the video. The video must be publicly accessible.
+          type: string
+        background_url:
+          description: >-
+            A link to a website. This will be used as the background for the
+            video. The website must be publicly accessible and properly formed.
+          type: string
+        replica_id:
+          description: >-
+            A unique identifier for the replica that will be used to generate
+            the video.
+          example: r783537ef5
+          type: string
+        script:
+          description: A script to be used for the video.
+          example: Hello from Tavus! Enjoy your new replica
+          type: string
+        video_name:
+          description: A name for the video.
+          example: My First Video
+          type: string
+      required:
+        - replica_id
+        - script
+      type: object
+    VideosUpdateNameRequest:
+      properties:
+        video_name:
+          type: string
+      required:
+        - video_name
+      type: object
+    ReplicasListResponse:
+      properties:
+        data:
+          items:
+            properties:
+              created_at:
+                type: string
+              replica_id:
+                description: A unique identifier for the replica.
+                example: r783537ef5
+                type: string
+              replica_name:
+                description: The name of the replica.
+                example: My Replica
+                type: string
+              status:
+                description: The status of the replica.
+                example: completed
+                type: string
+              thumbnail_video_url:
+                description: >-
+                  A direct link to the video that will be used as the thumbnail
+                  for the replica.
+                type: string
+              training_progress:
+                description: The progress of the replica training.
+                example: 100/100
+                type: string
+            type: object
+          type: array
+      type: object
+    ReplicasCreateNewReplicaResponse:
+      properties:
+        replica_id:
+          description: A unique identifier for the replica.
+          example: r783537ef5
+          type: string
+        status:
+          description: The status of the replica.
+          example: training
+          type: string
+      type: object
+    ReplicasGetReplicaByIdResponse:
+      properties:
+        created_at:
+          description: The date and time the replica was created.
+          example: '2024-01-24T07:14:03.327Z'
+          type: string
+        error_message:
+          description: If the replica has an error, this will contain the error message.
+          nullable: true
+          type: string
+        replica_id:
+          description: A unique identifier for the replica.
+          example: r783537ef5
+          type: string
+        replica_name:
+          description: The name of the replica.
+          example: My Replica
+          type: string
+        status:
+          description: The status of the replica.
+          example: completed
+          type: string
+        thumbnail_video_url:
+          description: >-
+            A direct link to the video that will be used as the thumbnail for
+            the replica.
+          type: string
+        training_progress:
+          description: The progress of the replica training.
+          example: 100/100
+          type: string
+        updated_at:
+          description: The date and time of when the replica was last updated.
+          example: '2024-01-24T07:14:03.327Z'
+          type: string
+      type: object
+    VideosGetAllResponse:
+      properties:
+        data:
+          items:
+            properties:
+              background_source_url:
+                description: >-
+                  A direct link to a video that is publicly accessible via a
+                  storage location such as an S3 bucket. This will be used as
+                  the background for the video. The video must be publicly
+                  accessible.
+                type: string
+              background_url:
+                description: >-
+                  A link to a website. This will be used as the background for
+                  the video. The website must be publicly accessible and
+                  properly formed.
+                type: string
+              replica_id:
+                description: >-
+                  A unique identifier for the replica that will be used to
+                  generate the video.
+                example: r783537ef5
+                type: string
+              script:
+                description: A script to be used for the video.
+                example: Hello from Tavus! Enjoy your new replica
+                type: string
+              video_name:
+                description: A name for the video.
+                example: My First Video
+                type: string
+            type: object
+          type: array
+      type: object
+    VideosCreateVideoFromReplicaAndScriptResponse:
+      properties:
+        created_at:
+          description: The date and time the video was created.
+          type: string
+        hosted_url:
+          description: >-
+            A direct link to view your video once generation has completed,
+            hosted by Tavus.
+          type: string
+        status:
+          description: The status of the video.
+          type: string
+        video_id:
+          description: A unique identifier for the video.
+          type: string
+        video_name:
+          description: The name of the video.
+          type: string
+      type: object
+    VideosGetByVideoIdResponse:
+      properties:
+        created_at:
+          description: The date and time the video was created.
+          type: string
+        data:
+          properties:
+            script:
+              description: The script that was initially used to generate the video.
+              type: string
+          type: object
+        download_url:
+          description: A direct link to download your generated video.
+          type: string
+        hosted_url:
+          description: A direct link to view your generated video, hosted by Tavus.
+          type: string
+        status:
+          description: The status of the video.
+          example: ready
+          type: string
+        status_details:
+          description: A detailed status of the video.
+          type: string
+        stream_url:
+          description: A direct link to stream your generated video.
+          type: string
+        updated_at:
+          description: The date and time of when the video was last updated.
+          type: string
+        video_id:
+          description: A unique identifier for the video.
+          type: string
+      type: object
+security:
+  - apiKey: []

@@ -6,6 +6,7 @@ info:
 servers:
   - url: https://api.baseten.co
 tags:
+  - name: Model
   - name: Deployment
   - name: AutoscalingSetting
   - name: Secret
@@ -47,6 +48,49 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SecretV1'
+  /v1/models:
+    get:
+      tags:
+        - Model
+      summary: Gets all models
+      operationId: Model_getAllModels
+      responses:
+        '200':
+          description: A list of models.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModelsV1'
+  /v1/models/{model_id}:
+    parameters:
+      - $ref: '#/components/parameters/model_id'
+    get:
+      tags:
+        - Model
+      summary: Gets a model by ID
+      operationId: Model_getModelById
+      responses:
+        '200':
+          description: A model.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModelV1'
+  /v1/models/{model_id}/deployments:
+    parameters:
+      - $ref: '#/components/parameters/model_id'
+    get:
+      tags:
+        - Model
+      summary: Gets all deployments of a model
+      operationId: Model_getAllDeployments
+      responses:
+        '200':
+          description: A list of deployments of a model.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeploymentsV1'
   /v1/models/{model_id}/deployments/development:
     parameters:
       - $ref: '#/components/parameters/model_id'
@@ -169,6 +213,55 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UpdateAutoscalingSettingsResponseV1'
+  /v1/models/{model_id}/deployments/development/promote:
+    parameters:
+      - $ref: '#/components/parameters/model_id'
+    post:
+      tags:
+        - Model
+      summary: Promotes a development deployment to production
+      operationId: Model_deployPromote
+      description: >-
+        Creates a new production deployment from the development deployment, the
+        currently building deployment is returned.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PromoteRequestV1'
+        required: true
+      responses:
+        '200':
+          description: A deployment of a model.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeploymentV1'
+  /v1/models/{model_id}/deployments/{deployment_id}/promote:
+    parameters:
+      - $ref: '#/components/parameters/model_id'
+      - $ref: '#/components/parameters/deployment_id'
+    post:
+      tags:
+        - Model
+      summary: Promotes a deployment to production
+      operationId: Model_deploymentPromote
+      description: >-
+        Promotes an existing deployment to production and returns the same
+        deployment.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PromoteRequestV1'
+        required: true
+      responses:
+        '200':
+          description: A deployment of a model.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeploymentV1'
 components:
   parameters:
     model_id:
@@ -188,9 +281,9 @@ components:
       title: SecretV1
       description: A Baseten secret. Note that we do not support retrieving secret values.
       properties:
-        created:
-          title: Created
-          description: UTC time the secret was created
+        created_at:
+          title: Created At
+          description: Time the secret was created in ISO 8601 format
           format: date-time
           type: string
         name:
@@ -198,7 +291,7 @@ components:
           description: Name of the secret
           type: string
       required:
-        - created
+        - created_at
         - name
       type: object
     SecretsV1:
@@ -228,6 +321,60 @@ components:
       required:
         - name
         - value
+      type: object
+    ModelV1:
+      title: ModelV1
+      description: A model.
+      properties:
+        id:
+          title: Id
+          description: Unique identifier of the model
+          type: string
+        created_at:
+          title: Created At
+          description: Time the model was created in ISO 8601 format
+          format: date-time
+          type: string
+        name:
+          title: Name
+          description: Name of the model
+          type: string
+        deployments_count:
+          title: Deployments Count
+          description: Number of deployments of the model
+          type: integer
+        production_deployment_id:
+          title: Production Deployment Id
+          description: Unique identifier of the production deployment of the model
+          type: string
+        development_deployment_id:
+          title: Development Deployment Id
+          description: Unique identifier of the development deployment of the model
+          type: string
+        instance_type_name:
+          title: Instance Type Name
+          description: Name of the instance type the model is deployed on
+          type: string
+      required:
+        - id
+        - created_at
+        - name
+        - deployments_count
+        - production_deployment_id
+        - development_deployment_id
+        - instance_type_name
+      type: object
+    ModelsV1:
+      title: ModelsV1
+      description: A list of models.
+      properties:
+        models:
+          title: Models
+          items:
+            $ref: '#/components/schemas/ModelV1'
+          type: array
+      required:
+        - models
       type: object
     AutoscalingSettingsV1:
       title: AutoscalingSettingsV1
@@ -289,7 +436,7 @@ components:
           type: string
         created_at:
           title: Created At
-          description: UTC time the deployment was created
+          description: Time the deployment was created in ISO 8601 format
           format: date-time
           type: string
         name:
@@ -310,8 +457,8 @@ components:
           type: boolean
         status:
           $ref: '#/components/schemas/DeploymentStatusV1'
-        active_replicas:
-          title: Active Replicas
+        active_replica_count:
+          title: Active Replica Count
           description: Number of active replicas
           type: integer
         autoscaling_settings:
@@ -324,7 +471,7 @@ components:
         - is_production
         - is_development
         - status
-        - active_replicas
+        - active_replica_count
         - autoscaling_settings
       type: object
       x-konfig-properties:
@@ -332,6 +479,19 @@ components:
           description: Status of the deployment
         autoscaling_settings:
           description: Autoscaling settings for the deployment
+    DeploymentsV1:
+      title: DeploymentsV1
+      description: A list of deployments of a model.
+      properties:
+        deployments:
+          title: Deployments
+          description: A list of deployments of a model
+          items:
+            $ref: '#/components/schemas/DeploymentV1'
+          type: array
+      required:
+        - deployments
+      type: object
     UpdateAutoscalingSettingsV1:
       title: UpdateAutoscalingSettingsV1
       description: >-
@@ -391,6 +551,18 @@ components:
       x-konfig-properties:
         status:
           description: Status of the request to update autoscaling settings
+    PromoteRequestV1:
+      title: PromoteRequestV1
+      description: A request to promote a deployment to production.
+      properties:
+        scale_down_previous_production:
+          title: Scale Down Previous Production
+          description: >-
+            Whether to scale down the previous production deployment after
+            promoting
+          default: true
+          type: boolean
+      type: object
   securitySchemes:
     ApiKeyAuth:
       description: >-
