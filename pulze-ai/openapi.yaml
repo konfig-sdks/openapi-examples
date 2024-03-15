@@ -1,0 +1,4306 @@
+openapi: 3.0.2
+info:
+  title: Pulze.ai API
+  description: >-
+    At Pulze it's our mission to supercharge today's workforce with AI to
+    maximize the world's prosperity. We are doing so by enabling companies of
+    any size to securely leverage Large Language Models (LLM) and easily build
+    AI features into their apps. Our enterprise platform has access to all best
+    in class LLMs and can route user requests to the most relevant model to get
+    the highest quality response at the best price thanks to our smart meta
+    model. End users can leverage pre-built applications, such as our Marketing
+    AI product, or build custom apps on top of the Pulze Platform.
+
+
+    We are a VC Funded, early stage startup based in San Francisco.
+  version: 0.1.0
+  x-konfig-ignore:
+    object-with-no-properties: true
+servers:
+  - url: https://api.pulze.ai
+tags:
+  - name: models
+  - name: logs
+  - name: apps
+  - name: chat
+  - name: completions
+paths:
+  /v1/chat/completions:
+    post:
+      tags:
+        - chat
+      summary: Chat Completions
+      operationId: Chat_performCompletionRequest
+      security:
+        - HTTPBearer: []
+      description: Perform a Chat Completion request.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompletionRequestPayload'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PulzeEngineResponseChatCompletion'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /v1/completions:
+    post:
+      tags:
+        - completions
+      summary: Completions
+      operationId: Completions_performTextRequest
+      security:
+        - HTTPBearer: []
+      description: Perform a text Completion request.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompletionRequestPayload'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PulzeEngineResponseCompletion'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /v1/models/rank:
+    post:
+      tags:
+        - models
+      summary: Get Rank Of Best Models For Payload
+      operationId: Models_getRankOfBest
+      security:
+        - HTTPBearer: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompletionRequestPayload'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PulzeEngineModelRanking'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /v1/logs/{log_id}:
+    get:
+      tags:
+        - logs
+      summary: Get Log By Id
+      operationId: Logs_getById
+      security:
+        - HTTPBearer: []
+      description: >-
+        Get a specific log by id. If accessing via API Key, this endpoint will
+        only return a log if it belongs to that App.
+
+        If the log's App is disabled, this endpoint won't return it.
+      parameters:
+        - in: path
+          name: log_id
+          required: true
+          schema:
+            title: Log Id
+            format: uuid
+            type: string
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Request_Normalized'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /v1/logs/{log_id}/rating:
+    post:
+      tags:
+        - logs
+      summary: Rate Log By Id
+      operationId: Logs_rateById
+      security:
+        - HTTPBearer: []
+      description: >-
+        Rate a specific request by its ID. When accessing it via an App's API
+        Key, this endpoint will only allow
+
+        rating a log of that specific app.
+      parameters:
+        - in: path
+          name: log_id
+          required: true
+          schema:
+            title: Log Id
+            format: uuid
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LogResponseRatingRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Request_Normalized'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /v1/apps/self:
+    get:
+      tags:
+        - apps
+      summary: Get App For Api Key
+      operationId: Apps_getAppForApiKey
+      security:
+        - HTTPBearer: []
+      description: Retrieves the App for the given API key.
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppWithModelUpdatesInfo'
+  /v1/apps/update:
+    put:
+      tags:
+        - apps
+      summary: Update App And Models
+      operationId: Apps_updateProperties
+      security:
+        - HTTPBearer: []
+      description: 'Update an App''s properties: description, weights and policies.'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AppUpdate'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppWithModelUpdatesInfo'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /v1/models/active:
+    get:
+      tags:
+        - models
+      summary: Get Active Models For App
+      operationId: Models_listActiveModels
+      security:
+        - HTTPBearer: []
+      description: Get a list of the Models which are active for a specific App.
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModelsListActiveModelsResponse'
+  /v1/models/all:
+    get:
+      tags:
+        - models
+      summary: Get All Available Models For App
+      operationId: Models_getAllModels
+      security:
+        - HTTPBearer: []
+      description: Get a list of all the Models which this App can potentially use.
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModelsGetAllModelsResponse'
+  /v1/models/{model_id}/toggle:
+    put:
+      tags:
+        - models
+      summary: Toggle Model For App
+      operationId: Models_toggleModelForApp
+      security:
+        - HTTPBearer: []
+      description: Enable or disable a model.
+      parameters:
+        - in: path
+          name: model_id
+          required: true
+          schema:
+            title: Model Id
+            format: uuid
+            type: string
+        - in: query
+          name: enable
+          schema:
+            title: Enable
+            default: true
+            type: boolean
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PulzeToggleModelResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /v1/logs:
+    post:
+      tags:
+        - logs
+      summary: Get Logs For App
+      operationId: Logs_getMatchingLogs
+      security:
+        - HTTPBearer: []
+      description: >-
+        Get the list of logs that match the specified filters. When accessing
+        via an App's API Key, only logs for that
+
+        app will be returned.
+      parameters:
+        - in: query
+          name: page
+          schema:
+            title: Page
+            default: 1
+            minimum: 1
+            type: integer
+        - in: query
+          name: size
+          schema:
+            title: Size
+            default: 50
+            maximum: 100
+            minimum: 1
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FilterLogsRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LogsGetMatchingLogsResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+components:
+  schemas:
+    AcceptInviteRequest:
+      title: AcceptInviteRequest
+      properties:
+        accept:
+          title: Accept
+          description: Whether user accepts(1) or declines(0) invitation
+          default: '1'
+          enum:
+            - '0'
+            - '1'
+          type: string
+        email:
+          title: Email
+          type: string
+        token:
+          title: Token
+          type: string
+      required:
+        - email
+        - token
+      type: object
+    App:
+      title: App
+      properties:
+        description:
+          title: Description
+          type: string
+        added_on:
+          title: Added On
+          format: date-time
+          type: string
+        auth0_id:
+          title: Auth0 Id
+          type: string
+        hashed_key:
+          title: Hashed Key
+          type: string
+        id:
+          title: Id
+          format: uuid
+          type: string
+        is_active:
+          title: Is Active
+          type: boolean
+        key_end:
+          title: Key End
+          type: string
+        modified_on:
+          title: Modified On
+          format: date-time
+          type: string
+        org_id:
+          title: Org Id
+          format: uuid
+          type: string
+        policies:
+          $ref: '#/components/schemas/LLMModelPolicies'
+        prompt_id:
+          title: Prompt Id
+          format: uuid
+          type: string
+        rate_limit:
+          title: Rate Limit
+          default: 200
+          type: integer
+        settings:
+          title: Settings
+          type: object
+        weights:
+          $ref: '#/components/schemas/LLMModelWeights'
+      required:
+        - hashed_key
+        - key_end
+        - description
+        - is_active
+        - auth0_id
+        - id
+      type: object
+    AppCreateData:
+      title: AppCreateData
+      properties:
+        description:
+          title: Description
+          type: string
+        policies:
+          $ref: '#/components/schemas/LLMModelPolicies'
+        weights:
+          $ref: '#/components/schemas/LLMModelWeights'
+      type: object
+    AppCreateResponse:
+      title: AppCreateResponse
+      properties:
+        description:
+          title: Description
+          type: string
+        app_id:
+          title: App Id
+          format: uuid
+          type: string
+        created_key:
+          title: Created Key
+          type: string
+        key_end:
+          title: Key End
+          type: string
+      required:
+        - app_id
+      type: object
+    AppCustomData:
+      title: AppCustomData
+      properties:
+        added_on:
+          title: Added On
+          description: The timestamp the file was added
+          format: date-time
+          type: string
+        app_id:
+          title: App Id
+          description: The ID of the App it's associated with
+          format: uuid
+          type: string
+        data_type:
+          title: Data Type
+          description: The type of custom data (file, database, ...)
+          enum:
+            - file
+          type: string
+        file_content:
+          title: File Content
+          description: The contents of the file
+          format: binary
+          type: string
+        file_mime:
+          title: File Mime
+          description: The mimetype of the file
+          type: string
+        file_name:
+          title: File Name
+          description: The name of the file
+          type: string
+        file_size:
+          title: File Size
+          description: The size of the file in Bytes
+          type: integer
+        id:
+          title: Id
+          description: The ID
+          format: uuid
+          type: string
+      required:
+        - app_id
+        - file_name
+        - file_mime
+        - data_type
+      type: object
+    AppDeleteResponse:
+      title: AppDeleteResponse
+      properties:
+        id:
+          title: Id
+          format: uuid
+          type: string
+      type: object
+    AppUpdate:
+      title: AppUpdate
+      properties:
+        description:
+          title: Description
+          minLength: 1
+          type: string
+        id:
+          title: Id
+          format: uuid
+          type: string
+        policies:
+          $ref: '#/components/schemas/LLMModelPolicies'
+        prompt_id:
+          title: Prompt Id
+          description: Prompt ID that we will use for requests
+          format: uuid
+          type: string
+        weights:
+          $ref: '#/components/schemas/LLMModelWeights'
+      required:
+        - id
+        - description
+        - weights
+        - policies
+      type: object
+    AppWithModelUpdatesInfo:
+      title: AppWithModelUpdatesInfo
+      properties:
+        app:
+          $ref: '#/components/schemas/App'
+        files:
+          title: Files
+          description: List of files associated with the app.
+          default: []
+          items:
+            $ref: '#/components/schemas/AppCustomData'
+          type: array
+        model_settings:
+          title: Model Settings
+          additionalProperties:
+            $ref: '#/components/schemas/PulzeModelActiveForApp'
+          type: object
+      required:
+        - app
+        - model_settings
+      type: object
+    Auth0PostRegistrationRequest:
+      title: Auth0PostRegistrationRequest
+      properties:
+        created_at:
+          title: Created At
+          default: ''
+          type: string
+        email:
+          title: Email
+          type: string
+        email_verified:
+          title: Email Verified
+          default: false
+          type: boolean
+        extra_info:
+          title: Extra Info
+          type: object
+        family_name:
+          title: Family Name
+          default: ''
+          type: string
+        given_name:
+          title: Given Name
+          default: ''
+          type: string
+        name:
+          title: Name
+          default: ''
+          type: string
+        nickname:
+          title: Nickname
+          default: ''
+          type: string
+        phone_number:
+          title: Phone Number
+          default: ''
+          type: string
+        phone_verified:
+          title: Phone Verified
+          default: false
+          type: boolean
+        picture:
+          title: Picture
+          default: ''
+          type: string
+        user_id:
+          title: User Id
+          type: string
+      required:
+        - user_id
+        - email
+      type: object
+    Auth0PostRegistrationResponse:
+      title: Auth0PostRegistrationResponse
+      properties:
+        created:
+          title: Created
+          type: boolean
+        exists:
+          title: Exists
+          type: boolean
+        updated:
+          title: Updated
+          type: boolean
+      required:
+        - exists
+        - created
+        - updated
+      type: object
+    BillingAddPayment:
+      title: BillingAddPayment
+      properties:
+        payment_id:
+          title: Payment Id
+          type: string
+        return_url:
+          title: Return Url
+          type: string
+      required:
+        - payment_id
+        - return_url
+      type: object
+    BillingAddPaymentResult:
+      title: BillingAddPaymentResult
+      properties:
+        confirm_url:
+          title: Confirm Url
+          type: string
+        result:
+          title: Result
+          type: string
+      required:
+        - result
+      type: object
+    BillingPaymentCoupon:
+      title: BillingPaymentCoupon
+      properties:
+        amount_off:
+          title: Amount Off
+          type: string
+        currency:
+          title: Currency
+          enum:
+            - USD
+          type: string
+        id:
+          title: Id
+          type: string
+        name:
+          title: Name
+          type: string
+      required:
+        - name
+        - id
+        - amount_off
+        - currency
+      type: object
+    BillingPaymentCreation:
+      title: BillingPaymentCreation
+      properties:
+        intent_key:
+          title: Intent Key
+          type: string
+        public_key:
+          title: Public Key
+          type: string
+      required:
+        - public_key
+        - intent_key
+      type: object
+    BillingPaymentInfo:
+      title: BillingPaymentInfo
+      properties:
+        balance:
+          $ref: '#/components/schemas/PaymentDetailsBalance'
+        default_card:
+          title: Default Card
+          type: string
+        discount:
+          $ref: '#/components/schemas/BillingPaymentCoupon'
+        payments:
+          title: Payments
+          items: {}
+          type: array
+        subscriptions:
+          title: Subscriptions
+          items:
+            $ref: '#/components/schemas/BillingSubscription'
+          type: array
+      required:
+        - payments
+        - balance
+        - subscriptions
+      type: object
+    BillingSubscription:
+      title: BillingSubscription
+      properties:
+        description:
+          title: Description
+          type: string
+        amount:
+          title: Amount
+          type: number
+        currency:
+          title: Currency
+          type: string
+        current_period_end:
+          title: Current Period End
+          type: integer
+        current_period_start:
+          title: Current Period Start
+          type: integer
+        latest_invoice:
+          title: Latest Invoice
+          type: string
+        product:
+          title: Product
+          type: string
+        quantity:
+          title: Quantity
+          type: integer
+        start_date:
+          title: Start Date
+          type: integer
+      required:
+        - latest_invoice
+        - amount
+        - currency
+        - quantity
+        - start_date
+        - current_period_end
+        - current_period_start
+        - description
+        - product
+      type: object
+    BillingTopUp:
+      title: BillingTopUp
+      properties:
+        amount:
+          title: Amount
+          description: 'Amount of the currency to top up: $3.00, €4.22, ..., as a float'
+          type: number
+        currency:
+          title: Currency
+          enum:
+            - USD
+          type: string
+        payment_id:
+          title: Payment Id
+          description: The (stripe) ID of the customer's payment method. Optional for now
+          type: string
+        return_url:
+          title: Return Url
+          type: string
+      required:
+        - amount
+        - currency
+        - return_url
+      type: object
+    BillingTransactionItem:
+      title: BillingTransactionItem
+      properties:
+        description:
+          title: Description
+          type: string
+        amount:
+          title: Amount
+          anyOf:
+            - type: integer
+            - type: number
+        balance:
+          title: Balance
+          anyOf:
+            - type: integer
+            - type: number
+        created:
+          title: Created
+          anyOf:
+            - type: integer
+            - format: date-time
+              type: string
+        currency:
+          title: Currency
+          enum:
+            - USD
+          type: string
+        id:
+          title: Id
+          type: string
+        invoice_status:
+          title: Invoice Status
+          type: string
+        link:
+          title: Link
+          type: string
+        link_pdf:
+          title: Link Pdf
+          type: string
+        metadata:
+          title: Metadata
+          type: object
+        type:
+          title: Type
+          type: string
+      required:
+        - id
+        - amount
+        - currency
+        - created
+        - type
+      type: object
+    BillingTransactions:
+      title: BillingTransactions
+      properties:
+        data:
+          title: Data
+          description: The list of Transaction items
+          default: []
+          items:
+            $ref: '#/components/schemas/BillingTransactionItem'
+          type: array
+      type: object
+    Body_app_upload_custom_data_v1_apps_custom_data__app_id__post:
+      title: Body_app_upload_custom_data_v1_apps_custom_data__app_id__post
+      properties:
+        files:
+          title: Files
+          items:
+            format: binary
+            type: string
+          type: array
+      required:
+        - files
+      type: object
+    CompletionRequestPayload:
+      title: CompletionRequestPayload
+      properties:
+        best_of:
+          title: Best Of
+          description: >-
+            The number of responses to _generate_. Out of those, it will return
+            the best `n`.
+          default: 1
+          type: integer
+        'false':
+          title: false
+          description: |
+            How many completions to generate for each prompt.
+            @default 1
+          default: 1
+          minimum: 1
+          type: integer
+        frequency_penalty:
+          title: Frequency Penalty
+          description: >
+            https://platform.openai.com/docs/api-reference/completions/create#completions/create-frequency_penalty
+
+            Increase the model's likelihood to not repeat tokens/words
+          default: 0
+          maximum: 2
+          type: number
+        logit_bias:
+          title: Logit Bias
+          description: >
+            COMING SOON
+
+            https://platform.openai.com/docs/api-reference/completions/create#completions/create-logit_bias
+
+            Modify the likelihood of specified tokens appearing in the
+            completion.
+
+
+            See here for a detailed explanation on how to use:
+
+            https://help.openai.com/en/articles/5247780-using-logit-bias-to-define-token-probability
+          type: object
+        logprobs:
+          title: Logprobs
+          description: >
+            COMING SOON
+
+            https://platform.openai.com/docs/api-reference/completions/create#completions/create-logprobs
+
+            Include the log probabilities on the logprobs most likely tokens, as
+            well the chosen tokens.
+          maximum: 5
+          type: integer
+        max_tokens:
+          title: Max Tokens
+          description: The maximum number of tokens that the response can contain.
+          type: integer
+        messages:
+          title: Messages
+          description: >-
+            The conversation sent (with or without history) (for a
+            /chat/completions request)
+          default: []
+          items:
+            $ref: '#/components/schemas/RoleContentChatChoice'
+          type: array
+        model:
+          title: Model
+          description: >
+            https://docs.pulze.ai/overview/models
+
+            Specify the model you'd like Pulze to use. (optional). Can be the
+            full model name, or a subset for multi-matching.
+
+
+            Defaults to our dynamic routing, i.e. best model for this request.
+          default: pulze
+          type: string
+        presence_penalty:
+          title: Presence Penalty
+          description: >
+            https://platform.openai.com/docs/api-reference/completions/create#completions/create-presence_penalty
+
+            Increase the model's likelihood to talk about new topics
+          default: 0
+          maximum: 2
+          type: number
+        prompt:
+          title: Prompt
+          description: The prompt text sent (for a /completions request)
+          anyOf:
+            - type: string
+            - items:
+                type: string
+              type: array
+        stop:
+          title: Stop
+          description: >
+            Stop responding when this sequence of characters is generated. Leave
+            empty to allow the model to decide.
+          anyOf:
+            - type: string
+            - items:
+                type: string
+              type: array
+          default: ''
+        stream:
+          title: Stream
+          description: >
+            ** COMING SOON **
+
+            Specify if you want the response to be streamed or to be returned as
+            a standard HTTP request
+          default: false
+          type: boolean
+        suffix:
+          title: Suffix
+          description: COMING SOON
+          default: ''
+          type: string
+        temperature:
+          title: Temperature
+          description: >-
+            Optionally specify the temperature for this request only. Leave
+            empty to allow Pulze to guess it for you.
+          default: 1
+          maximum: 1
+          type: number
+        tool_choice:
+          title: Tool Choice
+          anyOf:
+            - enum:
+                - none
+                - auto
+              type: string
+            - $ref: '#/components/schemas/ToolChoice'
+          default: none
+        tools:
+          title: Tools
+          items:
+            $ref: '#/components/schemas/ToolFunction'
+          type: array
+        top_p:
+          title: Top P
+          description: >
+            https://platform.openai.com/docs/api-reference/completions/create#completions/create-top_p
+
+            An alternative to sampling with temperature, called nucleus
+            sampling, where the model considers the results of the tokens with
+            top_p probability mass
+          default: 1
+          type: number
+      type: object
+    ConversationShare:
+      title: ConversationShare
+      properties:
+        title:
+          title: Title
+          description: A title for this conversation
+          type: string
+        auth0_id:
+          title: Auth0 Id
+          description: >-
+            The Auth0-ID of the user that shared this. Could be used by a user
+            to share a conversation between their different organizations (as
+            long as they open it themselves)
+          type: string
+        continuation_of:
+          title: Continuation Of
+          description: >-
+            Will be used for analytics. We can know from which conversation this
+            was shared.
+          type: string
+        hashed_ids:
+          title: Hashed Ids
+          description: >-
+            To avoid creating duplicated shared links, we use this value as a
+            quick way to verify that we are receiving new IDs
+          type: string
+        is_public:
+          title: Is Public
+          description: >-
+            Whether the conversation is shared publicly or only members of your
+            organization
+          default: true
+          type: boolean
+        org_id:
+          title: Org Id
+          description: >-
+            The organization that shared this. Important, as it can be used to
+            filter users belonging to different organizations
+          format: uuid
+          type: string
+        share_hash:
+          title: Share Hash
+          description: The HASH that was shared. Used to fetch all the conversation items
+          type: string
+        shared_on:
+          title: Shared On
+          description: Some extra information, like when was the conversation shared
+          format: date-time
+          type: string
+      required:
+        - share_hash
+        - shared_on
+        - title
+      type: object
+    ConversationShareRequest:
+      title: ConversationShareRequest
+      properties:
+        continuation_of:
+          title: Continuation Of
+          description: If this playground was started from another existing conversation.
+          type: string
+        ids:
+          title: Ids
+          description: >-
+            A list (of list) of Request IDs of all the messages that need to be
+            shared in the playground.
+          items:
+            items:
+              format: uuid
+              type: string
+            type: array
+          type: array
+        is_public:
+          title: Is Public
+          description: >-
+            Set to True/False if you want it available for anyone with the link,
+            or only members within the organization
+          default: true
+          type: boolean
+      required:
+        - ids
+      type: object
+    ConversationSharedData:
+      title: ConversationSharedData
+      properties:
+        data:
+          $ref: '#/components/schemas/ConversationShare'
+        messages:
+          title: Messages
+          items:
+            items:
+              $ref: '#/components/schemas/Request'
+            type: array
+          type: array
+      required:
+        - messages
+        - data
+      type: object
+    DashboardGraphData:
+      title: DashboardGraphData
+      properties:
+        color:
+          title: Color
+          type: string
+        cumulative:
+          title: Cumulative
+          type: boolean
+        data:
+          title: Data
+          items:
+            $ref: '#/components/schemas/StatsPopulatedGraphResult'
+          type: array
+        id:
+          title: Id
+          type: string
+        interval:
+          title: Interval
+          type: string
+        label:
+          title: Label
+          type: string
+        large:
+          title: Large
+          default: false
+          type: boolean
+        max:
+          title: Max
+          type: number
+        name:
+          title: Name
+          type: string
+        total:
+          title: Total
+          type: number
+      required:
+        - name
+        - label
+        - id
+        - color
+        - data
+        - max
+        - total
+        - interval
+      type: object
+    FeaturesForSubscriptionDescriptions:
+      title: FeaturesForSubscriptionDescriptions
+      description: >-
+        See FeaturesForSubscription for more info!
+
+        This class is a duplicate so if anything gets renamed on the parent
+        class, this one will error.
+      properties:
+        customer_success:
+          title: Customer Success
+          type: string
+        fine_tuning:
+          title: Fine Tuning
+          type: string
+        flowz:
+          title: Flowz
+          type: string
+        llm_routing:
+          title: Llm Routing
+          type: string
+        max_apps_readable:
+          title: Max Apps Readable
+          type: string
+        max_tokens_readable:
+          title: Max Tokens Readable
+          type: string
+        personalized_llm_routing:
+          title: Personalized Llm Routing
+          type: string
+        prompt_models:
+          title: Prompt Models
+          type: string
+        prompts:
+          title: Prompts
+          type: string
+        support_level_readable:
+          title: Support Level Readable
+          type: string
+      required:
+        - max_tokens_readable
+        - max_apps_readable
+        - support_level_readable
+        - llm_routing
+        - flowz
+        - prompts
+        - prompt_models
+        - personalized_llm_routing
+        - fine_tuning
+        - customer_success
+      type: object
+    FilterLogsRequest:
+      title: FilterLogsRequest
+      properties:
+        app_ids:
+          title: App Ids
+          description: >-
+            The list of API Keys we want to filter for. Leave the list empty to
+            disable filtering (and return data for all apps) instead.
+          default: []
+          items:
+            format: uuid
+            type: string
+          type: array
+        date_from:
+          title: Date From
+          description: The earliest date we are searching for.
+          format: date-time
+          type: string
+        date_to:
+          title: Date To
+          description: The latest date we are searching for.
+          format: date-time
+          type: string
+        labels:
+          title: Labels
+          description: >-
+            Only logs (requests) with all of the specified labels will be
+            returned. Values get compared between their lowercase forms.
+          additionalProperties:
+            type: string
+          type: object
+        params:
+          title: Params
+          description: The sorting parameters for the query
+          default: []
+          items:
+            $ref: '#/components/schemas/GetTableSortParams'
+          type: array
+        query:
+          title: Query
+          description: Search for logs containing the `query` in their Request or Response.
+          default: ''
+          type: string
+      required:
+        - date_from
+      type: object
+    FilteredSearch:
+      title: FilteredSearch
+      properties:
+        app_ids:
+          title: App Ids
+          description: >-
+            The list of API Keys we want to filter for. Leave the list empty to
+            disable filtering (and return data for all apps) instead.
+          default: []
+          items:
+            format: uuid
+            type: string
+          type: array
+        date_from:
+          title: Date From
+          description: The earliest date we are searching for.
+          format: date-time
+          type: string
+        date_to:
+          title: Date To
+          description: The latest date we are searching for.
+          format: date-time
+          type: string
+        params:
+          title: Params
+          description: The sorting parameters for the query
+          default: []
+          items:
+            $ref: '#/components/schemas/GetTableSortParams'
+          type: array
+      required:
+        - date_from
+      type: object
+    FrontendSettings:
+      title: FrontendSettings
+      properties:
+        balance:
+          $ref: '#/components/schemas/PaymentDetailsBalance'
+        currency:
+          title: Currency
+          description: The currency of the user. Currently only "USD".
+          enum:
+            - USD
+          type: string
+        did_onboarding_setup:
+          title: Did Onboarding Setup
+          description: False when it's the user's first login/signup for an organization
+          type: boolean
+        email_verified:
+          title: Email Verified
+          description: True if the email was verified
+          type: boolean
+        privacy_accepted:
+          title: Privacy Accepted
+          description: Date of last accepted Privacy Policy
+          format: date-time
+          type: string
+        subscription_paused:
+          $ref: '#/components/schemas/SubscriptionPaused'
+        terms_accepted:
+          title: Terms Accepted
+          description: Date of last accepted Terms of Service
+          format: date-time
+          type: string
+        user_details:
+          $ref: '#/components/schemas/UserDetails'
+      required:
+        - email_verified
+        - did_onboarding_setup
+        - currency
+        - balance
+        - user_details
+      type: object
+      x-konfig-properties:
+        balance:
+          title: Balance
+          description: Balance details
+        subscription_paused:
+          title: Subscription Paused
+          description: >-
+            Returned to the frontend when the subscription has been paused for
+            any reason.
+        user_details:
+          title: User Details
+          description: The basic information for the user
+    FrontendSettingsResponse:
+      title: FrontendSettingsResponse
+      properties:
+        orgs:
+          title: Orgs
+          description: The list of organizations the user has access to
+          items:
+            $ref: '#/components/schemas/UserOrgAccess'
+          type: array
+        settings:
+          $ref: '#/components/schemas/FrontendSettings'
+      required:
+        - orgs
+        - settings
+      type: object
+      x-konfig-properties:
+        settings:
+          title: Settings
+          description: >-
+            Other settings related to the user/org. See `FrontendSettings` for
+            more info.
+    FunctionCallArguments:
+      title: FunctionCallArguments
+      properties:
+        arguments:
+          title: Arguments
+          description: A stringified JSON that represents the arguments for the function
+          type: string
+        name:
+          title: Name
+          description: The name of the function to which the arguments correspond
+          type: string
+      required:
+        - arguments
+        - name
+      type: object
+    FunctionParameters:
+      title: FunctionParameters
+      properties:
+        properties:
+          title: Properties
+          description: JSON schema's properties
+          additionalProperties:
+            type: object
+          type: object
+        required:
+          title: Required
+          description: List of required parameters
+          items:
+            type: string
+          type: array
+        type:
+          title: Type
+          description: Following JSON schema, this must be 'object'.
+          default: object
+          type: string
+      required:
+        - properties
+      type: object
+    GetTableParams:
+      title: GetTableParams
+      properties:
+        params:
+          title: Params
+          description: The sorting parameters for the query
+          default: []
+          items:
+            $ref: '#/components/schemas/GetTableSortParams'
+          type: array
+      type: object
+    GetTableSortParams:
+      title: GetTableSortParams
+      properties:
+        col:
+          title: Col
+          type: string
+        multiple:
+          title: Multiple
+          type: boolean
+        order:
+          title: Order
+          enum:
+            - asc
+            - desc
+          type: string
+      required:
+        - col
+        - order
+      type: object
+    HTTPValidationError:
+      title: HTTPValidationError
+      properties:
+        detail:
+          title: Detail
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+      type: object
+    InternalCompanyData:
+      title: InternalCompanyData
+      properties:
+        billing_email:
+          title: Billing Email
+          type: string
+        city:
+          title: City
+          default: ''
+          type: string
+        country:
+          title: Country
+          default: ''
+          type: string
+        creator:
+          title: Creator
+          type: string
+        email:
+          title: Email
+          type: string
+        hubspot_id:
+          title: Hubspot Id
+          type: string
+        id:
+          title: Id
+          format: uuid
+          type: string
+        name:
+          title: Name
+          type: string
+        slug:
+          title: Slug
+          type: string
+      required:
+        - id
+        - name
+        - billing_email
+        - slug
+        - creator
+        - email
+      type: object
+    InternalUserData:
+      title: InternalUserData
+      properties:
+        email:
+          title: Email
+          type: string
+        email_verified:
+          title: Email Verified
+          type: boolean
+        hubspot_id:
+          title: Hubspot Id
+          type: string
+        id:
+          title: Id
+          description: Auth0 ID
+          type: string
+        invite_status:
+          title: Invite Status
+          type: string
+        name:
+          title: Name
+          type: string
+        type:
+          title: Type
+          type: string
+      required:
+        - id
+        - type
+        - name
+        - email
+        - email_verified
+        - invite_status
+      type: object
+    InvitationInfo:
+      title: InvitationInfo
+      properties:
+        email:
+          title: Email
+          description: The email that was invited
+          type: string
+        token:
+          title: Token
+          description: The invitation token
+          type: string
+      required:
+        - email
+        - token
+      type: object
+    InviteFormEmail:
+      title: InviteFormEmail
+      properties:
+        email:
+          title: Email
+          type: string
+        role:
+          title: Role
+          type: string
+      required:
+        - email
+        - role
+      type: object
+    InviteFormRequest:
+      title: InviteFormRequest
+      properties:
+        emails:
+          title: Emails
+          items:
+            $ref: '#/components/schemas/InviteFormEmail'
+          type: array
+        invite_link:
+          title: Invite Link
+          type: string
+      required:
+        - invite_link
+        - emails
+      type: object
+    LLMModelPolicies:
+      title: LLMModelPolicies
+      properties:
+        max_cost:
+          title: Max Cost
+          description: >-
+            The maximum cost allowed for a request. Only works with compounded
+            requests that require multiple LLM calls. If the value is reached,
+            it will exit with an exception.
+          default: 0.02
+          type: number
+        max_same_model_retries:
+          title: Max Same Model Retries
+          description: >-
+            If an LLM call fails, how many times should Pulze _retry the call to
+            the same LLM_? There will be a maximum of N+1 calls (original + N
+            retries)
+          default: 1
+          maximum: 3
+          type: integer
+        max_switch_model_retries:
+          title: Max Switch Model Retries
+          description: >-
+            If an LLM call fails, _how many other models_ should Pulze try,
+            chosen by quality descending? It will be a maximum of N+1 models
+            (original + N other models)
+          default: 1
+          maximum: 5
+          type: integer
+        optimize_internal_requests:
+          title: Optimize Internal Requests
+          description: >-
+            Optimize the internal / intermediate LLM requests, for a big gain in
+            speed and cost savings, at the cost of a potential, and very slight,
+            penalty on quality. The final request ("SYNTHESIZE") is always
+            performed using your original settings.
+          default: 0
+          enum:
+            - 0
+            - 1
+          type: integer
+        privacy_level:
+          title: Privacy Level
+          description: |2-
+
+                    The level of privacy for a given request
+                    0 = (UNSUPPORTED -- public logs)
+                    1 = Log request, response and all of its metadata (Normal mode)
+                    2 = Do not log neither the request prompt nor the response text. Logs are still visible, and all of the request metadata accessible. Retrievable as a log. (TBD)
+                    3 = Do not log at all. Internally, a minimal representation may be stored for billing: model name, tokens used, which app it belongs to, and timestamp. Not retrievable as a log. (TBD)
+                    
+          default: 1
+          enum:
+            - 1
+            - 2
+            - 3
+          type: integer
+        prompt_id:
+          title: Prompt Id
+          description: Prompt ID that we will use for requests
+          format: uuid
+          type: string
+      type: object
+    LLMModelWeights:
+      title: LLMModelWeights
+      properties:
+        cost:
+          title: Cost
+          description: >-
+            Prioritizes cost when selecting the most optimized models for your
+            use case.
+          default: 0.4
+          type: number
+        latency:
+          title: Latency
+          description: >-
+            Prioritizes latency and reduces the time delay between submitting a
+            request and receiving the response.
+          default: 0.4
+          type: number
+        quality:
+          title: Quality
+          description: Prioritizes the quality and readability of the generated responses.
+          default: 0.4
+          type: number
+      type: object
+    LogResponseRatingRequest:
+      title: LogResponseRatingRequest
+      properties:
+        feedback:
+          title: Feedback
+          description: An optional text with accompanies the feedback's rating
+          default: ''
+          type: string
+        good_answer:
+          title: Good Answer
+          description: >-
+            The rating given to this request. It can be good (`True`), bad
+            (`False`) or none (`None` == `null`)
+          type: boolean
+      type: object
+    ModelData:
+      title: ModelData
+      properties:
+        description:
+          title: Description
+          description: A description of the model
+          type: string
+        added_by:
+          title: Added By
+          description: The user (auth0_id) who created the model
+          type: string
+        added_on:
+          title: Added On
+          description: When the model was added. Auto-populated in DB
+          format: date-time
+          type: string
+        app_id:
+          title: App Id
+          description: The app_id that has access to this model (if only one)
+          format: uuid
+          type: string
+        at:
+          title: At
+          description: Extra model settings inferred from namespace
+          type: string
+        base_cost:
+          title: Base Cost
+          description: >-
+            A (usually 0) cost added on top of a request. Some models charge per
+            request, not only per token
+          type: number
+        completion_token_cost:
+          title: Completion Token Cost
+          description: The cost of a completion token, in USD
+          type: number
+        context_window:
+          title: Context Window
+          description: The max_tokens for this model
+          type: integer
+        default_active:
+          title: Default Active
+          description: >-
+            This determines if the model will be available + pre-selected when
+            users create new apps.
+          type: boolean
+        id:
+          title: Id
+          description: The ID of this model
+          format: uuid
+          type: string
+        is_chat:
+          title: Is Chat
+          description: >-
+            True if the model is of type Chat Completions, False if it's a Text
+            Completion model.
+          type: boolean
+        is_ft:
+          title: Is Ft
+          description: Whether it's fine-tuned or not
+          type: boolean
+        is_gdpr:
+          title: Is Gdpr
+          description: True if the model complies with GDPR
+          type: boolean
+        is_open_source:
+          title: Is Open Source
+          description: True if the model is open source
+          type: boolean
+        is_public:
+          title: Is Public
+          description: True if the model is publicly accessible to all
+          type: boolean
+        is_pulze_owner:
+          title: Is Pulze Owner
+          description: Model has been created and shared by Pulze.ai
+          type: boolean
+        is_rag:
+          title: Is Rag
+          description: Whether it's rag-tuned or not
+          type: boolean
+        model:
+          title: Model
+          description: The name of the model. Can belong to many providers
+          type: string
+        modified_on:
+          title: Modified On
+          description: When the model was updated. Auto-populated in DB
+          format: date-time
+          type: string
+        namespace:
+          title: Namespace
+          description: The fully qualified (namespaced) model name
+          type: string
+        org_id:
+          title: Org Id
+          description: The org_id that has acccess to this model
+          format: uuid
+          type: string
+        owner:
+          title: Owner
+          description: >-
+            The owner of the model. Sometimes, for a provider/model combination,
+            many instances exist, trained on different data
+          type: string
+        prompt_token_cost:
+          title: Prompt Token Cost
+          description: The cost of a prompt token, in USD
+          type: number
+        provider:
+          title: Provider
+          description: The provider for the model.
+          type: string
+        supports_functions:
+          title: Supports Functions
+          description: True if the model supports `function`/`tool` call
+          type: boolean
+        supports_json:
+          title: Supports Json
+          description: True if the model supports `json`-formatted responses
+          type: boolean
+        supports_n:
+          title: Supports N
+          description: >-
+            True if the model supports `n` and `best_of` -- i.e, multiple
+            responses
+          type: boolean
+        supports_penalties:
+          title: Supports Penalties
+          description: >-
+            True if the model supports `frequency_penalty` and
+            `presence_penalty`
+          type: boolean
+        supports_stream:
+          title: Supports Stream
+          description: True if the model supports streaming responses
+          type: boolean
+        until:
+          title: Until
+          description: The most recent data this model has been trained with
+          format: date-time
+          type: string
+        url:
+          title: Url
+          description: A URL to the model's page or more informatino
+          type: string
+      required:
+        - model
+        - namespace
+        - context_window
+        - description
+        - url
+        - is_rag
+        - is_ft
+        - is_open_source
+        - is_gdpr
+        - is_chat
+        - supports_functions
+        - supports_json
+        - supports_n
+        - supports_penalties
+        - supports_stream
+        - is_public
+        - is_pulze_owner
+        - default_active
+        - completion_token_cost
+        - prompt_token_cost
+        - base_cost
+      type: object
+    ModelDataCreatePayloadForInternal:
+      title: ModelDataCreatePayloadForInternal
+      properties:
+        description:
+          title: Description
+          type: string
+        app_id:
+          title: App Id
+          format: uuid
+          type: string
+        at:
+          title: At
+          type: string
+        base_cost:
+          title: Base Cost
+          default: 0
+          type: string
+        completion_token_cost:
+          title: Completion Token Cost
+          type: string
+        context_window:
+          title: Context Window
+          type: integer
+        default_active:
+          title: Default Active
+          type: boolean
+        is_chat:
+          title: Is Chat
+          type: boolean
+        is_gdpr:
+          title: Is Gdpr
+          type: boolean
+        is_open_source:
+          title: Is Open Source
+          type: boolean
+        is_public:
+          title: Is Public
+          type: boolean
+        model:
+          title: Model
+          type: string
+        org_id:
+          title: Org Id
+          format: uuid
+          type: string
+        owner:
+          title: Owner
+          type: string
+        prompt_token_cost:
+          title: Prompt Token Cost
+          type: string
+        provider:
+          title: Provider
+          type: string
+        supports_functions:
+          title: Supports Functions
+          default: false
+          type: boolean
+        supports_json:
+          title: Supports Json
+          default: false
+          type: boolean
+        supports_n:
+          title: Supports N
+          default: false
+          type: boolean
+        supports_penalties:
+          title: Supports Penalties
+          default: false
+          type: boolean
+        supports_stream:
+          title: Supports Stream
+          default: false
+          type: boolean
+        until:
+          title: Until
+          type: string
+        url:
+          title: Url
+          type: string
+      type: object
+    ModelDataUpdatePayloadForInternal:
+      title: ModelDataUpdatePayloadForInternal
+      properties:
+        description:
+          title: Description
+          type: string
+        app_id:
+          title: App Id
+          format: uuid
+          type: string
+        at:
+          title: At
+          type: string
+        base_cost:
+          title: Base Cost
+          default: 0
+          type: string
+        completion_token_cost:
+          title: Completion Token Cost
+          type: string
+        context_window:
+          title: Context Window
+          type: integer
+        default_active:
+          title: Default Active
+          type: boolean
+        is_public:
+          title: Is Public
+          type: boolean
+        model:
+          title: Model
+          type: string
+        org_id:
+          title: Org Id
+          format: uuid
+          type: string
+        owner:
+          title: Owner
+          type: string
+        prompt_token_cost:
+          title: Prompt Token Cost
+          type: string
+        provider:
+          title: Provider
+          type: string
+        until:
+          title: Until
+          type: string
+        url:
+          title: Url
+          type: string
+      type: object
+    ModelParts:
+      title: ModelParts
+      properties:
+        at:
+          title: At
+          description: Extra model settings inferred from namespace
+          type: string
+        model:
+          title: Model
+          description: The name of the model. Can belong to many providers
+          type: string
+        namespace:
+          title: Namespace
+          description: The fully qualified (namespaced) model name
+          type: string
+        owner:
+          title: Owner
+          description: >-
+            The owner of the model. Sometimes, for a provider/model combination,
+            many instances exist, trained on different data
+          type: string
+        provider:
+          title: Provider
+          description: The provider for the model.
+          type: string
+      required:
+        - model
+        - namespace
+      type: object
+    Org:
+      title: Org
+      properties:
+        added_on:
+          title: Added On
+          format: date-time
+          type: string
+        address_1:
+          title: Address 1
+          default: ''
+          type: string
+        address_2:
+          title: Address 2
+          default: ''
+          type: string
+        address_city:
+          title: Address City
+          default: ''
+          type: string
+        address_country:
+          title: Address Country
+          default: ''
+          type: string
+        address_state:
+          title: Address State
+          default: ''
+          type: string
+        address_zip:
+          title: Address Zip
+          default: ''
+          type: string
+        billing_email:
+          title: Billing Email
+          description: Billing email
+          default: ''
+          type: string
+        credit_balance:
+          title: Credit Balance
+          description: The balance in this Org's account
+          default: 0
+          type: number
+        currency:
+          title: Currency
+          description: The currency for this organization
+          default: USD
+          enum:
+            - USD
+          type: string
+        free_balance:
+          title: Free Balance
+          description: >-
+            If this is > 0, we will deduct the balance from here instead of the
+            credit_balance. Add credits to this Org by updating this column
+          default: 0
+          type: number
+        hubspot_id:
+          title: Hubspot Id
+          type: string
+        id:
+          title: Id
+          format: uuid
+          type: string
+        is_active:
+          title: Is Active
+          default: true
+          type: boolean
+        is_personal:
+          title: Is Personal
+          default: false
+          type: boolean
+        last_invoice_date:
+          title: Last Invoice Date
+          description: >-
+            We track the expenses with `pending_expense`, but when we charge, we
+            add up all the requests between `last_invoice_date` and now.
+          format: date-time
+          type: string
+        loki_endpoint:
+          title: Loki Endpoint
+          type: string
+        loki_id:
+          title: Loki Id
+          type: string
+        loki_token:
+          title: Loki Token
+          type: string
+        modified_on:
+          title: Modified On
+          format: date-time
+          type: string
+        org_creator:
+          title: Org Creator
+          type: string
+        org_display_name:
+          title: Org Display Name
+          type: string
+        org_logo:
+          title: Org Logo
+          type: string
+        org_name:
+          title: Org Name
+          type: string
+        org_stripe_id:
+          title: Org Stripe Id
+          description: The Stripe's customer ID. `cus_xxxxxx`
+          type: string
+        pending_expense:
+          title: Pending Expense
+          description: >-
+            A reference value for how much money has a customer spent since the
+            last sync with Stripe. When we charge them, we don't use this value,
+            and instead add up all the requests' costs.
+          default: 0
+          type: number
+        period_end:
+          title: Period End
+          description: >-
+            The timestamp (in s) when the subscription ended or will end. The
+            user will be billed at this point
+          type: integer
+        period_start:
+          title: Period Start
+          description: >-
+            The timestamp (in s) when the subscription started or will start. If
+            it's not the first cycle, the user was billed at this point
+          type: integer
+        prom_endpoint:
+          title: Prom Endpoint
+          type: string
+        prom_id:
+          title: Prom Id
+          type: string
+        prom_token:
+          title: Prom Token
+          type: string
+        rate_limit:
+          title: Rate Limit
+          description: The rate limit for this org, per minute
+          default: 200
+          type: integer
+        spending_limit_hard:
+          title: Spending Limit Hard
+          default: 0
+          type: number
+        spending_limit_soft:
+          title: Spending Limit Soft
+          default: 0
+          type: number
+        subscription_cycle:
+          title: Subscription Cycle
+          description: >-
+            The length of the Platform subscription cycle. Useful for upgrades
+            and downgrades
+          enum:
+            - monthly
+            - yearly
+          type: string
+        subscription_pause_reason:
+          $ref: '#/components/schemas/SubscriptionPaused'
+        subscription_price_id:
+          title: Subscription Price Id
+          description: >-
+            PRICE ID (on Stripe). The user's current Subscription ID is created
+            from this Price
+          type: string
+        subscription_tier:
+          title: Subscription Tier
+          description: The subscription tier this user is in.
+          enum:
+            - _NONE_
+            - STARTUP
+            - GROWTH
+            - SCALE
+            - ENTERPRISE
+          type: string
+        trial_end:
+          title: Trial End
+          description: >-
+            The timestamp (in s) when the trial will end and the paid
+            subscription will start. The user will be billed at this point
+          type: integer
+        usage:
+          $ref: '#/components/schemas/OrgUsage'
+      required:
+        - last_invoice_date
+        - org_stripe_id
+        - org_name
+        - org_creator
+        - id
+      type: object
+      x-konfig-properties:
+        subscription_pause_reason:
+          title: Subscription Pause Reason
+          description: >-
+            The reason the subscription was paused. If `null`, the subscription
+            is considered active
+        usage:
+          title: Usage
+          description: The Usage stats (view) for this org
+    OrgCreateRequest:
+      title: OrgCreateRequest
+      properties:
+        org_display_name:
+          title: Org Display Name
+          type: string
+        org_name:
+          title: Org Name
+          type: string
+      required:
+        - org_name
+      type: object
+    OrgCreateResponse:
+      title: OrgCreateResponse
+      properties:
+        org_display_name:
+          title: Org Display Name
+          type: string
+        org_id:
+          title: Org Id
+          format: uuid
+          type: string
+        org_name:
+          title: Org Name
+          type: string
+      required:
+        - org_id
+        - org_name
+      type: object
+    OrgIntegrationItem:
+      title: OrgIntegrationItem
+      properties:
+        endpoint:
+          title: Endpoint
+          description: Endpoint of the integration
+          minLength: 1
+          type: string
+        id:
+          title: Id
+          description: Id of the integration
+          minLength: 1
+          type: string
+        token:
+          title: Token
+          description: Token of the integration
+          minLength: 1
+          type: string
+      required:
+        - id
+        - token
+        - endpoint
+      type: object
+    OrgIntegrationUpdate:
+      title: OrgIntegrationUpdate
+      properties:
+        loki:
+          $ref: '#/components/schemas/OrgIntegrationItem'
+        prom:
+          $ref: '#/components/schemas/OrgIntegrationItem'
+      type: object
+    OrgMember:
+      title: OrgMember
+      properties:
+        added_on:
+          title: Added On
+          format: date-time
+          type: string
+        auth0_id:
+          title: Auth0 Id
+          type: string
+        id:
+          title: Id
+          format: uuid
+          type: string
+        is_active:
+          title: Is Active
+          type: boolean
+        last_login:
+          title: Last Login
+          format: date-time
+          type: string
+        org_id:
+          title: Org Id
+          format: uuid
+          type: string
+        permissions:
+          title: Permissions
+          type: string
+      required:
+        - auth0_id
+        - org_id
+        - is_active
+        - permissions
+        - last_login
+        - added_on
+        - id
+      type: object
+    OrgMemberInvite:
+      title: OrgMemberInvite
+      properties:
+        added_on:
+          title: Added On
+          format: date-time
+          type: string
+        auth0_id:
+          title: Auth0 Id
+          type: string
+        email:
+          title: Email
+          type: string
+        invite_status:
+          title: Invite Status
+          enum:
+            - accepted
+            - declined
+            - pending
+          type: string
+        is_current_user:
+          title: Is Current User
+          type: boolean
+        last_login:
+          title: Last Login
+          format: date-time
+          type: string
+        name:
+          title: Name
+          type: string
+        permissions:
+          title: Permissions
+          type: string
+        picture:
+          title: Picture
+          type: string
+        token:
+          title: Token
+          type: string
+      required:
+        - name
+        - email
+        - invite_status
+        - is_current_user
+        - added_on
+        - permissions
+      type: object
+    OrgNameCheck:
+      title: OrgNameCheck
+      properties:
+        org_name:
+          title: Org Name
+          type: string
+      required:
+        - org_name
+      type: object
+    OrgUpdate:
+      title: OrgUpdate
+      properties:
+        added_on:
+          title: Added On
+          format: date-time
+          type: string
+        address_1:
+          title: Address 1
+          type: string
+        address_2:
+          title: Address 2
+          type: string
+        address_city:
+          title: Address City
+          type: string
+        address_country:
+          title: Address Country
+          type: string
+        address_state:
+          title: Address State
+          type: string
+        address_zip:
+          title: Address Zip
+          type: string
+        billing_email:
+          title: Billing Email
+          type: string
+        currency:
+          title: Currency
+          default: USD
+          enum:
+            - USD
+          type: string
+        id:
+          title: Id
+          format: uuid
+          type: string
+        last_invoice_date:
+          title: Last Invoice Date
+          format: date-time
+          type: string
+        org_display_name:
+          title: Org Display Name
+          minLength: 4
+          type: string
+        org_logo:
+          title: Org Logo
+          type: string
+        org_name:
+          title: Org Name
+          minLength: 4
+          type: string
+        pending_expense:
+          title: Pending Expense
+          type: number
+      required:
+        - id
+        - billing_email
+        - org_display_name
+        - org_logo
+        - org_name
+        - address_1
+        - address_2
+        - address_city
+        - address_zip
+        - address_state
+        - address_country
+      type: object
+    OrgUsage:
+      title: OrgUsage
+      properties:
+        completion_tokens:
+          title: Completion Tokens
+          description: Number of tokens the response used
+          type: integer
+        completion_tokens_cost:
+          title: Completion Tokens Cost
+          description: Cost (in $) of the response
+          type: number
+        completion_tokens_cost_savings:
+          title: Completion Tokens Cost Savings
+          description: >-
+            Cost (in $) saved in the completion costs comparison to the
+            benchmark model
+          type: number
+        num_apps:
+          title: Num Apps
+          description: The number of active apps this Organization has
+          type: integer
+        num_requests:
+          title: Num Requests
+          description: >-
+            The number of requests this Organization has performed in the
+            current cycle
+          type: integer
+        org_id:
+          title: Org Id
+          description: The Org's ID
+          format: uuid
+          type: string
+        prompt_tokens:
+          title: Prompt Tokens
+          description: Number of tokens the request used
+          type: integer
+        prompt_tokens_cost:
+          title: Prompt Tokens Cost
+          description: Cost (in $) of the prompt
+          type: number
+        prompt_tokens_cost_savings:
+          title: Prompt Tokens Cost Savings
+          description: >-
+            Cost (in $) saved in the prompt costs comparison to the benchmark
+            model
+          type: number
+        total_tokens:
+          title: Total Tokens
+          description: Number of tokens of (request + response)
+          type: integer
+        total_tokens_cost:
+          title: Total Tokens Cost
+          description: Cost (in $) of the (request + response)
+          type: number
+        total_tokens_cost_savings:
+          title: Total Tokens Cost Savings
+          description: Cost (in $) saved in total, in comparison to the benchmark model
+          type: number
+      required:
+        - prompt_tokens
+        - completion_tokens
+        - total_tokens
+        - prompt_tokens_cost
+        - completion_tokens_cost
+        - total_tokens_cost
+        - prompt_tokens_cost_savings
+        - completion_tokens_cost_savings
+        - total_tokens_cost_savings
+        - org_id
+        - num_requests
+        - num_apps
+      type: object
+    PaymentDetailsBalance:
+      title: PaymentDetailsBalance
+      properties:
+        balance:
+          title: Balance
+          description: The balance in the account. Synced with Stripe periodically
+          default: 0
+          type: number
+        billing_zip:
+          title: Billing Zip
+          description: The Zipcode of the address of the Organization
+          type: string
+        free_balance:
+          title: Free Balance
+          description: >-
+            This represents balance that's either gifted or earned, and
+            non-redeemable for any cash.
+          default: 0
+          type: number
+        last_sync:
+          title: Last Sync
+          description: >-
+            The datetime when the local balance (i.e. the value we keep track
+            of) was synced with stripe (and the customer was billed)
+          format: date-time
+          type: string
+        pending_expense:
+          title: Pending Expense
+          description: >
+            The usage your account had since it last synced with Stripe.
+
+            Used for reference purposes, this is the amount we will charge
+            Stripe for.
+
+
+            This value does not only contain the sum of all the log tokens, but
+            it might also contain other expenses, like
+
+            uptime for custom models or base subscription prices, premium
+            features, etc (all of this might come in the future)
+          default: 0
+          type: number
+        spending_limit_hard:
+          title: Spending Limit Hard
+          description: >-
+            When the balance crosses this value, a high-warning email will be
+            sent informing the customer that services will be disrupted if the
+            balance reaches 0
+          default: 0
+          type: number
+        spending_limit_soft:
+          title: Spending Limit Soft
+          description: >-
+            When the balance crosses this value, a warning email will be sent
+            informing the customer
+          default: 0
+          type: number
+      required:
+        - last_sync
+        - billing_zip
+      type: object
+    PaymentDetailsLimits:
+      title: PaymentDetailsLimits
+      properties:
+        spending_limit_hard:
+          title: Spending Limit Hard
+          description: >-
+            When the balance crosses this value, a high-warning email will be
+            sent informing the customer that services will be disrupted if the
+            balance reaches 0
+          default: 0
+          type: number
+        spending_limit_soft:
+          title: Spending Limit Soft
+          description: >-
+            When the balance crosses this value, a warning email will be sent
+            informing the customer
+          default: 0
+          type: number
+      type: object
+    PlatformFeedbackBody:
+      title: PlatformFeedbackBody
+      properties:
+        source_details:
+          title: Source Details
+          type: string
+      required:
+        - source_details
+      type: object
+    PlaygroundCompletionRequest:
+      title: PlaygroundCompletionRequest
+      properties:
+        app_id:
+          title: App Id
+          description: >-
+            Optionally, send an App ID belonging to this user's org and all the
+            logs will be logged into that app. This usually means the user is
+            using the playground from the app's page itself.
+          format: uuid
+          type: string
+        max_tokens:
+          title: Max Tokens
+          description: The maximum number of tokens for the request
+          default: 140
+          minimum: 1
+          type: integer
+        messages:
+          title: Messages
+          description: >-
+            The list of messages (user/assistant/user/...) for the prompt. At
+            least one message required
+          default: []
+          items:
+            $ref: '#/components/schemas/RoleContentChatChoice'
+          minItems: 1
+          type: array
+        model:
+          title: Model
+          description: An optional model name. If specified, that model will be used
+          type: string
+        temperature:
+          title: Temperature
+          description: The temperature of the request
+          default: 0.4
+          maximum: 1
+          type: number
+        weights:
+          $ref: '#/components/schemas/LLMModelWeights'
+      type: object
+      x-konfig-properties:
+        weights:
+          title: Weights
+          description: '@required The weights specific to this request'
+    Prompt:
+      title: Prompt
+      properties:
+        title:
+          title: Title
+          maxLength: 60
+          minLength: 1
+          type: string
+        description:
+          title: Description
+          maxLength: 200
+          minLength: 1
+          type: string
+        added_on:
+          title: Added On
+          format: date-time
+          type: string
+        approved_on:
+          title: Approved On
+          format: date-time
+          type: string
+        decline_reason:
+          title: Decline Reason
+          description: Reason for decline
+          type: string
+        id:
+          title: Id
+          format: uuid
+          type: string
+        modified_on:
+          title: Modified On
+          format: date-time
+          type: string
+        org_id:
+          title: Org Id
+          format: uuid
+          type: string
+        prompt:
+          title: Prompt
+          pattern: '[\s\S]*{{prompt}}[\s\S]*'
+          type: string
+        published_on:
+          title: Published On
+          format: date-time
+          type: string
+        reviewed_on:
+          title: Reviewed On
+          format: date-time
+          type: string
+        tokens:
+          title: Tokens
+          type: integer
+      required:
+        - prompt
+        - title
+        - description
+        - added_on
+        - modified_on
+        - org_id
+        - tokens
+        - id
+      type: object
+    PromptCalculateRequest:
+      title: PromptCalculateRequest
+      properties:
+        text:
+          title: Text
+          type: string
+      required:
+        - text
+      type: object
+    PromptCalculateResponse:
+      title: PromptCalculateResponse
+      properties:
+        tokens:
+          title: Tokens
+          type: integer
+      required:
+        - tokens
+      type: object
+    PromptCreateData:
+      title: PromptCreateData
+      properties:
+        title:
+          title: Title
+          maxLength: 60
+          minLength: 1
+          type: string
+        description:
+          title: Description
+          maxLength: 200
+          minLength: 1
+          type: string
+        prompt:
+          title: Prompt
+          pattern: '[\s\S]*{{prompt}}[\s\S]*'
+          type: string
+      required:
+        - prompt
+        - title
+        - description
+      type: object
+    PromptReviewRequest:
+      title: PromptReviewRequest
+      properties:
+        accept:
+          title: Accept
+          description: Whether Admin accepts(1) or declines(0) review
+          default: '1'
+          enum:
+            - '0'
+            - '1'
+          type: string
+        decline_reason:
+          title: Decline Reason
+          description: Reason for decline
+          type: string
+        id:
+          title: Id
+          format: uuid
+          type: string
+      required:
+        - id
+      type: object
+    PromptUpdate:
+      title: PromptUpdate
+      properties:
+        title:
+          title: Title
+          maxLength: 60
+          minLength: 1
+          type: string
+        description:
+          title: Description
+          maxLength: 200
+          minLength: 1
+          type: string
+        id:
+          title: Id
+          format: uuid
+          type: string
+        prompt:
+          title: Prompt
+          pattern: '[\s\S]*{{prompt}}[\s\S]*'
+          type: string
+      required:
+        - prompt
+        - title
+        - description
+        - id
+      type: object
+    PulzeCompletionRequest:
+      title: PulzeCompletionRequest
+      properties:
+        best_of:
+          title: Best Of
+          description: >-
+            The number of responses to _generate_. Out of those, it will return
+            the best `n`.
+          default: 1
+          type: integer
+        context_window:
+          title: Context Window
+          description: The maximum context size (tokens) for the provided model
+          type: integer
+        'false':
+          title: false
+          description: |
+            How many completions to generate for each prompt.
+            @default 1
+          default: 1
+          minimum: 1
+          type: integer
+        frequency_penalty:
+          title: Frequency Penalty
+          description: >
+            https://platform.openai.com/docs/api-reference/completions/create#completions/create-frequency_penalty
+
+            Increase the model's likelihood to not repeat tokens/words
+          default: 0
+          maximum: 2
+          type: number
+        headers:
+          title: Headers
+          description: Headers sent alongside the request -- stored as part of the payload
+          additionalProperties:
+            type: string
+          type: object
+        labels:
+          title: Labels
+          description: >-
+            The labels sent alongside the request as a JSON-encoded Dict[str,
+            str] inside of the header "pulze-labels".
+          additionalProperties:
+            type: string
+          type: object
+        logit_bias:
+          title: Logit Bias
+          description: >
+            COMING SOON
+
+            https://platform.openai.com/docs/api-reference/completions/create#completions/create-logit_bias
+
+            Modify the likelihood of specified tokens appearing in the
+            completion.
+
+
+            See here for a detailed explanation on how to use:
+
+            https://help.openai.com/en/articles/5247780-using-logit-bias-to-define-token-probability
+          type: object
+        logprobs:
+          title: Logprobs
+          description: >
+            COMING SOON
+
+            https://platform.openai.com/docs/api-reference/completions/create#completions/create-logprobs
+
+            Include the log probabilities on the logprobs most likely tokens, as
+            well the chosen tokens.
+          maximum: 5
+          type: integer
+        max_tokens:
+          title: Max Tokens
+          description: The maximum number of tokens that the response can contain.
+          type: integer
+        messages:
+          title: Messages
+          description: >-
+            The conversation sent (with or without history) (for a
+            /chat/completions request)
+          default: []
+          items:
+            $ref: '#/components/schemas/RoleContentChatChoice'
+          type: array
+        model:
+          title: Model
+          description: >
+            https://docs.pulze.ai/overview/models
+
+            Specify the model you'd like Pulze to use. (optional). Can be the
+            full model name, or a subset for multi-matching.
+
+
+            Defaults to our dynamic routing, i.e. best model for this request.
+          default: pulze
+          type: string
+        policies:
+          $ref: '#/components/schemas/LLMModelPolicies'
+        presence_penalty:
+          title: Presence Penalty
+          description: >
+            https://platform.openai.com/docs/api-reference/completions/create#completions/create-presence_penalty
+
+            Increase the model's likelihood to talk about new topics
+          default: 0
+          maximum: 2
+          type: number
+        prompt:
+          title: Prompt
+          description: The prompt text sent (for a /completions request)
+          anyOf:
+            - type: string
+            - items:
+                type: string
+              type: array
+        provider:
+          title: Provider
+          description: The name of the provider for the request
+          default: ''
+          type: string
+        stop:
+          title: Stop
+          description: >
+            Stop responding when this sequence of characters is generated. Leave
+            empty to allow the model to decide.
+          anyOf:
+            - type: string
+            - items:
+                type: string
+              type: array
+          default: ''
+        stream:
+          title: Stream
+          description: >
+            ** COMING SOON **
+
+            Specify if you want the response to be streamed or to be returned as
+            a standard HTTP request
+          default: false
+          type: boolean
+        suffix:
+          title: Suffix
+          description: COMING SOON
+          default: ''
+          type: string
+        temperature:
+          title: Temperature
+          description: >-
+            Optionally specify the temperature for this request only. Leave
+            empty to allow Pulze to guess it for you.
+          default: 1
+          maximum: 1
+          type: number
+        tool_choice:
+          title: Tool Choice
+          anyOf:
+            - enum:
+                - none
+                - auto
+              type: string
+            - $ref: '#/components/schemas/ToolChoice'
+          default: none
+        tools:
+          title: Tools
+          items:
+            $ref: '#/components/schemas/ToolFunction'
+          type: array
+        top_p:
+          title: Top P
+          description: >
+            https://platform.openai.com/docs/api-reference/completions/create#completions/create-top_p
+
+            An alternative to sampling with temperature, called nucleus
+            sampling, where the model considers the results of the tokens with
+            top_p probability mass
+          default: 1
+          type: number
+        weights:
+          $ref: '#/components/schemas/LLMModelWeights'
+      type: object
+      x-konfig-properties:
+        policies:
+          title: Policies
+          description: >-
+            Settings for how this request should be processed: Anonimized,
+            public, and more.
+        weights:
+          title: Weights
+          description: >-
+            Optionally specify specific weights for this request only. Leave
+            empty to use the App's weights (global configuration)
+    PulzeDefaultModelData:
+      title: PulzeDefaultModelData
+      properties:
+        description:
+          title: Description
+          description: A description of the model
+          type: string
+        at:
+          title: At
+          description: Extra model settings inferred from namespace
+          type: string
+        context_window:
+          title: Context Window
+          description: The max_tokens for this model
+          type: integer
+        model:
+          title: Model
+          description: The name of the model. Can belong to many providers
+          type: string
+        namespace:
+          title: Namespace
+          description: The fully qualified (namespaced) model name
+          type: string
+        owner:
+          title: Owner
+          description: >-
+            The owner of the model. Sometimes, for a provider/model combination,
+            many instances exist, trained on different data
+          type: string
+        provider:
+          title: Provider
+          description: The provider for the model.
+          type: string
+        until:
+          title: Until
+          description: The most recent data this model has been trained with
+          format: date-time
+          type: string
+        url:
+          title: Url
+          description: A URL to the model's page or more informatino
+          type: string
+      required:
+        - model
+        - namespace
+        - context_window
+        - description
+        - url
+      type: object
+    PulzeEngineModelRanking:
+      title: PulzeEngineModelRanking
+      properties:
+        models:
+          title: Models
+          description: >-
+            A list of the best models for the given prompt+config, sorted by
+            overall score descending.
+          default: []
+          items:
+            $ref: '#/components/schemas/PulzeModelWithScore'
+          type: array
+      type: object
+    PulzeEngineResponse:
+      title: PulzeEngineResponse
+      description: >-
+        The response of any request to Completions or Chat Completions
+        endpoints.
+
+        This is a generic class!
+      properties:
+        choices:
+          title: Choices
+          description: >-
+            The Response contains a list of choices. The role: *.message.role,
+            and the content: *.message.content or, for text completions, the
+            *.text attribute.
+          anyOf:
+            - items:
+                $ref: '#/components/schemas/ResponseCompletionChatChoice'
+              type: array
+            - items:
+                $ref: '#/components/schemas/ResponseCompletionChoice'
+              type: array
+          default: []
+        created:
+          title: Created
+          description: Creation timestamp
+          default: 0
+          type: integer
+        id:
+          title: Id
+          description: This ID gets generated by the database when we save the request
+          type: string
+        metadata:
+          $ref: '#/components/schemas/PulzeEngineResponseMetadata'
+        model:
+          title: Model
+          description: The fully qualified model name used by PulzeEngine
+          type: string
+        object:
+          title: Object
+          description: The type of response object
+          enum:
+            - text_completion
+            - chat.completion
+          type: string
+        usage:
+          $ref: '#/components/schemas/PulzeEngineTokens'
+      required:
+        - model
+        - object
+      type: object
+      x-konfig-properties:
+        metadata:
+          title: Metadata
+          description: Metadata of the response
+        usage:
+          title: Usage
+          description: Tokens used
+    PulzeEngineResponseChatCompletion:
+      title: PulzeEngineResponseChatCompletion
+      description: The response returned to the user by the Chat Completions endpoint
+      properties:
+        choices:
+          title: Choices
+          items:
+            $ref: '#/components/schemas/ResponseCompletionChatChoice'
+          type: array
+        created:
+          title: Created
+          description: Creation timestamp
+          default: 0
+          type: integer
+        id:
+          title: Id
+          description: This ID gets generated by the database when we save the request
+          type: string
+        metadata:
+          $ref: '#/components/schemas/PulzeEngineResponseMetadata'
+        model:
+          title: Model
+          description: The fully qualified model name used by PulzeEngine
+          type: string
+        object:
+          title: Object
+          description: The type of response object
+          enum:
+            - text_completion
+            - chat.completion
+          type: string
+        usage:
+          $ref: '#/components/schemas/PulzeEngineTokens'
+      required:
+        - choices
+        - model
+        - object
+      type: object
+      x-konfig-properties:
+        metadata:
+          title: Metadata
+          description: Metadata of the response
+        usage:
+          title: Usage
+          description: Tokens used
+    PulzeEngineResponseCompletion:
+      title: PulzeEngineResponseCompletion
+      description: The response returned to the user by the (text) Completions endpoint
+      properties:
+        choices:
+          title: Choices
+          items:
+            $ref: '#/components/schemas/ResponseCompletionChoice'
+          type: array
+        created:
+          title: Created
+          description: Creation timestamp
+          default: 0
+          type: integer
+        id:
+          title: Id
+          description: This ID gets generated by the database when we save the request
+          type: string
+        metadata:
+          $ref: '#/components/schemas/PulzeEngineResponseMetadata'
+        model:
+          title: Model
+          description: The fully qualified model name used by PulzeEngine
+          type: string
+        object:
+          title: Object
+          description: The type of response object
+          enum:
+            - text_completion
+            - chat.completion
+          type: string
+        usage:
+          $ref: '#/components/schemas/PulzeEngineTokens'
+      required:
+        - choices
+        - model
+        - object
+      type: object
+      x-konfig-properties:
+        metadata:
+          title: Metadata
+          description: Metadata of the response
+        usage:
+          title: Usage
+          description: Tokens used
+    PulzeEngineResponseMetadata:
+      title: PulzeEngineResponseMetadata
+      properties:
+        app_id:
+          title: App Id
+          description: The ID of the app this request belongs to
+          type: string
+        category:
+          title: Category
+          description: Category assigned to this request (Science, Health, Games...)
+          type: string
+        cost_savings:
+          $ref: '#/components/schemas/PulzeEngineTokens'
+        costs:
+          $ref: '#/components/schemas/PulzeEngineTokens'
+        error:
+          title: Error
+          description: If an error occurs, it will be stored here
+          type: string
+        extra:
+          title: Extra
+          description: Extra data
+          type: object
+        labels:
+          title: Labels
+          description: Custom labels (metadata) sent along in the request
+          additionalProperties:
+            type: string
+          type: object
+        latency:
+          title: Latency
+          description: The time it took for the Provider to return a response
+          type: number
+        max_tokens:
+          title: Max Tokens
+          description: >-
+            Maximum number of tokens that can be used in the
+            request+response.Leave empty to make it automatic, and set to `-1`
+            to use the maximum context size (model-dependent)
+          type: integer
+        model:
+          $ref: '#/components/schemas/ModelParts'
+        retries:
+          title: Retries
+          description: >-
+            The number of retries needed to get the answer. `null` or `0` means
+            no retries were required
+          default: 0
+          type: integer
+        score:
+          title: Score
+          description: The score for the currently used LLM
+          default: 0
+          type: number
+        scores:
+          $ref: '#/components/schemas/RankedScoringModels'
+        status_code:
+          title: Status Code
+          description: Status code of the response
+          type: integer
+        temperature:
+          title: Temperature
+          description: Temperature used for the request
+          anyOf:
+            - type: number
+            - type: integer
+      type: object
+      x-konfig-properties:
+        cost_savings:
+          title: Cost Savings
+          description: Price difference -- compared with GPT-4
+        costs:
+          title: Costs
+          description: Cost (in $) of the request
+        model:
+          title: Model
+          description: The model used in the request
+        scores:
+          title: Scores
+          description: A ranking of the best models for a given request
+    PulzeEngineTokens:
+      title: PulzeEngineTokens
+      properties:
+        completion_tokens:
+          title: Completion Tokens
+          default: 0
+          type: number
+        prompt_tokens:
+          title: Prompt Tokens
+          default: 0
+          type: number
+        total_tokens:
+          title: Total Tokens
+          default: 0
+          type: number
+      type: object
+    PulzeModelActiveForApp:
+      title: PulzeModelActiveForApp
+      properties:
+        description:
+          title: Description
+          description: A description of the model
+          type: string
+        active:
+          title: Active
+          description: Whether the model is active for the app.
+          default: false
+          type: boolean
+        at:
+          title: At
+          description: Extra model settings inferred from namespace
+          type: string
+        context_window:
+          title: Context Window
+          description: The max_tokens for this model
+          type: integer
+        id:
+          title: Id
+          description: Used to uniquely target models when we enable/disable them
+          format: uuid
+          type: string
+        model:
+          title: Model
+          description: The name of the model. Can belong to many providers
+          type: string
+        namespace:
+          title: Namespace
+          description: The fully qualified (namespaced) model name
+          type: string
+        owner:
+          title: Owner
+          description: >-
+            The owner of the model. Sometimes, for a provider/model combination,
+            many instances exist, trained on different data
+          type: string
+        provider:
+          title: Provider
+          description: The provider for the model.
+          type: string
+        until:
+          title: Until
+          description: The most recent data this model has been trained with
+          format: date-time
+          type: string
+        url:
+          title: Url
+          description: A URL to the model's page or more informatino
+          type: string
+      required:
+        - model
+        - namespace
+        - context_window
+        - description
+        - url
+      type: object
+    PulzeModelWithScore:
+      title: PulzeModelWithScore
+      properties:
+        at:
+          title: At
+          description: Extra model settings inferred from namespace
+          type: string
+        model:
+          title: Model
+          description: The name of the model. Can belong to many providers
+          type: string
+        namespace:
+          title: Namespace
+          description: The fully qualified (namespaced) model name
+          type: string
+        owner:
+          title: Owner
+          description: >-
+            The owner of the model. Sometimes, for a provider/model combination,
+            many instances exist, trained on different data
+          type: string
+        provider:
+          title: Provider
+          description: The provider for the model.
+          type: string
+        score:
+          title: Score
+          type: number
+      required:
+        - model
+        - namespace
+      type: object
+    PulzeToggleModelResponse:
+      title: PulzeToggleModelResponse
+      properties:
+        active:
+          title: Active
+          type: boolean
+        model:
+          $ref: '#/components/schemas/PulzeDefaultModelData'
+        success:
+          title: Success
+          description: The status of the update
+          type: boolean
+      required:
+        - success
+      type: object
+    RankedScoringModels:
+      title: RankedScoringModels
+      properties:
+        best_models:
+          title: Best Models
+          default: []
+          items:
+            additionalProperties:
+              type: number
+            type: object
+          type: array
+        candidates:
+          title: Candidates
+          items:
+            additionalProperties:
+              type: number
+            type: object
+          type: array
+      type: object
+    Request:
+      title: Request
+      properties:
+        app_id:
+          title: App Id
+          description: The ID of the app that performed the request
+          format: uuid
+          type: string
+        children:
+          title: Children
+          description: >-
+            The children of the Request. Will equal None unless you use eager
+            loading in the query
+          items:
+            $ref: '#/components/schemas/RequestInDBBase'
+          type: array
+        costs_incurred:
+          title: Costs Incurred
+          description: >-
+            When a request requires multiple intermediate calls, they are stored
+            as 'no costs incurred' -- that way we can store the costs, but don't
+            charge the user
+          default: true
+          type: boolean
+        feedback:
+          title: Feedback
+          description: A free text providing more detailed feedback
+          default: ''
+          type: string
+        good_answer:
+          title: Good Answer
+          description: The rating for the request
+          type: boolean
+        id:
+          title: Id
+          description: ID of the request
+          format: uuid
+          type: string
+        namespace:
+          title: Namespace
+          description: >-
+            The name of the provider's model which was used to answer the
+            request
+          type: string
+        parent:
+          $ref: '#/components/schemas/RequestInDBBase'
+        parent_id:
+          title: Parent Id
+          description: >-
+            Reference to the ID of the parent of this log. A log has a parent
+            when it's a subrequest used to retrieve the final answer.
+          format: uuid
+          type: string
+        payload:
+          $ref: '#/components/schemas/PulzeCompletionRequest'
+        privacy_level:
+          title: Privacy Level
+          description: >-
+            How much is logged? 1: everything, 2: mask request+response (but
+            show log), 3: Not visible, not retrievable, no information stored.
+          default: 1
+          enum:
+            - 1
+            - 2
+            - 3
+          type: integer
+        prompt:
+          title: Prompt
+          description: The prompt in text format
+          type: string
+        request_type:
+          title: Request Type
+          description: >-
+            The type of request (text completion or chat) the user sends and
+            expects back
+          enum:
+            - completions
+            - chat_completions
+          type: string
+        response:
+          $ref: '#/components/schemas/PulzeEngineResponse'
+        response_text:
+          title: Response Text
+          description: The response in text format
+          type: string
+        status_code:
+          title: Status Code
+          description: The status code of the request to the AI model
+          default: -1
+          type: integer
+      required:
+        - response
+        - id
+      type: object
+      x-konfig-properties:
+        parent:
+          title: Parent
+          description: >-
+            The parent of the Request, if any. Requests which are part of a
+            series of sub-requests (like multiple LLM calls, or RAG) will have
+            the final, resulting Log as parent.
+        payload:
+          title: Payload
+          description: The payload sent with the request
+        response:
+          title: Response
+          description: The response object
+    RequestInDBBase:
+      title: RequestInDBBase
+      properties:
+        app_id:
+          title: App Id
+          description: The ID of the app that performed the request
+          format: uuid
+          type: string
+        children:
+          title: Children
+          description: >-
+            The children of the Request. Will equal None unless you use eager
+            loading in the query
+          items: {}
+          type: array
+        costs_incurred:
+          title: Costs Incurred
+          description: >-
+            When a request requires multiple intermediate calls, they are stored
+            as 'no costs incurred' -- that way we can store the costs, but don't
+            charge the user
+          default: true
+          type: boolean
+        feedback:
+          title: Feedback
+          description: A free text providing more detailed feedback
+          default: ''
+          type: string
+        good_answer:
+          title: Good Answer
+          description: The rating for the request
+          type: boolean
+        id:
+          title: Id
+          description: ID of the request
+          format: uuid
+          type: string
+        namespace:
+          title: Namespace
+          description: >-
+            The name of the provider's model which was used to answer the
+            request
+          type: string
+        parent:
+          title: Parent
+          description: >-
+            The parent of the Request, if any. Requests which are part of a
+            series of sub-requests (like multiple LLM calls, or RAG) will have
+            the final, resulting Log as parent.
+          allOf:
+            - {}
+        parent_id:
+          title: Parent Id
+          description: >-
+            Reference to the ID of the parent of this log. A log has a parent
+            when it's a subrequest used to retrieve the final answer.
+          format: uuid
+          type: string
+        payload:
+          $ref: '#/components/schemas/PulzeCompletionRequest'
+        privacy_level:
+          title: Privacy Level
+          description: >-
+            How much is logged? 1: everything, 2: mask request+response (but
+            show log), 3: Not visible, not retrievable, no information stored.
+          default: 1
+          enum:
+            - 1
+            - 2
+            - 3
+          type: integer
+        prompt:
+          title: Prompt
+          description: The prompt in text format
+          type: string
+        request_type:
+          title: Request Type
+          description: >-
+            The type of request (text completion or chat) the user sends and
+            expects back
+          enum:
+            - completions
+            - chat_completions
+          type: string
+        response:
+          $ref: '#/components/schemas/PulzeEngineResponse'
+        response_text:
+          title: Response Text
+          description: The response in text format
+          type: string
+        status_code:
+          title: Status Code
+          description: The status code of the request to the AI model
+          default: -1
+          type: integer
+      required:
+        - response
+        - id
+      type: object
+      x-konfig-properties:
+        payload:
+          title: Payload
+          description: The payload sent with the request
+        response:
+          title: Response
+          description: The response object
+    Request_Normalized:
+      title: Request_Normalized
+      properties:
+        app_id:
+          title: App Id
+          description: The ID of the app that performed the request
+          format: uuid
+          type: string
+        at:
+          title: At
+          description: Extra model settings inferred from namespace
+          type: string
+        children:
+          title: Children
+          description: >-
+            The children of the Request. Will equal None unless you use eager
+            loading in the query
+          items:
+            $ref: '#/components/schemas/RequestInDBBase'
+          type: array
+        completion_tokens:
+          title: Completion Tokens
+          description: Number of tokens the response used
+          type: integer
+        completion_tokens_cost:
+          title: Completion Tokens Cost
+          description: Cost (in $) of the response
+          type: number
+        completion_tokens_cost_savings:
+          title: Completion Tokens Cost Savings
+          description: >-
+            Cost (in $) saved in the completion costs comparison to the
+            benchmark model
+          type: number
+        costs_incurred:
+          title: Costs Incurred
+          description: >-
+            When a request requires multiple intermediate calls, they are stored
+            as 'no costs incurred' -- that way we can store the costs, but don't
+            charge the user
+          default: true
+          type: boolean
+        created:
+          title: Created
+          description: When the request was performed
+          format: date-time
+          type: string
+        feedback:
+          title: Feedback
+          description: A free text providing more detailed feedback
+          default: ''
+          type: string
+        good_answer:
+          title: Good Answer
+          description: The rating for the request
+          type: boolean
+        id:
+          title: Id
+          description: ID of the request
+          format: uuid
+          type: string
+        latency:
+          title: Latency
+          description: Time it took for the LLM to respond
+          default: -1
+          type: number
+        model:
+          title: Model
+          description: The name of the model. Can belong to many providers
+          type: string
+        model_id:
+          title: Model Id
+          description: The ID of the model used
+          format: uuid
+          type: string
+        namespace:
+          title: Namespace
+          description: >-
+            The name of the provider's model which was used to answer the
+            request
+          type: string
+        owner:
+          title: Owner
+          description: >-
+            The owner of the model. Sometimes, for a provider/model combination,
+            many instances exist, trained on different data
+          type: string
+        parent:
+          $ref: '#/components/schemas/RequestInDBBase'
+        parent_id:
+          title: Parent Id
+          description: >-
+            Reference to the ID of the parent of this log. A log has a parent
+            when it's a subrequest used to retrieve the final answer.
+          format: uuid
+          type: string
+        payload:
+          $ref: '#/components/schemas/PulzeCompletionRequest'
+        privacy_level:
+          title: Privacy Level
+          description: >-
+            How much is logged? 1: everything, 2: mask request+response (but
+            show log), 3: Not visible, not retrievable, no information stored.
+          default: 1
+          enum:
+            - 1
+            - 2
+            - 3
+          type: integer
+        prompt:
+          title: Prompt
+          description: The prompt in text format
+          type: string
+        prompt_tokens:
+          title: Prompt Tokens
+          description: Number of tokens the request used
+          type: integer
+        prompt_tokens_cost:
+          title: Prompt Tokens Cost
+          description: Cost (in $) of the prompt
+          type: number
+        prompt_tokens_cost_savings:
+          title: Prompt Tokens Cost Savings
+          description: >-
+            Cost (in $) saved in the prompt costs comparison to the benchmark
+            model
+          type: number
+        provider:
+          title: Provider
+          description: The provider for the model.
+          type: string
+        request_type:
+          title: Request Type
+          description: >-
+            The type of request (text completion or chat) the user sends and
+            expects back
+          enum:
+            - completions
+            - chat_completions
+          type: string
+        response:
+          $ref: '#/components/schemas/PulzeEngineResponse'
+        response_text:
+          title: Response Text
+          description: The response in text format
+          type: string
+        status_code:
+          title: Status Code
+          description: The status code of the request to the AI model
+          default: -1
+          type: integer
+        timestamp:
+          title: Timestamp
+          description: The timestamp of the request, in milliseconds
+          type: integer
+        total_tokens:
+          title: Total Tokens
+          description: Number of tokens of (request + response)
+          type: integer
+        total_tokens_cost:
+          title: Total Tokens Cost
+          description: Cost (in $) of the (request + response)
+          type: number
+        total_tokens_cost_savings:
+          title: Total Tokens Cost Savings
+          description: Cost (in $) saved in total, in comparison to the benchmark model
+          type: number
+      required:
+        - model
+        - response
+        - id
+        - prompt_tokens
+        - completion_tokens
+        - total_tokens
+        - prompt_tokens_cost
+        - completion_tokens_cost
+        - total_tokens_cost
+        - prompt_tokens_cost_savings
+        - completion_tokens_cost_savings
+        - total_tokens_cost_savings
+        - timestamp
+        - model_id
+      type: object
+      x-konfig-properties:
+        parent:
+          title: Parent
+          description: >-
+            The parent of the Request, if any. Requests which are part of a
+            series of sub-requests (like multiple LLM calls, or RAG) will have
+            the final, resulting Log as parent.
+        payload:
+          title: Payload
+          description: The payload sent with the request
+        response:
+          title: Response
+          description: The response object
+    ResendInviteEmail:
+      title: ResendInviteEmail
+      properties:
+        email:
+          title: Email
+          type: string
+        invite_link:
+          title: Invite Link
+          type: string
+        org_id:
+          title: Org Id
+          format: uuid
+          type: string
+      required:
+        - invite_link
+        - email
+        - org_id
+      type: object
+    ResponseCompletionChatChoice:
+      title: ResponseCompletionChatChoice
+      properties:
+        finish_reason:
+          title: Finish Reason
+          description: >-
+            The reason the model stopped generating tokens. Possible values:
+            "stop", "length", "content_filter", "function_call", "max_tokens",
+            ... 
+          default: stop
+          type: string
+        index:
+          title: Index
+          type: integer
+        message:
+          $ref: '#/components/schemas/RoleContentChatChoice'
+      required:
+        - index
+        - message
+      type: object
+    ResponseCompletionChoice:
+      title: ResponseCompletionChoice
+      properties:
+        finish_reason:
+          title: Finish Reason
+          description: >-
+            The reason the model stopped generating tokens. Possible values:
+            "stop", "length", "content_filter", "function_call", "max_tokens",
+            ... 
+          default: stop
+          type: string
+        index:
+          title: Index
+          type: integer
+        logprobs:
+          title: Logprobs
+          type: integer
+        text:
+          title: Text
+          type: string
+      required:
+        - index
+        - text
+      type: object
+    RoleContentChatChoice:
+      title: RoleContentChatChoice
+      properties:
+        content:
+          title: Content
+          type: string
+        role:
+          title: Role
+          enum:
+            - user
+            - assistant
+            - system
+          type: string
+        tool_calls:
+          title: Tool Calls
+          description: >-
+            If `tool_choice` parameter was passed, and the model supports it,
+            this will return a list of the different calls/functions used.
+          items:
+            $ref: '#/components/schemas/ToolCall'
+          type: array
+      required:
+        - role
+      type: object
+    StatsPopulatedGraphResult:
+      title: StatsPopulatedGraphResult
+      properties:
+        date:
+          title: Date
+          type: string
+        'true':
+          title: true
+          type: number
+        x:
+          title: X
+          type: string
+      required:
+        - date
+        - x
+        - 'y'
+      type: object
+    StatsRequest:
+      title: StatsRequest
+      properties:
+        app_ids:
+          title: App Ids
+          description: >-
+            The list of API Keys we want to filter for. Leave the list empty to
+            disable filtering (and return data for all apps) instead.
+          default: []
+          items:
+            format: uuid
+            type: string
+          type: array
+        cumulative:
+          title: Cumulative
+          additionalProperties:
+            type: boolean
+          type: object
+        date_from:
+          title: Date From
+          description: The earliest date we are searching for.
+          format: date-time
+          type: string
+        date_to:
+          title: Date To
+          description: The latest date we are searching for.
+          format: date-time
+          type: string
+        params:
+          title: Params
+          description: The sorting parameters for the query
+          default: []
+          items:
+            $ref: '#/components/schemas/GetTableSortParams'
+          type: array
+      required:
+        - date_from
+      type: object
+    SubscriptionData:
+      title: SubscriptionData
+      properties:
+        cycle:
+          title: Cycle
+          enum:
+            - monthly
+            - yearly
+          type: string
+        price_id:
+          title: Price Id
+          description: The StripeID `price_xxx` that will be added to the subscription
+          type: string
+        tier:
+          title: Tier
+          enum:
+            - _NONE_
+            - STARTUP
+            - GROWTH
+            - SCALE
+            - ENTERPRISE
+          type: string
+      required:
+        - price_id
+        - cycle
+        - tier
+      type: object
+    SubscriptionPaused:
+      title: SubscriptionPaused
+      description: >-
+        If a subscription is paused (can't charge card, user cancels, ...) we
+        store the reasons here.
+      properties:
+        data:
+          title: Data
+          type: object
+        reason:
+          title: Reason
+          description: The reason the subscription was paused
+          type: string
+        reason_code:
+          title: Reason Code
+          description: The reason the subscription was paused (code)
+          type: string
+        timestamp:
+          title: Timestamp
+          description: When the subscription was paused
+          type: integer
+      required:
+        - reason_code
+        - reason
+        - timestamp
+        - data
+      type: object
+    SubscriptionPricingTable:
+      title: SubscriptionPricingTable
+      properties:
+        subscription_price_id:
+          title: Subscription Price Id
+          description: The ID of the price associated with the current subscription, if any
+          type: string
+        table:
+          title: Table
+          additionalProperties:
+            $ref: '#/components/schemas/SubscriptionSettings'
+          type: object
+      required:
+        - descriptions
+        - table
+      type: object
+    SubscriptionSettings:
+      title: SubscriptionSettings
+      description: >-
+        For any given subscription, this represents the set of available
+        features
+      properties:
+        customer_success:
+          title: Customer Success
+          description: Support from Marketing team (? TBD)
+          type: boolean
+        fine_tuning:
+          title: Fine Tuning
+          description: Allows to fine-tune models
+          type: boolean
+        flowz:
+          title: Flowz
+          description: Flowz Feature
+          default: true
+          type: boolean
+        llm_routing:
+          title: Llm Routing
+          description: Dynamic LLM routing using KG
+          default: true
+          type: boolean
+        max_apps:
+          title: Max Apps
+          description: Maximum number of apps that can be created
+          type: integer
+        max_apps_readable:
+          title: Max Apps Readable
+          description: >-
+            A human-readable format of max_apps. Example: 'Infinite' or '1000'
+            or 'None'
+          type: string
+        max_tokens:
+          title: Max Tokens
+          description: >-
+            The maximum number of tokens that can be _generated_, for each
+            billing period (month)
+          type: integer
+        max_tokens_readable:
+          title: Max Tokens Readable
+          description: 'A human-readable format of max_tokens. Example: ''50bn'' or ''+100M'''
+          type: string
+        monthly_price_id:
+          title: Monthly Price Id
+          description: The Stripe PriceID for the monthly subscription
+          type: string
+        monthly_price_usd:
+          title: Monthly Price Usd
+          description: Price per MONTH -- same as in Stripe, here for display purposes
+          type: number
+        name:
+          title: Name
+          description: The name for this subscription
+          type: string
+        personalized_llm_routing:
+          title: Personalized Llm Routing
+          description: Custom scoring of LLMs using KG
+          type: boolean
+        prompt_models:
+          title: Prompt Models
+          description: Allows the user to create and use Prompt-based Models
+          type: boolean
+        prompts:
+          title: Prompts
+          description: Allows the user to create and use Prompts
+          type: boolean
+        support_level:
+          title: Support Level
+          description: The level of support this user has access to
+          enum:
+            - community
+            - all
+          type: string
+        support_level_readable:
+          title: Support Level Readable
+          description: A human-readable format for the level of support offered
+          type: string
+        yearly_price_id:
+          title: Yearly Price Id
+          description: The Stripe PriceID for the yearly subscription
+          type: string
+        yearly_price_usd:
+          title: Yearly Price Usd
+          description: Price per YEAR -- same as in Stripe, here for display purposes
+          type: number
+      required:
+        - max_tokens
+        - max_apps
+        - prompts
+        - prompt_models
+        - personalized_llm_routing
+        - fine_tuning
+        - support_level
+        - customer_success
+        - max_tokens_readable
+        - max_apps_readable
+        - support_level_readable
+        - name
+      type: object
+    ToolCall:
+      title: ToolCall
+      properties:
+        function:
+          $ref: '#/components/schemas/FunctionCallArguments'
+        id:
+          title: Id
+          type: string
+        type:
+          title: Type
+          default: function
+          type: string
+      required:
+        - function
+        - id
+      type: object
+      x-konfig-properties:
+        function:
+          title: Function
+          description: >-
+            A JSON schema with the values for each argument that the LLM
+            predicted
+    ToolChoice:
+      title: ToolChoice
+      properties:
+        function:
+          $ref: '#/components/schemas/ToolChoiceFunction'
+        type:
+          title: Type
+          description: >
+            (Note: Not supported by all models yet) //
+
+            `json_object`: If you instruct the model to return a JSON object,
+            the model will respond in a valid JSON format. ||
+
+            `function`: If you set this to function, you must also pass the
+            `function` parameter with extra information. ||
+          enum:
+            - function
+            - json_object
+          type: string
+      type: object
+      x-konfig-properties:
+        function:
+          title: Function
+          description: >-
+            The definition of the function you would like the LLM to guess the
+            parameters for.
+    ToolChoiceFunction:
+      title: ToolChoiceFunction
+      properties:
+        name:
+          title: Name
+          description: The name of the function you'd like the code to call
+          type: string
+      required:
+        - name
+      type: object
+    ToolFunction:
+      title: ToolFunction
+      properties:
+        function:
+          $ref: '#/components/schemas/ToolFunctionDetail'
+        type:
+          title: Type
+          default: function
+          type: string
+      required:
+        - function
+      type: object
+    ToolFunctionDetail:
+      title: ToolFunctionDetail
+      properties:
+        description:
+          title: Description
+          description: >-
+            A description of the function. Might help the LLM to figure out the
+            structure and parameters
+          type: string
+        parameters:
+          $ref: '#/components/schemas/FunctionParameters'
+        name:
+          title: Name
+          description: A unique name for the function
+          type: string
+      required:
+        - name
+        - parameters
+      type: object
+      x-konfig-properties:
+        parameters:
+          title: Parameters
+          description: A JSON schema object with the parameter definitons
+    UpdatePermissionsRequest:
+      title: UpdatePermissionsRequest
+      properties:
+        auth0_id:
+          title: Auth0 Id
+          type: string
+        permissions:
+          title: Permissions
+          type: string
+      required:
+        - permissions
+        - auth0_id
+      type: object
+    UserDetails:
+      title: UserDetails
+      properties:
+        first_name:
+          title: First Name
+          default: ''
+          type: string
+        last_name:
+          title: Last Name
+          default: ''
+          type: string
+        picture:
+          title: Picture
+          default: ''
+          type: string
+      type: object
+    UserOrgAccess:
+      title: UserOrgAccess
+      properties:
+        auth0_id:
+          title: Auth0 Id
+          type: string
+        billing_email:
+          title: Billing Email
+          type: string
+        full_name:
+          title: Full Name
+          type: string
+        is_org_setup_complete:
+          title: Is Org Setup Complete
+          default: true
+          type: boolean
+        is_personal_org:
+          title: Is Personal Org
+          default: true
+          type: boolean
+        member_is_active:
+          title: Member Is Active
+          default: false
+          type: boolean
+        org:
+          $ref: '#/components/schemas/Org'
+        org_display_name:
+          title: Org Display Name
+          type: string
+        org_id:
+          title: Org Id
+          format: uuid
+          type: string
+        org_name:
+          title: Org Name
+          type: string
+        org_stripe_id:
+          title: Org Stripe Id
+          type: string
+        permissions:
+          title: Permissions
+          default: ''
+          type: string
+        user_avatar:
+          title: User Avatar
+          type: string
+      required:
+        - auth0_id
+        - org_id
+        - org_display_name
+        - org_name
+      type: object
+    ValidationError:
+      title: ValidationError
+      properties:
+        loc:
+          title: Location
+          items:
+            anyOf:
+              - type: string
+              - type: integer
+          type: array
+        msg:
+          title: Message
+          type: string
+        type:
+          title: Error Type
+          type: string
+      required:
+        - loc
+        - msg
+        - type
+      type: object
+    ModelsListActiveModelsResponse:
+      title: Response Get Active Models For App V1 Models Active Get
+      items:
+        $ref: '#/components/schemas/ModelParts'
+      type: array
+    ModelsGetAllModelsResponse:
+      title: Response Get All Available Models For App V1 Models All Get
+      items:
+        $ref: '#/components/schemas/ModelParts'
+      type: array
+    LogsGetMatchingLogsResponse:
+      type: object
+      properties: {}
+      example: {}
+  securitySchemes:
+    HTTPBearer:
+      scheme: bearer
+      type: http
