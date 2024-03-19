@@ -1,0 +1,2355 @@
+openapi: 3.0.3
+info:
+  title: Visier Data and Job Handling APIs
+  description: Visier APIs for data and job handling
+  version: 22222222.99201.1200
+  license:
+    name: Apache License, Version 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0
+  x-api-status-urls: false
+servers:
+  - url: https://{vanity-name}.api.visier.io
+    variables:
+      vanity-name:
+        default: vanity
+tags:
+  - name: DataAndJobHandling
+paths:
+  /v1/op/data-connector-credentials:
+    get:
+      tags:
+        - DataAndJobHandling
+      summary: Retrieve a list of all data connector credentials
+      operationId: DataAndJobHandling_DataConnectorCredentials
+      description: >-
+        Use this API to retrieve a list of the connector credentials in a
+        specified tenant. Connector credentials allow
+         Visier to retrieve data from your source systems through an integration user in the source system.
+      parameters:
+        - description: >-
+            The tenant code of a specific analytic tenant that you want to
+            retrieve for.
+          name: tenantCode
+          in: query
+          schema:
+            type: string
+        - description: The limit to retrieve.
+          name: limit
+          in: query
+          schema:
+            type: integer
+            format: int32
+        - description: >-
+            The index to start retrieving results from, also known as offset.
+            The index begins at 0.
+          name: start
+          in: query
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExtractorCredentialsAPIDTO'
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Status'
+    post:
+      tags:
+        - DataAndJobHandling
+      summary: Create a connector credential
+      operationId: DataAndJobHandling_CreateConnectorCredential
+      description: >-
+        Use this API to create connector credentials for a specified tenant.
+        Connector credentials allow Visier to
+         retrieve data from your source systems through an integration user in the source system.
+      parameters:
+        - description: >-
+            The tenant code of a specific analytic tenant that you want to
+            create the credential for.
+          name: tenantCode
+          in: query
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DataProviderAuthInformationDTO'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CredentialCreationAPIResponseDTO'
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Status'
+  /v1/op/data-connectors:
+    get:
+      tags:
+        - DataAndJobHandling
+      summary: Retrieve a list of all data connectors
+      operationId: DataAndJobHandling_DataConnectors
+      description: >-
+        Use this API to retrieve a list of the data connectors in a specified
+        tenant. Data connectors are an alternative
+         to generating flat files and transferring them to Visier via SFTP.
+      parameters:
+        - description: >-
+            The tenant code of a specific analytic tenant that you want to
+            retrieve for.
+          name: tenantCode
+          in: query
+          schema:
+            type: string
+        - description: The limit to retrieve.
+          name: limit
+          in: query
+          schema:
+            type: integer
+            format: int32
+        - description: >-
+            The index to start retrieving results from, also known as offset.
+            The index begins at 0.
+          name: start
+          in: query
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportDefinitionsAPIDTO'
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Status'
+  /v1/op/data-connectors/assignCredentials:
+    post:
+      tags:
+        - DataAndJobHandling
+      summary: Assign connector credentials to data connectors
+      operationId: DataAndJobHandling_AssignConnectorCredential
+      description: >-
+        This API allows you to assign a connector credential to a data
+        connector.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignConnectorCredentialRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssignConnectorCredentialsResponseDTO'
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Status'
+  /v1/op/data-versions/disable:
+    put:
+      tags:
+        - DataAndJobHandling
+      summary: Disable data versions for a list of analytic tenants
+      operationId: DataAndJobHandling_DisableDV
+      description: >-
+        If you discover that a data version is not what is expected after
+        running metric value validation on a data load,
+         you may want to disable the data version for that processing job.
+
+         Use this API to disable the latest enabled data versions for affected analytic tenants or to disable a particular
+         data version for each analytic tenant.
+
+         Note: Disabling an older data version may not have an effect on the state of the solution.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DisableDVRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DisableDVResponse'
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Status'
+  /v1/op/data/startExtractAndLoad:
+    post:
+      tags:
+        - DataAndJobHandling
+      summary: Trigger extraction jobs
+      operationId: DataAndJobHandling_StartExtraction
+      description: >-
+        Use this API to generate extraction jobs for a list of analytic tenants
+        or for the administrating tenant.
+         This API creates a dispatching job that generates one extraction job per tenant. The extraction jobs retrieve
+         data from your source systems through data connectors. The dispatching job is the "parent" of the extraction
+         jobs and its job ID is returned in the response.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StartExtractionRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StartExtractionResponse'
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Status'
+  /v1/op/data/startload:
+    post:
+      tags:
+        - DataAndJobHandling
+      summary: Start the data load for an analytic tenant
+      operationId: DataAndJobHandling_StartLoad
+      description: >-
+        This API starts the data load process for all analytic tenants included
+        in the specified data files uploaded
+         to the Visier SFTP server. On success, you receive a job ID that can be filtered and searched for within the
+         Jobs room in Visier. This job ID is associated with the receiving job, and related to all processing jobs that
+         spawn for each analytic tenant.
+
+         With the job ID, you can also call the next two APIs to retrieve the status of the receiving job and the status
+         list of all related processing jobs.
+
+         **Prerequisite:** You must first obtain Visier's public encryption key and upload the source data files to Visier's
+         SFTP server. Files must have a .zip.gpg extension, meaning the files are encrypted using the PGP protocol and compressed.
+
+         Visier provides SFTP server credentials and instructions. You can find the encryption key at https://www.visier.com/pgp/visier.public.pgp.asc.
+         After downloading the file, open the file in a text editor or by dragging it into your browser.
+
+         **Note:**
+          - To see the full status of all analytic tenant data loads, navigate to the Jobs room in a project.
+          - For performance and efficiency, Visier requires that the uncompressed batch file size is below 5 GB and that no
+            more than 5000 tenants are included in a batch.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DataLoadRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataLoadResponse'
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Status'
+  /v1/op/data/uploads:
+    get:
+      tags:
+        - DataAndJobHandling
+      summary: Retrieve data uploads
+      operationId: DataAndJobHandling_RetrieveDataUploads
+      description: >-
+        Use this API to retrieve the data uploads and whether they're included
+        in one of:
+         - A list of analytic tenants managed by you.
+         - A single specified analytic tenant.
+         - An upload job.
+      parameters:
+        - description: >-
+            The job ID of an upload job. Use this if you are interested in the
+            data uploads for a specific upload job.
+          name: uploadJobId
+          in: query
+          schema:
+            type: string
+        - description: >-
+            The tenant code of a specific analytic tenant that you want to
+            retrieve the data uploads for.
+          name: tenantCode
+          in: query
+          schema:
+            type: integer
+            format: int32
+        - description: >-
+            The limit of analytic tenants to retrieve data uploads for. This
+            parameter is not used if the tenantCode parameter is specified.
+          name: limit
+          in: query
+          schema:
+            type: integer
+            format: int32
+        - description: >-
+            The index to start retrieving results from, also known as offset.
+            The index begins at 0.
+          name: start
+          in: query
+          schema:
+            type: integer
+            format: int32
+        - description: >-
+            The maximum number of latest enabled data uploads to retrieve for
+            each analytic tenant. The maximum value is 5.
+          name: numberOfDataUploads
+          in: query
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TenantDataUploadsListResponseDTO'
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Status'
+  /v1/op/data/uploads/exclude:
+    put:
+      tags:
+        - DataAndJobHandling
+      summary: Exclude data uploads
+      operationId: DataAndJobHandling_ExcludeDataUplaods
+      description: >-
+        Use this API to exclude either a specified list of data uploads or all
+        data uploads for each analytic tenant.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExcludeDataUploadsRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TenantDataUploadsUpdateResponseDTO'
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Status'
+  /v1/op/data/uploads/include:
+    put:
+      tags:
+        - DataAndJobHandling
+      summary: Include data uploads
+      operationId: DataAndJobHandling_IncludeDataUploads
+      description: >-
+        Use this API to include either the specified list of data uploads or all
+        data uploads for each analytic tenant.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IncludeDataUploadsRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TenantDataUploadsUpdateResponseDTO'
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Status'
+  /v1/op/job-status/jobs:
+    get:
+      tags:
+        - DataAndJobHandling
+      summary: Retrieve the statuses of all jobs
+      operationId: DataAndJobHandling_JobStatus
+      description: Use this API to retrieve the list of statuses for all jobs.
+      parameters:
+        - description: The start time from which to retrieve job statuses.
+          name: startTime
+          in: query
+          schema:
+            type: string
+        - description: The end time from which to retrieve job statuses.
+          name: endTime
+          in: query
+          schema:
+            type: string
+        - description: The specific status to restrict the list of job to.
+          name: status
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReceivingJobStatusResponse'
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Status'
+  /v1/op/job-status/jobs/:jobId:
+    get:
+      tags:
+        - DataAndJobHandling
+      summary: Retrieve a specific job's status
+      operationId: DataAndJobHandling_JobIdStatus
+      description: >-
+        Use this API to retrieve the list of statuses for a specific job with id
+        `jobId`.
+      parameters:
+        - description: The unique ID of the job to retrieve the status for.
+          name: jobId
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReceivingJobStatusResponse'
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Status'
+  /v1/op/jobs/cancel:
+    post:
+      tags:
+        - DataAndJobHandling
+      summary: Cancel a list of jobs
+      operationId: DataAndJobHandling_CancelJobs
+      description: >-
+        Use this API to cancel a list of processing jobs, upload jobs, receiving
+        jobs, and extraction jobs.
+
+         Note: Receiving jobs with the Running status cannot be cancelled.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CancelJobBatchFromJobIdDTO'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobCancellationResultsDTO'
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Status'
+  /v1/op/jobs/dispatching-jobs/:jobId:
+    get:
+      tags:
+        - DataAndJobHandling
+      summary: Retrieve a dispatching job's status
+      operationId: DataAndJobHandling_DispatchingJobStatus
+      description: >-
+        Use this API to retrieve the status of a dispatching job, including its
+        job ID and the number of jobs it generated.
+      parameters:
+        - description: The ID of the job you want to retrieve.
+          name: jobId
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DispatchingJobStatusResponse'
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Status'
+  /v1/op/jobs/dispatching-jobs/:jobId/extraction-jobs:
+    get:
+      tags:
+        - DataAndJobHandling
+      summary: Retrieve a dispatching job's extraction jobs with their statuses
+      operationId: DataAndJobHandling_ExtractionJobAndStatus
+      description: >-
+        Use this API to retrieve the statuses of extraction jobs associated with
+        a dispatching job. The dispatching job
+         is a "parent" to extraction jobs, which retrieve data from your source systems through data connectors.
+      parameters:
+        - description: The ID of the dispatching job that generated the extraction jobs.
+          name: dispatchingJobId
+          in: query
+          schema:
+            type: string
+        - description: >-
+            The tenant code of a specific analytic tenant that you want to
+            retrieve the extraction job status for.
+             Use this if you are only interested in the results for one analytic tenant.
+          name: tenantCode
+          in: query
+          schema:
+            type: string
+        - description: The limit of extraction job statuses to retrieve.
+          name: limit
+          in: query
+          schema:
+            type: integer
+            format: int32
+        - description: >-
+            The index to start retrieving results from, also known as offset.
+            The index begins at 0.
+          name: start
+          in: query
+          schema:
+            type: integer
+            format: int32
+        - description: The ID of the dispatching job you want to retrieve.
+          name: jobId
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExtractionJobAndStatusResponse'
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Status'
+  /v1/op/jobs/dispatching-jobs/:jobId/processing-jobs:
+    get:
+      tags:
+        - DataAndJobHandling
+      summary: Retrieve a dispatching job's processing jobs with their statuses
+      operationId: DataAndJobHandling_ProcessingJobAndStatus
+      description: >-
+        Use this API to retrieve the statuses of processing jobs associated with
+        a dispatching job. The dispatching job
+         is a "parent" to extraction jobs, which in turn generate processing jobs and receiving jobs.
+      parameters:
+        - description: The ID of the dispatching job that generated the extraction jobs.
+          name: dispatchingJobId
+          in: query
+          schema:
+            type: string
+        - description: >-
+            The tenant code of a specific analytic tenant that you want to
+            retrieve the extraction job status for.
+             Use this if you are only interested in the results for one analytic tenant.
+          name: tenantCode
+          in: query
+          schema:
+            type: string
+        - description: The limit of extraction job statuses to retrieve.
+          name: limit
+          in: query
+          schema:
+            type: integer
+            format: int32
+        - description: >-
+            The index to start retrieving results from, also known as offset.
+            The index begins at 0.
+          name: start
+          in: query
+          schema:
+            type: integer
+            format: int32
+        - description: The ID of the dispatching job you want to retrieve.
+          name: jobId
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessingJobAndStatusResponse'
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Status'
+  /v1/op/jobs/dispatching-jobs/:jobId/receiving-jobs:
+    get:
+      tags:
+        - DataAndJobHandling
+      summary: Retrieve a dispatching job's receiving jobs with their statuses
+      operationId: DataAndJobHandling_ReceivingJobAndStatus
+      description: >-
+        Use this API to retrieve the statuses of receiving jobs associated with
+        a dispatching job. The dispatching job
+         is a "parent" to extraction jobs, which in turn generate processing jobs and receiving jobs.
+      parameters:
+        - description: The ID of the dispatching job that generated the extraction jobs.
+          name: dispatchingJobId
+          in: query
+          schema:
+            type: string
+        - description: >-
+            The tenant code of a specific analytic tenant that you want to
+            retrieve the extraction job status for.
+             Use this if you are only interested in the results for one analytic tenant.
+          name: tenantCode
+          in: query
+          schema:
+            type: string
+        - description: The limit of extraction job statuses to retrieve.
+          name: limit
+          in: query
+          schema:
+            type: integer
+            format: int32
+        - description: >-
+            The index to start retrieving results from, also known as offset.
+            The index begins at 0.
+          name: start
+          in: query
+          schema:
+            type: integer
+            format: int32
+        - description: The ID of the dispatching job you want to retrieve.
+          name: jobId
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReceivingJobAndStatusResponse'
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Status'
+  /v1/op/jobs/receiving-jobs/:receivingJobId:
+    get:
+      tags:
+        - DataAndJobHandling
+      summary: Retrieve a receiving job's status
+      operationId: DataAndJobHandling_ReceivingJobStatus
+      description: >-
+        After sending data to Visier, you may want to know the status of the
+        receiving job and the associated tenant
+         receiving jobs. A receiving job validates the transferred data and adds the transferred data to Visier's data
+         store.
+
+         Use this API to retrieve the receiving job status and summary of analytic tenant receiving jobs.
+      parameters:
+        - description: >-
+            If "true", returns the status of receiving jobs spawned by the
+            receiving job specified by jobId.
+          name: jobs
+          in: query
+          schema:
+            type: boolean
+        - description: >-
+            The tenant code of the tenant you want to retrieve the receiving
+            jobs for. Use this if you are only interested
+             in the results for one analytic tenant.
+          name: tenantCode
+          in: query
+          schema:
+            type: string
+        - description: >-
+            The index to start retrieving results from, also known as offset.
+            The index begins at 0.
+          name: start
+          in: query
+          schema:
+            type: integer
+            format: int32
+        - description: The number of job statuses to return per page.
+          name: limit
+          in: query
+          schema:
+            type: integer
+            format: int32
+        - description: The jobId provided after sending data to Visier.
+          name: receivingJobId
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReceivingJobStatusResponse'
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Status'
+  v1/op/data-versions:
+    get:
+      tags:
+        - DataAndJobHandling
+      summary: Retrieve the latest enabled data versions for all analytic tenants
+      operationId: DataAndJobHandling_LatestEnabledDV
+      description: >-
+        If you discover any inconsistencies after running metric value
+        validation, you may want to find the data versions
+         causing inconsistencies so you can later disable them.
+
+         Use this API to retrieve up to five (5) of the latest enabled data versions for all your analytic tenants or a
+         single specified analytic tenant.
+      parameters:
+        - description: >-
+            The tenant code of a specific analytic tenant that you want to
+            retrieve data versions for.
+             Use this if you are only interested in the results for one analytic tenant.
+          name: tenantCode
+          in: query
+          schema:
+            type: string
+        - description: |-
+            The limit of analytic tenants to retrieve data versions for.
+             This parameter is not used if the tenantCode parameter is specified.
+          name: limit
+          in: query
+          schema:
+            type: integer
+            format: int32
+        - description: >-
+            The index to start retrieving results from, also known as offset.
+            The index begins at 0.
+          name: start
+          in: query
+          schema:
+            type: integer
+            format: int32
+        - description: >-
+            The number of latest enabled data versions to retrieve. The maximum
+            value is 5.
+          name: numberOfVersions
+          in: query
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MultipleTenantDataVersionsListDTO'
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Status'
+  v1/op/jobs/processing-jobs/:receivingJobId:
+    get:
+      tags:
+        - DataAndJobHandling
+      summary: Retrieve processing job statuses by receiving job ID
+      operationId: DataAndJobHandling_ProcessingJobStatus
+      description: >-
+        Use this API to retrieve a list of statuses for all processing jobs
+        associated with the given receiving job ID.
+         Processing jobs deal with an individual analytic tenant's data load. A processing job is either triggered through
+         the UI or is one of many processing jobs spawned from a receiving job. When a processing job is triggered as part
+         of a set from an receiving job, it is associated to the receiving job through a Parent ID.
+      parameters:
+        - description: >-
+            The tenant code of the tenant you want to retrieve the processing
+            jobs for.
+             Use this if you are only interested in the results for one analytic tenant.
+          name: tenantCode
+          in: query
+          schema:
+            type: string
+        - description: The limit of processing jobs to retrieve per page.
+          name: limit
+          in: query
+          schema:
+            type: integer
+            format: int32
+        - description: >-
+            The index to start retrieving results from, also known as offset.
+            The index begins at 0.
+          name: start
+          in: query
+          schema:
+            type: integer
+            format: int32
+        - description: The receiving job ID
+          name: receivingJobId
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessingJobStatusResponse'
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Status'
+  /v1/op/data-connector-credentials/:id:
+    delete:
+      tags:
+        - DataAndJobHandling
+      summary: Delete a connector credential
+      operationId: DataAndJobHandling_DeleteConnectorCredential
+      description: >-
+        Use this API to delete connector credentials from your tenants.
+        Credentials that are no longer valid
+         should be deleted.
+      parameters:
+        - description: The credentialId of the credential you want to delete.
+          name: id
+          in: query
+          schema:
+            type: string
+        - description: >-
+            The tenant code of the analytic tenant in which the credential
+            you're deleting.
+          name: tenantCode
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/DataAndJobHandlingDeleteConnectorCredentialResponse
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Status'
+components:
+  schemas:
+    AdpAuthParamsDTO:
+      type: object
+      properties:
+        authCode:
+          type: string
+    AssignConnectorCredentialRequest:
+      type: object
+      properties:
+        connectors:
+          description: >-
+            A list of objects representing the data connectors to be assigned
+            with credentials.
+          type: array
+          items:
+            $ref: '#/components/schemas/Connector'
+    AssignConnectorCredentialsByTenantResponseDTO:
+      type: object
+      properties:
+        tenantCode:
+          description: The unique identifier associated with the tenant.
+          type: string
+        connectors:
+          description: >-
+            A list of objects representing the assigned credentials and
+            connectors.
+          type: array
+          items:
+            $ref: '#/components/schemas/AssignConnectorWithCredentialsResponseDTO'
+        status:
+          description: >-
+            The state of the credential assignment. Valid values are Succeed or
+            Failed.
+          enum:
+            - Unknown
+            - Succeed
+            - Failed
+          type: string
+          format: enum
+        message:
+          type: string
+    AssignConnectorCredentialsResponseDTO:
+      type: object
+      properties:
+        tenants:
+          description: >-
+            A list of objects representing the tenants and data connectors that
+            were assigned connector credentials.
+          type: array
+          items:
+            $ref: '#/components/schemas/AssignConnectorCredentialsByTenantResponseDTO'
+    AssignConnectorWithCredentialsResponseDTO:
+      type: object
+      properties:
+        connector:
+          $ref: '#/components/schemas/ConnectorInfoResponseDTO'
+        credential:
+          $ref: '#/components/schemas/AssignedCredentialInfoResponseDTO'
+      x-konfig-properties:
+        connector:
+          description: The data connector that was assigned a connector credential.
+        credential:
+          description: A connector credential that was assigned to a data connector
+    AssignedCredentialInfoResponseDTO:
+      type: object
+      properties:
+        credentialId:
+          description: The unique identifier associated with the user.
+          type: string
+        displayName:
+          description: >-
+            The user's username. This is typically the user's email, such as
+            john@visier.com.
+          type: string
+        message:
+          type: string
+    BambooAuthParamsDTO:
+      type: object
+      properties:
+        accessKey:
+          type: string
+        tenantDomainName:
+          type: string
+    BasicS3AuthParamsDTO:
+      type: object
+      properties:
+        bucketName:
+          type: string
+        bucketRegion:
+          type: string
+        accessKey:
+          type: string
+        secretKey:
+          type: string
+        path:
+          type: string
+    BigQueryAuthParamsDTO:
+      type: object
+      properties:
+        projectId:
+          type: string
+        datasetLocation:
+          type: string
+        refreshToken:
+          type: string
+        clientId:
+          type: string
+        clientSecret:
+          type: string
+        defaultDataset:
+          type: string
+        serviceAccountParams:
+          $ref: '#/components/schemas/BigQueryServiceAccountParamsDTO'
+    BigQueryServiceAccountParamsDTO:
+      type: object
+      properties:
+        serviceAccountEmail:
+          type: string
+        privateKey:
+          type: string
+    CancelJobBatchFromJobIdDTO:
+      type: object
+      properties:
+        jobIds:
+          description: >-
+            A list of jobs to cancel. The maximum number of jobs that can be
+            cancelled is 500.
+          type: array
+          items:
+            type: string
+    Connector:
+      type: object
+      properties:
+        connectorId:
+          description: The unique identifier associated with the data connector.
+          type: string
+        tenants:
+          description: >-
+            A list of analytic tenants and credentials to be assigned to the
+            connector.
+          type: array
+          items:
+            $ref: '#/components/schemas/TenantAndCredential'
+    ConnectorInfoResponseDTO:
+      type: object
+      properties:
+        description:
+          type: string
+        connectorId:
+          description: The unique identifier associated with the data connector.
+          type: string
+        displayName:
+          description: An identifiable data connector name that is displayed within Visier.
+          type: string
+    CopyS3AuthParamsDTO:
+      type: object
+      properties:
+        iamRole:
+          type: string
+    CredentialCreationAPIResponseDTO:
+      type: object
+      properties:
+        uuid:
+          description: The unique ID of the newly created credential.
+          type: string
+        symbolName:
+          description: The symbol name of the newly created credential.
+          type: string
+        objectName:
+          description: The object name of the newly created credential.
+          type: string
+        missingConnectionProperties:
+          description: >-
+            The properties that the credential cannot access despite successful
+            authentication.
+             This is only returned for authentications that do not grant access to all data.
+          type: array
+          items:
+            $ref: '#/components/schemas/SubjectMissingAccessDTO'
+    DataLoadRequest:
+      type: object
+      properties:
+        model:
+          description: |-
+            A form body key that contains a collection of key-value pairs.
+
+             **Note:** The only supported key value is `files` and the value is a comma-separated list of file names.
+             Example:
+             `"files": "/path/to/file1.zip.gpg,/path/to/another/file.zip.gpg"`
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/MapValue'
+    DataLoadResponse:
+      type: object
+      properties:
+        jobId:
+          description: The unique identifier associated with the receiving job.
+          type: string
+    DataProviderAuthInformationDTO:
+      type: object
+      properties:
+        dataProviderAuthParams:
+          $ref: '#/components/schemas/DataProviderAuthParamsDTO'
+        dataProviderBasicInformation:
+          $ref: '#/components/schemas/DataProviderBasicInformationDTO'
+        dataProviderMetadata:
+          $ref: '#/components/schemas/DataProviderBasicMetadataDTO'
+      x-konfig-properties:
+        dataProviderAuthParams:
+          description: The authentication information for the credential.
+        dataProviderBasicInformation:
+          description: The display name and description for the credential.
+    DataProviderAuthParamsDTO:
+      type: object
+      properties:
+        tenantDomainName:
+          type: string
+        provider:
+          description: |-
+            The data provider associated with the credential.
+             - Valid values: UKG, Dimensions, Workday, Redshift, BasicS3, CopyS3, SqlServer, Snowflake
+          enum:
+            - Bamboo
+            - GoogleSheets
+            - Greenhouse
+            - Jira
+            - Lever
+            - Namely
+            - Qualtrics
+            - Salesforce
+            - UKG
+            - Workday
+            - Icims
+            - ServiceNow
+            - Jdbc
+            - BasicS3
+            - InternalS3
+            - CopyS3
+            - Redshift
+            - Snowflake
+            - BigQuery
+            - SqlServer
+            - Dimensions
+            - IcimsPartnerProviderRedshift
+            - Willow
+            - SuccessFactors
+            - IcimsV2
+            - ADP
+            - WorkdayV2
+            - ServiceNowV2
+            - Medallia
+            - Fusion
+            - SalesforceV2
+            - Gong
+            - Zoom
+            - GoogleCalendar
+            - UKGV2
+            - DayforceV2
+            - GoogleActivityReport
+            - Slack
+            - MySql
+            - WorkdayRaas
+            - Microsoft365
+            - GoogleWorkspace
+            - OracleDb
+            - SmartRecruiters
+          type: string
+          format: enum
+        bambooAuthParams:
+          $ref: '#/components/schemas/BambooAuthParamsDTO'
+        greenhouseAuthParams:
+          $ref: '#/components/schemas/GreenhouseAuthParamsDTO'
+        googleSheetsAuthParams:
+          $ref: '#/components/schemas/GoogleSheetsAuthParamsDTO'
+        jiraAuthParams:
+          $ref: '#/components/schemas/JiraAuthParamsDTO'
+        leverAuthParams:
+          $ref: '#/components/schemas/LeverAuthParamsDTO'
+        namelyAuthParams:
+          $ref: '#/components/schemas/NamelyAuthParamsDTO'
+        qualtricsAuthParams:
+          $ref: '#/components/schemas/QualtricsAuthParamsDTO'
+        salesforceAuthParams:
+          $ref: '#/components/schemas/SalesforceAuthParamsDTO'
+        ultimateAuthParams:
+          $ref: '#/components/schemas/UltimateAuthParamsDTO'
+        workdayAuthParams:
+          $ref: '#/components/schemas/WorkdayAuthParamsDTO'
+        icimsAuthParams:
+          $ref: '#/components/schemas/IcimsAuthParamsDTO'
+        serviceNowAuthParams:
+          $ref: '#/components/schemas/ServiceNowAuthParamsDTO'
+        jdbcAuthParams:
+          $ref: '#/components/schemas/JdbcAuthParamsDTO'
+        s3AuthParams:
+          $ref: '#/components/schemas/BasicS3AuthParamsDTO'
+        internalS3AuthParams:
+          $ref: '#/components/schemas/InternalS3AuthParamsDTO'
+        copyS3AuthParams:
+          $ref: '#/components/schemas/CopyS3AuthParamsDTO'
+        redshiftAuthParams:
+          $ref: '#/components/schemas/RedshiftAuthParamsDTO'
+        snowflakeAuthParams:
+          $ref: '#/components/schemas/SnowflakeAuthParamsDTO'
+        bigQueryAuthParams:
+          $ref: '#/components/schemas/BigQueryAuthParamsDTO'
+        sqlServerAuthParams:
+          $ref: '#/components/schemas/SqlServerAuthParamsDTO'
+        dimensionsAuthParams:
+          $ref: '#/components/schemas/DimensionsAuthParamsDTO'
+        willowAuthParams:
+          $ref: '#/components/schemas/WillowAuthParamsDTO'
+        emptyAuthParams:
+          $ref: '#/components/schemas/EmptyAuthParamsDTO'
+        successFactorsAuthParams:
+          $ref: '#/components/schemas/SuccessFactorsAuthParamsDTO'
+        fusionAuthParams:
+          $ref: '#/components/schemas/FusionAuthParamsDTO'
+        adpAuthParams:
+          $ref: '#/components/schemas/AdpAuthParamsDTO'
+        medalliaAuthParams:
+          $ref: '#/components/schemas/MedalliaAuthParamsDTO'
+        salesforceV2AuthParams:
+          $ref: '#/components/schemas/SalesforceV2AuthParamsDTO'
+        gongAuthParams:
+          $ref: '#/components/schemas/GongAuthParamsDTO'
+        zoomAuthParams:
+          $ref: '#/components/schemas/ZoomAuthParamsDTO'
+        dayforceV2AuthParams:
+          $ref: '#/components/schemas/DayforceV2AuthParamsDTO'
+        slackAuthParams:
+          $ref: '#/components/schemas/SlackAuthParamsDTO'
+        mySqlAuthParams:
+          $ref: '#/components/schemas/MySqlAuthParamsDTO'
+        workdayRaasAuthParams:
+          $ref: '#/components/schemas/WorkdayRaasAuthParamsDTO'
+        ms365AuthParams:
+          $ref: '#/components/schemas/Microsoft365AuthParamsDTO'
+        googleWorkspaceAuthParams:
+          $ref: '#/components/schemas/GoogleWorkspaceAuthParamsDTO'
+        oracleDbAuthParams:
+          $ref: '#/components/schemas/OracleDbAuthParamsDTO'
+        hasUpdates:
+          type: boolean
+        authContext:
+          enum:
+            - DefaultDataExtraction
+            - WorkplaceDynamicsDataExtraction
+            - Notification
+          type: string
+          format: enum
+    DataProviderBasicInformationDTO:
+      type: object
+      properties:
+        description:
+          type: string
+        displayName:
+          type: string
+    DataProviderBasicMetadataDTO:
+      type: object
+      properties:
+        canChildrenInherit:
+          type: boolean
+    DataVersionAndDateDTO:
+      type: object
+      properties:
+        dataVersion:
+          description: The data version ID.
+          type: string
+        dataVersionDate:
+          description: The date that the data version was created.
+          type: string
+    DataVersionObject:
+      type: object
+      properties:
+        tenantCode:
+          description: >-
+            The tenant code for the analytic tenant that you are disabling a
+            data version.
+          type: string
+        dataVersions:
+          description: The data version to disable for a particular analytic tenant.
+          type: string
+    DayforceV2AuthParamsDTO:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+        companyId:
+          type: string
+        tokenHost:
+          type: string
+        hostDomainName:
+          type: string
+    DimensionsAuthParamsDTO:
+      type: object
+      properties:
+        appKey:
+          type: string
+        clientId:
+          type: string
+        clientSecret:
+          type: string
+        vanityUrl:
+          type: string
+        username:
+          type: string
+        password:
+          type: string
+    DisableDVModel:
+      type: object
+      properties:
+        dataVersionObjects:
+          description: >-
+            A list of objects representing the data version to disable for a
+            particular analytic tenant.
+             The limit of objects to include per request is 1000.
+          type: array
+          items:
+            $ref: '#/components/schemas/DataVersionObject'
+    DisableDVRequest:
+      type: object
+      properties:
+        model:
+          $ref: '#/components/schemas/DisableDVModel'
+      x-konfig-properties:
+        model:
+          description: A form body key that contains a collection of key-value pairs.
+    DisableDVResponse:
+      type: object
+      properties:
+        totalFailures:
+          description: >-
+            The number of data versions that failed during the disabling
+            process.
+          type: integer
+          format: int32
+        totalSuccess:
+          description: The number of data versions that were disabled successfully.
+          type: integer
+          format: int32
+        results:
+          description: A list of objects representing the disabling process.
+          type: array
+          items:
+            $ref: '#/components/schemas/Result'
+    DispatchingJobStatusResponse:
+      type: object
+      properties:
+        jobId:
+          description: The ID of the dispatching job that generated the extraction jobs.
+          type: string
+        tenantCode:
+          description: >-
+            The tenant that owns the dispatching job. This is usually the
+            administrating tenant.
+          type: string
+        status:
+          description: The current state of the job.
+          type: string
+        totalJobsDispatched:
+          description: >-
+            The number of extraction jobs that were generated by the dispatching
+            job.
+          type: integer
+          format: int32
+    EmptyAuthParamsDTO:
+      type: object
+      properties: {}
+    ExcludeDataUploadsRequest:
+      type: object
+      properties:
+        model:
+          $ref: '#/components/schemas/UploadToExcludeModel'
+      x-konfig-properties:
+        model:
+          description: A form body key that contains a collection of key-value pairs.
+    ExtractionJob:
+      type: object
+      properties:
+        extractionJobId:
+          description: The ID of the extraction job.
+          type: string
+        tenantCode:
+          description: The tenant code of the analytic tenant for the extraction job.
+          type: string
+        status:
+          description: |-
+            The current state of the job.
+             - Valid values: Pending, Running, Succeeded, Failed, Error, Cancelling, Cancelled, RolledBack, Rescheduling, Rescheduled.
+          type: string
+        currentStage:
+          description: >-
+            The current stage of the job. This is not returned if the stage is
+            "Completed".
+             - Valid values: Initialize, Retrieve Main Subject, Retrieve Secondary Subjects, Retrieve Custom Subjects, Process Records, Publish Artifacts, Publish Records, Completed.
+          type: string
+    ExtractionJobAndStatusResponse:
+      type: object
+      properties:
+        parentJobId:
+          description: The ID of the dispatching job that generated the extraction jobs.
+          type: string
+        parentTenantCode:
+          description: >-
+            The tenant that owns the dispatching job. This is usually the
+            administrating tenant.
+          type: string
+        limit:
+          description: >-
+            The number of extraction jobs to return. The maximum number of jobs
+            to return is 1000.
+          type: integer
+          format: int32
+        start:
+          description: >-
+            The index to start retrieving results from, also known as offset.
+            The index begins at 0.
+          type: integer
+          format: int32
+        extractionJobs:
+          description: A list of extraction job information.
+          type: array
+          items:
+            $ref: '#/components/schemas/ExtractionJob'
+    ExtractorCredentialAPIDTO:
+      type: object
+      properties:
+        credentialId:
+          description: The ID associated with the connector credential.
+          type: string
+        displayName:
+          description: >-
+            An identifiable connector credential name that is displayed within
+            Visier.
+          type: string
+        dataProvider:
+          description: The data provider associated with the credential.
+          type: string
+        isInherited:
+          description: Whether this credential is inherited from another tenant.
+          type: boolean
+        authContext:
+          type: string
+    ExtractorCredentialsAPIDTO:
+      type: object
+      properties:
+        connectorCredentials:
+          description: >-
+            A list of objects representing all the available connector
+            credentials in Production.
+          type: array
+          items:
+            $ref: '#/components/schemas/ExtractorCredentialAPIDTO'
+        limit:
+          description: >-
+            The number of connector credentials to return. The maximum number of
+            data connector credentials to return is 1000.
+          type: integer
+          format: uint32
+        start:
+          description: >-
+            The index to start retrieving values from, also known as offset. The
+            index begins at 0.
+          type: integer
+          format: uint32
+    FusionAuthParamsDTO:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+        hostDomainName:
+          type: string
+    GongAuthParamsDTO:
+      type: object
+      properties:
+        clientId:
+          type: string
+        clientSecret:
+          type: string
+    GoogleProtobufAny:
+      description: >-
+        Contains an arbitrary serialized message along with a @type that
+        describes the type of the serialized message.
+      type: object
+      properties:
+        '@type':
+          description: The type of the serialized message.
+          type: string
+      additionalProperties: true
+    GoogleSheetsAuthParamsDTO:
+      type: object
+      properties:
+        authCode:
+          type: string
+        configuration:
+          type: string
+        clientId:
+          type: string
+        clientSecret:
+          type: string
+    GoogleWorkspaceAuthParamsDTO:
+      type: object
+      properties:
+        authCode:
+          type: string
+        clientId:
+          type: string
+        clientSecret:
+          type: string
+    GreenhouseAuthParamsDTO:
+      type: object
+      properties:
+        apiKey:
+          type: string
+    IcimsAuthParamsDTO:
+      type: object
+      properties:
+        customerId:
+          type: string
+        username:
+          type: string
+        password:
+          type: string
+    ImportDefinitionAPIDTO:
+      type: object
+      properties:
+        connectorId:
+          description: The ID associated with the data connector.
+          type: string
+        displayName:
+          description: An identifiable data connector name that is displayed within Visier.
+          type: string
+        credentialId:
+          description: >-
+            The ID associated with the connector credentials currently assigned
+            to this data connector.
+          type: string
+    ImportDefinitionsAPIDTO:
+      type: object
+      properties:
+        dataConnectors:
+          description: >-
+            A list of objects representing all the available data connectors in
+            Production.
+          type: array
+          items:
+            $ref: '#/components/schemas/ImportDefinitionAPIDTO'
+        limit:
+          description: >-
+            The number of data connectors to return. The maximum number of data
+            connectors to return is 1000.
+          type: integer
+          format: uint32
+        start:
+          description: >-
+            The index to start retrieving values from, also known as offset. The
+            index begins at 0.
+          type: integer
+          format: uint32
+    IncludeDataUploadsRequest:
+      type: object
+      properties:
+        model:
+          $ref: '#/components/schemas/UploadToIncludeModel'
+      x-konfig-properties:
+        model:
+          description: A form body key that contains a collection of key-value pairs.
+    InternalS3AuthParamsDTO:
+      type: object
+      properties:
+        bucketName:
+          type: string
+        path:
+          type: string
+    JdbcAuthParamsDTO:
+      type: object
+      properties:
+        jdbcConnectString:
+          type: string
+        username:
+          type: string
+        password:
+          type: string
+    JiraAuthParamsDTO:
+      type: object
+      properties:
+        apiToken:
+          type: string
+        hostName:
+          type: string
+        connectParams:
+          $ref: '#/components/schemas/JiraConnectParamsDTO'
+    JiraConnectParamsDTO:
+      type: object
+      properties:
+        appKey:
+          type: string
+        clientKey:
+          type: string
+        sharedSecret:
+          type: string
+    JobCancellationResultDTO:
+      type: object
+      properties:
+        tenantCode:
+          description: >-
+            The analytic tenant whose job the cancel operation was conducted
+            for.
+          type: string
+        jobId:
+          description: The job ID of the job that the cancel operation was conducted for.
+          type: string
+        jobType:
+          description: The job type associated with the job ID.
+          type: string
+        parentJobId:
+          description: If applicable, the job ID of the job that spawned the given job.
+          type: string
+        cancelStatus:
+          description: The status of the cancellation.
+          enum:
+            - CANCEL_FAILED
+            - CANCEL_SUCCEEDED
+          type: string
+          format: enum
+        jobStatus:
+          description: >-
+            The job status after the cancel operation. If successful, the status
+            is either Cancelled or Cancelling.
+          type: string
+        message:
+          description: >-
+            If applicable, the message explains what errors occurred while
+            cancelling the jobs.
+          type: string
+    JobCancellationResultsDTO:
+      type: object
+      properties:
+        jobCancellationResults:
+          description: A list of objects representing the job cancellation results.
+          type: array
+          items:
+            $ref: '#/components/schemas/JobCancellationResultDTO'
+    LeverAuthParamsDTO:
+      type: object
+      properties:
+        apiKey:
+          type: string
+    MapValue:
+      type: object
+      properties:
+        value:
+          description: >-
+            A comma-separated list of encrypted, compressed batch filenames to
+            be processed.
+          type: array
+          items:
+            type: string
+    MedalliaAuthParamsDTO:
+      type: object
+      properties:
+        tenantDomainName:
+          type: string
+        instanceUrl:
+          type: string
+        clientId:
+          type: string
+        clientSecret:
+          type: string
+    Microsoft365AuthParamsDTO:
+      type: object
+      properties:
+        oAuthTenantId:
+          type: string
+        clientId:
+          type: string
+        clientSecret:
+          type: string
+    MultipleTenantDataVersionsDetailsDTO:
+      type: object
+      properties:
+        tenantCode:
+          description: The owner of the data versions.
+          type: string
+        dataVersions:
+          description: >-
+            The latest enabled data versions for the given analytic tenant. If
+            the analytic tenant
+             has no enabled data versions, an empty string "" is returned.
+          type: array
+          items:
+            $ref: '#/components/schemas/DataVersionAndDateDTO'
+    MultipleTenantDataVersionsListDTO:
+      type: object
+      properties:
+        tenants:
+          description: A list of analytic tenants and their latest enabled data versions.
+          type: array
+          items:
+            $ref: '#/components/schemas/MultipleTenantDataVersionsDetailsDTO'
+        limit:
+          description: >-
+            The number of analytic tenants to retrieve. The maximum number to
+            retrieve is 1000.
+          type: integer
+          format: uint32
+        start:
+          description: >-
+            The index to start retrieving results from, also known as offset.
+            The index begins at 0.
+          type: integer
+          format: uint32
+    MySqlAuthParamsDTO:
+      type: object
+      properties:
+        host:
+          type: string
+        port:
+          type: string
+        username:
+          type: string
+        password:
+          type: string
+        database:
+          type: string
+        sslMode:
+          type: string
+    NamelyAuthParamsDTO:
+      type: object
+      properties:
+        authCode:
+          type: string
+    OracleDbAuthParamsDTO:
+      type: object
+      properties:
+        host:
+          type: string
+        port:
+          type: string
+        username:
+          type: string
+        password:
+          type: string
+        serviceName:
+          type: string
+    ProcessingJob:
+      type: object
+      properties:
+        jobId:
+          description: The job ID of the processing job for the analytic tenant.
+          type: string
+        tenantCode:
+          description: The analytic tenant code.
+          type: string
+        dataVersion:
+          description: The data version associated with the processing job.
+          type: string
+        status:
+          description: The status of the receiving job for the analytic tenant.
+          type: string
+        message:
+          description: A meaningful message about the processing job.
+          type: string
+    ProcessingJobAndStatusResponse:
+      type: object
+      properties:
+        parentJobId:
+          description: The ID of the dispatching job that generated the extraction jobs.
+          type: string
+        parentTenantCode:
+          description: >-
+            The tenant that owns the dispatching job. This is usually the
+            administrating tenant.
+          type: string
+        limit:
+          description: >-
+            The number of processing jobs to return. The maximum number of jobs
+            to return is 1000.
+          type: integer
+          format: int32
+        start:
+          description: >-
+            The index to start retrieving results from, also known as offset.
+            The index begins at 0.
+          type: integer
+          format: int32
+        processingJobs:
+          description: A list of processing job information.
+          type: array
+          items:
+            $ref: '#/components/schemas/ProcessingJob'
+    ProcessingJobStatusResponse:
+      type: object
+      properties:
+        parentJobId:
+          description: The job ID of the receiving job that spawned this job
+          type: string
+        parentTenantCode:
+          description: The tenant code of the receiving job that spawned this job.
+          type: string
+        limit:
+          description: The limit of processing jobs to retrieve per page.
+          type: integer
+          format: int32
+        start:
+          description: >-
+            The index to start retrieving results from, also known as offset.
+            The index begins at 0.
+          type: integer
+          format: int32
+        processingJobs:
+          description: A list of objects representing the processing jobs to retrieve.
+          type: array
+          items:
+            $ref: '#/components/schemas/ProcessingJob'
+    QualtricsAuthParamsDTO:
+      type: object
+      properties:
+        apiToken:
+          type: string
+        dataCenterId:
+          type: string
+    ReceivingJob:
+      type: object
+      properties:
+        receivingJobId:
+          description: The job ID of the receiving job for the analytic tenant.
+          type: string
+        tenantCode:
+          description: The analytic tenant code.
+          type: string
+        status:
+          description: The status of the receiving job for the analytic tenant.
+          type: string
+    ReceivingJobAndStatusResponse:
+      type: object
+      properties:
+        parentJobId:
+          description: The ID of the dispatching job that generated the extraction jobs.
+          type: string
+        parentTenantCode:
+          description: >-
+            The tenant that owns the dispatching job. This is usually the
+            administrating tenant.
+          type: string
+        limit:
+          description: >-
+            The number of receiving jobs to return. The maximum number of jobs
+            to return is 1000.
+          type: integer
+          format: int32
+        start:
+          description: >-
+            The index to start retrieving results from, also known as offset.
+            The index begins at 0.
+          type: integer
+          format: int32
+        receivingJobs:
+          description: A list of receiving job information.
+          type: array
+          items:
+            $ref: '#/components/schemas/ReceivingJob'
+    ReceivingJobStatusResponse:
+      type: object
+      properties:
+        jobId:
+          description: The unique identifier associated with the receiving job.
+          type: string
+        status:
+          description: The status of the receiving job.
+          type: string
+        parentJobId:
+          description: The job ID of the receiving job that spawned this job.
+          type: string
+        parentTenantCode:
+          description: The tenant code of the receiving job that spawned this job.
+          type: string
+        receivingJobs:
+          description: A list of objects representing the receiving jobs to retrieve.
+          type: array
+          items:
+            $ref: '#/components/schemas/ReceivingJob'
+    RedshiftAuthParamsDTO:
+      type: object
+      properties:
+        endpoint:
+          type: string
+        port:
+          type: string
+        database:
+          type: string
+        username:
+          type: string
+        password:
+          type: string
+        tablePrefix:
+          type: string
+        schema:
+          type: string
+    Result:
+      type: object
+      properties:
+        jobId:
+          description: If applicable, the job ID associated with the data version.
+          type: string
+        dataVersion:
+          description: If applicable, the data version that was disabled.
+          type: string
+        tenantCode:
+          description: The analytic tenant that the disable operation was conducted for.
+          type: string
+        status:
+          description: The outcome of the disabling operation.
+          type: string
+        message:
+          description: >-
+            If applicable, the message explains what errors occurred while
+            disabling data versions.
+          type: string
+    SalesforceAuthParamsDTO:
+      type: object
+      properties:
+        refreshToken:
+          type: string
+        clientId:
+          type: string
+    SalesforceV2AuthParamsDTO:
+      type: object
+      properties:
+        authCode:
+          type: string
+        clientId:
+          type: string
+        clientSecret:
+          type: string
+        loginHost:
+          type: string
+    ServiceNowAuthParamsDTO:
+      type: object
+      properties:
+        hostDomainName:
+          type: string
+        username:
+          type: string
+        password:
+          type: string
+    SlackAuthParamsDTO:
+      type: object
+      properties:
+        authCode:
+          type: string
+        clientId:
+          type: string
+        clientSecret:
+          type: string
+    SnowflakeAuthParamsDTO:
+      type: object
+      properties:
+        accountIdentifier:
+          type: string
+        database:
+          type: string
+        schema:
+          type: string
+        username:
+          type: string
+        password:
+          type: string
+        warehouse:
+          type: string
+        privateKey:
+          type: string
+    SqlServerAuthParamsDTO:
+      type: object
+      properties:
+        host:
+          type: string
+        port:
+          type: string
+        username:
+          type: string
+        password:
+          type: string
+        database:
+          type: string
+    StartExtractionModel:
+      type: object
+      properties:
+        tenants:
+          description: >-
+            A list of analytic tenants to dispatch extraction jobs for. One
+            extraction job is dispatched per tenant.
+          type: array
+          items:
+            type: string
+        allTenants:
+          description: >-
+            If "true", one extraction job is dispatched for each accessible
+            analytic tenant.
+          type: boolean
+        overrideLastExtractionTimestamp:
+          description: The time from which to extract data.
+          type: string
+        publishDataLoadArtifacts:
+          description: >-
+            If "true", the generated data load artifacts are published to
+            Production immediately.
+          type: boolean
+        runProcessingJob:
+          description: >-
+            If "true", a processing job is spawned after a dispatched extraction
+            job runs successfully.
+          type: boolean
+        dataCategoryId:
+          description: >-
+            The unique identifier of the data category on which to trigger the
+            extraction job.
+          type: string
+        disableArtifactGeneration:
+          description: >-
+            If "true", the job does not generate data load artifacts. If
+            unspecified, the default is "false".
+          type: boolean
+    StartExtractionRequest:
+      type: object
+      properties:
+        model:
+          $ref: '#/components/schemas/StartExtractionModel'
+      x-konfig-properties:
+        model:
+          description: A form body key that contains a collection of key-value pairs.
+    StartExtractionResponse:
+      type: object
+      properties:
+        jobId:
+          description: The ID of the dispatching job that generated the extraction jobs.
+          type: string
+    Status:
+      description: >-
+        The `Status` type defines a logical error model that is suitable for
+        different programming environments, including REST APIs and RPC APIs. It
+        is used by [gRPC](https://github.com/grpc). Each `Status` message
+        contains three pieces of data: error code, error message, and error
+        details. You can find out more about this error model and how to work
+        with it in the [API Design
+        Guide](https://cloud.google.com/apis/design/errors).
+      type: object
+      properties:
+        code:
+          description: >-
+            The status code, which should be an enum value of
+            [google.rpc.Code][google.rpc.Code].
+          type: integer
+          format: int32
+        message:
+          description: >-
+            A developer-facing error message, which should be in English. Any
+            user-facing error message should be localized and sent in the
+            [google.rpc.Status.details][google.rpc.Status.details] field, or
+            localized by the client.
+          type: string
+        details:
+          description: >-
+            A list of messages that carry the error details.  There is a common
+            set of message types for APIs to use.
+          type: array
+          items:
+            $ref: '#/components/schemas/GoogleProtobufAny'
+    SubjectMissingAccessDTO:
+      type: object
+      properties:
+        subject:
+          description: The subjects that cannot be accessed.
+          enum:
+            - Employee
+            - Employee_Budgeted_Compensation
+            - Employment_Start
+            - Employment_Exit
+            - Absenteeism
+            - Supervisory
+            - Organization
+            - Compensation_Payout
+            - CustomSubject
+            - TestConnectionSubject
+            - Internal_Placement
+            - Pay_Change
+            - Hire
+            - Applicant
+            - Candidate
+            - Requisition
+          type: string
+          format: enum
+        attributes:
+          description: The attributes that cannot be accessed.
+          type: array
+          items:
+            type: string
+    SuccessFactorsAuthParamsDTO:
+      type: object
+      properties:
+        hostDomainName:
+          type: string
+        companyID:
+          type: string
+        username:
+          type: string
+        password:
+          type: string
+    TenantAndCredential:
+      type: object
+      properties:
+        tenantCode:
+          description: The unique identifier associated with the tenant.
+          type: string
+        credentialId:
+          description: The unique identifier associated with the credential.
+          type: string
+    TenantDataUploadStatusResponseDTO:
+      type: object
+      properties:
+        uploadTime:
+          description: The upload time of the data upload.
+          type: string
+        included:
+          description: If "true", the data upload is included.
+          type: boolean
+    TenantDataUploadUpdateStatusResponseDTO:
+      type: object
+      properties:
+        tenantCode:
+          description: The analytic tenant that the exclusion operation was conducted for.
+          type: string
+        uploadTime:
+          description: The upload time of the data upload
+          type: string
+        status:
+          description: The outcome of the exclusion operation.
+          type: string
+        message:
+          description: >-
+            If applicable, the message explains why errors were encountered
+            during the exclusion operation.
+          type: string
+    TenantDataUploadsListResponseDTO:
+      type: object
+      properties:
+        tenants:
+          description: >-
+            A list of objects representing analytic tenants and their data
+            uploads.
+          type: array
+          items:
+            $ref: '#/components/schemas/TenantDataUploadsResponseDTO'
+        limit:
+          description: >-
+            The number of analytic tenants to retrieve. The maximum number of
+            analytic tenants to retrieve is 1000.
+          type: integer
+          format: uint32
+        start:
+          description: >-
+            The index to start retrieving results from, also known as offset.
+            The index begins at 0.
+          type: integer
+          format: uint32
+    TenantDataUploadsResponseDTO:
+      type: object
+      properties:
+        tenantCode:
+          description: The tenant code of the analytic tenant owning the data uploads.
+          type: string
+        uploads:
+          description: >-
+            The data uploads completed for the specified analytic tenant. The
+            list is empty if no previous data uploads are found for the analytic
+            tenant.
+          type: array
+          items:
+            $ref: '#/components/schemas/TenantDataUploadStatusResponseDTO'
+    TenantDataUploadsUpdateResponseDTO:
+      type: object
+      properties:
+        totalFailures:
+          description: >-
+            The number of data uploads that failed during the exclusion
+            operation.
+          type: integer
+          format: uint32
+        totalSuccess:
+          description: The number of data uploads that were excluded successfully.
+          type: integer
+          format: uint32
+        uploads:
+          description: >-
+            A list of objects representing the results of the data upload
+            exclusion.
+          type: array
+          items:
+            $ref: '#/components/schemas/TenantDataUploadUpdateStatusResponseDTO'
+    UltimateAuthParamsDTO:
+      type: object
+      properties:
+        hostDomainName:
+          type: string
+        apiKey:
+          type: string
+        username:
+          type: string
+        password:
+          type: string
+        userAccessKey:
+          type: string
+    UploadToExclude:
+      type: object
+      properties:
+        tenantCode:
+          description: >-
+            The tenant code of the analytic tenant you are excluding a data
+            upload for.
+          type: string
+        excludeAll:
+          description: If "true", all data uploads are excluded for the analytic tenant.
+          type: boolean
+        uploadTimes:
+          description: >-
+            A comma-separated list of strings representing the upload time of
+            each data upload to exclude.
+          type: array
+          items:
+            type: string
+    UploadToExcludeModel:
+      type: object
+      properties:
+        uploads:
+          description: >-
+            A list of objects representing the data uploads to exclude for a
+            particular analytic tenant.
+          type: array
+          items:
+            $ref: '#/components/schemas/UploadToExclude'
+    UploadToInclude:
+      type: object
+      properties:
+        tenantCode:
+          description: >-
+            The tenant code of the analytic tenant you are including a data
+            upload for.
+          type: string
+        includeAll:
+          description: If "true", all data uploads are included for the analytic tenant.
+          type: boolean
+        uploadTimes:
+          description: >-
+            A comma-separated list of strings representing the upload time of
+            each data upload to include.
+          type: array
+          items:
+            type: string
+    UploadToIncludeModel:
+      type: object
+      properties:
+        uploads:
+          description: >-
+            A list of objects representing the data uploads to include for a
+            particular analytic tenant.
+          type: array
+          items:
+            $ref: '#/components/schemas/UploadToInclude'
+    WillowAuthParamsDTO:
+      type: object
+      properties:
+        apiToken:
+          type: string
+        hostName:
+          type: string
+    WorkdayAuthParamsDTO:
+      type: object
+      properties:
+        userId:
+          type: string
+        domainName:
+          type: string
+        implementationName:
+          type: string
+        password:
+          type: string
+        integrationSystemId:
+          type: string
+        apiKey:
+          type: string
+    WorkdayRaasAuthParamsDTO:
+      type: object
+      properties:
+        userId:
+          type: string
+        domainName:
+          type: string
+        implementationName:
+          type: string
+        password:
+          type: string
+        testReportUrl:
+          type: string
+    ZoomAuthParamsDTO:
+      type: object
+      properties:
+        authCode:
+          type: string
+        clientId:
+          type: string
+        clientSecret:
+          type: string
+    DataAndJobHandlingDeleteConnectorCredentialResponse:
+      type: string
+  securitySchemes:
+    CookieAuth:
+      type: apiKey
+      name: VisierASIDToken
+      in: cookie
+    ApiKeyAuth:
+      type: apiKey
+      name: apikey
+      in: header
+    BearerAuth:
+      type: http
+      scheme: bearer
+    OAuth2Auth:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: /v1/auth/oauth2/authorize
+          tokenUrl: /v1/auth/oauth2/token
+          scopes:
+            read: Grants read access
+            write: Grants write access
+        password:
+          tokenUrl: /v1/auth/oauth2/token
+          scopes:
+            read: Grants read access
+            write: Grants write access
+security:
+  - ApiKeyAuth: []
+    BearerAuth: []
+  - ApiKeyAuth: []
+    CookieAuth: []
+  - ApiKeyAuth: []
+    OAuth2Auth: []

@@ -1,0 +1,173 @@
+openapi: 3.0.3
+info:
+  title: Visier Document Search API
+  description: Visier API for searching for Visier documents
+  version: 22222222.99201.1200
+  license:
+    name: Apache License, Version 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0
+  x-api-status-urls: false
+servers:
+  - url: https://{vanity-name}.api.visier.io
+    variables:
+      vanity-name:
+        default: vanity
+tags:
+  - name: DocumentSearch
+paths:
+  /v1alpha/search/simple/document-headers:
+    get:
+      tags:
+        - DocumentSearch
+      summary: Perform a simple search for Visier document headers
+      operationId: DocumentSearch_SimpleSearchDocumentHeaders
+      description: >-
+        Perform a simple search for Visier document headers, such as analysis
+        titles. Simple search doesn't support keywords, Boolean expressions, or
+        any other advanced search features.
+         Example: `GET /v1alpha/search/simple/document-headers?q=My+Query&limit=10` returns the first 10 document headers that best match the query string `My Query`.
+
+         <br>**Note:** <em>This API is in **alpha**. While in alpha, APIs may change in a breaking way without notice; functionality may be removed, and no deprecation notices will be issued.
+         If you are interested in using this API, please contact your Customer Success Manager (CSM).</em>
+      parameters:
+        - description: The search query string.
+          name: q
+          in: query
+          schema:
+            type: string
+        - description: The maximum number of results to return. Defaults to 100.
+          name: limit
+          in: query
+          schema:
+            type: integer
+            format: int32
+        - description: >-
+            The index to start retrieving results from, also known as offset.
+            Defaults to 0.
+          name: offset
+          in: query
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimpleDocumentHeaderSearchResponseDTO'
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Status'
+components:
+  schemas:
+    DocumentSearchLinkDTO:
+      description: >-
+        Defines the attributes of a web request to reference documents in the
+        search results.
+      type: object
+      properties:
+        href:
+          description: The URL pointing to the specific document.
+          type: string
+        verb:
+          description: >-
+            The verb to use when formulating the web request. This is commonly
+            `GET`.
+          type: string
+    GoogleProtobufAny:
+      description: >-
+        Contains an arbitrary serialized message along with a @type that
+        describes the type of the serialized message.
+      type: object
+      properties:
+        '@type':
+          description: The type of the serialized message.
+          type: string
+      additionalProperties: true
+    SimpleDocumentHeaderSearchResponseDTO:
+      description: >-
+        The response body structure for Simple document header search
+        operations.
+      type: object
+      properties:
+        documentHeaders:
+          description: >-
+            The ordered collection of document header search results. The
+            results are sorted according to their relevance in a descending
+            order.
+          type: array
+          items:
+            $ref: '#/components/schemas/SimpleDocumentHeaderSearchResultDTO'
+    SimpleDocumentHeaderSearchResultDTO:
+      description: >-
+        Structure of a single document header search using the Simple search
+        operation.
+      type: object
+      properties:
+        description:
+          description: >-
+            The `Web Template Framework` representation of the search result
+            element. This commonly displayed alongside the result by search
+            portals.
+          type: string
+        displayName:
+          description: The display name of the element in the search result.
+          type: string
+        relevance:
+          description: >-
+            The relevance of the search result and a number between `0` and
+            `100`.
+          type: number
+          format: double
+        viewLink:
+          $ref: '#/components/schemas/DocumentSearchLinkDTO'
+      x-konfig-properties:
+        viewLink:
+          description: Use the `viewLink` to build a web request to view this document.
+    Status:
+      description: The response structure for errors.
+      type: object
+      properties:
+        errorCode:
+          description: Error classification.
+          type: string
+        message:
+          description: Error message describing the root cause of the error.
+          type: string
+  securitySchemes:
+    CookieAuth:
+      type: apiKey
+      name: VisierASIDToken
+      in: cookie
+    ApiKeyAuth:
+      type: apiKey
+      name: apikey
+      in: header
+    BearerAuth:
+      type: http
+      scheme: bearer
+    OAuth2Auth:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: /v1/auth/oauth2/authorize
+          tokenUrl: /v1/auth/oauth2/token
+          scopes:
+            read: Grants read access
+            write: Grants write access
+        password:
+          tokenUrl: /v1/auth/oauth2/token
+          scopes:
+            read: Grants read access
+            write: Grants write access
+security:
+  - ApiKeyAuth: []
+    BearerAuth: []
+  - ApiKeyAuth: []
+    CookieAuth: []
+  - ApiKeyAuth: []
+    OAuth2Auth: []

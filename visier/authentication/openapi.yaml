@@ -1,0 +1,261 @@
+openapi: 3.0.3
+info:
+  title: Visier Authentication APIs
+  description: Visier APIs for generating authentication tokens
+  version: 22222222.99201.1200
+  license:
+    name: Apache License, Version 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0
+  x-api-status-urls: false
+servers:
+  - url: https://{vanity-name}.api.visier.io
+    variables:
+      vanity-name:
+        default: vanity
+tags:
+  - name: Authentication
+paths:
+  /v1/admin/visierSecureTicket:
+    post:
+      tags:
+        - Authentication
+      operationId: Authentication_TicketAuthentication
+      description: Generate a legacy Visier secure ticket
+      requestBody:
+        description: Secure ticket request body
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AuthenticationRequest'
+        required: true
+      responses:
+        '200':
+          description: Secure ticket response
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/AuthenticationTicketAuthenticationResponse
+            text/plain:
+              schema:
+                $ref: >-
+                  #/components/schemas/AuthenticationTicketAuthentication200Response
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Status'
+      deprecated: true
+  /v1/admin/visierSecureToken:
+    post:
+      tags:
+        - Authentication
+      operationId: Authentication_ASIDTokenAuthentication
+      description: Generate a Visier authentication token
+      requestBody:
+        description: Authentication token request body
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AuthenticationRequest'
+        required: true
+      responses:
+        '200':
+          description: Authentication token response
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/AuthenticationAsidTokenAuthenticationResponse
+            text/plain:
+              schema:
+                $ref: >-
+                  #/components/schemas/AuthenticationAsidTokenAuthentication200Response
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Status'
+      deprecated: true
+  /v1/auth/oauth2/authorize:
+    get:
+      tags:
+        - Authentication
+      operationId: Authentication_OAuth2Authorize
+      security:
+        - ApiKeyAuth: []
+      description: Initiate an OAuth2 authorization code flow.
+      parameters:
+        - description: The optional URI to redirect to after authorization.
+          name: redirect_uri
+          in: query
+          required: false
+          schema:
+            type: string
+        - description: The response type. Must be `code`.
+          name: response_type
+          in: query
+          required: true
+          schema:
+            type: string
+        - description: The ID of the pre-registered client application.
+          name: client_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - description: >-
+            The OAuth 2.0 scope of the authorization request. Defaults to
+            `read`.
+          name: scope
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Status'
+        3XX:
+          description: Redirect to authorization page.
+  /v1/auth/oauth2/token:
+    post:
+      tags:
+        - Authentication
+      operationId: Authentication_OAuth2Token
+      security:
+        - ApiKeyAuth: []
+        - ApiKeyAuth: []
+          BasicAuth: []
+      description: Generate a JSON Web Token (JWT) for the specified user.
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenRequestBody'
+        required: true
+      responses:
+        '200':
+          description: JWT response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticationOAuth2Token200Response'
+            application/jwt:
+              schema:
+                $ref: '#/components/schemas/AuthenticationOAuth2TokenResponse'
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Status'
+components:
+  schemas:
+    AuthenticationRequest:
+      description: Basic Authentication Request Body
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+    GoogleProtobufAny:
+      description: >-
+        Contains an arbitrary serialized message along with a @type that
+        describes the type of the serialized message.
+      type: object
+      properties:
+        '@type':
+          description: The type of the serialized message.
+          type: string
+      additionalProperties: true
+    Status:
+      description: The response structure for errors.
+      type: object
+      properties:
+        code:
+          description: >-
+            The status code, which should be an enum value of
+            [google.rpc.Code][google.rpc.Code].
+          type: integer
+          format: int32
+        message:
+          description: The error message returned by the server.
+          type: string
+        details:
+          description: >-
+            A list of messages that carry the error details.  There is a common
+            set of message types for APIs to use.
+          type: array
+          items:
+            $ref: '#/components/schemas/GoogleProtobufAny'
+    TokenResponse:
+      type: object
+      properties:
+        token:
+          type: string
+    TokenRequestBody:
+      description: Token request body definition.
+      type: object
+      properties:
+        grant_type:
+          description: >-
+            The grant type. Supported values:
+
+            - `authorization_code`: The authorization code grant type.
+
+            - `password`: The password grant type.
+
+            - `urn:visier:params:oauth:grant-type:asid-token`: The ASID token
+            grant type.
+          type: string
+        client_id:
+          description: The ID of the pre-registered client application.
+          type: string
+        redirect_uri:
+          description: The optional URI to redirect to after authorization.
+          type: string
+        code:
+          description: >-
+            The authorization code. Applicable only for authorization code grant
+            type.
+          type: string
+        username:
+          description: >-
+            The username of the user to authenticate. Applicable only for
+            password grant type.
+          type: string
+        password:
+          description: >-
+            The password of the user to authenticate. Applicable only for
+            password grant type.
+          type: string
+        asid_token:
+          description: The ASID token. Applicable only for ASID token grant type.
+          type: string
+    AuthenticationTicketAuthenticationResponse:
+      type: string
+    AuthenticationTicketAuthentication200Response:
+      type: string
+    AuthenticationAsidTokenAuthenticationResponse:
+      type: string
+    AuthenticationAsidTokenAuthentication200Response:
+      type: string
+    AuthenticationOAuth2TokenResponse:
+      type: string
+    AuthenticationOAuth2Token200Response:
+      type: string
+  securitySchemes:
+    BasicAuth:
+      type: http
+      scheme: basic
+    ApiKeyAuth:
+      type: apiKey
+      name: apikey
+      in: header

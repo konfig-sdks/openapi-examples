@@ -1,0 +1,452 @@
+openapi: 3.0.3
+info:
+  title: Visier Object Configuration APIs
+  description: Visier APIs for managing objects in studio experience
+  version: 22222222.99201.1200
+  license:
+    name: Apache License, Version 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0
+  x-api-status-urls: false
+servers:
+  - url: https://{vanity-name}.api.visier.io
+    variables:
+      vanity-name:
+        default: vanity
+tags:
+  - name: ObjectConfiguration
+paths:
+  /v1/admin/calculation-concepts:
+    get:
+      tags:
+        - ObjectConfiguration
+      summary: Retrieve all calculation concepts
+      operationId: ObjectConfiguration_GetCalculationConcepts
+      description: >-
+        This API allows you to retrieve the calculation concepts available in
+        production.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalculationConceptListDTO'
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Status'
+  /v1/admin/calculation-concepts/{conceptId}:
+    get:
+      tags:
+        - ObjectConfiguration
+      summary: Retrieve the configuration of a calculation concept
+      operationId: ObjectConfiguration_GetCalculationConcept
+      description: >-
+        This API allows you to retrieve the configuration details of a
+        calculation concept in production.
+      parameters:
+        - description: The ID of the concept to retrieve the configuration for.
+          name: conceptId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalculationConceptDTO'
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Status'
+  /v1/admin/calculation-concepts/{conceptId}/configure:
+    put:
+      tags:
+        - ObjectConfiguration
+      summary: Map dimension members to nodes in a calculation concept
+      operationId: ObjectConfiguration_MapCalculationConcept
+      description: >-
+        This API allows you to map dimension members to nodes in a calculation
+        concept.
+         The changes are applied in a new project and published to production.
+
+         The body of this API is the source of truth for dimension members mapped to the concept. For example, if a node in
+         the body does not have any dimension members, all existing dimension members mapped to that node will be removed.
+      parameters:
+        - description: The UUID of the concept to configure.
+          name: conceptId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CalculationConceptConfigurationMapDTO'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConceptConfigurationResultDTO'
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Status'
+  /v1/admin/selection-concepts:
+    get:
+      tags:
+        - ObjectConfiguration
+      summary: Retrieve all selection concepts
+      operationId: ObjectConfiguration_GetSelectionConcepts
+      description: >-
+        This API allows you to retrieve the selection concepts available in
+        production.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SelectionConceptListDTO'
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Status'
+  /v1/admin/selection-concepts/{conceptId}:
+    get:
+      tags:
+        - ObjectConfiguration
+      summary: Retrieve the configuration of a selection concept
+      operationId: ObjectConfiguration_GetSelectionConcept
+      description: >-
+        This API allows you to retrieve the configuration details of a selection
+        concept in production.
+      parameters:
+        - description: The ID of the concept to retrieve the configuration for.
+          name: conceptId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SelectionConceptDTO'
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Status'
+  /v1/admin/selection-concepts/{conceptId}/configure:
+    put:
+      tags:
+        - ObjectConfiguration
+      summary: Map dimension members to a selection concept
+      operationId: ObjectConfiguration_MapSelectionConcept
+      description: |-
+        This API allows you to map dimension members to a selection concept.
+         The changes are applied to a new project and published to production.
+
+         The body of this API is the source of truth for dimension members mapped to the concept. For example, if a node in
+         the body does not have any dimension members, all existing dimension members mapped to that node will be removed.
+      parameters:
+        - description: The UUID of the concept to configure.
+          name: conceptId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SelectionConceptConfigurationMapDTO'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConceptConfigurationResultDTO'
+        default:
+          description: Default error response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Status'
+components:
+  schemas:
+    AnalyticObjectFilterDTO:
+      type: object
+      properties:
+        analyticObjectUuid:
+          description: The UUID of the analytic object used in the selection concept.
+          type: string
+        symbolName:
+          description: The symbol name of the analytic object.
+          type: string
+        dimensions:
+          description: A list of dimensions included in the concept.
+          type: array
+          items:
+            $ref: '#/components/schemas/DimensionFilterDTO'
+    CalculationConceptConfigurationDTO:
+      type: object
+      properties:
+        perspectives:
+          description: >-
+            A list of objects representing the perspectives in the calculation
+            concept.
+          type: array
+          items:
+            $ref: '#/components/schemas/PerspectiveConfigurationDTO'
+    CalculationConceptConfigurationMapDTO:
+      description: The configuration to apply to the concept.
+      type: object
+      properties:
+        perspectivesToMap:
+          description: >-
+            A list of objects representing the list of perspectives in the
+            calculation concept.
+          type: array
+          items:
+            $ref: '#/components/schemas/PerspectiveConfigurationDTO'
+    CalculationConceptDTO:
+      type: object
+      properties:
+        uuid:
+          description: The unique identifier associated with the calculation concept.
+          type: string
+        name:
+          description: The display name of the calculation concept.
+          type: string
+        configuration:
+          $ref: '#/components/schemas/CalculationConceptConfigurationDTO'
+      x-konfig-properties:
+        configuration:
+          description: >-
+            A list of objects representing the configuration for the calculation
+            concept.
+    CalculationConceptListDTO:
+      type: object
+      properties:
+        concepts:
+          description: A list of objects representing calculation concepts.
+          type: array
+          items:
+            $ref: '#/components/schemas/CalculationConceptDTO'
+    ConceptConfigurationResultDTO:
+      type: object
+      properties:
+        conceptId:
+          description: The unique identifier of the configured concept.
+          type: string
+        projectId:
+          description: The unique identifier of the system-generated project.
+          type: string
+        message:
+          description: A meaningful message about the API result.
+          type: string
+    DimensionFilterDTO:
+      type: object
+      properties:
+        dimensionId:
+          description: The UUID of the dimension.
+          type: string
+        symbolName:
+          description: The symbol name of the dimension.
+          type: string
+        dimensionMembers:
+          description: |-
+            A list of dimension members to map to the perspective node.
+
+             Note: If this array is empty, all dimension members will be removed for the node.
+          type: array
+          items:
+            $ref: '#/components/schemas/DimensionMemberDTO'
+    DimensionMemberDTO:
+      type: object
+      properties:
+        dimensionMember:
+          description: >-
+            A list of strings representing the dimension members. Dimension
+            members in a hierarchical dimension
+             will have an array with multiple strings.
+          type: array
+          items:
+            type: string
+    GoogleProtobufAny:
+      description: >-
+        Contains an arbitrary serialized message along with a @type that
+        describes the type of the serialized message.
+      type: object
+      properties:
+        '@type':
+          description: The type of the serialized message.
+          type: string
+      additionalProperties: true
+    PerspectiveConfigurationDTO:
+      type: object
+      properties:
+        perspectiveId:
+          description: The UUID of the perspective.
+          type: string
+        perspectiveName:
+          description: The display name of the perspective.
+          type: string
+        perspectiveNodes:
+          description: A list of nodes in the perspective.
+          type: array
+          items:
+            $ref: '#/components/schemas/PerspectiveNodeDTO'
+    PerspectiveNodeDTO:
+      type: object
+      properties:
+        selectionConceptUuid:
+          description: >-
+            The UUID of the node's selection concept. Perspective nodes are
+            generated as selection concepts to enable filtering.
+          type: string
+        symbolName:
+          description: >-
+            The symbol name of the selection concept. For example,
+            "isExitActualSystemTermination".
+          type: string
+        analyticObjectFilters:
+          description: >-
+            A list of analytic object filters indicating the analytic object and
+            dimensions used for the selection concept.
+          type: array
+          items:
+            $ref: '#/components/schemas/AnalyticObjectFilterDTO'
+    SelectionConceptConfigurationDTO:
+      type: object
+      properties:
+        analyticObjectFilters:
+          description: >-
+            A list of analytic object filters indicating the analytic object and
+            dimension used for this selection concept.
+          type: array
+          items:
+            $ref: '#/components/schemas/AnalyticObjectFilterDTO'
+    SelectionConceptConfigurationMapDTO:
+      type: object
+      properties:
+        analyticObjectFiltersToMap:
+          description: >-
+            A list of analytic object filters indicating the analytic object and
+            dimension members used
+             for the selection concept.
+
+             Note: If this array is empty, all filters will be removed for the concept.
+          type: array
+          items:
+            $ref: '#/components/schemas/AnalyticObjectFilterDTO'
+    SelectionConceptDTO:
+      type: object
+      properties:
+        uuid:
+          description: The unique identifier associated with the selection concept.
+          type: string
+        name:
+          description: The display name of the selection concept.
+          type: string
+        configuration:
+          $ref: '#/components/schemas/SelectionConceptConfigurationDTO'
+      x-konfig-properties:
+        configuration:
+          description: >-
+            A list of objects representing the configuration for the selection
+            concept.
+    SelectionConceptListDTO:
+      type: object
+      properties:
+        concepts:
+          description: A list of objects representing selection concepts.
+          type: array
+          items:
+            $ref: '#/components/schemas/SelectionConceptDTO'
+    Status:
+      description: >-
+        The `Status` type defines a logical error model that is suitable for
+        different programming environments, including REST APIs and RPC APIs. It
+        is used by [gRPC](https://github.com/grpc). Each `Status` message
+        contains three pieces of data: error code, error message, and error
+        details. You can find out more about this error model and how to work
+        with it in the [API Design
+        Guide](https://cloud.google.com/apis/design/errors).
+      type: object
+      properties:
+        code:
+          description: >-
+            The status code, which should be an enum value of
+            [google.rpc.Code][google.rpc.Code].
+          type: integer
+          format: int32
+        message:
+          description: >-
+            A developer-facing error message, which should be in English. Any
+            user-facing error message should be localized and sent in the
+            [google.rpc.Status.details][google.rpc.Status.details] field, or
+            localized by the client.
+          type: string
+        details:
+          description: >-
+            A list of messages that carry the error details.  There is a common
+            set of message types for APIs to use.
+          type: array
+          items:
+            $ref: '#/components/schemas/GoogleProtobufAny'
+  securitySchemes:
+    CookieAuth:
+      type: apiKey
+      name: VisierASIDToken
+      in: cookie
+    ApiKeyAuth:
+      type: apiKey
+      name: apikey
+      in: header
+    BearerAuth:
+      type: http
+      scheme: bearer
+    OAuth2Auth:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: /v1/auth/oauth2/authorize
+          tokenUrl: /v1/auth/oauth2/token
+          scopes:
+            read: Grants read access
+            write: Grants write access
+        password:
+          tokenUrl: /v1/auth/oauth2/token
+          scopes:
+            read: Grants read access
+            write: Grants write access
+security:
+  - ApiKeyAuth: []
+    BearerAuth: []
+  - ApiKeyAuth: []
+    CookieAuth: []
+  - ApiKeyAuth: []
+    OAuth2Auth: []
