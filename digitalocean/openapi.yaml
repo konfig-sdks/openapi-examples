@@ -8576,6 +8576,118 @@ paths:
 
                 _, err := client.Databases.DeleteTopic(ctx, "9cc10173-e9ea-4176-9dbc-a4cee4c4ff30", topicName)
             }
+  /v2/databases/metrics/credentials:
+    get:
+      tags:
+        - Databases
+      summary: Retrieve Database Clusters' Metrics Endpoint Credentials
+      operationId: Databases_getClustersMetricsCredentials
+      security:
+        - bearer_auth:
+            - write
+      description: >-
+        To show the credentials for all database clusters' metrics endpoints,
+        send a GET request to `/v2/databases/metrics/credentials`. The result
+        will be a JSON object with a `credentials` key.
+      responses:
+        '200':
+          $ref: '#/components/responses/database_metrics_auth'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '404':
+          $ref: '#/components/responses/not_found'
+        '429':
+          $ref: '#/components/responses/too_many_requests'
+        '500':
+          $ref: '#/components/responses/server_error'
+        default:
+          $ref: '#/components/responses/unexpected_error'
+      x-codeSamples:
+        - lang: cURL
+          source: |-
+            curl -X GET \
+              -H "Authorization: Bearer $DIGITALOCEAN_TOKEN" \
+              "https://api.digitalocean.com/v2/databases/metrics/credentials"
+        - lang: Go
+          source: |-
+            import (
+                "context"
+                "os"
+
+                "github.com/digitalocean/godo"
+            )
+
+            func main() {
+                token := os.Getenv("DIGITALOCEAN_TOKEN")
+
+                client := godo.NewFromToken(token)
+                ctx := context.TODO()
+
+                creds, _, _ := client.Databases.GetMetricsCredentials(ctx)
+            }
+    put:
+      tags:
+        - Databases
+      summary: Update Database Clusters' Metrics Endpoint Credentials
+      operationId: Databases_updateMetricsCredentials
+      security:
+        - bearer_auth:
+            - write
+      description: >-
+        To update the credentials for all database clusters' metrics endpoints,
+        send a PUT request to `/v2/databases/metrics/credentials`. A successful
+        request will receive a 204 No Content status code  with no body in
+        response.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/database_metrics_credentials'
+            example:
+              credentials:
+                basic_auth_username: new_username
+                basic_auth_password: new_password
+      responses:
+        '204':
+          $ref: '#/components/responses/no_content'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '429':
+          $ref: '#/components/responses/too_many_requests'
+        '500':
+          $ref: '#/components/responses/server_error'
+        default:
+          $ref: '#/components/responses/unexpected_error'
+      x-codeSamples:
+        - lang: cURL
+          source: |-
+            curl -X PUT \
+              -H "Content-Type: application/json" \
+              -H "Authorization: Bearer $DIGITALOCEAN_TOKEN" \
+              -d '{"credentials": {"basic_auth_username": "new_username", "basic_auth_password": "new_password"}}'\
+              "https://api.digitalocean.com/v2/databases/metrics/credentials"
+        - lang: Go
+          source: |-
+            import (
+                "context"
+                "os"
+
+                "github.com/digitalocean/godo"
+            )
+
+            func main() {
+                token := os.Getenv("DIGITALOCEAN_TOKEN")
+
+                client := godo.NewFromToken(token)
+                ctx := context.TODO()
+
+                _, _ = client.Databases.UpdateMetricsCredentials(ctx, &godo.DatabaseUpdateMetricsCredentialsRequest{
+                  Credentials: &godo.DatabaseMetricsCredentials{
+                    BasicAuthUsername: "a_new_username",
+                    BasicAuthPassword: "a_new_password",
+                  },
+                })
+            }
   /v2/domains:
     get:
       tags:
@@ -27278,6 +27390,20 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/DatabasesCreateTopicKafkaClusterResponse'
+    database_metrics_auth:
+      description: A JSON object with a key of `credentials`.
+      headers:
+        ratelimit-limit:
+          $ref: '#/components/headers/ratelimit-limit'
+        ratelimit-remaining:
+          $ref: '#/components/headers/ratelimit-remaining'
+        ratelimit-reset:
+          $ref: '#/components/headers/ratelimit-reset'
+      content:
+        application/json:
+          schema:
+            $ref: >-
+              #/components/schemas/DatabasesGetClustersMetricsCredentialsResponse
     all_domains_response:
       description: >-
         The response will be a JSON object with a key called `domains`. The
@@ -33415,6 +33541,19 @@ components:
       required:
         - type
         - value
+    database_service_endpoint:
+      type: object
+      properties:
+        host:
+          description: A FQDN pointing to the database cluster's node(s).
+          type: string
+          example: backend-do-user-19081923-0.db.ondigitalocean.com
+          readOnly: true
+        port:
+          description: The port on which a service is listening.
+          type: integer
+          example: 9273
+          readOnly: true
     database_cluster:
       type: object
       properties:
@@ -33581,6 +33720,14 @@ components:
             storage.
           type: integer
           example: 61440
+        metrics_endpoints:
+          description: >-
+            Public hostname and port of the cluster's metrics endpoint(s).
+            Includes one record for the cluster's primary node and a second
+            entry for the cluster's standby node(s).
+          type: array
+          items:
+            $ref: '#/components/schemas/database_service_endpoint'
       required:
         - name
         - engine
@@ -35277,6 +35424,22 @@ components:
           example: 3
         config:
           $ref: '#/components/schemas/kafka_topic_config'
+    databases_basic_auth_credentials:
+      type: object
+      properties:
+        basic_auth_username:
+          description: basic authentication username for metrics HTTP endpoint
+          type: string
+          example: username
+        basic_auth_password:
+          description: basic authentication password for metrics HTTP endpoint
+          type: string
+          example: password
+    database_metrics_credentials:
+      type: object
+      properties:
+        credentials:
+          $ref: '#/components/schemas/databases_basic_auth_credentials'
     domain:
       type: object
       properties:
@@ -41076,6 +41239,22 @@ components:
             segment_index_bytes: 10485760
             segment_jitter_ms: 0
             segment_ms: 604800000
+    DatabasesGetClustersMetricsCredentialsResponse:
+      type: object
+      properties:
+        credentials:
+          type: object
+          properties:
+            basic_auth_username:
+              type: string
+              example: username
+            basic_auth_password:
+              type: string
+              example: password
+      example:
+        credentials:
+          basic_auth_username: username
+          basic_auth_password: password
     DomainsListResponse:
       allOf:
         - type: object

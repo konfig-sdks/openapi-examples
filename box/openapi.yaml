@@ -16,7 +16,7 @@ info:
   license:
     name: Apache-2.0
     url: http://www.apache.org/licenses/LICENSE-2.0
-  x-box-commit-hash: '5819125043'
+  x-box-commit-hash: 9d605a3ec5
   x-konfig-ignore:
     object-with-no-properties: true
     potential-incorrect-type: true
@@ -31698,6 +31698,99 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/SignRequest'
+    CompletionRuleVariable:
+      title: Completion rule variable
+      description: |-
+        A completion
+        rule object. Determines
+        if an action should be completed
+        by all or any assignees.
+      type: object
+      required:
+        - type
+        - variable_type
+        - variable_value
+      properties:
+        type:
+          description: |
+            Completion
+            Rule object type.
+          type: string
+          enum:
+            - variable
+          example: variable
+        variable_type:
+          description: |
+            Variable type
+            for the Completion
+            Rule object.
+          type: string
+          example: task_completion_rule
+          enum:
+            - task_completion_rule
+        variable_value:
+          description: |
+            Variable
+            values for a completion
+            rule.
+          type: string
+          example: all_assignees
+          enum:
+            - all_assignees
+            - any_assignees
+    CollaboratorVariable:
+      title: Collaborator variable
+      description: |-
+        A collaborator
+        object. Allows to
+        specify a list of user
+        ID's that are affected
+        by the workflow result.
+      type: object
+      required:
+        - type
+        - variable_type
+        - variable_value
+      properties:
+        type:
+          description: |
+            Collaborator
+            object type.
+          type: string
+          enum:
+            - variable
+          example: variable
+        variable_type:
+          description: |
+            Variable type 
+            for the Collaborator
+            object.
+          type: string
+          example: user_list
+          enum:
+            - user_list
+        variable_value:
+          description: A list of user IDs.
+          type: array
+          items:
+            description: |-
+              User variable used
+              in workflow outcomes.
+            type: object
+            required:
+              - type
+              - id
+            properties:
+              type:
+                description: The object type.
+                type: string
+                enum:
+                  - user
+                example: user
+              id:
+                description: User's ID.
+                type: string
+                example: '636281'
     FileOrFolderScope:
       title: File or folder scope
       description: >-
@@ -31962,6 +32055,99 @@ components:
       required:
         - id
         - type
+    Outcome:
+      title: Outcome
+      description: An instance of an outcome.
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          description: ID of a specific outcome
+          type: string
+          example: '17363629'
+        collaborators:
+          allOf:
+            - $ref: '#/components/schemas/CollaboratorVariable'
+            - description: |-
+                Lists collaborators
+                affected by the workflow
+                result.
+        completion_rule:
+          allOf:
+            - $ref: '#/components/schemas/CompletionRuleVariable'
+            - description: |-
+                Determines
+                if an action should be completed
+                by all or any assignees.
+        file_collaborator_role:
+          allOf:
+            - $ref: '#/components/schemas/RoleVariable'
+            - description: |-
+                Determines if the
+                workflow outcome for
+                a file
+                affects a specific
+                collaborator role.
+        task_collaborators:
+          allOf:
+            - $ref: '#/components/schemas/CollaboratorVariable'
+            - description: |-
+                Lists collaborators
+                affected by the task workflow
+                result.
+        role:
+          allOf:
+            - $ref: '#/components/schemas/RoleVariable'
+            - description: |-
+                Determines if the
+                workflow outcome
+                affects a specific
+                collaborator role.
+    RoleVariable:
+      title: Role variable
+      description: |-
+        Determines if the
+        workflow outcome
+        affects a specific
+        collaborator role.
+      type: object
+      required:
+        - type
+        - variable_type
+        - variable_value
+      properties:
+        type:
+          description: |
+            Role object type.
+          type: string
+          enum:
+            - variable
+          example: variable
+        variable_type:
+          description: |
+            The variable type used
+            by the object.
+          type: string
+          example: collaborator_role
+          enum:
+            - collaborator_role
+        variable_value:
+          allOf:
+            - description: The level of access granted.
+              type: string
+              example: editor
+              enum:
+                - editor
+                - viewer
+                - previewer
+                - uploader
+                - previewer uploader
+                - viewer uploader
+                - co-owner
+            - description: |-
+                Variable values you can use
+                for the role parameter.
     TimelineSkillCard:
       title: Timeline Skill Card
       description: |-
@@ -37453,35 +37639,10 @@ components:
               type: string
               example: '87654321'
         outcomes:
-          description: A list of outcomes required to be configured at start time.
+          description: A configurable outcome the workflow should complete.
           type: array
           items:
-            description: |-
-              A configurable outcome the workflow should complete. If you
-              have a `task_completion_rule`, you may input `all_assignees` or
-              `any_assignee` in the `variable_value` field. Similarly, if you
-              have a `collaborator_role`, you may input `editor`, `viewer`,
-              `previewer`, `uploader`, `previewer uploader`, `viewer uploader`
-              , `co-owner` in the `variable_value` field.
-            type: object
-            properties:
-              id:
-                description: The id of the outcome
-                type: string
-                example: '890375782'
-              type:
-                description: The type of the outcome object
-                type: string
-                example: outcome
-                enum:
-                  - outcome
-              parameter:
-                description: |-
-                  This is a placeholder example for various objects that
-                  can be passed in - refer to the guides section to find
-                  out more information.
-                type: string
-                example: placeholder
+            $ref: '#/components/schemas/Outcome'
     IntegrationMappingsUpdateSlackMappingRequest:
       type: object
       properties:

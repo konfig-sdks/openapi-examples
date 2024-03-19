@@ -112,7 +112,7 @@ paths:
               - archive_complete_time
         - description: >-
             The group ID. To get a group ID, use the [List
-            groups](https://developers.zoom.us/docs/api/rest/reference/zoom-api/methods/#operation/groups)
+            groups](https://developers.zoom.us/docs/api/rest/reference/scim-api/methods/#operation/groupSCIM2List)
             API.
           name: group_id
           in: query
@@ -142,6 +142,9 @@ paths:
           - Recording:Read
         x-macro-scopes:
           - recording:read:admin
+        x-granular-scopes:
+          - archiving:read:list_archived_files:admin
+          - archiving:read:list_archived_files
   /archive_files/statistics:
     get:
       tags:
@@ -2021,14 +2024,14 @@ paths:
     post:
       tags:
         - Devices
-      summary: Add new device
+      summary: Add a new device
       operationId: Devices_createNewDevice
       security:
         - openapi_oauth:
             - device:write:admin
           openapi_authorization: []
       description: >-
-        This Device API lets you add a new device to Zoom Account. 
+        Add a new device to Zoom account. 
 
 
         **Scope:** `device:write:admin`   
@@ -2052,42 +2055,85 @@ paths:
             **HTTP Status:** `202` **Accepted**
             Request processed successfully.
         '400':
-          description: |+
+          description: |
             **HTTP Status Code:** `400` <br>
-             Bad Request
+             Bad Request 
 
-            **Error Code:** `30055001` <br>
-            zoom room does not exist. 
-
+             **Error Code:** `30055001` <br>
+             zoom room does not exist.  <br>
             **Error Code:** `30055002` <br>
-            required param can not be empty or null.
-
+             required param can not be empty or null. <br>
             **Error Code:** `30055003` <br>
-            device type does not support.
-
+             device type does not support. <br>
             **Error Code:** `30055004` <br>
-            model or vendor not exist.
-
+             model or vendor not exist. <br>
             **Error Code:** `30055005` <br>
-            tag length can not be more than 64.
-
+             tag length can not be more than 64. <br>
             **Error Code:** `30055006` <br>
-            device has already exist.
-
+             device has already exist. <br>
             **Error Code:** `30055007` <br>
-            invalid mac address.
-
+             invalid mac address. <br>
             **Error Code:** `30055008` <br>
-            no permission.
-
+             no permission. <br>
             **Error Code:** `30055009` <br>
-            email does not have plan.
-
+             email does not have plan. <br>
       extensions:
         x-permissions:
           - ZoomRooms:Edit
         x-macro-scopes:
           - device:write:admin
+  /devices/zpa/upgrade:
+    post:
+      tags:
+        - Devices
+      summary: upgrade zpa os/app
+      operationId: Devices_upgradeZpaOsApp
+      security:
+        - openapi_oauth:
+            - device:write:admin
+          openapi_authorization: []
+      description: >-
+        Upgrade ZPA firmware or app by Zoom Device Manager (ZDM) group ID.
+
+
+        **Scopes:** `device:write:admin`
+
+
+        **[Rate Limit
+        Label](https://marketplace.zoom.us/docs/api-reference/rate-limits#rate-limits):**
+        `HEAVY`
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DevicesUpgradeZpaOsAppRequest'
+      responses:
+        '202':
+          description: >-
+            The upgrade request has been accepted and is currently being
+            processed.
+        '400':
+          description: |
+            **HTTP Status Code:** `400` <br>
+             Bad Request  
+
+             **Error Code:** `30052029` <br>
+             Missing required input: firmware_versions. <br>
+            **Error Code:** `30055020` <br>
+             Upgrade type dose not exist. <br>
+            **Error Code:** `30055018` <br>
+             Zdm group id dose not exist. <br>
+            **Error Code:** `30052030` <br>
+             Missing required input: app_version. <br>
+      extensions:
+        x-permissions:
+          - ZoomRooms:Edit
+          - MobileDeviceManagement:Edit
+        x-macro-scopes:
+          - device:write:admin
+        x-granular-scopes:
+          - device:write:zpa_os_or_app:admin
+          - device:write:zpa_os_or_app:master
   /devices/{deviceId}:
     get:
       tags:
@@ -3013,23 +3059,19 @@ paths:
         '400':
           description: |
             **HTTP Status Code:** `400` <br>
-             Bad Request 
+             Bad Request  
 
-             **Error Code:** `1010` <br>
-             User not found on this account: {accountId}.<br> <br>
-            **Error Code:** `3000` <br>
+             **Error Code:** `3000` <br>
              Cannot access webinar info. <br>
             **Error Code:** `3161` <br>
-             Meeting hosting and scheduling capabilities are not allowed for your user account. <br>
+             Your user account is not allowed meeting hosting and scheduling capabilities. <br>
         '404':
           description: |
             **HTTP Status Code:** `404` <br>
-             Not Found 
+             Not Found  
 
-             **Error Code:** `1001` <br>
-             User not exist: {userId}.<br> <br>
-            **Error Code:** `3001` <br>
-             Meeting {meetingId} is not found or has expired. <br>
+             **Error Code:** `3001` <br>
+             Meeting does not exist: {meetingId}. <br>
       extensions:
         x-permissions:
           - User:Read
@@ -3188,14 +3230,15 @@ paths:
 
         **Note** 
 
-        * This API has a rate limit of **100 requests per day**. You can update
-        a meeting for a maximum of **100 times within a 24-hour period**. 
-
         * The `start_time` value **must** be a future date. If the value is
-        omitted or a date in the past, the API ignores this value and does
+        omitted or a date is in the past, the API ignores this value and does
         **not** update any recurring meetings. 
 
         * The `recurrence` object is **required**.
+
+        * This API has a rate limit of **100 requests per day**. You can update
+        a meeting for a maximum of **100 times within a 24-hour period**. 
+
 
 
 
@@ -3242,53 +3285,39 @@ paths:
              
             Meeting updated.
         '400':
-          description: >
+          description: |
             **HTTP Status Code:** `400` <br>
-             Bad Request 
+             Bad Request  
 
-             **Error Code:** `1010` <br>
-             User not found on this account: {accountId} <br>
-            **Error Code:** `3000` <br>
-             Cannot access meeting information. <br>
-            **Error Code:** `3003` <br>
-             You are not the meeting host. <br>
-            **Error Code:** `3000` <br>
-             * Instant meetings do not support the "schedule_for" parameter. You cannot schedule an instant meeting for another user. 
-            * Users in "{0}" have been blocked from joining meetings and
-            webinars. To unblock them, go to the "Settings" page in the Zoom web
-            portal and update the "Block users in specific domains from joining
-            meetings and webinars" setting. 
-
-            * Prescheduling is only available for scheduled meetings (type 2)
-            and recurring meetings with no fixed time (type 3). 
-
-            * You cannot schedule a meeting for "{0}". 
-
-            * You cannot update or delete meetings that have started using this
-            method. 
-
-            * Unable to schedule for a user outside of your account for a
-            meeting with continuous chat. <br>
-
-            **Error Code:** `3161` <br>
-             Meeting hosting and scheduling capabilities are not allowed for your user account. <br>
+             **Error Code:** `3161` <br>
+             Your user account is not allowed meeting hosting and scheduling capabilities. <br>
             **Error Code:** `300` <br>
-             * The value that you entered for the schedule_for field is invalid. Enter a valid value and try again. <br> 
-            * Invalid enforce_login_domains, separate multiple domains by
-            semicolon. <br>
+             The value that you entered in the `schedule_for` field is invalid. Enter a valid value and try again. <br>
+            **Error Code:** `300` <br>
+             Invalid `enforce_login_domains`. Separate multiple domains with semicolons. <br>
+            **Error Code:** `3000` <br>
+             Cannot access webinar info. <br>
+            **Error Code:** `3000` <br>
+             Instant meetings do not support the `schedule_for` parameter, and you can't schedule an instant meeting for another user. <br>
+            **Error Code:** `3000` <br>
+             Users in '{userId}' have been blocked from joining meetings and webinars. To unblock them, go to the **Settings** page in the Zoom web portal and update **Block users in specific domains from joining meetings and webinars**. <br>
+            **Error Code:** `3000` <br>
+             You cannot schedule a meeting for {userId} <br>
+            **Error Code:** `3000` <br>
+             Prescheduling is only available for scheduled meetings (type 2) and recurring meetings with no fixed time (type 3). <br>
+            **Error Code:** `3000` <br>
+             Unable to schedule for a user outside of your account for a meeting with continuous chat. <br>
         '404':
           description: |
             **HTTP Status Code:** `404` <br>
-             Not Found 
+             Not Found  
 
-             **Error Code:** `1001` <br>
-             User does not exist: {userId}.<br> <br>
-            **Error Code:** `3001` <br>
-             A meeting with this {meetingId} is not found or has expired. <br>
+             **Error Code:** `3001` <br>
+             Meeting does not exist: {meetingId}. <br>
         '429':
           description: |-
             **HTTP Status Code:** `429` <br>
-             Too Many Requests 
+             Too Many Requests  
 
              
       extensions:
@@ -3844,8 +3873,8 @@ paths:
       operationId: Meetings_getJoinTokenLocalRecording
       security:
         - openapi_oauth:
-            - meeting_token:read:admin:local_recording
             - meeting_token:read:local_recording
+            - meeting_token:read:admin:local_recording
           openapi_authorization: []
       description: >-
         Get a meeting's join token to allow for local recording. The join token
@@ -3860,12 +3889,12 @@ paths:
 
 
         **Scopes:**
-        `meeting_token:read:admin:local_recording`,`meeting_token:read:local_recording`
+        `meeting_token:read:local_recording`,`meeting_token:read:admin:local_recording`
 
 
         **[Rate Limit
         Label](https://marketplace.zoom.us/docs/api-reference/rate-limits#rate-limits):**
-        `Light`
+        `LIGHT`
       parameters:
         - description: |-
             The meeting's ID. 
@@ -3878,6 +3907,13 @@ paths:
             type: integer
             format: int64
             example: 85746065
+        - description: Whether to bypass the waiting room.
+          name: bypass_waiting_room
+          in: query
+          required: false
+          schema:
+            type: boolean
+            example: true
       responses:
         '200':
           description: |-
@@ -3890,52 +3926,38 @@ paths:
                 $ref: >-
                   #/components/schemas/MeetingsGetJoinTokenLocalRecordingResponse
         '400':
-          description: >+
+          description: |
             **HTTP Status Code:** `400` <br>
-             Bad Request
+             Bad Request  
 
-            **Error Code:** `300` <br>
-
-            Invalid meeting ID.
-
-
+             **Error Code:** `300` <br>
+             Invalid meeting ID. <br>
             **Error Code:** `3000` <br>
-
-            Cannot access Webinar information.
-
-
+             Cannot access Webinar information. <br>
             **Error Code:** `124` <br>
-
-            This API only supports OAuth2 authorization.
-
-
+             This API only supports OAuth2 authorization. <br>
             **Error Code:** `3000` <br>
-
-            Not allowed to start local recording. To use this feature, enable
-            the "Local Recording" setting in the "Settings" page of the Zoom web
-            portal.
-
-
+             Not allowed to start local recording. To use this feature, enable the "Local Recording" setting in the "Settings" page of the Zoom web portal. <br>
             **Error Code:** `3161` <br>
-
-            Meeting hosting and scheduling capabilities are not allowed for your
-            user account.
-
+             Meeting hosting and scheduling capabilities are not allowed for your user account. <br>
         '404':
-          description: |+
+          description: |
             **HTTP Status Code:** `404` <br>
-             Not Found
+             Not Found  
 
-            **Error Code:** `300` <br>
-            Meeting ID does not exist.
-
+             **Error Code:** `300` <br>
+             Meeting ID does not exist. <br>
             **Error Code:** `3001` <br>
-            Meeting does not exist: {meetingId}
-
+             Meeting does not exist: {meetingId}. <br>
       extensions:
+        x-permissions:
+          - User:Read
         x-macro-scopes:
-          - meeting_token:read:admin:local_recording
           - meeting_token:read:local_recording
+          - meeting_token:read:admin:local_recording
+        x-granular-scopes:
+          - meeting:read:local_recording_token
+          - meeting:read:local_recording_token:admin
   /meetings/{meetingId}/livestream:
     get:
       tags:
@@ -6497,7 +6519,7 @@ paths:
             type: string
             format: date
             example: '2023-01-01'
-        - description: The end data.
+        - description: The end date.
           name: to
           in: query
           required: false
@@ -6505,6 +6527,16 @@ paths:
             type: string
             format: date
             example: '2023-01-16'
+        - description: >-
+            The timezone to assign to the `from` and `to` value. For a list of
+            supported timezones and their formats, see our [timezone
+            list](https://developers.zoom.us/docs/api/rest/other-references/abbreviation-lists/#timezones).
+          name: timezone
+          in: query
+          required: false
+          schema:
+            type: string
+            example: America/Los_Angeles
       responses:
         '200':
           description: |-
@@ -6530,9 +6562,14 @@ paths:
              **Error Code:** `1001` <br>
              User {userId} not exist or not belong to this account.<br> <br>
       extensions:
+        x-permissions:
+          - User:Read
         x-macro-scopes:
           - meeting:read
           - meeting:read:admin
+        x-granular-scopes:
+          - meeting:read:list_meetings
+          - meeting:read:list_meetings:admin
     post:
       tags:
         - Meetings
@@ -6604,36 +6641,33 @@ paths:
               schema:
                 $ref: '#/components/schemas/MeetingsCreateMeetingResponse'
         '400':
-          description: >
+          description: |
             **HTTP Status Code:** `400` <br>
-             Bad Request 
+             Bad Request  
 
-             **Error Code:** `3000` <br>
-             * Instant meetings do not support the schedule_for parameter; you cannot schedule an instant meeting for another user.<br>
-            * Users in '{0}' have been blocked from joining meetings and
-            webinars. To unblock them, go to the Settings page in the Zoom web
-            portal and update 'Block users in specific domains from joining
-            meetings and webinars'.<br> 
-
-            * You cannot schedule a meeting for {0}. <br>
-
-            **Error Code:** `3161` <br>
-             Meeting hosting and scheduling capabilities are not allowed for your user account. <br>
+             **Error Code:** `3161` <br>
+             Your user account is not allowed meeting hosting and scheduling capabilities. <br>
+            **Error Code:** `3000` <br>
+             Instant meetings do not support the `schedule_for` parameter, and you can't schedule an instant meeting for another user. <br>
+            **Error Code:** `3000` <br>
+             Users in '{userId}' have been blocked from joining meetings and webinars. To unblock them, go to the **Settings** page in the Zoom web portal and update **Block users in specific domains from joining meetings and webinars**. <br>
+            **Error Code:** `3000` <br>
+             You cannot schedule a meeting for {userId} <br>
             **Error Code:** `300` <br>
-             * The value that you entered for the schedule_for field is invalid. Enter a valid value and try again. <br> 
-            * Invalid enforce_login_domains, separate multiple domains by
-            semicolon. <br>
+             The value that you entered in the `schedule_for` field is invalid. Enter a valid value and try again. <br>
+            **Error Code:** `300` <br>
+             Invalid `enforce_login_domains`. Separate multiple domains with semicolons. <br>
         '404':
           description: |
             **HTTP Status Code:** `404` <br>
-             Not Found 
+             Not Found  
 
              **Error Code:** `1001` <br>
-             User {userId} not exist or not belong to this account. <br>
+             User does not exist: {userId}. <br>
         '429':
           description: |-
             **HTTP Status Code:** `429` <br>
-             Too Many Requests 
+             Too Many Requests  
 
              
       extensions:
@@ -6645,6 +6679,67 @@ paths:
         x-granular-scopes:
           - meeting:write:meeting
           - meeting:write:meeting:admin
+  /users/{userId}/upcoming_meetings:
+    get:
+      tags:
+        - Meetings
+      summary: List upcoming meetings
+      operationId: Meetings_listUpcomingMeetings
+      security:
+        - openapi_oauth:
+            - meeting:read
+            - meeting:read:admin
+          openapi_authorization: []
+      description: >-
+        List a Zoom user's upcoming meetings. For user-level apps, pass [the
+        `me`
+        value](https://developers.zoom.us/docs/api/rest/using-zoom-apis/#the-me-keyword)
+        instead of the `userId` parameter.
+
+
+        **Note**
+
+        * This API includes the meetings that Zoom users schedule and the
+        meetings they are invited to join.
+
+        * This API **only** includes upcoming meetings within the next 24 hours.
+
+
+        **Scopes:** `meeting:read`,`meeting:read:admin`
+
+
+        **[Rate Limit
+        Label](https://marketplace.zoom.us/docs/api-reference/rate-limits#rate-limits):**
+        `MEDIUM`
+      parameters:
+        - description: >-
+            The user's user ID or email address. For user-level apps, pass [the
+            `me`
+            value](https://developers.zoom.us/docs/api/rest/using-zoom-apis/#the-me-keyword).
+          name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 30R7kT7bTIKSNUFEuH_Qlg
+      responses:
+        '200':
+          description: >-
+            **HTTP Status Code:** `200` List of upcoming meeting objects
+            returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MeetingsListUpcomingMeetingsResponse'
+      extensions:
+        x-permissions:
+          - User:Read
+        x-macro-scopes:
+          - meeting:read
+          - meeting:read:admin
+        x-granular-scopes:
+          - meeting:read:list_upcoming_meetings
+          - meeting:read:list_upcoming_meetings:admin
   /users/{userId}/pac:
     get:
       tags:
@@ -7378,18 +7473,15 @@ paths:
             - report:read:admin
           openapi_authorization: []
       description: >-
-        The question &amp; answer (Q&amp;A) feature for meetings lets attendees
-        ask questions during the meeting and lets the other attendees answer
-        their questions.
-
-
-        Use this API to retrieve a report on question and answers from past
-        meetings.   
+        Retrieve a report on questions asked and answered by participants from
+        past meetings.   
            
+
+
          
         **Prerequisites:**  
          
-        * Pro or a higher plan.
+        * Pro plan or higher.
 
 
         **Scopes:** `report:read:admin`
@@ -7397,7 +7489,7 @@ paths:
 
         **[Rate Limit
         Label](https://marketplace.zoom.us/docs/api-reference/rate-limits#rate-limits):**
-        `Heavy`
+        `HEAVY`
       parameters:
         - description: >-
             The meeting's ID or universally unique ID (UUID). 
@@ -7406,18 +7498,13 @@ paths:
             the latest meeting instance. 
 
             * If you provide a meeting UUID that begins with a `/` character or
-            contains the `//` characters, you **must** [double
-            encode](https://marketplace.zoom.us/docs/api-reference/using-zoom-apis/#meeting-id-and-uuid)
-            the meeting UUID before making an API request.
+            contains the `//` characters, you **must** double-encode the meeting
+            UUID before making an API request.
           name: meetingId
           in: path
           required: true
           schema:
-            oneOf:
-              - type: integer
-                example: 5638296721
-              - type: string
-                example: 4444AAAiAAAAAiAiAiiAii==
+            type: string
       responses:
         '200':
           description: |-
@@ -7431,27 +7518,106 @@ paths:
               schema:
                 $ref: '#/components/schemas/ReportsGetMeetingQaReportResponse'
         '400':
-          description: |+
+          description: |
             **HTTP Status Code:** `400` <br>
-             Bad Request
+             Bad Request  
 
-            **Error Code:** `200` <br>
-            No permission.<br>
-
+             **Error Code:** `200` <br>
+             No permission.<br> <br>
         '404':
-          description: |+
+          description: |
             **HTTP Status Code:** `404` <br>
-             Not Found
+             Not Found  
 
-            **Error Code:** `1001` <br>
-            User does not exist: {userId}.<br>
-
+             **Error Code:** `1001` <br>
+             User does not exist: {userId}.<br> <br>
             **Error Code:** `3001` <br>
-            Meeting {meetingId} not found or has expired.<br>
-
+             Meeting {meetingId} not found or has expired.<br> <br>
       extensions:
+        x-permissions:
+          - UsageReport:Read
         x-macro-scopes:
           - report:read:admin
+        x-granular-scopes:
+          - report:read:meeting_qna:admin
+  /report/meetings/{meetingId}/survey:
+    get:
+      tags:
+        - Reports
+      summary: Get meeting survey report
+      operationId: Reports_getMeetingSurveyReport
+      security:
+        - openapi_oauth:
+            - report:read:admin
+          openapi_authorization: []
+      description: >-
+        Retrieve a report on past [meeting
+        survey](https://support.zoom.com/hc/en/article?id=zm_kb&sysparm_article=KB0057559).  
+           
+         
+        **Prerequisites:**  
+         
+        * Pro or a higher plan.
+
+
+        **Scopes:** `report:read:admin`
+
+
+        **[Rate Limit
+        Label](https://marketplace.zoom.us/docs/api-reference/rate-limits#rate-limits):**
+        `HEAVY`
+      parameters:
+        - description: >-
+            The meeting's ID or universally unique ID (UUID). 
+
+            * If you provide a meeting ID, the API will return a response for
+            the latest meeting instance. 
+
+            * If you provide a meeting UUID that begins with a `/` character or
+            contains the `//` characters, you **must** double-encode the meeting
+            UUID before making an API request.
+          name: meetingId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: |-
+            **HTTP Status Code:** `200`  
+             
+            Meeting survey report returned.   
+             
+            Only available for Paid or ZMP account: {accountId}.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportsGetMeetingSurveyReportResponse'
+        '400':
+          description: |
+            **HTTP Status Code:** `400` <br>
+             Bad Request  
+
+             **Error Code:** `1010` <br>
+             User does not belong to this account:{accountId}.<br> <br>
+            **Error Code:** `12702` <br>
+             Can not access a webinar a year ago.<br> <br>
+            **Error Code:** `200` <br>
+             No permission.<br> <br>
+        '404':
+          description: |
+            **HTTP Status Code:** `404` <br>
+             Not Found  
+
+             **Error Code:** `3001` <br>
+             Webinar  {webinarId} not found or has expired.<br> <br>
+      extensions:
+        x-permissions:
+          - UsageReport:Read
+        x-macro-scopes:
+          - report:read:admin
+        x-granular-scopes:
+          - report:read:meeting_survey:admin
   /report/operationlogs:
     get:
       tags:
@@ -8428,13 +8594,86 @@ paths:
             - report:read:admin
           openapi_authorization: []
       description: >-
-        The Question &amp; Answer (Q&amp;A) feature for webinars allows
-        attendees to ask questions during the webinar and for the panelists,
-        co-hosts and host to answer their questions.
+        Retrieve a report on questions asked by participants and answered by
+        panelists, co-hosts and hosts from past webinars.   
 
 
-        Use this API to retrieve a report on question and answers from past
-        webinars.   
+           
+         
+        **Prerequisites:**  
+         
+        * Pro or a higher plan with the Webinar add-on enabled.
+
+
+        **Scopes:** `report:read:admin`
+
+
+        **[Rate Limit
+        Label](https://marketplace.zoom.us/docs/api-reference/rate-limits#rate-limits):**
+        `HEAVY`
+      parameters:
+        - description: >-
+            The webinar's ID or universally unique ID (UUID). 
+
+            * If you provide a webinar ID, the API will return a response for
+            the latest webinar instance. 
+
+            * If you provide a webinar UUID that begins with a `/` character or
+            contains the `//` characters, you **must** double-encode the webinar
+            UUID before making an API request.
+          name: webinarId
+          in: path
+          required: true
+          schema:
+            type: string
+            example: ABCDE12345
+      responses:
+        '200':
+          description: >-
+            **HTTP Status Code:** `200`   Webinar Q&A report returned. Only
+            available for Paid or ZMP account: {accountId}.   A report can't be
+            generated for this account because this account is not subscribed to
+            a webinar plan.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportsGetWebinarQaReportResponse'
+        '400':
+          description: |
+            **HTTP Status Code:** `400` <br>
+             Bad Request  
+
+             **Error Code:** `200` <br>
+             No permission.<br> <br>
+        '404':
+          description: |
+            **HTTP Status Code:** `404` <br>
+             Not Found  
+
+             **Error Code:** `1001` <br>
+             User does not exist: {userId}.<br> <br>
+            **Error Code:** `3001` <br>
+             Webinar  {webinarId} not found or has expired.<br> <br>
+      extensions:
+        x-permissions:
+          - UsageReport:Read
+        x-macro-scopes:
+          - report:read:admin
+        x-granular-scopes:
+          - report:read:webinar_qna:admin
+  /report/webinars/{webinarId}/survey:
+    get:
+      tags:
+        - Reports
+      summary: Get webinar survey report
+      operationId: Reports_getWebinarSurveyReport
+      security:
+        - openapi_oauth:
+            - report:read:admin
+          openapi_authorization: []
+      description: >-
+        Retrieve a report on past [webinar
+        survey](https://support.zoom.com/hc/en/article?id=zm_kb&sysparm_article=KB0057559).  
            
          
         **Prerequisites:**  
@@ -8447,18 +8686,17 @@ paths:
 
         **[Rate Limit
         Label](https://marketplace.zoom.us/docs/api-reference/rate-limits#rate-limits):**
-        `Heavy`
+        `HEAVY`
       parameters:
         - description: >-
             The webinar's ID or universally unique ID (UUID). 
 
-            * If you provide a webinar ID, the API will return a response for
-            the latest webinar instance. 
+            * If you provide a webinar ID, the API returns a response for the
+            latest webinar instance. 
 
             * If you provide a webinar UUID that begins with a `/` character or
-            contains the `//` characters, you **must** [double
-            encode](https://marketplace.zoom.us/docs/api-reference/using-zoom-apis/#meeting-id-and-uuid)
-            the webinar UUID before making an API request.
+            contains the `//` characters, you **must** double-encode the webinar
+            UUID before making an API request.
           name: webinarId
           in: path
           required: true
@@ -8467,41 +8705,43 @@ paths:
             example: ABCDE12345
       responses:
         '200':
-          description: >-
+          description: |-
             **HTTP Status Code:** `200`  
              
-            Webinar Q&amp;A report returned.  
+            Webinar survey report returned.  
              
-            This is only available for paid account:{accountId}.  
+            Missing webinar subscription plan.  
              
-            A report cannot be generated for this account because this account
-            has not subscribed to a webinar plan.
+            Only available for Paid or ZMP account: {accountId}.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ReportsGetWebinarQaReportResponse'
+                $ref: '#/components/schemas/ReportsGetWebinarSurveyReportResponse'
         '400':
-          description: |+
+          description: |
             **HTTP Status Code:** `400` <br>
-             Bad Request
+             Bad Request  
 
+             **Error Code:** `1010` <br>
+             User does not belong to this account:{accountId}.<br> <br>
+            **Error Code:** `12702` <br>
+             Can not access a webinar a year ago.<br> <br>
             **Error Code:** `200` <br>
-            No permission.<br>
-
+             No permission.<br> <br>
         '404':
-          description: |+
+          description: |
             **HTTP Status Code:** `404` <br>
-             Not Found
+             Not Found  
 
-            **Error Code:** `1001` <br>
-            User does not exist: {userId}.<br>
-
-            **Error Code:** `3001` <br>
-            Webinar  {webinarId} not found or has expired.<br>
-
+             **Error Code:** `3001` <br>
+             Webinar  {webinarId} not found or has expired.<br> <br>
       extensions:
+        x-permissions:
+          - UsageReport:Read
         x-macro-scopes:
           - report:read:admin
+        x-granular-scopes:
+          - report:read:webinar_survey:admin
   /sip_phones:
     get:
       tags:
@@ -14071,8 +14311,8 @@ components:
             meeting_token:read:admin:live_streaming: meeting_token:read:admin:live_streaming
             meeting_token:read:live_streaming: meeting_token:read:live_streaming
             meeting_token:read:admin:local_archiving: meeting_token:read:admin:local_archiving
-            meeting_token:read:admin:local_recording: meeting_token:read:admin:local_recording
             meeting_token:read:local_recording: meeting_token:read:local_recording
+            meeting_token:read:admin:local_recording: meeting_token:read:admin:local_recording
             meeting_summary:read: meeting_summary:read
             meeting:write:sip_dialing: meeting:write:sip_dialing
             meeting:write:admin:sip_dialing: meeting:write:admin:sip_dialing
@@ -14513,11 +14753,11 @@ components:
       type: object
       properties:
         device_name:
-          description: The name of the device.
+          description: The device's name.
           type: string
           example: My device
         mac_address:
-          description: The mac address of the device.
+          description: The device's mac address.
           type: string
           example: 01-23-45-67-89-AB
         serial_number:
@@ -14533,21 +14773,21 @@ components:
           type: string
           example: StudioX30
         room_id:
-          description: Id of the Zoom Room. Only for Zoom Room device
+          description: The Zoom Room's ID. Only for Zoom Room devices.
           type: string
           example: 72afdc13-a289-40c3-b358-50c8b8de
         user_email:
           description: >-
             User email for assigning the Zoom Phone device. Only for Zoom Phone
-            device
+            devices.
           type: string
           example: test-user@ya.us
         device_type:
           description: |-
-            Device Type:  
-             `0` - Zoom Rooms Computer.  
-             `1` - Zoom Rooms Controller.  
-             `5` - Zoom Phone Appliance.
+            Device type.  
+             `0` - Zoom Rooms computer.  
+             `1` - Zoom Rooms controller.  
+             `5` - Zoom Phone appliance.
           type: integer
           example: 0
           enum:
@@ -14558,6 +14798,73 @@ components:
           description: The name of the tag.
           type: string
           example: personal rooms
+        zdm_group_id:
+          description: The ZDM group ID.
+          type: string
+          example: ff49588c-92c4-4406-99e6-1942d8a61a7b
+        extension_number:
+          description: The extension number.
+          type: string
+          example: '802'
+    DevicesUpgradeZpaOsAppRequest:
+      required:
+        - data
+        - zdm_group_id
+      type: object
+      properties:
+        zdm_group_id:
+          description: The ZDM group ID.
+          type: string
+          example: ff49588c-92c4-4406-99e6-1942d8a61a7b
+        data:
+          oneOf:
+            - title: ''
+              required:
+                - upgrade_type
+              type: object
+              properties:
+                firmware_versions:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      version:
+                        description: The firmware version.
+                        type: string
+                        example: 1.19.552
+                      vendor:
+                        description: The device's manufacturer.
+                        type: string
+                        example: AudioCodes
+                      model:
+                        description: The device's model name. Maximum of 64 characters.
+                        type: string
+                        example: C470HD
+                upgrade_type:
+                  description: Upgrade firmware.
+                  type: string
+                  example: UPGRADE_FIRMWARE
+                  default: UPGRADE_FIRMWARE
+                  enum:
+                    - UPGRADE_FIRMWARE
+            - title: ''
+              required:
+                - upgrade_type
+              type: object
+              properties:
+                app_version:
+                  description: >-
+                    The app version to be upgraded. If upgrade type is `0`, this
+                    field won't work. If upgrade type is `1`, this field will
+                    work.
+                  type: string
+                  example: 5.16.5.3920
+                upgrade_type:
+                  description: Upgrade app.
+                  type: string
+                  example: UPGRADE_APP
+                  enum:
+                    - UPGRADE_APP
     DevicesUpdateDeviceNameRequest:
       required:
         - device_name
@@ -14957,8 +15264,9 @@ components:
             end_times:
               description: >-
                 Select how many times the meeting should recur before it is
-                canceled. The maximum number of recurrences is 60. Cannot be
-                used with `end_date_time`.
+                canceled. If `end_times` is set to 0, it means there is no end
+                time. The maximum number of recurrences is 60. Cannot be used
+                with `end_date_time`.
               maximum: 60
               type: integer
               example: 7
@@ -15761,6 +16069,16 @@ components:
                       - editor
                       - commenter
                       - viewer
+            auto_start_meeting_summary:
+              description: Whether to automatically start meeting summary.
+              type: boolean
+              example: false
+              default: false
+            auto_start_ai_companion_questions:
+              description: Whether to automatically start AI Companion questions.
+              type: boolean
+              example: false
+              default: false
         start_time:
           description: >-
             Meeting start time. When using a format like
@@ -17380,8 +17698,9 @@ components:
             end_times:
               description: >-
                 Select how many times the meeting should recur before it is
-                canceled. The maximum number of recurring is 60. Cannot be used
-                with `end_date_time`.
+                canceled. If `end_times` is set to 0, it means there is no end
+                time. The maximum number of recurring is 60. Cannot be used with
+                `end_date_time`.
               maximum: 60
               type: integer
               example: 7
@@ -18168,6 +18487,16 @@ components:
                       - editor
                       - commenter
                       - viewer
+            auto_start_meeting_summary:
+              description: Whether to automatically start a meeting summary.
+              type: boolean
+              example: false
+              default: false
+            auto_start_ai_companion_questions:
+              description: Whether to automatically start AI Companion questions.
+              type: boolean
+              example: false
+              default: false
         start_time:
           description: >-
             The meeting's start time. This field is only used for scheduled or
@@ -24488,7 +24817,8 @@ components:
             end_times:
               description: >-
                 Select how many times the meeting should recur before it is
-                canceled. The maximum number of recurring is 60. Cannot be used
+                canceled. If `end_times` is set to 0, it means there is no end
+                time. The maximum number of recurrences is 60. Cannot be used
                 with `end_date_time`.
               maximum: 60
               type: integer
@@ -25294,6 +25624,16 @@ components:
                       - editor
                       - commenter
                       - viewer
+            auto_start_meeting_summary:
+              description: Whether to automatically start a meeting summary.
+              type: boolean
+              example: false
+              default: false
+            auto_start_ai_companion_questions:
+              description: Whether to automatically start AI Companion questions.
+              type: boolean
+              example: false
+              default: false
         start_time:
           description: >
             Meeting start time in GMT or UTC. Start time will not be returned if
@@ -27856,7 +28196,7 @@ components:
           type: string
           example: My Meeting Template
     MeetingsListHostScheduledResponse:
-      description: Pagination Object.
+      description: Pagination object.
       type: object
       properties:
         next_page_token:
@@ -27887,7 +28227,7 @@ components:
           type: integer
           example: 1
         meetings:
-          description: List of Meeting objects.
+          description: List of meeting objects.
           type: array
           items:
             type: object
@@ -27895,14 +28235,14 @@ components:
               agenda:
                 description: >-
                   Meeting description. The length of agenda gets truncated to
-                  250 characters when you list all meetings for a user. To view
-                  the complete agenda of a meeting, retrieve details for a
+                  250 characters when you list all of a user's meetings. To view
+                  a meeting's complete agenda, or to retrieve details for a
                   single meeting, use the [**Get a
                   meeting**](https://developers.zoom.us) API.
                 type: string
                 example: My Meeting
               created_at:
-                description: 'Time of creation. '
+                description: Time of creation.
                 type: string
                 format: date-time
                 example: '2022-03-23T05:31:16Z'
@@ -27911,7 +28251,7 @@ components:
                 type: integer
                 example: 60
               host_id:
-                description: ID of the user who is set as the host of the meeting.
+                description: ID of the user who is set as the meeting's host.
                 type: string
                 example: 30R7kT7bTIKSNUFEuH_Qlg
               id:
@@ -27948,7 +28288,7 @@ components:
                 example: My Meeting
               type:
                 description: |-
-                  Meeting Types:  
+                  Meeting types.  
                    `1` - Instant meeting.  
                    `2` - Scheduled meeting.  
                    `3` - Recurring meeting with no fixed time.  
@@ -28119,8 +28459,9 @@ components:
             end_times:
               description: >-
                 Select how many times the meeting should recur before it is
-                canceled. The maximum number of recurring is 60. Cannot be used
-                with `end_date_time`.
+                canceled. If `end_times` is set to 0, it means there is no end
+                time. The maximum number of recurring is 60. Cannot be used with
+                `end_date_time`.
               maximum: 60
               type: integer
               example: 7
@@ -28924,6 +29265,16 @@ components:
                       - editor
                       - commenter
                       - viewer
+            auto_start_meeting_summary:
+              description: Whether to automatically start a meeting summary.
+              type: boolean
+              example: false
+              default: false
+            auto_start_ai_companion_questions:
+              description: Whether to automatically start AI Companion questions.
+              type: boolean
+              example: false
+              default: false
         start_time:
           description: Meeting start date-time in UTC/GMT, such as `2020-03-31T12:02:00Z`.
           type: string
@@ -28994,6 +29345,75 @@ components:
             - 2
             - 3
             - 8
+    MeetingsListUpcomingMeetingsResponse:
+      type: object
+      properties:
+        total_records:
+          description: The total number of all records available across all pages.
+          type: integer
+          example: 1
+        meetings:
+          description: List of upcoming meeting objects.
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                description: >-
+                  The [meeting
+                  ID](https://support.zoom.us/hc/en-us/articles/201362373-What-is-a-Meeting-ID-)
+                  - a unique identifier of the meeting in **long** format,
+                  represented as int64 data type in JSON. Also known as the
+                  meeting number.
+                type: integer
+                format: int64
+                example: 97763643886
+              topic:
+                description: The meeting topic.
+                type: string
+                example: My Meeting
+              type:
+                description: |-
+                  Meeting types.
+                  `1` - Instant meeting.
+                  `2` - Scheduled meeting.
+                  `3` - Recurring meeting with no fixed time.
+                  `8` - Recurring meeting with fixed time.
+                type: integer
+                example: 2
+                extensions:
+                  x-enum-descriptions:
+                    - Instant Meeting
+                    - Scheduled Meeting
+                    - Recurring Meeting with no fixed time
+                    - Recurring Meeting with fixed time
+                enum:
+                  - 1
+                  - 2
+                  - 3
+                  - 8
+              start_time:
+                description: The meeting's start time.
+                type: string
+                format: date-time
+                example: '2022-03-23T06:00:00Z'
+              duration:
+                description: Meeting duration.
+                type: integer
+                example: 60
+              timezone:
+                description: The timezone to format the meeting start time.
+                type: string
+                example: America/Los_Angeles
+              created_at:
+                description: The meeting creation time.
+                type: string
+                format: date-time
+                example: '2022-03-23T05:31:16Z'
+              join_url:
+                description: The URL that participants can use to join a meeting.
+                type: string
+                example: https://example.com/j/11111
     PacListAccountsResponse:
       type: object
       properties:
@@ -29619,8 +30039,8 @@ components:
       properties:
         id:
           description: >-
-            The meeting ID in &quot;**long**&quot; format(represented as int64
-            data type in JSON), also known as the meeting number.
+            The meeting ID in `long` format, represented as int64 data type in
+            JSON. Also known as the meeting number.
           type: integer
           format: int64
           example: 245603123123
@@ -29630,18 +30050,24 @@ components:
           items:
             type: object
             properties:
+              user_id:
+                description: >-
+                  The user ID of the user who asked the question. This value
+                  returns blank for external users.
+                type: string
+                example: hyROrs0TRCSvwmadI7L13w
               email:
                 description: >-
-                  Participant email. If the participant is **not** part of the
+                  Participant's email. If the participant is **not** part of the
                   host's account, this returns an empty string value, with some
                   exceptions. See [Email address display
-                  rules](https://marketplace.zoom.us/docs/api-reference/using-zoom-apis#email-address)
+                  rules](https://developers.zoom.us/docs/api/rest/using-zoom-apis/#email-address-display-rules)
                   for details.
                 type: string
                 example: jchilll@example.com
               name:
                 description: >-
-                  Participant display name.  
+                  Participant's display name.  
                     
 
                   If the anonymous
@@ -29661,12 +30087,82 @@ components:
                       description: >-
                         The given answer. If this is a live answer, the value is
                         'live answered'.
+
+                        **Note:** All answers will be returned together and
+                        separated by semicolons. For more detailed answer
+                        information, please see the "answer_details" field.
                       type: string
                       example: fine
+                      deprecated: true
                     question:
                       description: Asked question.
                       type: string
                       example: how are you
+                    question_id:
+                      description: Question UUID.
+                      type: string
+                      example: zxU4wOwnlxs
+                    create_time:
+                      description: Question create time.
+                      type: string
+                      example: '2022-03-15T07:48:00Z'
+                    answer_details:
+                      description: Array of answers from the user.
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          user_id:
+                            description: >-
+                              The user ID of the user who answered the question.
+                              This value returns blank for external users.
+                            type: string
+                            example: Cn_5wJ9mRNGyYOmpjVufBQ
+                          name:
+                            description: >-
+                              User display name, including the host or
+                              participant.
+                            type: string
+                            example: Paul
+                          email:
+                            description: >-
+                              Participant's email. If the participant is **not**
+                              part of the host's account, this returns an empty
+                              string value, with some exceptions. See [Email
+                              address display
+                              rules](https://developers.zoom.us/docs/api/rest/using-zoom-apis/#email-address-display-rules)
+                              for details.
+                            type: string
+                            example: paul@example.com
+                          content:
+                            description: >-
+                              The answer from host or the comment from
+                              participant.
+                            maxLength: 1024
+                            type: string
+                            example: fine
+                          create_time:
+                            description: Content submit time.
+                            type: string
+                            example: '2022-03-15T07:50:00Z'
+                          type:
+                            description: Type of answer.
+                            type: string
+                            example: default
+                            extensions:
+                              x-enum-description:
+                                - >-
+                                  default - default value, does not represent
+                                  any type
+                                - host_answered - answer from the host
+                                - >-
+                                  participant_commented - comment from the
+                                  participant
+                            default: default
+                            enum:
+                              - default
+                              - host_answered
+                              - participant_commented
         start_time:
           description: Meeting start time.
           type: string
@@ -29676,10 +30172,102 @@ components:
           description: >-
             The meeting UUID. Each meeting instance will generate its own UUID -
             for example, after a meeting ends, a new UUID will be generated for
-            the next instance of the Meeting. Double encode your UUID when using
+            the next instance of the meeting. Double-encode your UUID when using
             it for API calls if the UUID begins with a '/' or contains '//'.
           type: string
           example: 4444AAAiAAAAAiAiAiiAii==
+    ReportsGetMeetingSurveyReportResponse:
+      type: object
+      properties:
+        meeting_id:
+          description: The meeting ID.
+          type: integer
+          format: int64
+          example: 123456
+        meeting_uuid:
+          description: >-
+            The meeting's universally unique identifier (UUID). Each meeting
+            instance generates a meeting UUID.
+          type: string
+          example: 4444AAAiAAAAAiAiAiiAii==
+        start_time:
+          description: The meeting's start time.
+          type: string
+          format: date-time
+          example: '2022-02-01T12:34:12.660Z'
+        survey_id:
+          description: The survey's ID
+          type: string
+          example: 8SFHRTGHAAAiAAAAAiAiAiiAii==
+        survey_name:
+          description: The name of survey
+          type: string
+          example: Survey of this meeting
+        survey_answers:
+          description: Information about the survey questions and answers.
+          type: array
+          items:
+            type: object
+            properties:
+              email:
+                description: The participant's email address.
+                type: string
+                format: email
+                example: jchill@example.com
+              name:
+                description: >-
+                  The participant's display name. **Allow participants to answer
+                  questions anonymously** setting is enabled for a
+                  [survey](https://support.zoom.com/hc/en/article?id=zm_kb&sysparm_article=KB0057559),
+                  the participant's survey information is kept anonymous and the
+                  `name` field will return the &quot;Anonymous Attendee&quot;
+                  value.
+                type: string
+                example: Jill Chill
+              first_name:
+                description: >-
+                  The participant's first name. If the **Allow participants to
+                  answer questions anonymously** setting is enabled for a
+                  [survey](https://support.zoom.com/hc/en/article?id=zm_kb&sysparm_article=KB0057559),
+                  the participant's survey information is kept anonymous and the
+                  `first_name` field will return the &quot;Anonymous
+                  Attendee&quot; value.
+                type: string
+                example: Jill
+              last_name:
+                description: >-
+                  The participant's last name. If the **Allow participants to
+                  answer questions anonymously** setting is enabled for a
+                  [survey](https://support.zoom.com/hc/en/article?id=zm_kb&sysparm_article=KB0057559),
+                  the participant's survey information is kept anonymous and the
+                  `last_name` field will return the &quot;Anonymous
+                  Attendee&quot; value.
+                type: string
+                example: Chill
+              answer_details:
+                description: Information about the user's questions and answers.
+                type: array
+                items:
+                  type: object
+                  properties:
+                    question:
+                      description: The survey question.
+                      type: string
+                      example: How are you?
+                    question_id:
+                      description: The question's ID
+                      type: string
+                      example: 798fGJEWrA
+                    answer:
+                      description: The user's given answer.
+                      type: string
+                      example: I am wonderful.
+                    date_time:
+                      description: >-
+                        The date and time at which the user answered the survey
+                        question.
+                      type: string
+                      example: '2022-02-01T12:37:12.660Z'
     ReportsGetOperationLogsReportResponse:
       description: Pagination object.
       type: object
@@ -30579,8 +31167,8 @@ components:
       properties:
         id:
           description: >-
-            Webinar ID in &quot;**long**&quot; format(represented as int64 data
-            type in JSON), also known as the webinar number.
+            Webinar ID in `long` format, represented as int64 data type in JSON.
+            Also known as the webinar number.
           type: integer
           format: int64
           example: 245603123123
@@ -30590,18 +31178,24 @@ components:
           items:
             type: object
             properties:
+              user_id:
+                description: >-
+                  The user ID of the user who asked the question. This value
+                  returns blank for external users.
+                type: string
+                example: hyROrs0TRCSvwmadI7L13w
               email:
                 description: >-
-                  Participant email. If the participant is **not** part of the
+                  Participant's email. If the participant is **not** part of the
                   host's account, this returns an empty string value, with some
                   exceptions. See [Email address display
-                  rules](https://marketplace.zoom.us/docs/api-reference/using-zoom-apis#email-address)
+                  rules](https://developers.zoom.us/docs/api/rest/using-zoom-apis/#email-address-display-rules)
                   for details.
                 type: string
                 example: jchilll@example.com
               name:
                 description: >-
-                  Participant display name.  
+                  Participant's display name.  
                     
 
                   If anonymous
@@ -30612,21 +31206,91 @@ components:
                 type: string
                 example: Jill Chill
               question_details:
-                description: Array of questions from user.
+                description: Array of questions from the user.
                 type: array
                 items:
                   type: object
                   properties:
                     answer:
                       description: >-
-                        Given answer. The value will be 'live answered' if this
-                        is a live answer.
+                        The given answer. If this is a live answer, the value is
+                        'live answered'.
+
+                        **Note:** All answers will be returned together and
+                        separated by semicolons. For more detailed answer
+                        information, please see the "answer_details" field.
                       type: string
                       example: fine
+                      deprecated: true
                     question:
                       description: Asked question.
                       type: string
                       example: how are you
+                    question_id:
+                      description: Question UUID.
+                      type: string
+                      example: zxU4wOwnlxs
+                    create_time:
+                      description: Question creation time.
+                      type: string
+                      example: '2022-03-15T07:48:00Z'
+                    answer_details:
+                      description: Array of answers from user.
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          user_id:
+                            description: >-
+                              The user ID of the user who answered the question.
+                              This value returns blank for external users.
+                            type: string
+                            example: Cn_5wJ9mRNGyYOmpjVufBQ
+                          name:
+                            description: >-
+                              User display name, including the host or
+                              participant. 
+                            type: string
+                            example: Paul
+                          email:
+                            description: >-
+                              Participant's email. If the participant is **not**
+                              part of the host's account, this returns an empty
+                              string value, with some exceptions. See [Email
+                              address display
+                              rules](https://developers.zoom.us/docs/api/rest/using-zoom-apis/#email-address-display-rules)
+                              for details.
+                            type: string
+                            example: paul@example.com
+                          content:
+                            description: >-
+                              The answer from the host or the comment from a
+                              participant.
+                            maxLength: 1024
+                            type: string
+                            example: fine
+                          create_time:
+                            description: Content submission time.
+                            type: string
+                            example: '2022-03-15T07:50:00Z'
+                          type:
+                            description: Type of answer.
+                            type: string
+                            example: default
+                            extensions:
+                              x-enum-description:
+                                - >-
+                                  default - default value, does not represent
+                                  any type
+                                - host_answered - answer from the host
+                                - >-
+                                  participant_commented - comment from the
+                                  participant
+                            default: default
+                            enum:
+                              - default
+                              - host_answered
+                              - participant_commented
         start_time:
           description: Webinar start time.
           type: string
@@ -30634,14 +31298,104 @@ components:
           example: '2022-03-15T07:40:46Z'
         uuid:
           description: >-
-            Webinar UUID. Each Webinar instance will generate its own UUID(i.e.,
-            after a Webinar ends, a new UUID will be generated for the next
-            instance of the Webinar). [Double
-            encode](https://marketplace.zoom.us/docs/api-reference/using-zoom-apis/#meeting-id-and-uuid)
-            your UUID when using it for API calls if the UUID begins with a '/'
-            or contains '//' in it.
+            Webinar UUID. Each webinar instance will generate its own UUID -
+            after a webinar ends, a new UUID will be generated for the next
+            instance of the webinar. Double-encode your UUID when using it for
+            API calls if the UUID begins with a '/' or contains '//' in it.
           type: string
           example: 4444AAAiAAAAAiAiAiiAii==
+    ReportsGetWebinarSurveyReportResponse:
+      type: object
+      properties:
+        webinar_id:
+          description: The webinar ID.
+          type: integer
+          format: int64
+          example: 123456
+        webinar_uuid:
+          description: >-
+            The webinar's universally unique identifier (UUID). Each webinar
+            instance generates a webinar UUID.
+          type: string
+          example: 4444AAAiAAAAAiAiAiiAii==
+        start_time:
+          description: The webinar's start time.
+          type: string
+          format: date-time
+          example: '2022-02-01T12:34:12.660Z'
+        survey_id:
+          description: The survey's ID
+          type: string
+          example: 8SFHRTGHAAAiAAAAAiAiAiiAii==
+        survey_name:
+          description: The name of survey
+          type: string
+          example: Survey of this meeting
+        survey_answers:
+          description: Information about the survey questions and answers.
+          type: array
+          items:
+            type: object
+            properties:
+              email:
+                description: The participant's email address.
+                type: string
+                format: email
+                example: jchill@example.com
+              name:
+                description: >-
+                  The participant's display name. **Allow participants to answer
+                  questions anonymously** setting is enabled for a
+                  [survey](https://support.zoom.com/hc/en/article?id=zm_kb&sysparm_article=KB0057559),
+                  the participant's survey information is kept anonymous and the
+                  `name` field will return the &quot;Anonymous Attendee&quot;
+                  value.
+                type: string
+                example: Jill Chill
+              first_name:
+                description: >-
+                  The participant's first name. If the **Allow participants to
+                  answer questions anonymously** setting is enabled for a
+                  [survey](https://support.zoom.com/hc/en/article?id=zm_kb&sysparm_article=KB0057559),
+                  the participant's survey information is kept anonymous and the
+                  `first_name` field will return the &quot;Anonymous
+                  Attendee&quot; value.
+                type: string
+                example: Jill
+              last_name:
+                description: >-
+                  The participant's last name. If the **Allow participants to
+                  answer questions anonymously** setting is enabled for a
+                  [survey](https://support.zoom.com/hc/en/article?id=zm_kb&sysparm_article=KB0057559),
+                  the participant's survey information is kept anonymous and the
+                  `last_name` field will return the &quot;Anonymous
+                  Attendee&quot; value.
+                type: string
+                example: Chill
+              answer_details:
+                description: Information about the user's questions and answers.
+                type: array
+                items:
+                  type: object
+                  properties:
+                    question:
+                      description: The survey question.
+                      type: string
+                      example: How are you?
+                    question_id:
+                      description: The question's ID
+                      type: string
+                      example: 798fGJEWrA
+                    answer:
+                      description: The user's given answer.
+                      type: string
+                      example: I am wonderful.
+                    date_time:
+                      description: >-
+                        The date and time at which the user answered the survey
+                        question.
+                      type: string
+                      example: '2022-02-01T12:37:12.660Z'
     SipPhoneListResponse:
       type: object
       properties:
