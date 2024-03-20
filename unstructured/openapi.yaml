@@ -1,0 +1,263 @@
+openapi: 3.0.3
+info:
+  summary: Partition documents with the Unstructured library
+  title: Unstructured Pipeline API
+  description: >-
+    At Unstructured, we're on a mission to give organizations access to all of
+    their data. We know the world runs on documents—from research reports and
+    memos, to quarterly filings and plans of action, documents are the unit of
+    information that companies depend on. And yet, 80% of this information is
+    trapped in inaccessible formats, and businesses have long struggled to
+    unlock this data, leading to information silos, inefficient decision-making,
+    and repetitive work. Until now.
+
+
+    Unstructured captures this unstructured data wherever it lives and
+    transforms it into AI-friendly JSON files for companies who are eager to
+    fold AI into their business.
+  version: 0.0.1
+servers:
+  - description: Hosted API
+    url: https://api.unstructured.io
+    x-speakeasy-server-id: prod
+  - description: Development server
+    url: http://localhost:8000
+    x-speakeasy-server-id: local
+tags:
+  - name: general
+paths:
+  /general/v0/general:
+    post:
+      tags:
+        - general
+      summary: Pipeline 1
+      operationId: General_createPipeline
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/partition_parameters'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Elements'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      x-speakeasy-name-override: partition
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      name: unstructured-api-key
+      in: header
+      x-speakeasy-example: YOUR_API_KEY
+  schemas:
+    Elements:
+      type: array
+      items:
+        Element:
+          type: object
+          properties:
+            type: {}
+            element_id: {}
+            metadata: {}
+            text: {}
+    partition_parameters:
+      title: Partition Parameters
+      properties:
+        files:
+          description: The file to extract
+          type: string
+          format: binary
+          required: 'true'
+          example:
+            summary: File to be partitioned
+            externalValue: >-
+              https://github.com/Unstructured-IO/unstructured/blob/98d3541909f64290b5efb65a226fc3ee8a7cc5ee/example-docs/layout-parser-paper.pdf
+        strategy:
+          title: Strategy
+          description: >-
+            The strategy to use for partitioning PDF/image. Options are fast,
+            hi_res, auto. Default: auto
+          type: string
+          example: hi_res
+        gz_uncompressed_content_type:
+          title: Uncompressed Content Type
+          description: If file is gzipped, use this content type after unzipping
+          type: string
+          example: application/pdf
+        output_format:
+          title: Output Format
+          description: >-
+            The format of the response. Supported formats are application/json
+            and text/csv. Default: application/json.
+          type: string
+          example: application/json
+        coordinates:
+          title: Coordinates
+          description: 'If true, return coordinates for each element. Default: false'
+          type: boolean
+        encoding:
+          title: Encoding
+          description: 'The encoding method used to decode the text input. Default: utf-8'
+          type: string
+          example: utf-8
+        hi_res_model_name:
+          title: Hi Res Model Name
+          description: The name of the inference model used when strategy is hi_res
+          type: string
+          example: yolox
+        include_page_breaks:
+          title: Include Page Breaks
+          description: >-
+            If True, the output will include page breaks if the filetype
+            supports it. Default: false
+          type: boolean
+        languages:
+          title: OCR Languages
+          description: >-
+            The languages present in the document, for use in partitioning
+            and/or OCR
+          items:
+            type: string
+            example: eng
+          type: array
+          default: []
+          example: '[eng]'
+        pdf_infer_table_structure:
+          title: Pdf Infer Table Structure
+          description: >-
+            If True and strategy=hi_res, any Table Elements extracted from a PDF
+            will include an additional metadata field, 'text_as_html', where the
+            value (string) is a just a transformation of the data into an HTML
+            <table>.
+          type: boolean
+        skip_infer_table_types:
+          title: Skip Infer Table Types
+          description: >-
+            The document types that you want to skip table extraction with.
+            Default: ['pdf', 'jpg', 'png']
+          items:
+            type: string
+            example: pdf
+          type: array
+        xml_keep_tags:
+          title: Xml Keep Tags
+          description: >-
+            If True, will retain the XML tags in the output. Otherwise it will
+            simply extract the text from within the tags. Only applies to
+            partition_xml.
+          type: boolean
+        chunking_strategy:
+          title: Chunking Strategy
+          description: >-
+            Use one of the supported strategies to chunk the returned elements.
+            Currently supports: by_title
+          type: string
+          example: by_title
+        multipage_sections:
+          title: Multipage Sections
+          description: >-
+            If chunking strategy is set, determines if sections can span
+            multiple sections. Default: true
+          type: boolean
+        combine_under_n_chars:
+          title: Combine Under N Chars
+          description: >-
+            If chunking strategy is set, combine elements until a section
+            reaches a length of n chars. Default: 500
+          type: integer
+          example: 500
+        new_after_n_chars:
+          title: New after n chars
+          description: >-
+            If chunking strategy is set, cut off new sections after reaching a
+            length of n chars (soft max). Default: 1500
+          type: integer
+          example: 1500
+        max_characters:
+          title: Max Characters
+          description: >-
+            If chunking strategy is set, cut off new sections after reaching a
+            length of n chars (hard max). Default: 1500
+          type: integer
+          example: 1500
+        overlap:
+          title: Intra-chunk overlap
+          description: >-
+            A prefix of this many trailing characters from prior text-split
+            chunk is applied to second and later chunks formed from oversized
+            elements by text-splitting. Default: None
+          type: integer
+          example: 25
+        overlap_all:
+          title: Inter-chunk overlap
+          description: >-
+            When True, overlap is also applied to 'normal' chunks formed by
+            combining whole elements. Use with caution as this can introduce
+            noise into otherwise clean semantic units. Default: None
+          type: boolean
+          example: true
+        extract_image_block_types:
+          title: Image block types to extract
+          description: >-
+            The types of elements to extract, for use in extracting image blocks
+            as base64 encoded data stored in metadata fields
+          items:
+            type: string
+            example: image
+          type: array
+          default: []
+          example:
+            - image
+            - table
+      type: object
+    HTTPValidationError:
+      title: HTTPValidationError
+      properties:
+        detail:
+          title: Detail
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+      type: object
+    ValidationError:
+      title: ValidationError
+      properties:
+        loc:
+          title: Location
+          items:
+            oneOf:
+              - type: string
+              - type: integer
+          type: array
+        msg:
+          title: Message
+          type: string
+        type:
+          title: Error Type
+          type: string
+      type: object
+      required:
+        - loc
+        - msg
+        - type
+security:
+  - ApiKeyAuth: []
+x-speakeasy-retries:
+  strategy: backoff
+  backoff:
+    initialInterval: 500
+    maxInterval: 60000
+    maxElapsedTime: 900000
+    exponent: 1.5
+  statusCodes:
+    - 5xx
+  retryConnectionErrors: true
