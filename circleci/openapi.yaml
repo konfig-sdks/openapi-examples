@@ -26,6 +26,30 @@ tags:
   - name: User
 paths:
   /context:
+    post:
+      tags:
+        - Context
+      summary: Create a new context
+      operationId: Context_createNewContext
+      description: Creates a new context.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContextCreateNewContextRequest'
+      responses:
+        '200':
+          description: The new context
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContextCreateNewContextResponse'
+        default:
+          description: Error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContextCreateNewContextdefaultResponse'
     get:
       tags:
         - Context
@@ -81,57 +105,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ContextListOwnerContextsdefaultResponse'
-    post:
-      tags:
-        - Context
-      summary: Create a new context
-      operationId: Context_createNewContext
-      description: Creates a new context.
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ContextCreateNewContextRequest'
-      responses:
-        '200':
-          description: The new context
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ContextCreateNewContextResponse'
-        default:
-          description: Error response.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ContextCreateNewContextdefaultResponse'
   /context/{context-id}:
-    delete:
-      tags:
-        - Context
-      summary: Delete a context
-      operationId: Context_removeContext
-      parameters:
-        - description: ID of the context (UUID)
-          in: path
-          name: context-id
-          schema:
-            type: string
-            format: uuid
-          required: true
-      responses:
-        '200':
-          description: A confirmation message
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ContextRemoveContextResponse'
-        default:
-          description: Error response.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ContextRemoveContextdefaultResponse'
     get:
       tags:
         - Context
@@ -159,6 +133,32 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ContextGetInformationdefaultResponse'
+    delete:
+      tags:
+        - Context
+      summary: Delete a context
+      operationId: Context_removeContext
+      parameters:
+        - description: ID of the context (UUID)
+          in: path
+          name: context-id
+          schema:
+            type: string
+            format: uuid
+          required: true
+      responses:
+        '200':
+          description: A confirmation message
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContextRemoveContextResponse'
+        default:
+          description: Error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContextRemoveContextdefaultResponse'
   /context/{context-id}/environment-variable:
     get:
       tags:
@@ -198,6 +198,41 @@ paths:
                 $ref: >-
                   #/components/schemas/ContextListEnvironmentVariablesdefaultResponse
   /context/{context-id}/environment-variable/{env-var-name}:
+    delete:
+      tags:
+        - Context
+      summary: Remove an environment variable
+      operationId: Context_removeEnvironmentVariable
+      description: Delete an environment variable from a context.
+      parameters:
+        - description: The name of the environment variable
+          in: path
+          name: env-var-name
+          schema:
+            type: string
+          required: true
+          example: POSTGRES_USER
+        - description: ID of the context (UUID)
+          in: path
+          name: context-id
+          schema:
+            type: string
+            format: uuid
+          required: true
+      responses:
+        '200':
+          description: A confirmation message
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContextRemoveEnvironmentVariableResponse'
+        default:
+          description: Error response.
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/ContextRemoveEnvironmentVariabledefaultResponse
     put:
       tags:
         - Context
@@ -240,41 +275,6 @@ paths:
               schema:
                 $ref: >-
                   #/components/schemas/ContextUpdateEnvironmentVariabledefaultResponse
-    delete:
-      tags:
-        - Context
-      summary: Remove an environment variable
-      operationId: Context_removeEnvironmentVariable
-      description: Delete an environment variable from a context.
-      parameters:
-        - description: The name of the environment variable
-          in: path
-          name: env-var-name
-          schema:
-            type: string
-          required: true
-          example: POSTGRES_USER
-        - description: ID of the context (UUID)
-          in: path
-          name: context-id
-          schema:
-            type: string
-            format: uuid
-          required: true
-      responses:
-        '200':
-          description: A confirmation message
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ContextRemoveEnvironmentVariableResponse'
-        default:
-          description: Error response.
-          content:
-            application/json:
-              schema:
-                $ref: >-
-                  #/components/schemas/ContextRemoveEnvironmentVariabledefaultResponse
   /insights/pages/{project-slug}/summary:
     get:
       tags:
@@ -1339,50 +1339,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/ProjectListCheckoutKeysdefaultResponse'
   /project/{project-slug}/checkout-key/{fingerprint}:
-    delete:
-      tags:
-        - Project
-      summary: Delete a checkout key
-      operationId: Project_deleteCheckoutKeyByFingerprint
-      description: >-
-        Deletes the checkout key via md5 or sha256 fingerprint. sha256 keys
-        should be url-encoded.
-      parameters:
-        - description: >-
-            Project slug in the form `vcs-slug/org-name/repo-name`. The `/`
-            characters may be URL-escaped. For projects that use GitLab or
-            GitHub App, use `circleci` as the `vcs-slug`, replace `org-name`
-            with the organization ID (found in Organization Settings), and
-            replace `repo-name` with the project ID (found in Project Settings).
-          in: path
-          name: project-slug
-          schema:
-            type: string
-          required: true
-          example: gh/CircleCI-Public/api-preview-docs
-          allowReserved: true
-        - description: An SSH key fingerprint.
-          in: path
-          name: fingerprint
-          schema:
-            type: string
-          required: true
-          example: c9:0b:1c:4f:d5:65:56:b9:ad:88:f9:81:2b:37:74:2f
-      responses:
-        '200':
-          description: A confirmation message.
-          content:
-            application/json:
-              schema:
-                $ref: >-
-                  #/components/schemas/ProjectDeleteCheckoutKeyByFingerprintResponse
-        default:
-          description: Error response.
-          content:
-            application/json:
-              schema:
-                $ref: >-
-                  #/components/schemas/ProjectDeleteCheckoutKeyByFingerprintdefaultResponse
     get:
       tags:
         - Project
@@ -1427,7 +1383,87 @@ paths:
               schema:
                 $ref: >-
                   #/components/schemas/ProjectGetCheckoutKeyByFingerprintdefaultResponse
+    delete:
+      tags:
+        - Project
+      summary: Delete a checkout key
+      operationId: Project_deleteCheckoutKeyByFingerprint
+      description: >-
+        Deletes the checkout key via md5 or sha256 fingerprint. sha256 keys
+        should be url-encoded.
+      parameters:
+        - description: >-
+            Project slug in the form `vcs-slug/org-name/repo-name`. The `/`
+            characters may be URL-escaped. For projects that use GitLab or
+            GitHub App, use `circleci` as the `vcs-slug`, replace `org-name`
+            with the organization ID (found in Organization Settings), and
+            replace `repo-name` with the project ID (found in Project Settings).
+          in: path
+          name: project-slug
+          schema:
+            type: string
+          required: true
+          example: gh/CircleCI-Public/api-preview-docs
+          allowReserved: true
+        - description: An SSH key fingerprint.
+          in: path
+          name: fingerprint
+          schema:
+            type: string
+          required: true
+          example: c9:0b:1c:4f:d5:65:56:b9:ad:88:f9:81:2b:37:74:2f
+      responses:
+        '200':
+          description: A confirmation message.
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/ProjectDeleteCheckoutKeyByFingerprintResponse
+        default:
+          description: Error response.
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/ProjectDeleteCheckoutKeyByFingerprintdefaultResponse
   /project/{project-slug}/envvar:
+    get:
+      tags:
+        - Project
+      summary: List all environment variables
+      operationId: Project_listEnvVarValues
+      description: >-
+        Returns four 'x' characters, in addition to the last four ASCII
+        characters of the value, consistent with the display of environment
+        variable values on the CircleCI website.
+      parameters:
+        - description: >-
+            Project slug in the form `vcs-slug/org-name/repo-name`. The `/`
+            characters may be URL-escaped. For projects that use GitLab or
+            GitHub App, use `circleci` as the `vcs-slug`, replace `org-name`
+            with the organization ID (found in Organization Settings), and
+            replace `repo-name` with the project ID (found in Project Settings).
+          in: path
+          name: project-slug
+          schema:
+            type: string
+          required: true
+          example: gh/CircleCI-Public/api-preview-docs
+          allowReserved: true
+      responses:
+        '200':
+          description: A sequence of environment variables.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectListEnvVarValuesResponse'
+        default:
+          description: Error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectListEnvVarValuesdefaultResponse'
     post:
       tags:
         - Project
@@ -1466,42 +1502,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ProjectCreateEnvVardefaultResponse'
-    get:
-      tags:
-        - Project
-      summary: List all environment variables
-      operationId: Project_listEnvVarValues
-      description: >-
-        Returns four 'x' characters, in addition to the last four ASCII
-        characters of the value, consistent with the display of environment
-        variable values on the CircleCI website.
-      parameters:
-        - description: >-
-            Project slug in the form `vcs-slug/org-name/repo-name`. The `/`
-            characters may be URL-escaped. For projects that use GitLab or
-            GitHub App, use `circleci` as the `vcs-slug`, replace `org-name`
-            with the organization ID (found in Organization Settings), and
-            replace `repo-name` with the project ID (found in Project Settings).
-          in: path
-          name: project-slug
-          schema:
-            type: string
-          required: true
-          example: gh/CircleCI-Public/api-preview-docs
-          allowReserved: true
-      responses:
-        '200':
-          description: A sequence of environment variables.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProjectListEnvVarValuesResponse'
-        default:
-          description: Error response.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProjectListEnvVarValuesdefaultResponse'
   /project/{project-slug}/envvar/{name}:
     delete:
       tags:
@@ -2050,33 +2050,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ScheduleUpdateScheduledefaultResponse'
-    get:
-      tags:
-        - Schedule
-      summary: Get a schedule
-      operationId: Schedule_getById
-      description: Get a schedule by id.
-      parameters:
-        - description: The unique ID of the schedule.
-          in: path
-          name: schedule-id
-          schema:
-            type: string
-            format: uuid
-          required: true
-      responses:
-        '200':
-          description: A schedule object.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ScheduleGetByIdResponse'
-        default:
-          description: Error response.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ScheduleGetByIddefaultResponse'
     delete:
       tags:
         - Schedule
@@ -2106,6 +2079,33 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ScheduleRemoveByIddefaultResponse'
+    get:
+      tags:
+        - Schedule
+      summary: Get a schedule
+      operationId: Schedule_getById
+      description: Get a schedule by id.
+      parameters:
+        - description: The unique ID of the schedule.
+          in: path
+          name: schedule-id
+          schema:
+            type: string
+            format: uuid
+          required: true
+      responses:
+        '200':
+          description: A schedule object.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScheduleGetByIdResponse'
+        default:
+          description: Error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScheduleGetByIddefaultResponse'
   /user/{id}:
     get:
       tags:
@@ -2135,6 +2135,31 @@ paths:
               schema:
                 $ref: '#/components/schemas/UserGetUserInformationdefaultResponse'
   /webhook:
+    post:
+      tags:
+        - Webhook
+      summary: Create an outbound webhook
+      operationId: Webhook_createOutboundWebhook
+      description: Creates an outbound webhook.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookCreateOutboundWebhookRequest'
+      responses:
+        '201':
+          description: A webhook
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookCreateOutboundWebhookResponse'
+        default:
+          description: Error response.
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/WebhookCreateOutboundWebhookdefaultResponse
     get:
       tags:
         - Webhook
@@ -2174,31 +2199,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/WebhookListMatchingScopedefaultResponse'
-    post:
-      tags:
-        - Webhook
-      summary: Create an outbound webhook
-      operationId: Webhook_createOutboundWebhook
-      description: Creates an outbound webhook.
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/WebhookCreateOutboundWebhookRequest'
-      responses:
-        '201':
-          description: A webhook
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/WebhookCreateOutboundWebhookResponse'
-        default:
-          description: Error response.
-          content:
-            application/json:
-              schema:
-                $ref: >-
-                  #/components/schemas/WebhookCreateOutboundWebhookdefaultResponse
   /webhook/{webhook-id}:
     delete:
       tags:
@@ -2228,6 +2228,33 @@ paths:
               schema:
                 $ref: >-
                   #/components/schemas/WebhookDeleteOutboundWebhookdefaultResponse
+    get:
+      tags:
+        - Webhook
+      summary: Get a webhook
+      operationId: Webhook_getById
+      description: Get an outbound webhook by id.
+      parameters:
+        - description: ID of the webhook (UUID)
+          in: path
+          name: webhook-id
+          schema:
+            type: string
+            format: uuid
+          required: true
+      responses:
+        '200':
+          description: A webhook
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookGetByIdResponse'
+        default:
+          description: Error response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookGetByIddefaultResponse'
     put:
       tags:
         - Webhook
@@ -2261,33 +2288,6 @@ paths:
               schema:
                 $ref: >-
                   #/components/schemas/WebhookUpdateOutboundWebhookdefaultResponse
-    get:
-      tags:
-        - Webhook
-      summary: Get a webhook
-      operationId: Webhook_getById
-      description: Get an outbound webhook by id.
-      parameters:
-        - description: ID of the webhook (UUID)
-          in: path
-          name: webhook-id
-          schema:
-            type: string
-            format: uuid
-          required: true
-      responses:
-        '200':
-          description: A webhook
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/WebhookGetByIdResponse'
-        default:
-          description: Error response.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/WebhookGetByIddefaultResponse'
   /workflow/{id}:
     get:
       tags:
