@@ -77,7 +77,7 @@ info:
     Earth](https://www.shipengine.com/docs/addresses/validation/countries/),
     including the United States, Canada, Great Britain, Australia, Germany,
     France, Norway, Spain, Sweden, Israel, Italy, and over 160 others.
-  version: 1.1.202403141503
+  version: 1.1.202403202303
   termsOfService: https://www.shipengine.com/terms-of-service/
   x-logo:
     url: https://shipengine.github.io/img/shipengine-logo-square.png
@@ -4454,21 +4454,26 @@ components:
         - carrier_not_connected
         - carrier_not_supported
         - confirmation_not_supported
+        - customs_items_required
         - default_warehouse_cannot_be_deleted
         - field_conflict
         - field_value_required
         - forbidden
         - identifier_conflict
         - identifiers_must_match
+        - incompatible_paired_labels
         - insufficient_funds
         - invalid_address
         - invalid_billing_plan
+        - invalid_charge_event
         - invalid_field_value
         - invalid_identifier
+        - invalid_object
         - invalid_status
         - invalid_string_length
         - label_images_not_supported
         - meter_failure
+        - no_rates_returned
         - order_source_not_active
         - rate_limit_exceeded
         - refresh_not_supported
@@ -4931,7 +4936,11 @@ components:
         original_address:
           $ref: '#/components/schemas/partial_address'
         matched_address:
-          $ref: '#/components/schemas/partial_address'
+          description: The matched address found by the Shipengine API
+          nullable: true
+          readOnly: true
+          allOf:
+            - $ref: '#/components/schemas/partial_address'
         messages:
           description: >-
             The list of messages that were generated during the address
@@ -4944,10 +4953,6 @@ components:
       x-konfig-properties:
         original_address:
           description: The original address that was sent for validation
-        matched_address:
-          description: The matched address found by the Shipengine API
-          nullable: true
-          readOnly: true
     address_validation_status:
       title: address_validation_status
       description: The possible address validation status values
@@ -4980,14 +4985,14 @@ components:
         type:
           $ref: '#/components/schemas/address_validation_message_type'
         detail_code:
-          $ref: '#/components/schemas/address_validation_detail_code'
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/address_validation_detail_code'
       x-konfig-properties:
         code:
           readOnly: true
         type:
           readOnly: true
-        detail_code:
-          nullable: true
     address_validation_code:
       title: address_validation_code
       description: The error codes that can be returned by the address validation API
@@ -5216,7 +5221,11 @@ components:
         created_at:
           $ref: '#/components/schemas/date_time'
         processed_at:
-          $ref: '#/components/schemas/date_time'
+          description: The date and time the batch was processed in ShipEngine
+          nullable: true
+          readOnly: true
+          allOf:
+            - $ref: '#/components/schemas/date_time'
         errors:
           description: The number of errors that occurred while generating the batch
           type: integer
@@ -5284,10 +5293,6 @@ components:
           readOnly: true
         created_at:
           description: The date and time the batch was created in ShipEngine
-          readOnly: true
-        processed_at:
-          description: The date and time the batch was processed in ShipEngine
-          nullable: true
           readOnly: true
         batch_shipments_url:
           description: The batch shipments endpoint
@@ -7361,7 +7366,14 @@ components:
           type: boolean
           readOnly: true
         voided_at:
-          $ref: '#/components/schemas/date_time'
+          description: >
+            The date and time that the label was
+            [voided](https://www.shipengine.com/docs/labels/voiding/), or `null`
+            if the label has not been voided
+          nullable: true
+          readOnly: true
+          allOf:
+            - $ref: '#/components/schemas/date_time'
         label_download_type:
           $ref: '#/components/schemas/label_download_type'
         label_format:
@@ -7378,7 +7390,12 @@ components:
           type: boolean
           readOnly: true
         label_image_id:
-          $ref: '#/components/schemas/image_id'
+          description: >-
+            The label image resource that was used to create a custom label
+            image.
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/image_id'
         carrier_code:
           $ref: '#/components/schemas/carrier_code'
         tracking_status:
@@ -7386,9 +7403,24 @@ components:
         label_download:
           $ref: '#/components/schemas/label_download'
         form_download:
-          $ref: '#/components/schemas/optional_link'
+          description: >
+            The link to download the customs form (a.k.a. commercial invoice)
+            for this shipment, if any.  Forms are in PDF format. This field is
+            null if the shipment does not require a customs form, or if the
+            carrier does not support it.
+          readOnly: true
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/optional_link'
         insurance_claim:
-          $ref: '#/components/schemas/optional_link'
+          description: >
+            The link to submit an insurance claim for the shipment.  This field
+            is null if the shipment is not insured or if the insurance provider
+            does not support online claim submission.
+          readOnly: true
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/optional_link'
         packages:
           description: >
             The label's package(s).
@@ -7496,13 +7528,6 @@ components:
         validate_address:
           writeOnly: true
           default: validate_and_clean
-        voided_at:
-          description: >
-            The date and time that the label was
-            [voided](https://www.shipengine.com/docs/labels/voiding/), or `null`
-            if the label has not been voided
-          nullable: true
-          readOnly: true
         label_download_type:
           writeOnly: true
           default: url
@@ -7522,11 +7547,6 @@ components:
             supported for all label formats, whereas `letter` (8.5" x 11") is
             only supported for `pdf` format.
           default: 4x6
-        label_image_id:
-          description: >-
-            The label image resource that was used to create a custom label
-            image.
-          nullable: true
         carrier_code:
           description: >
             The [shipping
@@ -7540,21 +7560,6 @@ components:
           readOnly: true
         label_download:
           readOnly: true
-        form_download:
-          description: >
-            The link to download the customs form (a.k.a. commercial invoice)
-            for this shipment, if any.  Forms are in PDF format. This field is
-            null if the shipment does not require a customs form, or if the
-            carrier does not support it.
-          readOnly: true
-          nullable: true
-        insurance_claim:
-          description: >
-            The link to submit an insurance claim for the shipment.  This field
-            is null if the shipment is not insured or if the insurance provider
-            does not support online claim submission.
-          readOnly: true
-          nullable: true
     partial_shipment:
       title: partial_shipment
       description: >
@@ -7632,7 +7637,15 @@ components:
         ship_from:
           $ref: '#/components/schemas/shipping_address'
         warehouse_id:
-          $ref: '#/components/schemas/se_id'
+          description: >
+            The
+            [warehouse](https://www.shipengine.com/docs/shipping/ship-from-a-warehouse/)
+            that the shipment is being shipped from.  Either `warehouse_id` or
+            `ship_from` must be specified.
+          nullable: true
+          default: null
+          allOf:
+            - $ref: '#/components/schemas/se_id'
         return_to:
           $ref: '#/components/schemas/shipping_address'
         is_return:
@@ -7645,7 +7658,13 @@ components:
         confirmation:
           $ref: '#/components/schemas/delivery_confirmation'
         customs:
-          $ref: '#/components/schemas/international_shipment_options'
+          description: >
+            Customs information.  This is usually only needed for international
+            shipments.
+          nullable: true
+          default: null
+          allOf:
+            - $ref: '#/components/schemas/international_shipment_options'
         advanced_options:
           $ref: '#/components/schemas/advanced_shipment_options'
         insurance_provider:
@@ -7711,14 +7730,6 @@ components:
             warehouse](https://www.shipengine.com/docs/reference/create-warehouse/). 
             Then you can simply specify the `warehouse_id` rather than the
             complete address each time.
-        warehouse_id:
-          description: >
-            The
-            [warehouse](https://www.shipengine.com/docs/shipping/ship-from-a-warehouse/)
-            that the shipment is being shipped from.  Either `warehouse_id` or
-            `ship_from` must be specified.
-          nullable: true
-          default: null
         return_to:
           description: >
             The return address for this shipment.  Defaults to the `ship_from`
@@ -7728,12 +7739,6 @@ components:
             The type of delivery confirmation that is required for this
             shipment.
           default: none
-        customs:
-          description: >
-            Customs information.  This is usually only needed for international
-            shipments.
-          nullable: true
-          default: null
         advanced_options:
           description: Advanced shipment options.  These are entirely optional.
         insurance_provider:
@@ -8216,7 +8221,16 @@ components:
           minimum: 0
           default: 0
         value:
-          $ref: '#/components/schemas/monetary_value'
+          description: The monetary amount, in the specified currency.
+          type: number
+          format: double
+          minimum: 0
+        value_currency:
+          description: >
+            The currencies that are supported by ShipEngine are the ones that
+            specified by ISO 4217:
+            https://www.iso.org/iso-4217-currency-codes.html
+          type: string
         weight:
           $ref: '#/components/schemas/weight'
         harmonized_tariff_code:
@@ -8228,7 +8242,14 @@ components:
           default: null
           example: 3926.1
         country_of_origin:
-          $ref: '#/components/schemas/country_code'
+          description: >
+            The two-letter [ISO 3166-1 country
+            code](https://en.wikipedia.org/wiki/ISO_3166-1) where this item
+            originated
+          nullable: true
+          default: null
+          allOf:
+            - $ref: '#/components/schemas/country_code'
         unit_of_measure:
           type: string
           nullable: true
@@ -8244,17 +8265,8 @@ components:
         customs_item_id:
           description: A string that uniquely identifies the customs item
           readOnly: true
-        value:
-          description: The declared customs value of each item
         weight:
           description: The item weight
-        country_of_origin:
-          description: >
-            The two-letter [ISO 3166-1 country
-            code](https://en.wikipedia.org/wiki/ISO_3166-1) where this item
-            originated
-          nullable: true
-          default: null
     weight:
       title: weight
       description: The weight of a package
@@ -8297,9 +8309,24 @@ components:
           nullable: true
           default: null
         bill_to_country_code:
-          $ref: '#/components/schemas/country_code'
+          description: >
+            The two-letter [ISO 3166-1 country
+            code](https://en.wikipedia.org/wiki/ISO_3166-1) of the third-party
+            that is responsible for shipping costs.
+          nullable: true
+          default: null
+          allOf:
+            - $ref: '#/components/schemas/country_code'
         bill_to_party:
-          $ref: '#/components/schemas/bill_to_party'
+          description: >
+            Indicates whether to bill shipping costs to the recipient or to a
+            third-party.  When billing to a third-party, the `bill_to_account`,
+            `bill_to_country_code`, and `bill_to_postal_code` fields must also
+            be set.
+          nullable: true
+          default: null
+          allOf:
+            - $ref: '#/components/schemas/bill_to_party'
         bill_to_postal_code:
           description: >
             The postal code of the third-party that is responsible for shipping
@@ -8323,7 +8350,10 @@ components:
           type: boolean
           default: false
         dry_ice_weight:
-          $ref: '#/components/schemas/weight'
+          description: The weight of the dry ice in the shipment
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/weight'
         non_machinable:
           description: >
             Indicates that the package cannot be processed automatically because
@@ -8387,7 +8417,10 @@ components:
           default: null
           maxLength: 100
         origin_type:
-          $ref: '#/components/schemas/origin_type'
+          nullable: true
+          default: null
+          allOf:
+            - $ref: '#/components/schemas/origin_type'
         additional_handling:
           description: >
             Indicate to the carrier that this shipment requires additional
@@ -8422,28 +8455,6 @@ components:
             phone:
               description: Phone number of the contact
               type: string
-      x-konfig-properties:
-        bill_to_country_code:
-          description: >
-            The two-letter [ISO 3166-1 country
-            code](https://en.wikipedia.org/wiki/ISO_3166-1) of the third-party
-            that is responsible for shipping costs.
-          nullable: true
-          default: null
-        bill_to_party:
-          description: >
-            Indicates whether to bill shipping costs to the recipient or to a
-            third-party.  When billing to a third-party, the `bill_to_account`,
-            `bill_to_country_code`, and `bill_to_postal_code` fields must also
-            be set.
-          nullable: true
-          default: null
-        dry_ice_weight:
-          description: The weight of the dry ice in the shipment
-          nullable: true
-        origin_type:
-          nullable: true
-          default: null
     bill_to_party:
       title: bill_to_party
       description: The possible bill to party values
@@ -8688,7 +8699,14 @@ components:
           default: null
           example: 3926.1
         country_of_origin:
-          $ref: '#/components/schemas/country_code'
+          description: >
+            The two-letter [ISO 3166-1 country
+            code](https://en.wikipedia.org/wiki/ISO_3166-1) where this item
+            originated
+          nullable: true
+          default: null
+          allOf:
+            - $ref: '#/components/schemas/country_code'
         unit_of_measure:
           type: string
           nullable: true
@@ -8726,13 +8744,6 @@ components:
           description: The declared value of each item
         weight:
           description: The item weight
-        country_of_origin:
-          description: >
-            The two-letter [ISO 3166-1 country
-            code](https://en.wikipedia.org/wiki/ISO_3166-1) where this item
-            originated
-          nullable: true
-          default: null
     dangerous_goods:
       title: dangerous_goods
       description: |
@@ -9021,7 +9032,12 @@ components:
         display_scheme:
           $ref: '#/components/schemas/display_scheme'
         label_image_id:
-          $ref: '#/components/schemas/image_id'
+          description: >-
+            The label image resource that was used to create a custom label
+            image.
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/image_id'
       x-konfig-properties:
         charge_event:
           description: |
@@ -9045,11 +9061,6 @@ components:
         display_scheme:
           description: The display format that the label should be shown in.
           default: label
-        label_image_id:
-          description: >-
-            The label image resource that was used to create a custom label
-            image.
-          nullable: true
     tracking_information:
       title: tracking_information
       description: A tracking information resource
