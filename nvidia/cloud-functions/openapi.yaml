@@ -1,0 +1,2770 @@
+openapi: 3.0.1
+info:
+  title: Cloud Functions
+  description: >-
+    Since its founding in 1993, NVIDIA (NASDAQ: NVDA) has been a pioneer in
+    accelerated computing. The company's invention of the GPU in 1999 sparked
+    the growth of the PC gaming market, redefined computer graphics, ignited the
+    era of modern AI and is fueling the creation of the metaverse. NVIDIA is now
+    a full-stack computing company with data-center-scale offerings that are
+    reshaping industry.
+  version: 2.87.3
+  termsOfService: https://www.nvidia.com/en-us/legal_info
+  contact:
+    name: NVIDIA
+    url: https://www.nvidia.com/
+  x-konfig-ignore:
+    object-with-no-properties: true
+servers:
+  - description: Generated server url
+    url: https://api.nvcf.nvidia.com
+tags:
+  - description: >-
+      Defines endpoints related to associating authorized accounts with a
+      function for  Account Admins. All the endpoints defined in this API
+      require a bearer token with  'authorize_clients' scope in HTTP
+      Authorization header.
+    name: Authorized Accounts
+  - description: >-
+      Defines Function Management endpoints for Account Admins. All tne
+      endpoints  defined in this API require a bearer token or an api-key with
+      appropriate scope in  the HTTP Authorization header. 
+    name: Function Management
+  - description: >-
+      Defines Asset Management endpoints for Account Admins/Users. All the
+      endpoints  defined in this API require a bearer token in the HTTP
+      Authorization header with  'invoke_function' scope.
+    name: Asset Management
+  - description: >-
+      Defines Function Deployment endpoints for Account Admins. All tne
+      endpoints defined  in this API require a bearer token with
+      'deploy_function' scope in the HTTP  Authorization header.
+    name: Function Deployment
+  - description: >-
+      Defines function pass-through invocation endpoints where the invocation
+      payload  is passed as-is without any wrapper. All tne endpoints defined in
+      this API  require either a bearer token or an api-key with
+      'invoke_function' scope in the  HTTP Authorization header. 
+    name: Function Invocation
+  - description: >-
+      Defines endpoints that use an envelope to wrap the invocation payload for 
+      Account Admins/Users. All the endpoints defined in this API require either
+      a  bearer token or an api-key in the HTTP Authorization header with
+      'invoke_function'  scope. These endpoints have been deprecated. Please use
+      pass-through function  invocation endpoints. 
+    name: Envelope Function Invocation
+  - description: >-
+      Defines Queue Details endpoints for Account Admins/Users. All tne
+      endpoints  defined in this API require either a bearer token or an api-key
+      with  'queue_details' scope in the HTTP Authorization header. 
+    name: Queue Details
+  - description: >-
+      Defines endpoints to list Cluster Groups and GPUs for Account Admins. All
+      tne  endpoints defined in this API require a bearer token with
+      'list_cluster_groups'  scope in the HTTP Authorization header.
+    name: Cluster Groups and GPUs
+  - name: Health
+paths:
+  /v2/nvcf/deployments/functions/{functionId}/versions/{functionVersionId}:
+    get:
+      tags:
+        - Function Deployment
+      summary: Get Function Deployment Details
+      operationId: FunctionDeployment_details
+      description: >-
+        Allows Account Admins to retrieve the deployment details of the
+        specified  function version. Access to this endpoint mandates a bearer
+        token with 'deploy_function' scope in the  HTTP Authorization header. 
+      parameters:
+        - description: Function id
+          name: functionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - description: Function version id
+          name: functionVersionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeploymentResponse'
+    put:
+      tags:
+        - Function Deployment
+      summary: Update Function Deployment
+      operationId: FunctionDeployment_updateSpecs
+      description: >-
+        Updates the deployment specs of the specified function version. It's
+        important  to note that GPU type and backend configurations cannot be
+        modified through  this endpoint. If the specified function is public,
+        then Account Admin cannot  perform this operation. Access to this
+        endpoint mandates a bearer token with 'deploy_function' scope in the 
+        HTTP Authorization header. 
+      parameters:
+        - description: Function id
+          name: functionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - description: Function version id
+          name: functionVersionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FunctionDeploymentRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeploymentResponse'
+    post:
+      tags:
+        - Function Deployment
+      summary: Deploy Function
+      operationId: FunctionDeployment_initiateDeploymentForVersion
+      description: >-
+        Initiates deployment for the specified function version. Upon invocation
+        of  this endpoint, the function's status transitions to 'DEPLOYING'. If
+        the  specified function version is public, then Account Admin cannot
+        perform this  operation. Access to this endpoint mandates a bearer token
+        with 'deploy_function' scope in the  HTTP Authorization header. 
+      parameters:
+        - description: Function id
+          name: functionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - description: Function version id
+          name: functionVersionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FunctionDeploymentRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeploymentResponse'
+    delete:
+      tags:
+        - Function Deployment
+      summary: Delete Function Deployment
+      operationId: FunctionDeployment_deleteByIdAndVersion
+      description: >-
+        Deletes the deployment associated with the specified function. Upon 
+        deletion, any active instances will be terminated, and the function's
+        status  will transition to 'INACTIVE'. To undeploy a function version
+        gracefully,  specify 'graceful=true' query parameter, allowing current
+        tasks to complete  before terminating the instances. If the specified
+        function version is public,  then Account Admin cannot perform this
+        operation. Access to this endpoint mandates a bearer token with
+        'deploy_function' scope in the  HTTP Authorization header. 
+      parameters:
+        - description: Function id
+          name: functionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - description: Function version id
+          name: functionVersionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - description: Query param to deactivate function for graceful shutdown
+          name: graceful
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FunctionResponse'
+  /v2/nvcf/pexec/functions/{functionId}:
+    post:
+      tags:
+        - Function Invocation
+      summary: Call Function
+      operationId: FunctionInvocation_invokeFunction
+      description: >-
+        Invokes the specified function that was successfully deployed. If the
+        version  is not specified, any active function versions will handle the
+        request. If  the version is specified in the URI, then the request is
+        exclusively processed  by the designated version of the function. By
+        default, this endpoint will block  for 5 seconds. If the request is not
+        fulfilled before the timeout, it's status  is considered in-progress or
+        pending and the response includes HTTP status code  202 with an
+        invocation request ID, indicating that the client should commence 
+        polling for the result using the invocation request ID. Access to this
+        endpoint  mandates inclusion of either a bearer token or an api-key with
+        'invoke_function'  scope in the HTTP Authorization header. Additionally,
+        this endpoint has the  capability to provide updates on the progress of
+        the request, contingent  upon the workload's provision of such
+        information. In-progress responses are returned in order. If no
+        in-progress response is received  during polling you will receive the
+        most recent in-progress response. Only the first  256 unread in-progress
+        messages are kept. 
+      parameters:
+        - name: NVCF-INPUT-ASSET-REFERENCES
+          in: header
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - name: functionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: NVCF-POLL-SECONDS
+          in: header
+          required: false
+          schema:
+            maximum: 300
+            type: integer
+            format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FunctionInvocationInvokeFunctionRequest'
+        required: true
+      responses:
+        '200':
+          description: Invocation is fulfilled
+          headers:
+            NVCF-REQID:
+              description: Invocation Request Id
+              style: simple
+              schema:
+                type: string
+            NVCF-PERCENT-COMPLETE:
+              description: Percentage complete
+              style: simple
+              schema:
+                type: string
+            NVCF-STATUS:
+              description: Invocation status
+              style: simple
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/FunctionInvocationInvokeFunction200Response
+            text/event-stream:
+              schema:
+                $ref: '#/components/schemas/FunctionInvocationInvokeFunctionResponse'
+        '202':
+          description: Result is pending. Client should poll using the requestId.
+          headers:
+            NVCF-REQID:
+              description: Invocation Request Id
+              style: simple
+              schema:
+                type: string
+            NVCF-PERCENT-COMPLETE:
+              description: Percentage complete
+              style: simple
+              schema:
+                type: string
+            NVCF-STATUS:
+              description: Invocation status
+              style: simple
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/FunctionInvocationInvokeFunction202Response
+        '302':
+          description: >-
+            Client should use the URL specified in the 'Location' response
+            header to fetch  large result. 
+          headers:
+            NVCF-REQID:
+              description: Invocation Request Id
+              style: simple
+              schema:
+                type: string
+            NVCF-PERCENT-COMPLETE:
+              description: Percentage complete
+              style: simple
+              schema:
+                type: string
+            NVCF-STATUS:
+              description: Invocation status
+              style: simple
+              schema:
+                type: string
+            Location:
+              description: URL to get the result
+              style: simple
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/FunctionInvocationInvokeFunction302Response
+        '402':
+          description: >-
+            Cloud credits expired for public functions. Please contact NVIDIA
+            representatives.
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/FunctionInvocationInvokeFunction402Response
+        '403':
+          description: >-
+            Either missing scope in the auth(SSA JWT / SAK) token and/or missing
+            resource entry  in the SAK for the function. 
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/FunctionInvocationInvokeFunction403Response
+  /v2/nvcf/pexec/functions/{functionId}/versions/{versionId}:
+    post:
+      tags:
+        - Function Invocation
+      summary: Call Function
+      operationId: FunctionInvocation_invokeFunction
+      description: >-
+        Invokes the specified function that was successfully deployed. If the
+        version  is not specified, any active function versions will handle the
+        request. If  the version is specified in the URI, then the request is
+        exclusively processed  by the designated version of the function. By
+        default, this endpoint will block  for 5 seconds. If the request is not
+        fulfilled before the timeout, it's status  is considered in-progress or
+        pending and the response includes HTTP status code  202 with an
+        invocation request ID, indicating that the client should commence 
+        polling for the result using the invocation request ID. Access to this
+        endpoint  mandates inclusion of either a bearer token or an api-key with
+        'invoke_function'  scope in the HTTP Authorization header. Additionally,
+        this endpoint has the  capability to provide updates on the progress of
+        the request, contingent  upon the workload's provision of such
+        information. In-progress responses are returned in order. If no
+        in-progress response is received  during polling you will receive the
+        most recent in-progress response. Only the first  256 unread in-progress
+        messages are kept. 
+      parameters:
+        - name: NVCF-INPUT-ASSET-REFERENCES
+          in: header
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - name: functionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: versionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: NVCF-POLL-SECONDS
+          in: header
+          required: false
+          schema:
+            maximum: 300
+            type: integer
+            format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FunctionInvocationInvokeFunctionRequest1'
+        required: true
+      responses:
+        '200':
+          description: Invocation is fulfilled
+          headers:
+            NVCF-REQID:
+              description: Invocation Request Id
+              style: simple
+              schema:
+                type: string
+            NVCF-PERCENT-COMPLETE:
+              description: Percentage complete
+              style: simple
+              schema:
+                type: string
+            NVCF-STATUS:
+              description: Invocation status
+              style: simple
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/FunctionInvocationInvokeFunction200Response
+            text/event-stream:
+              schema:
+                $ref: >-
+                  #/components/schemas/FunctionInvocationInvokeFunction200Response1
+        '202':
+          description: Result is pending. Client should poll using the requestId.
+          headers:
+            NVCF-REQID:
+              description: Invocation Request Id
+              style: simple
+              schema:
+                type: string
+            NVCF-PERCENT-COMPLETE:
+              description: Percentage complete
+              style: simple
+              schema:
+                type: string
+            NVCF-STATUS:
+              description: Invocation status
+              style: simple
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/FunctionInvocationInvokeFunction202Response
+        '302':
+          description: >-
+            Client should use the URL specified in the 'Location' response
+            header to fetch  large result. 
+          headers:
+            NVCF-REQID:
+              description: Invocation Request Id
+              style: simple
+              schema:
+                type: string
+            NVCF-PERCENT-COMPLETE:
+              description: Percentage complete
+              style: simple
+              schema:
+                type: string
+            NVCF-STATUS:
+              description: Invocation status
+              style: simple
+              schema:
+                type: string
+            Location:
+              description: URL to get the result
+              style: simple
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/FunctionInvocationInvokeFunction302Response
+        '402':
+          description: >-
+            Cloud credits expired for public functions. Please contact NVIDIA
+            representatives.
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/FunctionInvocationInvokeFunction402Response
+        '403':
+          description: >-
+            Either missing scope in the auth(SSA JWT / SAK) token and/or missing
+            resource entry  in the SAK for the function. 
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/FunctionInvocationInvokeFunction403Response
+  /v2/nvcf/exec/functions/{functionId}:
+    post:
+      tags:
+        - Envelope Function Invocation
+      summary: Call Function
+      operationId: EnvelopeFunctionInvocation_callFunction
+      description: >-
+        Invokes the specified function that was successfully deployed. If the
+        version  is not specified, any active function versions will handle the
+        request. If  the version is specified in the URI, then the request is
+        exclusively processed  by the designated version of the function. By
+        default, this endpoint will block  for 5 seconds. If the request is not
+        fulfilled before the timeout, it's status  is considered in-progress or
+        pending and the response includes HTTP status code  202 with an
+        invocation request ID, indicating that the client should commence 
+        polling for the result using the invocation request ID. Access to this
+        endpoint  mandates inclusion of either a bearer token or an api-key with
+        'invoke_function'  scope in the HTTP Authorization header. Additionally,
+        this endpoint has the  capability to provide updates on the progress of
+        the request, contingent  upon the workload's provision of such
+        information. In-progress responses are returned in order. If no
+        in-progress response is received  during polling you will receive the
+        most recent in-progress response. Only the first  256 unread in-progress
+        messages are kept. 
+      parameters:
+        - name: functionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InvokeFunctionRequest'
+        required: true
+      responses:
+        '200':
+          description: Invocation is fulfilled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvokeFunctionResponse'
+        '202':
+          description: Result is pending. Client should poll using the requestId.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvokeFunctionResponse'
+        '302':
+          description: >-
+            Client should use the URL specified in the 'Location' response
+            header to fetch  large result. 
+          headers:
+            Location:
+              style: simple
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvokeFunctionResponse'
+        '402':
+          description: >-
+            Cloud credits expired for public functions. Please contact NVIDIA
+            representatives.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvokeFunctionResponse'
+        '403':
+          description: >-
+            Either missing scope in the auth(SSA JWT / SAK) token and/or missing
+            resource entry  in the SAK for the function. 
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvokeFunctionResponse'
+      deprecated: true
+  /v2/nvcf/exec/functions/{functionId}/versions/{versionId}:
+    post:
+      tags:
+        - Envelope Function Invocation
+      summary: Call Function
+      operationId: EnvelopeFunctionInvocation_invokeFunction
+      description: >-
+        Invokes the specified function that was successfully deployed. If the
+        version  is not specified, any active function versions will handle the
+        request. If  the version is specified in the URI, then the request is
+        exclusively processed  by the designated version of the function. By
+        default, this endpoint will block  for 5 seconds. If the request is not
+        fulfilled before the timeout, it's status  is considered in-progress or
+        pending and the response includes HTTP status code  202 with an
+        invocation request ID, indicating that the client should commence 
+        polling for the result using the invocation request ID. Access to this
+        endpoint  mandates inclusion of either a bearer token or an api-key with
+        'invoke_function'  scope in the HTTP Authorization header. Additionally,
+        this endpoint has the  capability to provide updates on the progress of
+        the request, contingent  upon the workload's provision of such
+        information. In-progress responses are returned in order. If no
+        in-progress response is received  during polling you will receive the
+        most recent in-progress response. Only the first  256 unread in-progress
+        messages are kept. 
+      parameters:
+        - name: functionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: versionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InvokeFunctionRequest'
+        required: true
+      responses:
+        '200':
+          description: Invocation is fulfilled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvokeFunctionResponse'
+        '202':
+          description: Result is pending. Client should poll using the requestId.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvokeFunctionResponse'
+        '302':
+          description: >-
+            Client should use the URL specified in the 'Location' response
+            header to fetch  large result. 
+          headers:
+            Location:
+              style: simple
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvokeFunctionResponse'
+        '402':
+          description: >-
+            Cloud credits expired for public functions. Please contact NVIDIA
+            representatives.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvokeFunctionResponse'
+        '403':
+          description: >-
+            Either missing scope in the auth(SSA JWT / SAK) token and/or missing
+            resource entry  in the SAK for the function. 
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvokeFunctionResponse'
+      deprecated: true
+  /v2/nvcf/functions/{functionId}/versions:
+    get:
+      tags:
+        - Function Management
+      summary: List Function Versions
+      operationId: FunctionManagement_listFunctionVersions
+      description: >-
+        Lists details of all the versions of the specified function in the
+        authenticated  NVIDIA Cloud Account. Requires either a bearer token or
+        an api-key with  'list_functions' or 'list_functions_details' scopes in
+        the HTTP Authorization  header. 
+      parameters:
+        - description: Function id
+          name: functionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListFunctionsResponse'
+    post:
+      tags:
+        - Function Management
+      summary: Create Function Version
+      operationId: FunctionManagement_createFunctionVersion
+      description: >-
+        Creates a version of the specified function within the authenticated
+        NVIDIA  Cloud Account. Requires a bearer token with 'register_function'
+        scope in the  HTTP Authorization header. 
+      parameters:
+        - description: Function id
+          name: functionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateFunctionRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateFunctionResponse'
+  /v2/nvcf/functions:
+    get:
+      tags:
+        - Function Management
+      summary: List Functions
+      operationId: FunctionManagement_listFunctions
+      description: >-
+        Lists all the functions associated with the authenticated NVIDIA Cloud
+        Account.  Requires either a bearer token or an api-key with
+        'list_functions' or  'list_functions_details' scopes in the HTTP
+        Authorization header.
+      parameters:
+        - description: >-
+            Query param 'visibility' indicates the kind of functions to be
+            included  in the response. 
+          name: visibility
+          in: query
+          required: false
+          schema:
+            uniqueItems: true
+            type: array
+            items:
+              type: string
+              enum:
+                - authorized
+                - private
+                - public
+            default:
+              - authorized
+              - private
+              - public
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListFunctionsResponse'
+    post:
+      tags:
+        - Function Management
+      summary: Create Function
+      operationId: FunctionManagement_registerNewFunction
+      description: >-
+        Creates a new function within the authenticated NVIDIA Cloud Account.
+        Requires a  bearer token with 'register_function' scope in the HTTP
+        Authorization header. 
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateFunctionRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateFunctionResponse'
+  /v2/nvcf/authorizations/functions/{functionId}/versions/{functionVersionId}:
+    get:
+      tags:
+        - Authorized Accounts
+      summary: Get Account Authorizations For Function Version
+      operationId: AuthorizedAccounts_functionVersionAuthorizations
+      description: >-
+        Gets NVIDIA Cloud Account IDs that are authorized to invoke specified
+        function  version. Response includes authorized accounts that were added
+        specifically  to the function version and the inherited authorized
+        accounts that were  added at the function level. Access to this
+        functionality mandates the inclusion of a bearer token with the 
+        'authorize_clients' scope in the HTTP Authorization header 
+      parameters:
+        - description: Function id
+          name: functionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - description: Function version
+          name: functionVersionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthorizedPartiesResponse'
+    post:
+      tags:
+        - Authorized Accounts
+      summary: Authorize Accounts To Invoke Function Version
+      operationId: AuthorizedAccounts_authorizeFunctionAccounts
+      description: >-
+        Authorizes additional NVIDIA Cloud Accounts to invoke a specific
+        function  version. By default, a function belongs to the NVIDIA Cloud
+        Account that  created it, and the credentials used for function
+        invocation must reference  the same NVIDIA Cloud Account. Upon
+        invocation of this endpoint, any existing  authorized accounts will be
+        overwritten by the newly specified authorized  accounts. Access to this
+        functionality mandates the inclusion of a bearer token with the 
+        'authorize_clients' scope in the HTTP Authorization header 
+      parameters:
+        - description: Function id
+          name: functionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - description: Function version id
+          name: functionVersionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthorizedPartiesRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthorizedPartiesResponse'
+    delete:
+      tags:
+        - Authorized Accounts
+      summary: Delete All Extra Authorizations For Function Version
+      operationId: AuthorizedAccounts_deleteExtraForFunctionVersion
+      description: >-
+        Deletes all the authorized accounts that are directly associated with
+        the  specified function version. Authorized parties that are inherited
+        by the  function version are not deleted. If the specified function
+        version is public,  then Account Admin cannot perform this operation.
+        Access to this functionality mandates the inclusion of a bearer token
+        with the  'authorize_clients' scope in the HTTP Authorization header 
+      parameters:
+        - description: Function id
+          name: functionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - description: Function version
+          name: functionVersionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthorizedPartiesResponse'
+  /v2/nvcf/authorizations/functions/{functionId}:
+    get:
+      tags:
+        - Authorized Accounts
+      summary: List Account Authorizations For Function
+      operationId: AuthorizedAccounts_listForFunction
+      description: >-
+        Lists NVIDIA Cloud Account IDs that are authorized to invoke any version
+        of the  specified function. The response includes an array showing
+        authorized accounts  for each version. Individual versions of a function
+        can have their own  authorized accounts. So, each object in the array
+        can have different  authorized accounts listed. Access to this
+        functionality mandates the inclusion of a bearer token with the 
+        'authorize_clients' scope in the HTTP Authorization header 
+      parameters:
+        - description: Function id
+          name: functionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListAuthorizedPartiesResponse'
+    post:
+      tags:
+        - Authorized Accounts
+      summary: Authorize Accounts To Invoke Function
+      operationId: AuthorizedAccounts_authorizeFunctionAccounts
+      description: >-
+        Authorizes additional NVIDIA Cloud Accounts to invoke any version of
+        the  specified function. By default, a function belongs to the NVIDIA
+        Cloud Account  that created it, and the credentials used for function
+        invocation must  reference the same NVIDIA Cloud Account. Upon
+        invocation of this endpoint, any  existing authorized accounts will be
+        overwritten by the newly specified  authorized accounts. Access to this
+        functionality mandates the inclusion of a bearer token with the 
+        'authorize_clients' scope in the HTTP Authorization header 
+      parameters:
+        - description: Function id
+          name: functionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthorizedPartiesRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthorizedPartiesResponse'
+    delete:
+      tags:
+        - Authorized Accounts
+      summary: Delete All Extra Authorizations For Function
+      operationId: AuthorizedAccounts_deleteAllExtraForFunction
+      description: >-
+        Deletes all the extra NVIDIA Cloud Accounts that were authorized to
+        invoke the  function and all its versions. If a function version has its
+        own set of  authorized accounts, those are not deleted. If the specified
+        function is  public, then Account Admin cannot perform this operation.
+        Access to this functionality mandates the inclusion of a bearer token
+        with the  'authorize_clients' scope in the HTTP Authorization header 
+      parameters:
+        - description: Function id
+          name: functionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthorizedPartiesResponse'
+  /v2/nvcf/assets:
+    get:
+      tags:
+        - Asset Management
+      summary: List Assets
+      operationId: AssetManagement_listAssets
+      description: >-
+        List assets owned by the current NVIDIA Cloud Account. Requires either
+        a  bearer token or an api-key with invoke_function scope in the HTTP
+        Authorization  header. 
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListAssetsResponse'
+    post:
+      tags:
+        - Asset Management
+      summary: Create Asset
+      operationId: AssetManagement_createAssetAndUrl
+      description: >-
+        Creates a unique id representing an asset and a pre-signed URL to upload
+        the  asset artifact to AWS S3 bucket for the NVIDIA Cloud Account.
+        Requires either  a bearer token or an api-key with 'invoke_function'
+        scope in the HTTP  Authorization header.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAssetRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateAssetResponse'
+  /v2/nvcf/authorizations/functions/{functionId}/versions/{functionVersionId}/remove:
+    patch:
+      tags:
+        - Authorized Accounts
+      summary: Unauthorize Account From Invoking Function Version
+      operationId: AuthorizedAccounts_removePartyForVersion
+      description: >-
+        Removes the specified NVIDIA Cloud Account from the set of authorized
+        accounts  that are directly associated with specified function version.
+        If the specified  function version does not have any of its own(not
+        inherited) authorized  accounts, it results in a response with status
+        404. Also, if the specified  authorized account is not in the set of
+        existing authorized parties that are  directly associated with the
+        specified function version, it results in a  response with status code
+        400. If the specified function version is public,  then Account Admin
+        cannot perform this operation. Access to this functionality mandates the
+        inclusion of a bearer token with the  'authorize_clients' scope in the
+        HTTP Authorization header 
+      parameters:
+        - description: Function id
+          name: functionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - description: Function version
+          name: functionVersionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchAuthorizedPartyRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthorizedPartiesResponse'
+  /v2/nvcf/authorizations/functions/{functionId}/versions/{functionVersionId}/add:
+    patch:
+      tags:
+        - Authorized Accounts
+      summary: Authorize Additional Account To Invoke Function Version
+      operationId: AuthorizedAccounts_addAccountToFunctionVersion
+      description: >-
+        Adds the specified NVIDIA Cloud Account to the set of authorized
+        accounts that  can invoke the specified function version. If the
+        specified function version  does not have any existing inheritable
+        authorized accounts, it results in a  response with status 404. If the
+        specified account is already in the set of  existing authorized accounts
+        that are directly associated with the function  version, it results in a
+        response wit status code 409. If a function is public,  then Account
+        Admin cannot perform this operation. Access to this functionality
+        mandates the inclusion of a bearer token with the  'authorize_clients'
+        scope in the HTTP Authorization header 
+      parameters:
+        - description: Function id
+          name: functionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - description: Function version
+          name: functionVersionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchAuthorizedPartyRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthorizedPartiesResponse'
+  /v2/nvcf/authorizations/functions/{functionId}/remove:
+    patch:
+      tags:
+        - Authorized Accounts
+      summary: Unauthorize Account From Invoking Function
+      operationId: AuthorizedAccounts_removeFromFunctionAuthorization
+      description: >-
+        Removes the specified NVIDIA Cloud Account from the set of authorized
+        accounts  that can invoke all the versions of the specified function. If
+        the specified  function does not have any existing inheritable
+        authorized parties, it results  in a response with status 404. Also, if
+        the specified account is not in the  existing set of inheritable
+        authorized accounts, it results in a response with  status 400. If the
+        specified function is public, then Account Admin cannot  perform this
+        operation. Access to this functionality mandates the inclusion of a
+        bearer token with the  'authorize_clients' scope in the HTTP
+        Authorization header 
+      parameters:
+        - description: Function id
+          name: functionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchAuthorizedPartyRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthorizedPartiesResponse'
+  /v2/nvcf/authorizations/functions/{functionId}/add:
+    patch:
+      tags:
+        - Authorized Accounts
+      summary: Authorize Additional Account To Invoke Function
+      operationId: AuthorizedAccounts_addAccountToFunction
+      description: >-
+        Adds the specified NVIDIA Cloud Account to the set of authorized
+        accounts that  are can invoke all the versions of the specified
+        function. If the specified  function does not have any existing
+        inheritable authorized accounts, it results  in a response with status
+        404. If the specified account is already in the set  of existing
+        inheritable authorized accounts, it results in a response with  status
+        code 409. If a function is public, then Account Admin cannot perform 
+        this operation. Access to this functionality mandates the inclusion of a
+        bearer token with the  'authorize_clients' scope in the HTTP
+        Authorization header 
+      parameters:
+        - description: Function id
+          name: functionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchAuthorizedPartyRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthorizedPartiesResponse'
+  /v2/nvcf/queues/functions/{functionId}/versions/{versionId}:
+    get:
+      tags:
+        - Queue Details
+      summary: Queue Details
+      operationId: QueueDetails_getAllQueuesDetails
+      description: >-
+        Provides details of all the queues associated with the specified
+        function.  If a function has multiple versions and they are all
+        deployed, then the  response includes details of all the queues. If the
+        specified function  is public, then Account Admin cannot perform this
+        operation. Requires a bearer token or an api-key with 'queue_details'
+        scope in the HTTP  Authorization header. 
+      parameters:
+        - description: Function id
+          name: functionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - description: Function version id
+          name: versionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetQueuesResponse'
+  /v2/nvcf/queues/functions/{functionId}:
+    get:
+      tags:
+        - Queue Details
+      summary: Queue Details
+      operationId: QueueDetails_functionQueuesDetails
+      description: >-
+        Provides details of all the queues associated with the specified
+        function.  If a function has multiple versions and they are all
+        deployed, then the  response includes details of all the queues. If the
+        specified function  is public, then Account Admin cannot perform this
+        operation. Requires a bearer token or an api-key with 'queue_details'
+        scope in the HTTP  Authorization header. 
+      parameters:
+        - description: Function id
+          name: functionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetQueuesResponse'
+  /v2/nvcf/queues/{requestId}/position:
+    get:
+      tags:
+        - Queue Details
+      summary: Queue Position
+      operationId: QueueDetails_getQueuePositionByRequestId
+      description: >-
+        Using the specified function invocation request id, returns the
+        estimated  position of the corresponding message up to 1000 in the
+        queue. Requires a bearer token or an api-key with 'queue_details' scope
+        in the HTTP  Authorization header. 
+      parameters:
+        - description: Function invocation request id
+          name: requestId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetPositionInQueueResponse'
+  /v2/nvcf/pexec/status/{requestId}:
+    get:
+      tags:
+        - Function Invocation
+      summary: Poll For Result Using Function Invocation Request
+      operationId: FunctionInvocation_pollForResultUsingFunctionInvocationRequest
+      description: >-
+        Retrieves the status of an in-progress or pending request using its
+        unique  invocation request ID. If the result is available, it will be
+        included in  the response, marking the request as fulfilled. Conversely,
+        if the result is  not yet available, the request is deemed pending.
+        Access to this endpoint  mandates inclusion of either a bearer token or
+        an api-key with  'invoke_function' scope in the HTTP Authorization
+        header. In-progress responses are returned in order. If no in-progress
+        response is received  during polling you will receive the most recent
+        in-progress response. Only the first  256 unread in-progress messages
+        are kept. 
+      parameters:
+        - description: Function invocation request id
+          name: requestId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: NVCF-POLL-SECONDS
+          in: header
+          required: false
+          schema:
+            maximum: 300
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: Invocation is fulfilled
+          headers:
+            NVCF-REQID:
+              description: Invocation Request Id
+              style: simple
+              schema:
+                type: string
+            NVCF-PERCENT-COMPLETE:
+              description: Percentage complete
+              style: simple
+              schema:
+                type: string
+            NVCF-STATUS:
+              description: Invocation status
+              style: simple
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/FunctionInvocationPollForResultUsingFunctionInvocationRequestResponse
+        '202':
+          description: Result is pending. Client should poll using the requestId.
+          headers:
+            NVCF-REQID:
+              description: Invocation Request Id
+              style: simple
+              schema:
+                type: string
+            NVCF-PERCENT-COMPLETE:
+              description: Percentage complete
+              style: simple
+              schema:
+                type: string
+            NVCF-STATUS:
+              description: Invocation status
+              style: simple
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/FunctionInvocationPollForResultUsingFunctionInvocationRequest202Response
+        '302':
+          description: >-
+            Client should use the URL specified in the 'Location' response
+            header to fetch  large result. 
+          headers:
+            NVCF-REQID:
+              description: Invocation Request Id
+              style: simple
+              schema:
+                type: string
+            NVCF-PERCENT-COMPLETE:
+              description: Percentage complete
+              style: simple
+              schema:
+                type: string
+            NVCF-STATUS:
+              description: Invocation status
+              style: simple
+              schema:
+                type: string
+            Location:
+              description: URL to get the result
+              style: simple
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/FunctionInvocationPollForResultUsingFunctionInvocationRequest302Response
+        '402':
+          description: >-
+            Cloud credits expired for public functions. Please contact NVIDIA
+            representatives.
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/FunctionInvocationPollForResultUsingFunctionInvocationRequest402Response
+        '403':
+          description: >-
+            Either missing scope in the auth(SSA JWT / SAK) token and/or missing
+            resource entry  in the SAK for the function. 
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/FunctionInvocationPollForResultUsingFunctionInvocationRequest403Response
+  /v2/nvcf/functions/{functionId}/versions/{functionVersionId}:
+    get:
+      tags:
+        - Function Management
+      summary: Get Function Version Details
+      operationId: FunctionManagement_getVersionDetails
+      description: >-
+        Retrieves detailed information of the specified function version in the 
+        authenticated NVIDIA Cloud Account. Requires either a bearer token or
+        an  api-key with 'list_functions' or 'list_functions_details' scopes in
+        the HTTP  Authorization header. 
+      parameters:
+        - description: Function id
+          name: functionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - description: 'Version id '
+          name: functionVersionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FunctionResponse'
+    delete:
+      tags:
+        - Function Management
+      summary: Delete Function
+      operationId: FunctionManagement_deleteFunctionVersion
+      description: >-
+        Deletes the specified function version in the authenticated NVIDIA
+        Cloud  Account. Requires a bearer token with 'delete_function' scope in
+        the HTTP  Authorization header. If the function version is public, then
+        Account Admin  cannot delete the function. 
+      parameters:
+        - description: Function id
+          name: functionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - description: Version id
+          name: functionVersionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: No Content
+  /v2/nvcf/functions/ids:
+    get:
+      tags:
+        - Function Management
+      summary: List Function Ids
+      operationId: FunctionManagement_listFunctionIds
+      description: >-
+        Lists ids of all the functions in the authenticated NVIDIA Cloud
+        Account.  Requires either a bearer token or an api-key with
+        'list_functions' or  'list_functions_details' scopes in the HTTP
+        Authorization header. 
+      parameters:
+        - description: >-
+            Query param 'visibility' indicates the kind of functions to be
+            included  in the response. 
+          name: visibility
+          in: query
+          required: false
+          schema:
+            uniqueItems: true
+            type: array
+            items:
+              type: string
+              enum:
+                - authorized
+                - private
+                - public
+            default:
+              - authorized
+              - private
+              - public
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListFunctionIdsResponse'
+  /v2/nvcf/exec/status/{requestId}:
+    get:
+      tags:
+        - Envelope Function Invocation
+      summary: Poll For Result Using Function Invocation Request
+      operationId: EnvelopeFunctionInvocation_pollForResultUsingFunctionInvocationRequest
+      description: >-
+        Retrieves the status of an in-progress or pending request using its
+        unique  invocation request ID. If the result is available, it will be
+        included in  the response, marking the request as fulfilled. Conversely,
+        if the result is  not yet available, the request is deemed pending.
+        Access to this endpoint  mandates inclusion of either a bearer token or
+        an api-key with  'invoke_function' scope in the HTTP Authorization
+        header. In-progress responses are returned in order. If no in-progress
+        response is received  during polling you will receive the most recent
+        in-progress response. Only the first  256 unread in-progress messages
+        are kept. 
+      parameters:
+        - description: Function invocation request id
+          name: requestId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Invocation is fulfilled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvokeFunctionResponse'
+        '202':
+          description: Result is pending. Client should poll using the requestId.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvokeFunctionResponse'
+        '302':
+          description: >-
+            Client should use the URL specified in the 'Location' response
+            header to fetch  large result. 
+          headers:
+            Location:
+              style: simple
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvokeFunctionResponse'
+        '402':
+          description: >-
+            Cloud credits expired for public functions. Please contact NVIDIA
+            representatives.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvokeFunctionResponse'
+        '403':
+          description: >-
+            Either missing scope in the auth(SSA JWT / SAK) token and/or missing
+            resource entry  in the SAK for the function. 
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvokeFunctionResponse'
+      deprecated: true
+  /v2/nvcf/clusterGroups:
+    get:
+      tags:
+        - Cluster Groups and GPUs
+      summary: List Cluster Groups
+      operationId: ClusterGroupsAndGpUs_list
+      description: >-
+        Lists Cluster Groups for the current account. The response includes
+        cluster  groups defined specifically in the current account and publicly
+        available  cluster groups such as GFN, OCI, etc. Requires a bearer token
+        with 'list_cluster_groups' scope in HTTP Authorization header. 
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClusterGroupsResponse'
+  /v2/nvcf/assets/{assetId}:
+    get:
+      tags:
+        - Asset Management
+      summary: Show Asset Details
+      operationId: AssetManagement_showDetails
+      description: >-
+        Returns details for the specified asset-id belonging to the current
+        NVIDIA  Cloud Account. Requires either a bearer token or an api-key
+        with  'invoke_function' scope in the HTTP Authorization header. 
+      parameters:
+        - description: Asset id
+          name: assetId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssetResponse'
+    delete:
+      tags:
+        - Asset Management
+      summary: Delete Asset
+      operationId: AssetManagement_deleteAssetById
+      description: >-
+        Deletes asset belonging to the current NVIDIA Cloud Account. Requires
+        either  a bearer token or an api-key with 'invoke_function' scope in the
+        HTTP  Authorization header.
+      parameters:
+        - description: Id of the asset to be deleted
+          name: assetId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: No Content
+  /health/**:
+    get:
+      tags:
+        - Health
+      summary: Get Health Information
+      operationId: Health_getInfo
+      description: Get Health Information about this service
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthComponent'
+components:
+  schemas:
+    FunctionDeploymentRequest:
+      description: Request to deploy a function
+      required:
+        - deploymentSpecifications
+      type: object
+      properties:
+        deploymentSpecifications:
+          description: Deployment specs with Backend, GPU, instance-type, etc. details
+          type: array
+          items:
+            $ref: '#/components/schemas/GpuSpecificationDto'
+    GpuSpecificationDto:
+      description: Data Transfer Object(DTO) representing GPU specification.
+      required:
+        - backend
+        - gpu
+        - maxInstances
+        - minInstances
+      type: object
+      properties:
+        gpu:
+          description: GPU name from the cluster
+          type: string
+        backend:
+          description: Backend/CSP where the GPU powered instance will be launched
+          type: string
+        maxInstances:
+          description: Maximum number of spot instances for the deployment
+          type: integer
+          format: int32
+        minInstances:
+          description: Minimum number of spot instances for the deployment
+          type: integer
+          format: int32
+        instanceType:
+          description: Instance type, based on GPU, assigned to a Worker
+          type: string
+        availabilityZones:
+          description: List of availability-zones(or clusters) in the cluster group
+          type: array
+          items:
+            description: List of availability-zones(or clusters) in the cluster group
+            type: string
+        maxRequestConcurrency:
+          description: Max request concurrency between 1 (default) and 1024.
+          maximum: 1024
+          minimum: 1
+          type: integer
+          format: int32
+        configuration:
+          type: object
+    DeploymentHealthDto:
+      description: Data Transfer Object(DTO) representing deployment error
+      required:
+        - backend
+        - error
+        - gpu
+      type: object
+      properties:
+        sisRequestId:
+          description: SIS Request ID
+          type: string
+          format: uuid
+        gpu:
+          description: GPU Type as per SDD
+          type: string
+        backend:
+          description: Backend/CSP where the GPU powered instance will be launched
+          type: string
+        instanceType:
+          description: Instance type
+          type: string
+        error:
+          description: Deployment error
+          type: string
+    DeploymentResponse:
+      description: Function Deployment Response
+      required:
+        - deployment
+      type: object
+      properties:
+        deployment:
+          $ref: '#/components/schemas/FunctionDeploymentDto'
+    FunctionDeploymentDto:
+      description: Function deployment response
+      required:
+        - deploymentSpecifications
+        - functionId
+        - functionStatus
+        - functionVersionId
+        - ncaId
+        - requestQueueUrl
+      type: object
+      properties:
+        functionId:
+          description: Function id
+          type: string
+          format: uuid
+        functionVersionId:
+          description: Function version id
+          type: string
+          format: uuid
+        ncaId:
+          description: NVIDIA Cloud Account Id
+          type: string
+        functionStatus:
+          description: Function status
+          type: string
+          enum:
+            - ACTIVE
+            - DEPLOYING
+            - ERROR
+            - INACTIVE
+            - DELETED
+        requestQueueUrl:
+          description: SQS Request Queue URL
+          type: string
+        healthInfo:
+          description: >-
+            Health info for a deployment specification is included only if there
+            are any  issues/errors. 
+          type: array
+          items:
+            $ref: '#/components/schemas/DeploymentHealthDto'
+        deploymentSpecifications:
+          description: Function deployment details
+          type: array
+          items:
+            $ref: '#/components/schemas/GpuSpecificationDto'
+    InvokeFunctionRequest:
+      description: >-
+        Request body for creating a job/task for inference/train using a GPU
+        powered spot instance in cloud.
+      required:
+        - requestBody
+      type: object
+      properties:
+        requestBody:
+          type: object
+        requestHeader:
+          $ref: '#/components/schemas/RequestHeaderDto'
+    MeteringDataEntryDto:
+      description: Data Transfer Object(DTO) representing a billing/metering data entry
+      required:
+        - key
+        - value
+      type: object
+      properties:
+        key:
+          description: Metering/Billing key
+          type: string
+        value:
+          description: Metering/Billing value
+          type: string
+    RequestHeaderDto:
+      description: >-
+        Data Transfer Object(DTO) representing header/address for Cloud
+        Functions processing. 
+      type: object
+      properties:
+        inputAssetReferences:
+          description: >-
+            List of UUIDs corresponding to the uploaded assets to be used as
+            input for executing the task.
+          type: array
+          items:
+            description: >-
+              List of UUIDs corresponding to the uploaded assets to be used as
+              input for executing the task.
+            type: string
+            format: uuid
+        meteringData:
+          description: Metadata used for billing/metering purposes.
+          type: array
+          items:
+            $ref: '#/components/schemas/MeteringDataEntryDto'
+        pollDurationSeconds:
+          description: Polling timeout duration.
+          maximum: 300
+          type: integer
+          format: int32
+          default: 300
+    InvokeFunctionResponse:
+      description: >-
+        Response body with result from a request for executing a job/task as a
+        cloud function using a GPU powered spot/on-demand instance.
+      type: object
+      properties:
+        reqId:
+          description: Request id
+          type: string
+          format: uuid
+        status:
+          description: Status of the task/job executing cloud function.
+          type: string
+          enum:
+            - errored
+            - in-progress
+            - fulfilled
+            - pending-evaluation
+            - rejected
+        responseReference:
+          description: >-
+            For large results, responseReference will be a pre-signeddownload
+            URL.
+          type: string
+          format: url
+        percentComplete:
+          description: Progress indicator for the task/job executing cloud function.
+          type: integer
+          format: int32
+        errorCode:
+          description: Error code from the container while executing cloud function.
+          type: integer
+          format: int32
+        response:
+          description: >-
+            Response/result of size < 5MB size for the task/job executing cloud
+            function.
+          type: string
+    ArtifactDto:
+      description: Data Transfer Object(DTO) representing an artifact
+      required:
+        - name
+        - uri
+        - version
+      type: object
+      properties:
+        version:
+          description: Artifact version
+          type: string
+        name:
+          description: Artifact name
+          type: string
+        uri:
+          description: Artifact URI
+          type: string
+          format: uri
+    ContainerEnvironmentEntryDto:
+      description: Data Transfer Object(DTO) representing a container environment entry
+      required:
+        - key
+        - value
+      type: object
+      properties:
+        key:
+          description: Container environment key
+          type: string
+        value:
+          description: Container environment value
+          type: string
+    CreateFunctionRequest:
+      description: Request payload to create function.
+      required:
+        - inferenceUrl
+        - name
+      type: object
+      properties:
+        name:
+          description: >-
+            Function name must start with lowercase/uppercase/digit and can only
+            contain lowercase, uppercase, digit, hyphen, and underscore
+            characters
+          maxLength: 36
+          minLength: 10
+          pattern: ^[a-z0-9A-Z][a-z0-9A-Z\-_]*$
+          type: string
+        inferenceUrl:
+          description: Entrypoint for invoking the container to process a request
+          type: string
+          format: uri
+        healthUri:
+          description: Health endpoint for the container or the helmChart
+          type: string
+          format: uri
+        inferencePort:
+          description: >-
+            Optional port number where the inference listener is running.
+            Defaults to 8000  for Triton. 
+          type: integer
+          format: int32
+        containerArgs:
+          description: Args to be passed when launching the container
+          type: string
+        containerEnvironment:
+          description: Environment settings for launching the container
+          type: array
+          items:
+            $ref: '#/components/schemas/ContainerEnvironmentEntryDto'
+        models:
+          description: Optional set of models
+          uniqueItems: true
+          type: array
+          items:
+            $ref: '#/components/schemas/ArtifactDto'
+        containerImage:
+          description: Optional custom container image
+          type: string
+          format: uri
+        helmChart:
+          description: Optional Helm Chart
+          type: string
+          format: uri
+        helmChartServiceName:
+          description: >-
+            Helm Chart Service Name is required when helmChart property is
+            specified 
+          type: string
+        resources:
+          description: Optional set of resources
+          uniqueItems: true
+          type: array
+          items:
+            $ref: '#/components/schemas/ArtifactDto'
+        apiBodyFormat:
+          description: Invocation request body format
+          type: string
+          enum:
+            - PREDICT_V2
+            - CUSTOM
+    CreateFunctionResponse:
+      description: Response body for create function request.
+      required:
+        - function
+      type: object
+      properties:
+        function:
+          $ref: '#/components/schemas/FunctionDto'
+    FunctionDto:
+      description: Data Transfer Object(DTO) representing a function
+      required:
+        - createdAt
+        - healthUri
+        - id
+        - name
+        - ncaId
+        - status
+        - versionId
+      type: object
+      properties:
+        id:
+          description: Unique function id
+          type: string
+          format: uuid
+        ncaId:
+          description: NVIDIA Cloud Account Id
+          type: string
+        versionId:
+          description: Unique function version id
+          type: string
+          format: uuid
+        name:
+          description: Function name
+          type: string
+        status:
+          description: Function status
+          type: string
+          enum:
+            - ACTIVE
+            - DEPLOYING
+            - ERROR
+            - INACTIVE
+            - DELETED
+        inferenceUrl:
+          description: Entrypoint for invoking the container to process requests
+          type: string
+          format: uri
+        ownedByDifferentAccount:
+          description: >-
+            Indicates whether the function is owned by another account. If the
+            account  that is being used to lookup functions happens to be
+            authorized to invoke/list  this function which is owned by a
+            different account, then this field is set  to true and ncaId will
+            contain the id of the account that owns the function.  Otherwise,
+            this field is not set as it defaults to false. 
+          type: boolean
+        inferencePort:
+          description: >-
+            Optional port number where the inference listener is running -
+            defaults to 8000 for Triton
+          type: integer
+          format: int32
+        containerArgs:
+          description: Args used to launch the container
+          type: string
+        containerEnvironment:
+          description: Environment settings used to launch the container
+          type: array
+          items:
+            $ref: '#/components/schemas/ContainerEnvironmentEntryDto'
+        models:
+          description: Optional set of models
+          uniqueItems: true
+          type: array
+          items:
+            $ref: '#/components/schemas/ArtifactDto'
+        containerImage:
+          description: Optional custom container
+          type: string
+          format: uri
+        apiBodyFormat:
+          description: Invocation request body format
+          type: string
+          enum:
+            - PREDICT_V2
+            - CUSTOM
+        helmChart:
+          description: Optional Helm Chart
+          type: string
+          format: uri
+        helmChartServiceName:
+          description: >-
+            Helm Chart Service Name specified only when helmChart property is
+            specified 
+          type: string
+        healthUri:
+          description: Health endpoint for the container or helmChart
+          type: string
+          format: uri
+        createdAt:
+          description: Function creation timestamp
+          type: string
+          format: date-time
+        activeInstances:
+          description: List of active instances for this function.
+          type: array
+          items:
+            $ref: '#/components/schemas/InstanceDto'
+        resources:
+          description: Optional set of resources.
+          uniqueItems: true
+          type: array
+          items:
+            $ref: '#/components/schemas/ArtifactDto'
+    InstanceDto:
+      description: Data Transfer Object(DTO) representing a spot instance
+      type: object
+      properties:
+        instanceId:
+          description: Unique id of the instance
+          type: string
+        functionId:
+          description: Function executing on the instance
+          type: string
+          format: uuid
+        functionVersionId:
+          description: Function version executing on the instance
+          type: string
+          format: uuid
+        instanceType:
+          description: GPU instance-type powering the instance
+          type: string
+        instanceStatus:
+          description: Instance status
+          type: string
+          enum:
+            - ACTIVE
+            - ERRORED
+            - PREEMPTED
+            - DELETED
+        sisRequestId:
+          description: SIS request-id used to launch this instance
+          type: string
+          format: uuid
+        ncaId:
+          description: >-
+            NVIDIA Cloud Account Id that owns the function running on the
+            instance
+          type: string
+        gpu:
+          description: GPU name powering the instance
+          type: string
+        backend:
+          description: Backend where the instance is running
+          type: string
+        location:
+          description: Location such as zone name or region where the instance is running
+          type: string
+        instanceCreatedAt:
+          description: Instance creation timestamp
+          type: string
+          format: date-time
+        instanceUpdatedAt:
+          description: Instance's last updated timestamp
+          type: string
+          format: date-time
+    AuthorizedPartiesRequest:
+      description: >-
+        Request to associated authorized parties for a specific version or
+        allversions of a function
+      required:
+        - authorizedParties
+      type: object
+      properties:
+        authorizedParties:
+          description: Parties authorized to invoke function
+          type: array
+          items:
+            $ref: '#/components/schemas/AuthorizedPartyDto'
+    AuthorizedPartyDto:
+      description: Data Transfer Object(DTO) representing an authorized party.
+      required:
+        - ncaId
+      type: object
+      properties:
+        clientId:
+          description: >-
+            Client Id -- 'sub' claim in the JWT. This field should not be 
+            specified anymore.
+          type: string
+        ncaId:
+          description: NVIDIA Cloud Account authorized to invoke the function
+          type: string
+    AuthorizedPartiesByFunctionDto:
+      description: >-
+        Data Transfer Object(DTO) representing a function with authorized
+        accounts
+      required:
+        - id
+        - ncaId
+      type: object
+      properties:
+        id:
+          description: Function id
+          type: string
+          format: uuid
+        ncaId:
+          description: NVIDIA Cloud Account Id
+          type: string
+        versionId:
+          description: Function version id
+          type: string
+          format: uuid
+        authorizedParties:
+          description: Authorized parties allowed to invoke the function
+          type: array
+          items:
+            $ref: '#/components/schemas/AuthorizedPartyDto'
+    AuthorizedPartiesResponse:
+      description: Parties authorized to invoke function
+      required:
+        - function
+      type: object
+      properties:
+        function:
+          $ref: '#/components/schemas/AuthorizedPartiesByFunctionDto'
+    CreateAssetRequest:
+      description: >-
+        Request payload to create an asset-id and the corresponding pre-signed
+        URL to upload an asset of specified content-type to AWS S3 bucket.
+      required:
+        - contentType
+        - description
+      type: object
+      properties:
+        description:
+          description: Asset description
+          type: string
+        contentType:
+          description: Content type of the asset such image/png, image/jpeg, etc.
+          type: string
+    CreateAssetResponse:
+      description: >-
+        Response body containing asset-id and the corresponding pre-signed URL
+        to upload an asset of specified content-type to AWS S3 bucket.
+      type: object
+      properties:
+        description:
+          description: Asset description to be used when uploading the asset
+          type: string
+        assetId:
+          description: Unique id of the asset to be uploaded to AWS S3 bucket
+          type: string
+          format: uuid
+        uploadUrl:
+          description: Pre-signed upload URL to upload asset
+          type: string
+          format: url
+        contentType:
+          description: Content type of the asset such image/png, image/jpeg, etc.
+          type: string
+    PatchAuthorizedPartyRequest:
+      description: >-
+        Request payload to associate/disassociate authorized party with
+        function 
+      required:
+        - authorizedParty
+      type: object
+      properties:
+        authorizedParty:
+          $ref: '#/components/schemas/AuthorizedPartyDto'
+    GetQueuesResponse:
+      description: Request queue details of all the functions with same id in an account
+      required:
+        - functionId
+        - queues
+      type: object
+      properties:
+        functionId:
+          description: Function id
+          type: string
+          format: uuid
+        queues:
+          description: Details of all the queues associated with same named functions
+          type: array
+          items:
+            $ref: '#/components/schemas/QueueDto'
+    QueueDto:
+      description: >-
+        Data Transfer Object(DTO) representing a request queue for function
+        version
+      required:
+        - functionName
+        - functionStatus
+        - functionVersionId
+      type: object
+      properties:
+        functionVersionId:
+          description: Function version id
+          type: string
+          format: uuid
+        functionName:
+          description: Function name
+          type: string
+        functionStatus:
+          description: Function status
+          type: string
+          enum:
+            - ACTIVE
+            - DEPLOYING
+            - ERROR
+            - INACTIVE
+            - DELETED
+        queueDepth:
+          description: Approximate number of messages in the request queue
+          type: integer
+          format: int32
+    GetPositionInQueueResponse:
+      description: Request position in queue for invocation request
+      required:
+        - functionId
+        - functionVersionId
+      type: object
+      properties:
+        functionVersionId:
+          description: Function version id
+          type: string
+          format: uuid
+        functionId:
+          description: Function id
+          type: string
+          format: uuid
+        positionInQueue:
+          description: Position of request in queue
+          type: integer
+          format: int32
+    FunctionResponse:
+      description: Response body with function details
+      required:
+        - function
+      type: object
+      properties:
+        function:
+          $ref: '#/components/schemas/FunctionDto'
+    ListFunctionsResponse:
+      description: Response body containing list of functions
+      required:
+        - functions
+      type: object
+      properties:
+        functions:
+          description: List of functions
+          type: array
+          items:
+            $ref: '#/components/schemas/FunctionDto'
+    ListFunctionIdsResponse:
+      description: Response body containing list of function ids in an account
+      required:
+        - functionIds
+      type: object
+      properties:
+        functionIds:
+          description: List of function ids
+          type: array
+          items:
+            description: List of function ids
+            type: string
+            format: uuid
+    Cluster:
+      type: object
+      properties:
+        k8sVersion:
+          type: string
+        id:
+          type: string
+        name:
+          type: string
+    ClusterGroup:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        ncaId:
+          type: string
+        authorizedNcaIds:
+          type: array
+          items:
+            type: string
+        gpus:
+          type: array
+          items:
+            $ref: '#/components/schemas/Gpu'
+        clusters:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cluster'
+    ClusterGroupsResponse:
+      type: object
+      properties:
+        clusterGroups:
+          type: array
+          items:
+            $ref: '#/components/schemas/ClusterGroup'
+    Gpu:
+      type: object
+      properties:
+        name:
+          type: string
+        instanceTypes:
+          type: array
+          items:
+            $ref: '#/components/schemas/InstanceType'
+    InstanceType:
+      type: object
+      properties:
+        description:
+          type: string
+        name:
+          type: string
+        default:
+          type: boolean
+    ListAuthorizedPartiesResponse:
+      description: Parties authorized to invoke function
+      required:
+        - functions
+      type: object
+      properties:
+        functions:
+          description: Functions with authorized parties and other details
+          type: array
+          items:
+            $ref: '#/components/schemas/AuthorizedPartiesByFunctionDto'
+    AssetDto:
+      description: Data Transfer Object(DTO) representing an asset
+      type: object
+      properties:
+        description:
+          description: Description specified when creating the asset
+          type: string
+        assetId:
+          description: Asset id
+          type: string
+          format: uuid
+        contentType:
+          description: Content-type specified when creating the asset
+          type: string
+    AssetResponse:
+      type: object
+      properties:
+        asset:
+          $ref: '#/components/schemas/AssetDto'
+    ListAssetsResponse:
+      description: Response body containing list of assets of the current nca id
+      type: object
+      properties:
+        assets:
+          description: List of assets uploaded for the nca id
+          type: array
+          items:
+            $ref: '#/components/schemas/AssetDto'
+    HealthComponent:
+      type: object
+      properties:
+        description:
+          type: string
+        status:
+          type: string
+    FunctionInvocationInvokeFunctionRequest:
+      type: object
+    FunctionInvocationInvokeFunctionRequest1:
+      type: object
+    FunctionInvocationInvokeFunctionResponse:
+      type: array
+      items:
+        type: object
+        properties:
+          short:
+            type: integer
+            format: int32
+          char:
+            type: string
+          int:
+            type: integer
+            format: int32
+          long:
+            type: integer
+            format: int64
+          float:
+            type: number
+            format: float
+          double:
+            type: number
+            format: double
+          direct:
+            type: boolean
+          readOnly:
+            type: boolean
+    FunctionInvocationInvokeFunction200Response:
+      type: object
+      properties:
+        short:
+          type: integer
+          format: int32
+        char:
+          type: string
+        int:
+          type: integer
+          format: int32
+        long:
+          type: integer
+          format: int64
+        float:
+          type: number
+          format: float
+        double:
+          type: number
+          format: double
+        direct:
+          type: boolean
+        readOnly:
+          type: boolean
+    FunctionInvocationInvokeFunction202Response:
+      type: object
+      properties:
+        short:
+          type: integer
+          format: int32
+        char:
+          type: string
+        int:
+          type: integer
+          format: int32
+        long:
+          type: integer
+          format: int64
+        float:
+          type: number
+          format: float
+        double:
+          type: number
+          format: double
+        direct:
+          type: boolean
+        readOnly:
+          type: boolean
+    FunctionInvocationInvokeFunction302Response:
+      type: object
+      properties:
+        short:
+          type: integer
+          format: int32
+        char:
+          type: string
+        int:
+          type: integer
+          format: int32
+        long:
+          type: integer
+          format: int64
+        float:
+          type: number
+          format: float
+        double:
+          type: number
+          format: double
+        direct:
+          type: boolean
+        readOnly:
+          type: boolean
+    FunctionInvocationInvokeFunction402Response:
+      type: object
+      properties:
+        short:
+          type: integer
+          format: int32
+        char:
+          type: string
+        int:
+          type: integer
+          format: int32
+        long:
+          type: integer
+          format: int64
+        float:
+          type: number
+          format: float
+        double:
+          type: number
+          format: double
+        direct:
+          type: boolean
+        readOnly:
+          type: boolean
+    FunctionInvocationInvokeFunction403Response:
+      type: object
+      properties:
+        short:
+          type: integer
+          format: int32
+        char:
+          type: string
+        int:
+          type: integer
+          format: int32
+        long:
+          type: integer
+          format: int64
+        float:
+          type: number
+          format: float
+        double:
+          type: number
+          format: double
+        direct:
+          type: boolean
+        readOnly:
+          type: boolean
+    FunctionInvocationInvokeFunction200Response1:
+      type: array
+      items:
+        type: object
+        properties:
+          short:
+            type: integer
+            format: int32
+          char:
+            type: string
+          int:
+            type: integer
+            format: int32
+          long:
+            type: integer
+            format: int64
+          float:
+            type: number
+            format: float
+          double:
+            type: number
+            format: double
+          direct:
+            type: boolean
+          readOnly:
+            type: boolean
+    FunctionInvocationPollForResultUsingFunctionInvocationRequestResponse:
+      type: object
+      properties:
+        short:
+          type: integer
+          format: int32
+        char:
+          type: string
+        int:
+          type: integer
+          format: int32
+        long:
+          type: integer
+          format: int64
+        float:
+          type: number
+          format: float
+        double:
+          type: number
+          format: double
+        direct:
+          type: boolean
+        readOnly:
+          type: boolean
+    FunctionInvocationPollForResultUsingFunctionInvocationRequest202Response:
+      type: object
+      properties:
+        short:
+          type: integer
+          format: int32
+        char:
+          type: string
+        int:
+          type: integer
+          format: int32
+        long:
+          type: integer
+          format: int64
+        float:
+          type: number
+          format: float
+        double:
+          type: number
+          format: double
+        direct:
+          type: boolean
+        readOnly:
+          type: boolean
+    FunctionInvocationPollForResultUsingFunctionInvocationRequest302Response:
+      type: object
+      properties:
+        short:
+          type: integer
+          format: int32
+        char:
+          type: string
+        int:
+          type: integer
+          format: int32
+        long:
+          type: integer
+          format: int64
+        float:
+          type: number
+          format: float
+        double:
+          type: number
+          format: double
+        direct:
+          type: boolean
+        readOnly:
+          type: boolean
+    FunctionInvocationPollForResultUsingFunctionInvocationRequest402Response:
+      type: object
+      properties:
+        short:
+          type: integer
+          format: int32
+        char:
+          type: string
+        int:
+          type: integer
+          format: int32
+        long:
+          type: integer
+          format: int64
+        float:
+          type: number
+          format: float
+        double:
+          type: number
+          format: double
+        direct:
+          type: boolean
+        readOnly:
+          type: boolean
+    FunctionInvocationPollForResultUsingFunctionInvocationRequest403Response:
+      type: object
+      properties:
+        short:
+          type: integer
+          format: int32
+        char:
+          type: string
+        int:
+          type: integer
+          format: int32
+        long:
+          type: integer
+          format: int64
+        float:
+          type: number
+          format: float
+        double:
+          type: number
+          format: double
+        direct:
+          type: boolean
+        readOnly:
+          type: boolean
+x-readme:
+  explorer-enabled: true
+  proxy-enabled: true
+  samples-enabled: true
+_id: 65f7b55f255e0900453898b3
