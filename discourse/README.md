@@ -1,6 +1,0 @@
-[![Visit Discourse](imagePreview.png)](https://discourse.org)
-
-# [Discourse](https://discourse.org)
-
-Discourse is a modern forum software designed for community engagement and discussion. It offers a user-friendly interface, powerful moderation tools, and extensive customization options. Discourse fosters healthy conversations, promotes user participation, and provides a platform for sharing knowledge and ideas across diverse communities.
-
