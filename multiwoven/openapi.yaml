@@ -14,6 +14,7 @@ tags:
   - name: Connector Definitions
   - name: Reports
   - name: SyncRuns
+  - name: SyncRun
   - name: SyncRecords
 paths:
   /api/v1/models:
@@ -461,6 +462,8 @@ paths:
         - Syncs
       summary: Get report data based on given type
       operationId: Syncs_getReportData
+      security:
+        - bearerAuth: []
       responses:
         '200':
           description: Successfully retrieved report data.
@@ -474,6 +477,8 @@ paths:
         - Reports
       summary: Get report data based on given type
       operationId: Reports_getDataBasedOnType
+      security:
+        - bearerAuth: []
       parameters:
         - description: Type of the report to query.
           name: type
@@ -524,6 +529,8 @@ paths:
         - SyncRuns
       summary: List sync runs for a specific sync
       operationId: SyncRuns_listBySyncId
+      security:
+        - bearerAuth: []
       description: >-
         Retrieves a list of sync runs for a specific sync, optionally filtered
         by status.
@@ -557,12 +564,49 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SyncRunsListBySyncId404Response'
+  /api/v1/syncs/{sync_id}/sync_runs/{sync_run_id}:
+    get:
+      tags:
+        - SyncRun
+      summary: Get sync run using sync_run_id for a specific sync
+      operationId: SyncRun_getDetailsBySyncRunId
+      security:
+        - bearerAuth: []
+      description: Retrieves a sync run using sync_run_id for a specific sync.
+      parameters:
+        - description: The ID of the sync.
+          name: sync_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - description: The ID of the sync_run.
+          name: sync_run_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: A JSON object representing the sync run
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncRunGetDetailsBySyncRunIdResponse'
+        '404':
+          description: Sync not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncRunGetDetailsBySyncRunId404Response'
   /api/v1/syncs/{sync_id}/sync_runs/{sync_run_id}/sync_records:
     get:
       tags:
         - SyncRecords
       summary: List sync records for a specific sync run
       operationId: SyncRecords_listForSyncRun
+      security:
+        - bearerAuth: []
       description: >-
         Retrieves a list of sync records for a specific sync run, optionally
         filtered by status.
@@ -1631,6 +1675,58 @@ components:
         message:
           type: string
           example: Sync not found
+        status:
+          type: string
+          example: not_found
+    SyncRunGetDetailsBySyncRunIdResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            id:
+              type: string
+            type:
+              type: string
+            attributes:
+              type: object
+              properties:
+                sync_id:
+                  type: integer
+                status:
+                  type: string
+                started_at:
+                  type: string
+                  format: date-time
+                finished_at:
+                  type: string
+                  format: date-time
+                duration:
+                  type: number
+                  format: float
+                total_query_rows:
+                  type: integer
+                total_rows:
+                  type: integer
+                successful_rows:
+                  type: integer
+                failed_rows:
+                  type: integer
+                error:
+                  type: string
+                  nullable: true
+                created_at:
+                  type: string
+                  format: date-time
+                updated_at:
+                  type: string
+                  format: date-time
+    SyncRunGetDetailsBySyncRunId404Response:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Sync Run not found
         status:
           type: string
           example: not_found

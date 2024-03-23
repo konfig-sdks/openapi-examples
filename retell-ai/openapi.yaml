@@ -1,0 +1,855 @@
+openapi: 3.0.0
+info:
+  title: Retell SDK
+  description: >-
+    API for voice AI. Effortlessly integrate human-like Voice AI into your
+    product. | We are building an API that enables your product to provide an
+    intuitive and engaging way for user interaction - through voice.
+  version: 1.0.0
+  contact:
+    name: Retell Support
+    url: https://www.retellai.com/
+    email: founders@retellai.com
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+servers:
+  - description: The production server.
+    url: https://api.retellai.com
+tags:
+  - name: Agent
+  - name: Call
+paths:
+  x-speakeasy-errors:
+    statusCodes:
+      - 4XX
+      - 5XX
+  /register-call:
+    post:
+      tags:
+        - Call
+      operationId: Call_establishConnection
+      security:
+        - api_key: []
+      description: Register Call To Get CallId To Establish Connection
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CallEstablishConnectionRequest'
+      responses:
+        '201':
+          description: Successfully registered a call.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CallBase'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '402':
+          $ref: '#/components/responses/PaymentRequired'
+        '422':
+          $ref: '#/components/responses/UnprocessableContent'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /get-call/{call_id}:
+    get:
+      tags:
+        - Call
+      operationId: Call_getDetails
+      security:
+        - api_key: []
+      description: Retrieve details of a specific call
+      parameters:
+        - description: The call id to retrieve call history for.
+          in: path
+          name: call_id
+          schema:
+            type: string
+            example: 119c3f8e47135a29e65947eeb34cf12d
+          required: true
+      responses:
+        '200':
+          description: Successfully retrieved an agent.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CallDetail'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/UnprocessableContent'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      x-speakeasy-usage-example:
+        title: Retrieve a on-going or finished call
+        description: Retrieve details of a specific call
+  /list-calls:
+    get:
+      tags:
+        - Call
+      operationId: Call_getDetails
+      security:
+        - api_key: []
+      description: Retrieve call details
+      parameters:
+        - name: filter_criteria
+          in: query
+          schema:
+            type: object
+            properties:
+              agent_id:
+                description: Only retrieve calls that are made with specific agent(s).
+                type: array
+                items:
+                  type: string
+                example:
+                  - oBeDLoLOeuAbiuaMFXRtDOLriTJ5tSxD
+              before_start_timestamp:
+                description: Exclusive. Filter calls that start before this timestamp.
+                type: integer
+                example: 1703302407399
+              after_start_timestamp:
+                description: Inclusive. Filter calls that start on or after this timestamp.
+                type: integer
+                example: 1703302407300
+              before_end_timestamp:
+                description: Exclusive. Filter calls that end before this timestamp.
+                type: integer
+                example: 1703302428899
+              after_end_timestamp:
+                description: Inclusive. Filter calls that end on or after this timestamp.
+                type: integer
+                example: 1703302428800
+        - description: >-
+            The calls will be sorted by `start_timestamp`, whether to return the
+            calls in ascending or descending order.
+          name: sort_order
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - ascending
+              - descending
+            default: descending
+        - description: Limit the number of calls returned.
+          name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1000
+      responses:
+        '200':
+          description: Successfully retrieved all agents.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CallGetDetailsResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      x-speakeasy-usage-example:
+        title: List all web or phone calls
+        description: Retrieve call details
+  /create-agent:
+    post:
+      tags:
+        - Agent
+      operationId: Agent_createNewAgent
+      security:
+        - api_key: []
+      description: Create a new agent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentCreateNewAgentRequest'
+      responses:
+        '201':
+          description: Successfully created a new agent.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/UnprocessableContent'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      x-speakeasy-usage-example:
+        title: Create a new voice AI agent
+        description: Create a new agent
+  /get-agent/{agent_id}:
+    get:
+      tags:
+        - Agent
+      operationId: Agent_getDetails
+      security:
+        - api_key: []
+      description: Retrieve details of a specific agent
+      parameters:
+        - description: Unique id of the agent to be retrieved.
+          in: path
+          name: agent_id
+          schema:
+            type: string
+            example: 16b980523634a6dc504898cda492e939
+          required: true
+      responses:
+        '200':
+          description: Successfully retrieved an agent.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/UnprocessableContent'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      x-speakeasy-usage-example:
+        title: Retrieve details of an agent
+        description: Retrieve details of a specific agent
+  /list-agents:
+    get:
+      tags:
+        - Agent
+      operationId: Agent_getAll
+      security:
+        - api_key: []
+      description: List all agents
+      responses:
+        '200':
+          description: Successfully retrieved all agents.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentGetAllResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      x-speakeasy-usage-example:
+        title: List all agents
+        description: List all agents
+  /update-agent/{agent_id}:
+    patch:
+      tags:
+        - Agent
+      operationId: Agent_updateExistingAgent
+      security:
+        - api_key: []
+      description: Update an existing agent
+      parameters:
+        - description: Unique id of the agent to be updated.
+          in: path
+          name: agent_id
+          schema:
+            type: string
+            example: 16b980523634a6dc504898cda492e939
+          required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BaseAgent'
+      responses:
+        '200':
+          description: Successfully updated an agent.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/UnprocessableContent'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      x-speakeasy-usage-example:
+        title: Update an existing agent
+        description: Update an existing agent
+  /delete-agent/{agent_id}:
+    delete:
+      tags:
+        - Agent
+      operationId: Agent_deleteExistingAgent
+      security:
+        - api_key: []
+      description: Delete an existing agent
+      parameters:
+        - description: Unique id of the agent to be deleted.
+          in: path
+          name: agent_id
+          schema:
+            type: string
+            example: oBeDLoLOeuAbiuaMFXRtDOLriTJ5tSxD
+          required: true
+      responses:
+        '204':
+          description: No Content
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/UnprocessableContent'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      x-speakeasy-usage-example:
+        title: Delete an existing agent
+        description: Delete an existing agent
+components:
+  responses:
+    BadRequest:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CallEstablishConnectionResponse'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CallEstablishConnection401Response'
+    PaymentRequired:
+      description: Payment Required
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CallEstablishConnection402Response'
+    UnprocessableContent:
+      description: Unprocessable Content
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CallEstablishConnection422Response'
+    TooManyRequests:
+      description: Too Many Requests
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CallEstablishConnection429Response'
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CallEstablishConnection500Response'
+  securitySchemes:
+    api_key:
+      description: API key for authentication. You can find it in dashboard.
+      type: http
+      scheme: bearer
+      bearerFormat: string
+      x-speakeasy-example: YOUR_API_KEY
+  schemas:
+    CallBase:
+      type: object
+      required:
+        - call_id
+        - agent_id
+        - audio_websocket_protocol
+        - audio_encoding
+        - sample_rate
+        - call_status
+        - start_timestamp
+      properties:
+        call_id:
+          description: >-
+            Unique id of the call. Used to identify in LLM websocket and used to
+            authenticate in audio websocket.
+          type: string
+          example: Jabr9TXYYJHfvl6Syypi88rdAHYHmcq6
+        agent_id:
+          description: Corresponding agent id of this call.
+          type: string
+          example: oBeDLoLOeuAbiuaMFXRtDOLriTJ5tSxD
+        audio_websocket_protocol:
+          description: >-
+            Where the audio websocket would connect from would determine the
+            format / protocol of websocket messages, and would determine how our
+            server read audio bytes and send audio bytes.:
+
+
+            - `web`: The protocol defined by Retell, commonly used for
+            connecting from web frontend. Also useful for those who want to
+            manipulate audio bytes directly.
+
+
+            - `twilio`: The [websocket
+            protocol](https://www.twilio.com/docs/voice/twiml/stream#message-media)
+            defined by Twilio, used when your system uses Twilio, and supplies
+            Retell audio websocket url to Twilio.
+          type: string
+          enum:
+            - web
+            - twilio
+          example: twilio
+        audio_encoding:
+          description: >-
+            The audio encoding of the call. The following formats are
+            supported: 
+
+
+            - `s16le` 16 bit linear PCM audio, the native format for web audio
+            capture and playback.
+
+
+            - `mulaw` non-linear audio encoding technique used in telephony.
+            Commonly used by Twilio.
+          type: string
+          enum:
+            - s16le
+            - mulaw
+          example: s16le
+        sample_rate:
+          description: >-
+            Sample rate of the conversation, the input and output audio bytes
+            will all conform to this rate. Check the audio source, audio format,
+            and voice used for the agent to select one that works. supports
+            value ranging from [8000, 48000]. Note for Twilio `mulaw` encoding,
+            the sample rate has to be 8000.
+
+
+            - `s16le` sample rate recommendation (natively supported, lowest
+            latency): 
+              - elevenlabs voices: 16000, 22050, 24000, 44100.
+              - openai voices: 24000.
+
+              - deepgram voices: 8000, 16000, 24000, 32000, 48000.
+          type: integer
+          example: 24000
+        call_status:
+          description: >-
+            Status of call.
+
+
+            - `registered`: Call id issued, ready to make a call using this id.
+
+
+            - `ongoing`: Call connected and ongoing.
+
+
+            - `ended`: The underlying websocket has ended for the call. Either
+            user or agent hanged up, or call transferred. 
+
+
+            - `error`: Call encountered error.
+          type: string
+          enum:
+            - registered
+            - ongoing
+            - ended
+            - error
+          example: registered
+        start_timestamp:
+          description: Begin timestamp (milliseconds since epoch) of the call.
+          type: integer
+          example: 1703302407333
+        end_call_after_silence_ms:
+          description: >-
+            If users stay silent for a period, end the call. By default, it is
+            set to 600,000 ms (10 min). The minimum value allowed is 10,000 ms
+            (10 s).
+          type: integer
+          example: 600000
+        from_number:
+          description: >-
+            The caller number. This field is storage purpose only, set this if
+            you want the call object to contain it so that it's easier to
+            reference it. Not used for processing, when we connect to your LLM
+            websocket server, you can then get it from the call object.
+          type: string
+          example: 12137771234
+        to_number:
+          description: >-
+            The callee number. This field is storage purpose only, set this if
+            you want the call object to contain it so that it's easier to
+            reference it. Not used for processing, when we connect to your LLM
+            websocket server, you can then get it from the call object.
+          type: string
+          example: 12137771235
+        metadata:
+          description: >-
+            An abtriary object for storage purpose only. You can put anything
+            here like your own id for the call, twilio SID, internal customer
+            id. Not used for processing, when we connect to your LLM websocket
+            server, you can then get it from the call object.
+          type: object
+    CallDetail:
+      allOf:
+        - $ref: '#/components/schemas/CallBase'
+        - properties:
+            end_timestamp:
+              description: >-
+                End timestamp (milliseconds since epoch) of the call. Available
+                after call ends.
+              type: integer
+              example: 1703302428855
+            transcript:
+              description: Transcription of the call. Available after call ends.
+              type: string
+              example: >-
+                Agent: hi how are you doing?
+
+                User: Doing pretty well. How are you?
+
+                Agent: That's great to hear! I'm doing well too, thanks! What's
+                up?
+
+                User: I don't have anything in particular.
+
+                Agent: Got it, just checking in!
+
+                User: Alright. See you.
+
+                Agent: have a nice day
+                 
+            recording_url:
+              description: Recording of the call. Available after call ends.
+              type: string
+              example: >-
+                https://retellai.s3.us-west-2.amazonaws.com/Jabr9TXYYJHfvl6Syypi88rdAHYHmcq6/recording.wav
+    BaseAgent:
+      type: object
+      properties:
+        llm_websocket_url:
+          description: >-
+            The URL we will establish LLM websocket for getting response,
+            usually your server. Check out [LLM
+            WebSocket](https://raw.githubusercontent.com) for more about request
+            format (sent from us) and response format (send to us).
+          type: string
+          example: wss://your-websocket-endpoint
+        voice_id:
+          description: >-
+            Unique voice id used for the agent. Find list of available voices
+            and their preview in Dashboard.
+          type: string
+          example: 11labs-Adrian
+        voice_temperature:
+          description: >-
+            Controls how stable the voice is. Value ranging from [0,2]. Lower
+            value means more stable, and higher value means more variant speech
+            generation. Currently this setting only applies to `11labs` voices.
+            If unset, default value 1 will apply.
+          type: number
+          example: 1
+        voice_speed:
+          description: >-
+            Controls speed of voice. Value ranging from [0.5,2]. Lower value
+            means slower speech, while higher value means faster speech rate. If
+            unset, default value 1 will apply.
+          type: number
+          example: 1
+        responsiveness:
+          description: >-
+            Controls how responsive is the agent. Value ranging from [0,1].
+            Lower value means less responsive agent (wait more, respond slower),
+            while higher value means faster exchanges (respond when it can). If
+            unset, default value 1 will apply.
+          type: number
+          example: 1
+        enable_backchannel:
+          description: >-
+            Controls whether the agent would backchannel (agent interjects the
+            speaker with phrases like "yeah", "uh-huh" to signify interest and
+            engagement). Backchannel when enabled tends to show up more in
+            longer user utterances. If not set, agent will not backchannel.
+          type: boolean
+          example: true
+        ambient_sound:
+          description: >-
+            If set, will add ambient environment sound to the call to make
+            experience more realistic. Currently supports the following options:
+
+
+            - `coffee-shop`: Coffee shop ambience with people chatting in
+            background. [Listen to
+            Ambience](https://retell-utils-public.s3.us-west-2.amazonaws.com/coffee-shop.wav)
+
+
+            - `convention-hall`: Convention hall ambience, with some echo and
+            people chatting in background. [Listen to
+            Ambience](https://retell-utils-public.s3.us-west-2.amazonaws.com/convention-hall.wav)
+
+
+            - `summer-outdoor`: Summer outdoor ambience with cicada chirping.
+            [Listen to
+            Ambience](https://retell-utils-public.s3.us-west-2.amazonaws.com/summer-outdoor.wav)
+
+
+            - `mountain-outdoor`: Mountain outdoor ambience with birds singing.
+            [Listen to
+            Ambience](https://retell-utils-public.s3.us-west-2.amazonaws.com/mountain-outdoor.wav)
+
+             Set to string `null` to remove ambient sound from this agent. 
+          type: string
+          enum:
+            - coffee-shop
+            - convention-hall
+            - summer-outdoor
+            - mountain-outdoor
+            - 'null'
+        agent_name:
+          description: The name of the agent. Only used for your own reference.
+          type: string
+          example: Jarvis
+        language:
+          description: >-
+            `Beta feature, use with caution.`
+
+             This setting specifies the agent's operational language, including base language and dialect. Speech recognition considers both elements, but text-to-speech currently only recognizes the base language. 
+
+             For instance, selecting `en-GB` optimizes speech recognition for British English, yet text-to-speech output will be in standard English. If dialect-specific text-to-speech is required, please contact us for support. 
+
+            - `11lab voices`: supports English(en), German(de), Spanish(es),
+            Hindi(hi), Portuguese(pt) 
+
+
+            - `openAI voices`: supports English(en), German(de), Spanish(es),
+            Hindi(hi), Portuguese(pt), Japanese(ja) 
+
+
+            - `deepgram voices`: supports English(en) 
+          type: string
+          example: en-US
+          enum:
+            - en-US
+            - en-IN
+            - en-GB
+            - de-DE
+            - es-ES
+            - es-419
+            - hi-IN
+            - ja-JP
+            - pt-PT
+            - pt-BR
+        webhook_url:
+          description: >-
+            The webhook for agent to listen to call events. See what events it
+            would get at [webhook doc](https://raw.githubusercontent.com). If
+            set, will binds webhook events for this agent to the specified url,
+            and will ignore the account level webhook for this agent. Set to
+            string `null` to remove webhook url from this agent.
+          type: string
+          example: https://webhook-url-here
+        boosted_keywords:
+          description: >-
+            Provide a customized list of keywords to bias the transcriber model,
+            so that these words are more likely to get transcribed. Commonly
+            used for names, brands, street, etc.
+          type: array
+          items:
+            type: string
+          example:
+            - retell
+            - kroger
+        format_text:
+          description: >-
+            Whether to format the transcribed text with inverse text
+            normalization. It transforms the spoken form of text into written
+            form for entities like phone number, email address, street address,
+            etc. For example, "february fourth twenty twenty two" can be
+            converted into "february 4th 2022". If not set, the default is true.
+          type: boolean
+          example: true
+        optOutSensitiveDataStorage:
+          description: >-
+            Disable transcripts and recordings storage for enhanced privacy.
+            Access transcripts securely via webhooks.
+          type: boolean
+          example: true
+    AgentResponse:
+      allOf:
+        - properties:
+            agent_id:
+              description: Unique id of agent.
+              type: string
+              example: oBeDLoLOeuAbiuaMFXRtDOLriTJ5tSxD
+        - $ref: '#/components/schemas/BaseAgent'
+        - properties:
+            last_modification_timestamp:
+              description: >-
+                Last modification timestamp (milliseconds since epoch). Either
+                the time of last update or creation if no updates available.
+              type: integer
+              example: 1703413636133
+      required:
+        - agent_id
+        - llm_websocket_url
+        - voice_id
+        - last_modification_timestamp
+    CallEstablishConnectionRequest:
+      type: object
+      required:
+        - agent_id
+        - audio_websocket_protocol
+        - audio_encoding
+        - sample_rate
+      properties:
+        agent_id:
+          description: >-
+            Unique id of agent used for the call. Your agent would contain the
+            LLM Websocket url used for this call.
+          type: string
+          example: oBeDLoLOeuAbiuaMFXRtDOLriTJ5tSxD
+        audio_websocket_protocol:
+          description: >-
+            Where the audio websocket would connect from would determine the
+            format / protocol of websocket messages, and would determine how our
+            server read audio bytes and send audio bytes.:
+
+
+            - `web`: The protocol defined by Retell, commonly used for
+            connecting from web frontend. Also useful for those who want to
+            manipulate audio bytes directly.
+
+
+            - `twilio`: The [websocket
+            protocol](https://www.twilio.com/docs/voice/twiml/stream#message-media)
+            defined by Twilio, used when your system uses Twilio, and supplies
+            Retell audio websocket url to Twilio.
+          type: string
+          enum:
+            - web
+            - twilio
+          example: twilio
+        audio_encoding:
+          description: >-
+            The audio encoding of the call. The following formats are
+            supported: 
+
+
+            - `s16le` 16 bit linear PCM audio, the native format for web audio
+            capture and playback.
+
+
+            - `mulaw` non-linear audio encoding technique used in telephony.
+            Commonly used by Twilio.
+          type: string
+          enum:
+            - s16le
+            - mulaw
+          example: s16le
+        sample_rate:
+          description: >-
+            Sample rate of the conversation, the input and output audio bytes
+            will all conform to this rate. Check the audio source, audio format,
+            and voice used for the agent to select one that works. supports
+            value ranging from [8000, 48000]. Note for Twilio `mulaw` encoding,
+            the sample rate has to be 8000.
+
+
+            - `s16le` sample rate recommendation (natively supported, lowest
+            latency): 
+              - elevenlabs voices: 16000, 22050, 24000, 44100.
+              - openai voices: 24000.
+
+              - deepgram voices: 8000, 16000, 24000, 32000, 48000.
+          type: integer
+          example: 24000
+        end_call_after_silence_ms:
+          description: >-
+            If users stay silent for a period, end the call. By default, it is
+            set to 600,000 ms (10 min). The minimum value allowed is 10,000 ms
+            (10 s).
+          type: integer
+          example: 600000
+        from_number:
+          description: >-
+            The caller number. This field is storage purpose only, set this if
+            you want the call object to contain it so that it's easier to
+            reference it. Not used for processing, when we connect to your LLM
+            websocket server, you can then get it from the call object.
+          type: string
+          example: 12137771234
+        to_number:
+          description: >-
+            The callee number. This field is storage purpose only, set this if
+            you want the call object to contain it so that it's easier to
+            reference it. Not used for processing, when we connect to your LLM
+            websocket server, you can then get it from the call object.
+          type: string
+          example: 12137771235
+        metadata:
+          description: >-
+            An abtriary object for storage purpose only. You can put anything
+            here like your own id for the call, twilio SID, internal customer
+            id. Not used for processing, when we connect to your LLM websocket
+            server, you can then get it from the call object.
+          type: object
+    AgentCreateNewAgentRequest:
+      allOf:
+        - $ref: '#/components/schemas/BaseAgent'
+        - required:
+            - llm_websocket_url
+            - voice_id
+    CallEstablishConnectionResponse:
+      type: object
+      properties:
+        error_message:
+          type: string
+          example: Invalid request format, please check API reference.
+    CallEstablishConnection401Response:
+      type: object
+      properties:
+        error_message:
+          type: string
+          example: API key is missing or invalid.
+    CallEstablishConnection402Response:
+      type: object
+      properties:
+        error_message:
+          type: string
+          example: Trial has ended, please add payment method.
+    CallEstablishConnection422Response:
+      type: object
+      properties:
+        error_message:
+          type: string
+          example: Cannot find requested asset under given api key.
+    CallEstablishConnection429Response:
+      type: object
+      properties:
+        error_message:
+          type: string
+          example: Account rate limited, please throttle your requests.
+    CallEstablishConnection500Response:
+      type: object
+      properties:
+        error_message:
+          type: string
+          example: An unexpected server error occurred.
+    CallGetDetailsResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/CallDetail'
+    AgentGetAllResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/AgentResponse'
