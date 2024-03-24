@@ -9,8 +9,8 @@ servers:
 tags:
   - name: Voucher
   - name: Balance
-  - name: Payment
   - name: Transaction
+  - name: Payment
   - name: Wallet
   - name: Merchants
   - name: Rates
@@ -24,6 +24,70 @@ tags:
   - name: BankAccount
   - name: Bank
 paths:
+  /transaction:
+    get:
+      tags:
+        - Transaction
+      summary: Retrieve user's transaction records
+      operationId: Transaction_getUserTransactions
+      security:
+        - ApiKey: []
+          ApiUser: []
+          UserVersion: []
+      description: Retrieves all user transactions
+      parameters:
+        - description: >-
+            Currency for which transactions are to be retrieved. When this is
+            not supplied, transactions will be retrieved for all available
+            currencies.
+          in: query
+          name: currency
+          schema:
+            enum:
+              - NGN
+              - USD
+            type: string
+        - description: >-
+            Type of transactions to be retrieved. When this is not supplied,
+            transactions will be retrieved for all available types.
+          in: query
+          name: type
+          schema:
+            enum:
+              - deposit
+              - withdrawal
+              - sent
+              - transfer
+              - internalTransfer
+              - conversion
+            type: string
+        - description: Number of pages to be retrieved.
+          in: query
+          name: page
+          schema:
+            type: number
+        - description: Number of transaction records to be retrieved per page page.
+          in: query
+          name: limit
+          schema:
+            type: number
+        - description: Duration of the transaction to be retrieved per page page.
+          in: query
+          name: duration
+          schema:
+            enum:
+              - one day
+              - one week
+              - one month
+              - one year
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionGetUserTransactionsResponse'
   /v1/balance:
     get:
       tags:
@@ -629,70 +693,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/WebhookSubscribeWebhookCallbackResponse'
-  /transaction:
-    get:
-      tags:
-        - Transaction
-      summary: Retrieve user's transaction records
-      operationId: Transaction_getUserTransactions
-      security:
-        - ApiKey: []
-          ApiUser: []
-          UserVersion: []
-      description: Retrieves all user transactions
-      parameters:
-        - description: >-
-            Currency for which transactions are to be retrieved. When this is
-            not supplied, transactions will be retrieved for all available
-            currencies.
-          in: query
-          name: currency
-          schema:
-            enum:
-              - NGN
-              - USD
-            type: string
-        - description: >-
-            Type of transactions to be retrieved. When this is not supplied,
-            transactions will be retrieved for all available types.
-          in: query
-          name: type
-          schema:
-            enum:
-              - deposit
-              - withdrawal
-              - sent
-              - transfer
-              - internalTransfer
-              - conversion
-            type: string
-        - description: Number of pages to be retrieved.
-          in: query
-          name: page
-          schema:
-            type: number
-        - description: Number of transaction records to be retrieved per page page.
-          in: query
-          name: limit
-          schema:
-            type: number
-        - description: Duration of the transaction to be retrieved per page page.
-          in: query
-          name: duration
-          schema:
-            enum:
-              - one day
-              - one week
-              - one month
-              - one year
-            type: string
-      responses:
-        '200':
-          description: successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TransactionGetUserTransactionsResponse'
   /transaction/summary:
     get:
       tags:
@@ -931,10 +931,6 @@ paths:
                 $ref: '#/components/schemas/WalletExecuteTransferResponse'
 components:
   securitySchemes:
-    AdminSecret:
-      in: header
-      name: X-Admin-Secret
-      type: apiKey
     ApiKey:
       in: header
       name: X-Api-Key
@@ -946,6 +942,10 @@ components:
     UserVersion:
       in: header
       name: X-User-Version
+      type: apiKey
+    AdminSecret:
+      in: header
+      name: X-Admin-Secret
       type: apiKey
   schemas:
     MerchantsUpdateRecordRequest:
@@ -1254,6 +1254,76 @@ components:
         - currency
         - address
         - amount
+      type: object
+    TransactionGetUserTransactionsResponse:
+      properties:
+        data:
+          properties:
+            data:
+              items:
+                properties:
+                  version:
+                    type: string
+                  amount:
+                    format: int32
+                    type: number
+                  businessId:
+                    type: string
+                  createdAt:
+                    format: date-time
+                    type: string
+                  currency:
+                    type: string
+                  date:
+                    type: string
+                  fee:
+                    format: int32
+                    type: number
+                  fromAmount:
+                    format: int32
+                    type: number
+                  fromCurrency:
+                    type: string
+                  isFromRegUser:
+                    type: boolean
+                  prevBalance:
+                    format: int32
+                    type: number
+                  sender:
+                    type: string
+                  senderPrevbalance:
+                    format: int32
+                    type: number
+                  status:
+                    type: string
+                  transactionId:
+                    type: string
+                  type:
+                    type: string
+                  updatedAt:
+                    format: date-time
+                    type: string
+                  username:
+                    type: string
+                type: object
+              type: array
+            page:
+              format: int32
+              type: number
+            pages:
+              format: int32
+              type: number
+            perPage:
+              format: int32
+              type: number
+            total:
+              format: int32
+              type: number
+          type: object
+        message:
+          type: string
+        success:
+          type: boolean
       type: object
     BalanceGetAccountBalanceResponse:
       properties:
@@ -2075,76 +2145,6 @@ components:
       type: object
     WebhookSubscribeWebhookCallbackResponse:
       properties:
-        message:
-          type: string
-        success:
-          type: boolean
-      type: object
-    TransactionGetUserTransactionsResponse:
-      properties:
-        data:
-          properties:
-            data:
-              items:
-                properties:
-                  version:
-                    type: string
-                  amount:
-                    format: int32
-                    type: number
-                  businessId:
-                    type: string
-                  createdAt:
-                    format: date-time
-                    type: string
-                  currency:
-                    type: string
-                  date:
-                    type: string
-                  fee:
-                    format: int32
-                    type: number
-                  fromAmount:
-                    format: int32
-                    type: number
-                  fromCurrency:
-                    type: string
-                  isFromRegUser:
-                    type: boolean
-                  prevBalance:
-                    format: int32
-                    type: number
-                  sender:
-                    type: string
-                  senderPrevbalance:
-                    format: int32
-                    type: number
-                  status:
-                    type: string
-                  transactionId:
-                    type: string
-                  type:
-                    type: string
-                  updatedAt:
-                    format: date-time
-                    type: string
-                  username:
-                    type: string
-                type: object
-              type: array
-            page:
-              format: int32
-              type: number
-            pages:
-              format: int32
-              type: number
-            perPage:
-              format: int32
-              type: number
-            total:
-              format: int32
-              type: number
-          type: object
         message:
           type: string
         success:
