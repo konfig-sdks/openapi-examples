@@ -1,0 +1,6291 @@
+openapi: 3.0.0
+info:
+  title: Catalog API
+  description: This API lists data sets available on Agrimetrics platform.
+  version: ''
+  x-konfig-ignore:
+    object-with-no-properties: true
+servers:
+  - url: https://api-test.agrimetrics.co.uk/catalog
+tags:
+  - name: Dataset
+  - name: OGCAPI
+  - name: OGC API Tiles
+  - name: Admin
+  - name: Manage Layer
+  - name: dataRequest
+  - name: Template
+  - name: Query Layer
+  - name: Service Definition
+  - name: WFS
+  - name: WMTS REST
+  - name: AccessRequest
+  - name: Status
+  - name: WMS
+  - name: WCS
+  - name: ESRI
+  - name: Harvest
+  - name: Query Dataset
+  - name: Manage Dataset
+  - name: WMTS
+  - name: Import
+  - name: Shapefile
+  - name: Authentication
+  - name: Graph
+  - name: Image
+paths:
+  /authenticate:
+    post:
+      tags:
+        - Authentication
+      summary: Get JWT
+      operationId: Authentication_getJwt
+      description: >-
+        Retrieve an Agrimetrics JWT to be used as additional authentication on
+        specified endpoints
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthenticationGetJwtRequest'
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              examples:
+                Result:
+                  value: |-
+                    {
+                        "jwts": {
+                            "agrimetrics": {
+                                "token_type": "Bearer",
+                                "access_token": "9d7e80a0-ad76-4a5c-8810-91ffc9d5858f"
+                            }
+                        }
+                    }
+              schema:
+                $ref: '#/components/schemas/AuthenticationGetJwtResponse'
+        '400':
+          description: '400'
+          content:
+            application/json:
+              examples:
+                Result:
+                  value: '{}'
+              schema:
+                $ref: '#/components/schemas/AuthenticationGetJwt400Response'
+      deprecated: false
+  /status:
+    get:
+      tags:
+        - Status
+      summary: Get status of catalog API.
+      operationId: Status_getCatalogApiStatus
+      security:
+        - {}
+        - apiKeyQuery: []
+      description: Get status of catalog API.
+      responses:
+        '200':
+          description: Status of catalog API.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusGetCatalogApiStatusResponse'
+  /query:
+    post:
+      tags:
+        - Query Layer
+      summary: Query and download sections of one or more layers
+      operationId: QueryLayer_cutShapeBoundaryAndRetrieve
+      security: []
+      description: >-
+        Cut one or more layers to a shape boundary and retrieve the features as
+        multiple layers in a single downloadable file
+      parameters:
+        - description: A layer to query
+          in: query
+          name: layer
+          required: true
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/LayerId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: >-
+                #/components/schemas/QueryLayerCutShapeBoundaryAndRetrieveRequest
+          application/geo+json:
+            schema:
+              $ref: '#/components/schemas/GeoJSONPolygon'
+          application/zipped-shapefile:
+            schema:
+              $ref: >-
+                #/components/schemas/QueryLayerCutShapeBoundaryAndRetrieveRequest1
+      responses:
+        '200':
+          description: Result
+          content:
+            application/geo+json:
+              schema:
+                $ref: >-
+                  #/components/schemas/QueryLayerCutShapeBoundaryAndRetrieveResponse
+            application/gml+xml; version=3.2:
+              schema:
+                $ref: >-
+                  #/components/schemas/QueryLayerCutShapeBoundaryAndRetrieve200Response
+            application/vnd.google-earth.kml+xml:
+              schema:
+                $ref: >-
+                  #/components/schemas/QueryLayerCutShapeBoundaryAndRetrieve200Response
+            application/zipped-shapefile:
+              schema:
+                $ref: >-
+                  #/components/schemas/QueryLayerCutShapeBoundaryAndRetrieve200Response
+            application/x.gdb+zip:
+              schema:
+                $ref: >-
+                  #/components/schemas/QueryLayerCutShapeBoundaryAndRetrieve200Response
+            application/x.mid-mif+zip:
+              schema:
+                $ref: >-
+                  #/components/schemas/QueryLayerCutShapeBoundaryAndRetrieve200Response
+            application/x.tab+zip:
+              schema:
+                $ref: >-
+                  #/components/schemas/QueryLayerCutShapeBoundaryAndRetrieve200Response
+            application/dxf:
+              schema:
+                $ref: >-
+                  #/components/schemas/QueryLayerCutShapeBoundaryAndRetrieve200Response
+            application/dxf+zip:
+              schema:
+                $ref: >-
+                  #/components/schemas/QueryLayerCutShapeBoundaryAndRetrieve200Response
+        '400':
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '403':
+          description: Forbidden. Check permissions to view these layers.
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/QueryLayerCutShapeBoundaryAndRetrieve403Response
+        '404':
+          description: Not found. One or more layers could not be found.
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/QueryLayerCutShapeBoundaryAndRetrieve404Response
+        '406':
+          description: Not acceptable. Cannot produce output type.
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/QueryLayerCutShapeBoundaryAndRetrieve406Response
+  /datasets/{datasetId}:
+    get:
+      tags:
+        - Query Dataset
+      summary: List layers within dataset
+      operationId: QueryDataset_listLayersWithinDataset
+      description: Get the list of layers contained in a geospatial data set.
+      parameters:
+        - description: This parameter corresponds to the Agrimetrics Catalogue dataset ID.
+          in: path
+          name: datasetId
+          required: true
+          schema:
+            $ref: '#/components/schemas/DatasetId'
+      responses:
+        '200':
+          description: Successful. Retrived a list of layers for this dataset.
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/QueryDatasetListLayersWithinDatasetResponse
+        '400':
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '403':
+          description: Forbidden. Check permissions to view this dataset.
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/QueryDatasetListLayersWithinDataset403Response
+        '404':
+          description: Not found. The datasetId cannot be found.
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/QueryDatasetListLayersWithinDataset404Response
+  /datasets/{datasetId}/layers:
+    post:
+      tags:
+        - Manage Dataset
+        - Admin
+      summary: Ingest file to new layer
+      operationId: ManageDataset_ingestFileNewLayer
+      description: >
+        > :warning: **This is an Agrimetrics internal operation. It relies on
+        information which is not exposed externally.**
+
+
+        Ingest a file that has been uploaded to the catalog to create a new
+        layer.
+
+        See [supported ingest formats](doc:supported-ingest-formats) for
+        supported formats.
+      parameters:
+        - in: path
+          name: datasetId
+          required: true
+          schema:
+            $ref: '#/components/schemas/DatasetId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ManageDatasetIngestFileNewLayerRequest'
+      responses:
+        '201':
+          description: >-
+            Successful. Layer Created. File ingested correctly and new layer
+            created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NewLayers'
+        '400':
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '404':
+          description: File not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '409':
+          description: Lock contention. Try again later.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+  /shapefile:
+    post:
+      tags:
+        - Shapefile
+      summary: Receive a shapefile and return GeoJson
+      operationId: Shapefile_convertToGeoJson
+      description: >
+        > :warning: **This is an Agrimetrics internal operation. It relies on
+        information which is not exposed externally.**
+
+
+        Receive a shapefile and return GeoJson for explore page
+      requestBody:
+        required: true
+        content:
+          application/zipped-shapefile:
+            schema:
+              $ref: '#/components/schemas/ShapefileConvertToGeoJsonRequest'
+      responses:
+        '200':
+          description: GeoJSON Polygon
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeoJSONPolygon'
+        '400':
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '404':
+          description: Dataset not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+  /layers/{layerId}:
+    get:
+      tags:
+        - Query Layer
+      summary: Get layer metadata
+      operationId: QueryLayer_metadata
+      description: |
+        Get the metadata for a given layer, including the geospatial extent.
+      parameters:
+        - in: path
+          name: layerId
+          required: true
+          schema:
+            $ref: '#/components/schemas/LayerId'
+      responses:
+        '200':
+          description: >-
+            Successful. Retreived the geospatial and temporal descriptions of
+            the layer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueryLayerMetadataResponse'
+        '400':
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '404':
+          description: Not found. Verify that the layer ID is correct/exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+    patch:
+      tags:
+        - Manage Layer
+      summary: Add a GeoTIFF to a layer
+      operationId: ManageLayer_addGeoTiff
+      description: >
+        > :warning: **The maximum file size accepted for this endpoint to work
+        is 200 MiB.**
+
+
+        This endpoint will add a GeoTIFF to an existing GeoTIFF layer.
+      parameters:
+        - in: path
+          name: layerId
+          required: true
+          schema:
+            $ref: '#/components/schemas/LayerId'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ManageLayerAddGeoTiffRequest'
+      responses:
+        '200':
+          description: Successful. Tile created on the specified layer.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ManageLayerAddGeoTiffResponse'
+        '400':
+          description: Bad request. An error occurred while uploading the file.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '403':
+          description: Forbidden. The request is not authorised.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '404':
+          description: Not found. Verify that the layer ID is correct/exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '409':
+          description: Lock contention. Try again later.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '413':
+          description: Payload too large. File exceeds the maximum size limit.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+    delete:
+      tags:
+        - Manage Layer
+        - Admin
+      summary: Delete layer
+      operationId: ManageLayer_deleteLayer
+      description: >
+        > :warning: **This is an Agrimetrics internal operation. It relies on
+        information which is not exposed externally.**
+
+
+        Delete the datastore and layer relating to a zip file on a data set.
+      parameters:
+        - in: path
+          name: layerId
+          required: true
+          schema:
+            $ref: '#/components/schemas/LayerId'
+      responses:
+        '204':
+          description: Successful. Layer Deleted.
+        '400':
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '403':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '404':
+          description: File not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+  /layers/{layerId}/files:
+    delete:
+      tags:
+        - Manage Layer
+        - Admin
+      summary: Delete a file from a layer
+      operationId: ManageLayer_removeFile
+      description: >
+        > :warning: **This is an Agrimetrics internal operation. It relies on
+        information which is not exposed externally.**
+
+
+        Remove a file from a layer. When you are deleting a file from a layer,
+        the layer may remain if any other files were ingested onto the same
+        layer. If removing a raster file, provide the fileName query parameter;
+        if removing a vector file, provide the fileUri.
+      parameters:
+        - in: path
+          name: layerId
+          required: true
+          schema:
+            $ref: '#/components/schemas/LayerId'
+        - in: query
+          name: fileUri
+          required: false
+          schema:
+            type: string
+            format: uri
+            pattern: .zip$
+            example: >-
+              https://api-test.agrimetrics.co.uk/file-management/data-sets/11111111-2222-3333-4444-55555555555/files/example.zip
+        - in: query
+          name: filename
+          required: false
+          schema:
+            type: string
+            pattern: .tif[f]?$
+            example: example.tif
+      responses:
+        '200':
+          description: OK
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '403':
+          description: Auth error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '404':
+          description: File not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+  /layers/{layerId}/ingest:
+    post:
+      tags:
+        - Manage Layer
+        - Admin
+      summary: Ingest a file to a layer
+      operationId: ManageLayer_ingestFile
+      description: >
+        > :warning: **This is an Agrimetrics internal operation. It relies on
+        information which is not exposed externally.**
+
+
+        Ingest a file that has been uploaded to a data set.
+      parameters:
+        - in: path
+          name: layerId
+          required: true
+          schema:
+            $ref: '#/components/schemas/LayerId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ManageLayerIngestFileRequest'
+      responses:
+        '200':
+          description: Successful. Tile ingested correctly.
+        '400':
+          description: Bad request. File ingest error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '404':
+          description: File not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '409':
+          description: Lock contention. Try again later.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+  /layers/{layerId}/style:
+    delete:
+      tags:
+        - Manage Layer
+      summary: Delete the style from a layer, if one has been set
+      operationId: ManageLayer_removeStyle
+      description: |
+        Delete an SLD style that has been applied to a layer.
+      parameters:
+        - in: path
+          name: layerId
+          required: true
+          schema:
+            $ref: '#/components/schemas/LayerId'
+      responses:
+        '204':
+          description: Style deleted
+        '400':
+          description: >
+            You probably tried to delete the style from an unstyled layer.
+            Please verify the layer ID.
+    get:
+      tags:
+        - Manage Layer
+      summary: Get the style for a layer, if one has been set
+      operationId: ManageLayer_getStyle
+      description: |
+        Get the SLD style that has been applied to a layer.
+      parameters:
+        - in: path
+          name: layerId
+          required: true
+          schema:
+            $ref: '#/components/schemas/LayerId'
+      responses:
+        '200':
+          description: Style applied to the layer
+          content:
+            application/vnd.ogc.sld+xml:
+              example: null
+        '404':
+          description: Query was successful but no style found.
+    put:
+      tags:
+        - Manage Layer
+      summary: Set layer style
+      operationId: ManageLayer_setStyle
+      description: >
+        Apply a new style to the given layer. The style must be provided as an
+        SLD file (1.0.0 and 1.1.0 supported).
+      parameters:
+        - in: path
+          name: layerId
+          required: true
+          schema:
+            $ref: '#/components/schemas/LayerId'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ManageLayerSetStyleRequest'
+      responses:
+        '200':
+          description: Successful. Layer style has been updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ManageLayerSetStyleResponse'
+        '400':
+          description: >-
+            Bad request. Verify that the layer supports this operation /
+            temporal specifications / output format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+    post:
+      tags:
+        - Manage Layer
+      summary: Auto-generate and set layer style
+      operationId: ManageLayer_autoGenerateStyle
+      description: |
+        Generate a new style and apply it to the given layer.
+      parameters:
+        - in: path
+          name: layerId
+          required: true
+          schema:
+            $ref: '#/components/schemas/LayerId'
+        - in: query
+          name: key
+          required: true
+          schema:
+            description: The column name used for the legend
+            type: string
+            example: LU_CODE
+      responses:
+        '200':
+          description: Successful. Layer style has been updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '400':
+          description: >-
+            Bad request. Verify that the layer supports this operation /
+            temporal specifications / output format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '403':
+          description: Forbidden. Check permissions to view this dataset.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '404':
+          description: Layer not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+  /layers/{layerId}/search:
+    post:
+      tags:
+        - Query Layer
+      summary: Search within layer
+      operationId: QueryLayer_searchGeometry
+      description: >
+        > :warning: Search geometries are currently limited to areas up to 500
+        square km.
+
+
+        Search a specific geometry within a layer. You can optionally specify a
+        time range and/or choose the format of the response (file type, or
+        json).
+      parameters:
+        - in: path
+          name: layerId
+          required: true
+          schema:
+            $ref: '#/components/schemas/LayerId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QueryLayerSearchGeometryRequest'
+      responses:
+        '200':
+          description: >-
+            Successful. Retrieved the requested geometry in the
+            default/specified format.
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/BinaryFile'
+        '400':
+          description: >-
+            Bad request. Verify that the layer supports this operation /
+            temporal specifications / output format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '402':
+          description: Insufficient credits to complete the request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '404':
+          description: Resource not found. Verify that the layer ID is correct/exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+  /layers/{layerId}/search/cost:
+    post:
+      tags:
+        - Query Layer
+      summary: Calculate query cost
+      operationId: QueryLayer_calculateCost
+      description: |
+        Find out the cost of searching a specific geometry within a layer.
+      parameters:
+        - in: path
+          name: layerId
+          required: true
+          schema:
+            $ref: '#/components/schemas/LayerId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QueryLayerCalculateCostRequest'
+      responses:
+        '200':
+          description: >-
+            Successful. Retrieved the requested geometry in the
+            default/specified format.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CostSummary'
+        '400':
+          description: >-
+            Bad request. Verify that the layer supports this operation /
+            temporal specifications / output format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '402':
+          description: Insufficient credits to complete the request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '404':
+          description: Resource not found. Verify that the layer ID is correct/exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+  /layers/{layerId}/search/statistics:
+    post:
+      tags:
+        - Query Layer
+      summary: Get layer statistics
+      operationId: QueryLayer_calculateStatisticsWithinGeometry
+      description: >
+        > :warning: Search geometries are currently limited to areas up to 500
+        square km.
+
+
+        Calculates basic statistics of the raster layer within the specified
+        geometry (and optionally time).
+      parameters:
+        - in: path
+          name: layerId
+          required: true
+          schema:
+            $ref: '#/components/schemas/LayerId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: >-
+                #/components/schemas/QueryLayerCalculateStatisticsWithinGeometryRequest
+      responses:
+        '200':
+          description: >-
+            Successful. Retrieved the requested statistics for the specified
+            geometry
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Statistics'
+        '400':
+          description: >-
+            Bad request. Verify that the layer supports this operation /
+            temporal specifications.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '404':
+          description: Resource not found. Verify that the layer ID is correct/exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+  /serviceDefinition:
+    post:
+      tags:
+        - Service Definition
+        - Admin
+      summary: Create new service definition
+      operationId: ServiceDefinition_createNewDefinition
+      description: >
+        > :warning: **This is an Agrimetrics internal operation. It relies on
+        information which is not exposed externally.**
+
+
+        Create new service definition within a data set.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceDefinition'
+      responses:
+        '201':
+          description: Successful. Created new service definition.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceDefinitionResponse'
+        '400':
+          description: >-
+            Bad request. Verify that the format of the service definition is
+            correct.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '403':
+          description: Not authorised.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '404':
+          description: Not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+  /serviceDefinition/{layerId}:
+    patch:
+      tags:
+        - Service Definition
+        - Admin
+      summary: Update service definition
+      operationId: ServiceDefinition_updateExistingDefinition
+      description: >
+        > :warning: **This is an Agrimetrics internal operation. It relies on
+        information which is not exposed externally.**
+
+
+        Update an existing service definition with billing and coordinates
+        reference system metadata.
+      parameters:
+        - in: path
+          name: layerId
+          required: true
+          schema:
+            $ref: '#/components/schemas/LayerId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: >-
+                #/components/schemas/ServiceDefinitionUpdateExistingDefinitionRequest
+      responses:
+        '200':
+          description: Successful. Edited service definition.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceDefinitionResponse'
+        '400':
+          description: >-
+            Bad request. Verify that the format of the service definition is
+            correct.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '403':
+          description: Auth error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '404':
+          description: Service definition not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+    delete:
+      tags:
+        - Service Definition
+        - Admin
+      summary: Delete service definition
+      operationId: ServiceDefinition_deleteById
+      description: >
+        > :warning: **This is an Agrimetrics internal operation. It relies on
+        information which is not exposed externally.**
+
+
+        Delete service definition given layer ID
+      parameters:
+        - in: path
+          name: layerId
+          required: true
+          schema:
+            $ref: '#/components/schemas/LayerId'
+      responses:
+        '200':
+          description: OK
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '403':
+          description: Auth error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '404':
+          description: Service definition not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+    get:
+      tags:
+        - Service Definition
+        - Admin
+      summary: Get service definition
+      operationId: ServiceDefinition_getByLayerId
+      description: >
+        > :warning: **This is an Agrimetrics internal operation. It relies on
+        information which is not exposed externally.**
+
+
+        Get the service definition for a given layer ID
+      parameters:
+        - in: path
+          name: layerId
+          required: true
+          schema:
+            $ref: '#/components/schemas/LayerId'
+      responses:
+        '200':
+          description: Successful.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceDefinitionResponse'
+        '400':
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '403':
+          description: Auth error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '404':
+          description: Service definition not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+  /data-requests:
+    get:
+      tags:
+        - dataRequest
+      summary: lists a users data requests
+      operationId: DataRequest_listUserAccessRequests
+      description: |
+        Query the given users data access requests
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataRequestResponse'
+        '400':
+          description: Bad Request. Verify that the JWT has a valid user ID on it
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '401':
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+    post:
+      tags:
+        - dataRequest
+      summary: create a single access request
+      operationId: DataRequest_createSingleAccessRequest
+      description: Create a single access request for an authenticated user
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DataRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/DataRequestCreateSingleAccessRequestResponse
+        '400':
+          description: Bad Request. Verify that the JWT has a valid user ID on it
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '401':
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+  /data-requests/{requestId}:
+    get:
+      tags:
+        - dataRequest
+      summary: gets the data for the approved request
+      operationId: DataRequest_getRequestedData
+      description: Returns the users requested data
+      parameters:
+        - in: path
+          name: requestId
+          required: true
+          schema:
+            $ref: '#/components/schemas/RequestId'
+      responses:
+        '200':
+          description: Result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataRequestDetails'
+        '400':
+          description: Bad Request. Verify that the JWT has a valid user ID on it
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '401':
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '403':
+          description: >-
+            Access Error. Verify that this data set has been approved for
+            access.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+    patch:
+      tags:
+        - dataRequest
+      summary: updates a data request
+      operationId: DataRequest_updateRequest
+      description: |
+        Allows updating of the given data request |
+        - For example: cancelling the request
+      parameters:
+        - in: path
+          name: requestId
+          required: true
+          schema:
+            $ref: '#/components/schemas/RequestId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DataRequestUpdateRequestRequest'
+      responses:
+        '200':
+          description: Result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataRequestUpdateRequestResponse'
+        '400':
+          description: Bad Request. Verify that the JWT has a valid user ID on it
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '401':
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '403':
+          description: >-
+            Access Error. Verify that this data set has been approved for
+            access.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '404':
+          description: Not Found Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+  /data-requests/{uniqueLinkId}/approve:
+    get:
+      tags:
+        - dataRequest
+      summary: approve data access
+      operationId: DataRequest_grantUserAccess
+      description: Grants access to a user on a given data request
+      parameters:
+        - in: path
+          name: uniqueLinkId
+          required: true
+          schema:
+            $ref: '#/components/schemas/uniqueLinkId'
+      responses:
+        '204':
+          description: OK
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '404':
+          description: Data Access request not found
+  /data-requests/{uniqueLinkId}/reject:
+    get:
+      tags:
+        - dataRequest
+      summary: reject data access
+      operationId: DataRequest_rejectUserAccess
+      description: Rejects access to a user on a given data request
+      parameters:
+        - in: path
+          name: uniqueLinkId
+          required: true
+          schema:
+            $ref: '#/components/schemas/uniqueLinkId'
+      responses:
+        '204':
+          description: OK
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '404':
+          description: Data Access request not found
+  /data-requests/{uniqueLinkId}/geometry:
+    get:
+      tags:
+        - dataRequest
+      summary: Get geometry for data request as GeoJSON
+      operationId: DataRequest_getGeoJsonGeometry
+      description: Returns the geometry of the data request as GeoJSON
+      parameters:
+        - in: path
+          name: uniqueLinkId
+          required: true
+          schema:
+            $ref: '#/components/schemas/uniqueLinkId'
+      responses:
+        '200':
+          description: GeoJSON Polygon
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeoJSONPolygon'
+        '404':
+          description: Data Access request not found
+  /data-requests/{requestId}/download:
+    get:
+      tags:
+        - dataRequest
+      summary: Get the results of your data request
+      operationId: DataRequest_getResults
+      description: >-
+        Once a data access request has been approved, this endpoint returns the
+        data requested.
+      parameters:
+        - in: path
+          name: requestId
+          required: true
+          schema:
+            $ref: '#/components/schemas/RequestId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/geo+json:
+              schema:
+                $ref: '#/components/schemas/DataRequestGetResultsResponse'
+            application/gml+xml; version=3.2:
+              schema:
+                $ref: '#/components/schemas/DataRequestGetResults200Response'
+            application/vnd.google-earth.kml+xml:
+              schema:
+                $ref: '#/components/schemas/DataRequestGetResults200Response'
+            application/zipped-shapefile:
+              schema:
+                $ref: '#/components/schemas/DataRequestGetResults200Response'
+            application/x.gdb+zip:
+              schema:
+                $ref: '#/components/schemas/DataRequestGetResults200Response'
+            application/x.mid-mif+zip:
+              schema:
+                $ref: '#/components/schemas/DataRequestGetResults200Response'
+            application/x.tab+zip:
+              schema:
+                $ref: '#/components/schemas/DataRequestGetResults200Response'
+            application/dxf:
+              schema:
+                $ref: '#/components/schemas/DataRequestGetResults200Response'
+        '400':
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '401':
+          description: Authentication required.
+        '403':
+          description: >-
+            The request has not been approved yet OR it has been rejected OR you
+            are not authorised for this data access request.
+        '404':
+          description: No request found by that ID.
+        '406':
+          description: Not acceptable. Cannot produce output type.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataRequestGetResults406Response'
+        '410':
+          description: This data access request has expired.
+  /datasets/swagger-ui/{swaggerFile}:
+    get:
+      tags:
+        - OGCAPI
+      summary: OGC-API-Features Swagger
+      operationId: Ogcapi_getSwaggerFile
+      security: []
+      description: Get swagger files
+      parameters:
+        - in: path
+          name: swaggerFile
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+      x-allow-unknown-query-parameters: false
+  /datasets/apicss/{cssFile}:
+    get:
+      tags:
+        - OGCAPI
+      summary: OGC-API CSS
+      operationId: Ogcapi_getStyleForCssFile
+      security: []
+      description: Get CSS files
+      parameters:
+        - in: path
+          name: cssFile
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+      x-allow-unknown-query-parameters: false
+  /datasets/{datasetId}/wms:
+    get:
+      tags:
+        - WMS
+      summary: Web Map Service (WMS) query
+      operationId: Wms_queryLayerWithOpenGIS
+      security: []
+      description: >
+        Query the given layer with the OpenGIS® Web Map Service interface
+        standard
+      parameters:
+        - in: path
+          name: datasetId
+          required: true
+          schema:
+            $ref: '#/components/schemas/DatasetId'
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/WmsQueryLayerWithOpenGisResponse'
+        '400':
+          description: Bad Request. Verify that this data set has a geospatial layer.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '403':
+          description: Access Error. Verify that this data set is accessible via WMS.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '404':
+          description: Not Found Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+      x-allow-unknown-query-parameters: true
+    head:
+      tags:
+        - WMS
+      summary: Web Maps Service (WMS) query
+      operationId: Wms_queryWithOpenGis
+      security: []
+      description: >
+        Query the given data set with the OpenGIS® Web Map Service interface
+        standard
+      parameters:
+        - in: path
+          name: datasetId
+          required: true
+          schema:
+            $ref: '#/components/schemas/DatasetId'
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/WmsQueryWithOpenGisResponse'
+        '400':
+          description: Bad Request. Verify that this data set has a geospatial layer.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '403':
+          description: Access Error. Verify that this data set is accessible via WMS.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '404':
+          description: Not Found Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+      x-allow-unknown-query-parameters: true
+  /datasets/{datasetId}/wmts:
+    get:
+      tags:
+        - WMTS
+      summary: Web Map Tile Service (WMTS) query
+      operationId: Wmts_queryDataSetWmts
+      security: []
+      description: >
+        Query the given data set with the OpenGIS® Web Map Tile Serice interface
+        standard
+      parameters:
+        - in: path
+          name: datasetId
+          required: true
+          schema:
+            $ref: '#/components/schemas/DatasetId'
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/WmtsQueryDataSetWmtsResponse'
+        '400':
+          description: Bad Request. Verify that this data set has a geospatial layer.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '403':
+          description: Access Error. Verify that this data set is accessible via WMTS.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '404':
+          description: Not Found Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+      x-allow-unknown-query-parameters: true
+  /datasets/{datasetId}/wfs:
+    get:
+      tags:
+        - WFS
+      summary: Web Feature Service (WFS) query
+      operationId: Wfs_queryDataWithOpenGis
+      security: []
+      description: >
+        Query the given data set with the OpenGIS® Web Feature Service interface
+        standard
+      parameters:
+        - in: path
+          name: datasetId
+          required: true
+          schema:
+            $ref: '#/components/schemas/DatasetId'
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/WfsQueryDataWithOpenGisResponse'
+        '400':
+          description: Bad Request. Verify that this data set has a geospatial layer.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '403':
+          description: Access Error. Verify that this data set is accessible via WFS.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '404':
+          description: Not Found Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+      x-allow-unknown-query-parameters: true
+    post:
+      tags:
+        - WFS
+      summary: Web Feature Service (WFS) query
+      operationId: Wfs_queryDataOpenGis
+      security: []
+      description: >
+        Query the given data set with the OpenGIS® Web Feature Service interface
+        standard
+      parameters:
+        - in: path
+          name: datasetId
+          required: true
+          schema:
+            $ref: '#/components/schemas/DatasetId'
+      requestBody:
+        content:
+          text/xml:
+            schema:
+              $ref: '#/components/schemas/WfsQueryDataOpenGisRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/WfsQueryDataOpenGis200Response'
+        '400':
+          description: Bad Request. Verify that this data set has a geospatial layer.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '403':
+          description: Access Error. Verify that this data set is accessible via WMS.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '404':
+          description: Not Found Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+      x-allow-unknown-query-parameters: true
+    head:
+      tags:
+        - WFS
+      summary: Web Feature Service (WFS) query
+      operationId: Wfs_queryDataOpenGis
+      security: []
+      description: >
+        Query the given data set with the OpenGIS® Web Feature Service interface
+        standard
+      parameters:
+        - in: path
+          name: datasetId
+          required: true
+          schema:
+            $ref: '#/components/schemas/DatasetId'
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/WfsQueryDataOpenGisResponse'
+        '400':
+          description: Bad Request. Verify that this data set has a geospatial layer.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '403':
+          description: Access Error. Verify that this data set is accessible via WFS.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '404':
+          description: Not Found Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+      x-allow-unknown-query-parameters: true
+  /datasets/{datasetId}/ogc/features/v1:
+    get:
+      tags:
+        - OGCAPI
+      summary: OGC-API-Features query
+      operationId: Ogcapi_featuresQuery
+      security: []
+      description: |
+        Query the given data set with the OGC-API Featuresinterface standard
+      parameters:
+        - in: path
+          name: datasetId
+          required: true
+          schema:
+            $ref: '#/components/schemas/DatasetId'
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/OgcapiFeaturesQueryResponse'
+        '400':
+          description: Bad Request. Verify that this data set has a geospatial layer.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '403':
+          description: >-
+            Access Error. Verify that this data set is accessible via OGC API -
+            Features.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '404':
+          description: Not Found Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+      x-allow-unknown-query-parameters: true
+  /datasets/{datasetId}/ogc/features/v1/openapi:
+    get:
+      tags:
+        - OGCAPI
+      summary: OGC-API-Features query
+      operationId: Ogcapi_queryFeaturesOpenapi
+      security: []
+      description: |
+        Query the given data set with the OGC-API Featuresinterface standard
+      parameters:
+        - in: path
+          name: datasetId
+          required: true
+          schema:
+            $ref: '#/components/schemas/DatasetId'
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/OgcapiQueryFeaturesOpenapiResponse'
+        '400':
+          description: Bad Request. Verify that this data set has a geospatial layer.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '403':
+          description: >-
+            Access Error. Verify that this data set is accessible via OGC API -
+            Features.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '404':
+          description: Not Found Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+      x-allow-unknown-query-parameters: true
+  /datasets/{datasetId}/ogc/features/v1/conformance:
+    get:
+      tags:
+        - OGCAPI
+      summary: OGC-API-Features query
+      operationId: Ogcapi_featuresQueryConformance
+      security: []
+      description: |
+        Query the given data set with the OGC-API Featuresinterface standard
+      parameters:
+        - in: path
+          name: datasetId
+          required: true
+          schema:
+            $ref: '#/components/schemas/DatasetId'
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/OgcapiFeaturesQueryConformanceResponse'
+        '400':
+          description: Bad Request. Verify that this data set has a geospatial layer.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '403':
+          description: >-
+            Access Error. Verify that this data set is accessible via OGC API -
+            Features.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '404':
+          description: Not Found Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+      x-allow-unknown-query-parameters: true
+  /datasets/{datasetId}/ogc/features/v1/functions:
+    get:
+      tags:
+        - OGCAPI
+      summary: OGC-API-Features query
+      operationId: Ogcapi_queryFeaturesFunction
+      security: []
+      description: |
+        Query the given data set with the OGC-API Featuresinterface standard
+      parameters:
+        - in: path
+          name: datasetId
+          required: true
+          schema:
+            $ref: '#/components/schemas/DatasetId'
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/OgcapiQueryFeaturesFunctionResponse'
+        '400':
+          description: Bad Request. Verify that this data set has a geospatial layer.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '403':
+          description: >-
+            Access Error. Verify that this data set is accessible via OGC API -
+            Features.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '404':
+          description: Not Found Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+      x-allow-unknown-query-parameters: true
+  /datasets/{datasetId}/ogc/features/v1/collections:
+    get:
+      tags:
+        - OGCAPI
+      summary: OGC-API-Features query
+      operationId: Ogcapi_queryFeaturesCollection
+      security: []
+      description: |
+        Query the given data set with the OGC-API Featuresinterface standard
+      parameters:
+        - in: path
+          name: datasetId
+          required: true
+          schema:
+            $ref: '#/components/schemas/DatasetId'
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/OgcapiQueryFeaturesCollectionResponse'
+        '400':
+          description: Bad Request. Verify that this data set has a geospatial layer.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '403':
+          description: >-
+            Access Error. Verify that this data set is accessible via OGC API -
+            Features.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '404':
+          description: Not Found Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+      x-allow-unknown-query-parameters: true
+  /datasets/{datasetId}/ogc/features/v1/collections/{collectionId}:
+    get:
+      tags:
+        - OGCAPI
+      summary: OGC-API-Features query
+      operationId: Ogcapi_featuresQueryOgc
+      security: []
+      description: |
+        Query the given data set with the OGC-API Featuresinterface standard
+      parameters:
+        - in: path
+          name: datasetId
+          required: true
+          schema:
+            $ref: '#/components/schemas/DatasetId'
+        - in: path
+          name: collectionId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/OgcapiFeaturesQueryOgcResponse'
+        '400':
+          description: Bad Request. Verify that this data set has a geospatial layer.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '403':
+          description: >-
+            Access Error. Verify that this data set is accessible via OGC API -
+            Features.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '404':
+          description: Not Found Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+      x-allow-unknown-query-parameters: true
+  /datasets/{datasetId}/ogc/features/v1/collections/{collectionId}/queryables:
+    get:
+      tags:
+        - OGCAPI
+      summary: OGC-API-Features query
+      operationId: Ogcapi_featuresQueryables
+      security: []
+      description: |
+        Query the given data set with the OGC-API Featuresinterface standard
+      parameters:
+        - in: path
+          name: datasetId
+          required: true
+          schema:
+            $ref: '#/components/schemas/DatasetId'
+        - in: path
+          name: collectionId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/OgcapiFeaturesQueryablesResponse'
+        '400':
+          description: Bad Request. Verify that this data set has a geospatial layer.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '403':
+          description: >-
+            Access Error. Verify that this data set is accessible via OGC API -
+            Features.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '404':
+          description: Not Found Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+      x-allow-unknown-query-parameters: true
+  /datasets/{datasetId}/ogc/features/v1/collections/{collectionId}/items:
+    get:
+      tags:
+        - OGCAPI
+      summary: OGC-API-Features query
+      operationId: Ogcapi_queryFeaturesCollectionItems
+      security: []
+      description: |
+        Query the given data set with the OGC-API Featuresinterface standard
+      parameters:
+        - in: path
+          name: datasetId
+          required: true
+          schema:
+            $ref: '#/components/schemas/DatasetId'
+        - in: path
+          name: collectionId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                $ref: >-
+                  #/components/schemas/OgcapiQueryFeaturesCollectionItemsResponse
+        '400':
+          description: Bad Request. Verify that this data set has a geospatial layer.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '403':
+          description: >-
+            Access Error. Verify that this data set is accessible via OGC API -
+            Features.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '404':
+          description: Not Found Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+      x-allow-unknown-query-parameters: true
+  /datasets/{datasetId}/ogc/features/v1/collections/{collectionId}/items/{featureId}:
+    get:
+      tags:
+        - OGCAPI
+      summary: OGC-API-Features query
+      operationId: Ogcapi_featuresQuery
+      security: []
+      description: |
+        Query the given data set with the OGC-API Featuresinterface standard
+      parameters:
+        - in: path
+          name: datasetId
+          required: true
+          schema:
+            $ref: '#/components/schemas/DatasetId'
+        - in: path
+          name: collectionId
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: featureId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/OgcapiFeaturesQuery200Response'
+        '400':
+          description: Bad Request. Verify that this data set has a geospatial layer.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '403':
+          description: >-
+            Access Error. Verify that this data set is accessible via OGC API -
+            Features.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '404':
+          description: Not Found Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+      x-allow-unknown-query-parameters: true
+  /datasets/{datasetId}/ogc/tiles/v1:
+    get:
+      tags:
+        - OGC API Tiles
+      summary: OGC API Tiles query
+      operationId: OgcApiTiles_queryTilesV1
+      security: []
+      description: |
+        Query the given data set with OGC API Tiles standard
+      parameters:
+        - in: path
+          name: datasetId
+          required: true
+          schema:
+            $ref: '#/components/schemas/DatasetId'
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/OgcApiTilesQueryTilesV1Response'
+        '400':
+          description: Bad Request. Verify that this data set has a geospatial layer.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '403':
+          description: >-
+            Access Error. Verify that this data set has an accessible OGC API
+            Tiles service.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '404':
+          description: Not Found Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+      x-allow-unknown-query-parameters: false
+  /datasets/{datasetId}/ogc/tiles/v1/conformance:
+    get:
+      tags:
+        - OGC API Tiles
+      summary: OGC API Tiles query
+      operationId: OgcApiTiles_getConformance
+      security: []
+      description: |
+        Query the given data set with OGC API Tiles standard
+      parameters:
+        - in: path
+          name: datasetId
+          required: true
+          schema:
+            $ref: '#/components/schemas/DatasetId'
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/OgcApiTilesGetConformanceResponse'
+        '400':
+          description: Bad Request. Verify that this data set has a geospatial layer.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '403':
+          description: >-
+            Access Error. Verify that this data set has an accessible OGC API
+            Tiles service.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '404':
+          description: Not Found Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+      x-allow-unknown-query-parameters: false
+  /datasets/{datasetId}/ogc/tiles/v1/collections:
+    get:
+      tags:
+        - OGC API Tiles
+      summary: OGC API Tiles query
+      operationId: OgcApiTiles_queryCollections
+      security: []
+      description: |
+        Query the given data set with OGC API Tiles standard
+      parameters:
+        - in: path
+          name: datasetId
+          required: true
+          schema:
+            $ref: '#/components/schemas/DatasetId'
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/OgcApiTilesQueryCollectionsResponse'
+        '400':
+          description: Bad Request. Verify that this data set has a geospatial layer.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '403':
+          description: >-
+            Access Error. Verify that this data set has an accessible OGC API
+            Tiles service.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '404':
+          description: Not Found Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+      x-allow-unknown-query-parameters: false
+  /datasets/{datasetId}/ogc/tiles/v1/collections/{collectionId}:
+    get:
+      tags:
+        - OGC API Tiles
+      summary: OGC API Tiles query
+      operationId: OgcApiTiles_queryCollectionById
+      security: []
+      description: |
+        Query the given data set with OGC API Tiles standard
+      parameters:
+        - in: path
+          name: datasetId
+          required: true
+          schema:
+            $ref: '#/components/schemas/DatasetId'
+        - in: path
+          name: collectionId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/OgcApiTilesQueryCollectionByIdResponse'
+        '400':
+          description: Bad Request. Verify that this data set has a geospatial layer.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '403':
+          description: >-
+            Access Error. Verify that this data set has an accessible OGC API
+            Tiles service.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '404':
+          description: Not Found Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+      x-allow-unknown-query-parameters: false
+  /datasets/{datasetId}/ogc/tiles/v1/collections/{collectionId}/queryables:
+    get:
+      tags:
+        - OGC API Tiles
+      summary: OGC API Tiles query
+      operationId: OgcApiTiles_queryCollectionQueryables
+      security: []
+      description: |
+        Query the given data set with OGC API Tiles standard
+      parameters:
+        - in: path
+          name: datasetId
+          required: true
+          schema:
+            $ref: '#/components/schemas/DatasetId'
+        - in: path
+          name: collectionId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                $ref: >-
+                  #/components/schemas/OgcApiTilesQueryCollectionQueryablesResponse
+        '400':
+          description: Bad Request. Verify that this data set has a geospatial layer.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '403':
+          description: >-
+            Access Error. Verify that this data set has an accessible OGC API
+            Tiles service.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '404':
+          description: Not Found Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+      x-allow-unknown-query-parameters: false
+  /datasets/{datasetId}/ogc/tiles/v1/collections/{collectionId}/tiles/{tileMatrixSetId}:
+    get:
+      tags:
+        - OGC API Tiles
+      summary: OGC API Tiles query
+      operationId: OgcApiTiles_getTilesCollection
+      security: []
+      description: |
+        Query the given data set with OGC API Tiles standard
+      parameters:
+        - in: path
+          name: datasetId
+          required: true
+          schema:
+            $ref: '#/components/schemas/DatasetId'
+        - in: path
+          name: collectionId
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: tileMatrixSetId
+          required: true
+          schema:
+            type: string
+          allowReserved: true
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/OgcApiTilesGetTilesCollectionResponse'
+        '400':
+          description: Bad Request. Verify that this data set has a geospatial layer.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '403':
+          description: >-
+            Access Error. Verify that this data set has an accessible OGC API
+            Tiles service.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '404':
+          description: Not Found Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+      x-allow-unknown-query-parameters: false
+  /datasets/{datasetId}/ogc/tiles/v1/collections/{collectionId}/map/tiles/{tileMatrixSetId}/{tileMatrix}/{tileRow}/{tileCol}:
+    get:
+      tags:
+        - OGC API Tiles
+      summary: OGC API Tiles query
+      operationId: OgcApiTiles_getQueryTilesCollection
+      security: []
+      description: |
+        Query the given data set with OGC API Tiles standard
+      parameters:
+        - in: path
+          name: datasetId
+          required: true
+          schema:
+            $ref: '#/components/schemas/DatasetId'
+        - in: path
+          name: collectionId
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: tileMatrixSetId
+          required: true
+          schema:
+            type: string
+          allowReserved: true
+        - in: path
+          name: tileMatrix
+          required: true
+          schema:
+            type: string
+          allowReserved: true
+        - in: path
+          name: tileRow
+          required: true
+          schema:
+            type: integer
+        - in: path
+          name: tileCol
+          required: true
+          schema:
+            type: integer
+        - in: query
+          name: f
+          required: true
+          schema:
+            type: string
+          allowReserved: true
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                $ref: >-
+                  #/components/schemas/OgcApiTilesGetQueryTilesCollectionResponse
+        '400':
+          description: Bad Request. Verify that this data set has a geospatial layer.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '403':
+          description: >-
+            Access Error. Verify that this data set has an accessible OGC API
+            Tiles service.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '404':
+          description: Not Found Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+      x-allow-unknown-query-parameters: false
+  /datasets/{datasetId}/ogc/tiles/v1/tileMatrixSets:
+    get:
+      tags:
+        - OGC API Tiles
+      summary: OGC API Tiles query
+      operationId: OgcApiTiles_queryTileMatrixSets
+      security: []
+      description: |
+        Query the given data set with OGC API Tiles standard
+      parameters:
+        - in: path
+          name: datasetId
+          required: true
+          schema:
+            $ref: '#/components/schemas/DatasetId'
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/OgcApiTilesQueryTileMatrixSetsResponse'
+        '400':
+          description: Bad Request. Verify that this data set has a geospatial layer.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '403':
+          description: >-
+            Access Error. Verify that this data set has an accessible OGC API
+            Tiles service.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '404':
+          description: Not Found Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+      x-allow-unknown-query-parameters: false
+  /datasets/{datasetId}/ogc/tiles/v1/tileMatrixSets/{tileMatrixSetId}:
+    get:
+      tags:
+        - OGC API Tiles
+      summary: OGC API Tiles query
+      operationId: OgcApiTiles_queryTileMatrixSets
+      security: []
+      description: |
+        Query the given data set with OGC API Tiles standard
+      parameters:
+        - in: path
+          name: datasetId
+          required: true
+          schema:
+            $ref: '#/components/schemas/DatasetId'
+        - in: path
+          name: tileMatrixSetId
+          required: true
+          schema:
+            type: string
+          allowReserved: true
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/OgcApiTilesQueryTileMatrixSets200Response'
+        '400':
+          description: Bad Request. Verify that this data set has a geospatial layer.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '403':
+          description: >-
+            Access Error. Verify that this data set has an accessible OGC API
+            Tiles service.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '404':
+          description: Not Found Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+      x-allow-unknown-query-parameters: false
+  /datasets/{datasetId}/wmts/rest/{layerName}/{style}/tilejson/{imageFormat}:
+    get:
+      tags:
+        - WMTS REST
+      summary: WMTS Service query
+      operationId: WmtsRest_queryTilejsonImageFormat
+      security: []
+      description: |
+        Query the given data set with theWMTS standard
+      parameters:
+        - in: path
+          name: datasetId
+          required: true
+          schema:
+            $ref: '#/components/schemas/DatasetId'
+        - in: path
+          name: layerName
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: style
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: imageFormat
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: format
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/WmtsRestQueryTilejsonImageFormatResponse'
+        '400':
+          description: Bad Request. Verify that this data set has a geospatial layer.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '403':
+          description: Access Error. Verify that this data set has accessible WMTS service.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '404':
+          description: Not Found Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+      x-allow-unknown-query-parameters: false
+  /datasets/{datasetId}/wmts/rest/{layerName}/{style}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}:
+    get:
+      tags:
+        - WMTS REST
+      summary: WMTS Service query
+      operationId: WmtsRest_queryTileMatrixSet
+      security: []
+      description: |
+        Query the given data set with theWMTS standard
+      parameters:
+        - in: path
+          name: datasetId
+          required: true
+          schema:
+            $ref: '#/components/schemas/DatasetId'
+        - in: path
+          name: layerName
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: style
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: TileMatrixSet
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: TileMatrix
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: TileRow
+          required: true
+          schema:
+            type: integer
+            minimum: 0
+        - in: path
+          name: TileCol
+          required: true
+          schema:
+            type: integer
+            minimum: 0
+        - in: query
+          name: format
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/WmtsRestQueryTileMatrixSetResponse'
+        '400':
+          description: Bad Request. Verify that this data set has a geospatial layer.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '403':
+          description: Access Error. Verify that this data set has accessible WMTS service.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '404':
+          description: Not Found Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+      x-allow-unknown-query-parameters: false
+  /datasets/{datasetId}/wmts/rest/{layerName}/{style}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}/{J}/{I}:
+    get:
+      tags:
+        - WMTS REST
+      summary: WMTS Service query
+      operationId: WmtsRest_serviceQuery
+      security: []
+      description: |
+        Query the given data set with theWMTS standard
+      parameters:
+        - in: path
+          name: datasetId
+          required: true
+          schema:
+            $ref: '#/components/schemas/DatasetId'
+        - in: path
+          name: layerName
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: style
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: TileMatrixSet
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: TileMatrix
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: TileRow
+          required: true
+          schema:
+            type: integer
+            minimum: 0
+        - in: path
+          name: TileCol
+          required: true
+          schema:
+            type: integer
+            minimum: 0
+        - in: path
+          name: J
+          required: true
+          schema:
+            type: integer
+        - in: path
+          name: I
+          required: true
+          schema:
+            type: integer
+        - in: query
+          name: format
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/WmtsRestServiceQueryResponse'
+        '400':
+          description: Bad Request. Verify that this data set has a geospatial layer.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '403':
+          description: Access Error. Verify that this data set has accessible WMTS service.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '404':
+          description: Not Found Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+      x-allow-unknown-query-parameters: false
+  /datasets/{datasetId}/wcs:
+    get:
+      tags:
+        - WCS
+      summary: Web Coverage Service (WCS) query
+      operationId: Wcs_queryData
+      security: []
+      description: >
+        Query the given data set with the OpenGIS® Web Coverage Serice interface
+        standard
+      parameters:
+        - in: path
+          name: datasetId
+          required: true
+          schema:
+            $ref: '#/components/schemas/DatasetId'
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/WcsQueryDataResponse'
+        '400':
+          description: Bad Request. Verify that this data set has a geospatial layer.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '403':
+          description: Access Error. Verify that this data set is accessible via WCS.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '404':
+          description: Not Found Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+      x-allow-unknown-query-parameters: true
+    head:
+      tags:
+        - WCS
+      summary: Web Coverage Service (WMS) query
+      operationId: Wcs_queryData
+      security: []
+      description: >
+        Query the given data set with the OpenGIS® Web Coverage Service
+        interface standard
+      parameters:
+        - in: path
+          name: datasetId
+          required: true
+          schema:
+            $ref: '#/components/schemas/DatasetId'
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/WcsQueryData200Response'
+        '400':
+          description: Bad Request. Verify that this data set has a geospatial layer.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '403':
+          description: Access Error. Verify that this data set is accessible via WCS.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '404':
+          description: Not Found Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+      x-allow-unknown-query-parameters: true
+  /rest/services/{datasetId}/{paramOne}:
+    get:
+      tags:
+        - ESRI
+      summary: ESRI REST Service query
+      operationId: Esri_restServiceQuery
+      security: []
+      description: |
+        Query the given dataset using ESRI Rest Services
+      parameters:
+        - in: path
+          name: datasetId
+          required: true
+          schema:
+            $ref: '#/components/schemas/DatasetId'
+        - description: Additional path element
+          in: path
+          name: paramOne
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/EsriRestServiceQueryResponse'
+        '400':
+          description: Bad Request. Verify that this data set has a geospatial layer.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '403':
+          description: >-
+            Access Error. Verify that this data set is accessible via REST
+            endpoint.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '404':
+          description: Not Found Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+      x-allow-unknown-query-parameters: true
+  /rest/services/{datasetId}/{paramOne}/{paramTwo}:
+    get:
+      tags:
+        - ESRI
+      summary: ESRI REST Service query
+      operationId: Esri_restServiceQuery
+      security: []
+      description: |
+        Query the given dataset using ESRI Rest Services
+      parameters:
+        - in: path
+          name: datasetId
+          required: true
+          schema:
+            $ref: '#/components/schemas/DatasetId'
+        - description: Additional path element
+          in: path
+          name: paramOne
+          required: true
+          schema:
+            type: string
+        - description: Additional path element
+          in: path
+          name: paramTwo
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/EsriRestServiceQuery200Response'
+        '400':
+          description: Bad Request. Verify that this data set has a geospatial layer.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '403':
+          description: >-
+            Access Error. Verify that this data set is accessible via REST
+            endpoint.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+        '404':
+          description: Not Found Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestError'
+      x-allow-unknown-query-parameters: true
+  /categories:
+    get:
+      tags:
+        - Dataset
+      summary: List all the valid categories of datasets.
+      operationId: Dataset_listValidCategories
+      security: []
+      description: List all the valid categories of datasets.
+      responses:
+        '200':
+          description: List of categories
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Categories'
+  /tags:
+    get:
+      tags:
+        - Dataset
+      summary: List all the valid tags that can be set on a data set.
+      operationId: Dataset_listValidTags
+      security: []
+      description: List all the valid tags that can be set on a data set.
+      responses:
+        '200':
+          description: List of tags the user can use
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DatasetListValidTagsResponse'
+  /linked-data/concepts:
+    get:
+      tags:
+        - Graph
+      summary: List all concepts in linked data graph.
+      operationId: Graph_listConcepts
+      security: []
+      description: List All Concepts Available in Agrimetrics Ontology Graph.
+      responses:
+        '200':
+          description: List of all concepts
+  /data-sets:
+    get:
+      tags:
+        - Dataset
+      summary: List all data sets.
+      operationId: DataSet_listAllDataSets
+      security: []
+      description: List all data sets.
+      parameters:
+        - description: List of data set ids
+          in: query
+          name: ids
+          schema:
+            type: array
+            items:
+              type: string
+              example: 52178729-7b5a-4e34-8989-3d2fc8e7a371
+          style: form
+          explode: true
+        - description: The creator of the data set.
+          in: query
+          name: creator
+          schema:
+            type: array
+            items:
+              type: string
+              example: Agrimetrics
+          allowReserved: true
+          style: form
+          explode: true
+        - description: >-
+            Tags describing the data set. keywords is deprecated - use tags
+            instead
+          in: query
+          name: keywords
+          deprecated: true
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/TagValue'
+          style: form
+          allowReserved: true
+          explode: true
+        - description: Tags describing the data set.
+          in: query
+          name: tags
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/TagValue'
+          style: form
+          allowReserved: true
+          explode: true
+        - description: >-
+            Note - This feature will no longer be available as we are in the
+            process of moving to a different backend and will soon be removed.
+            If provided, include data sets that have been tagged with concepts
+            that are related to the values provided in the `tags` parameter. If
+            not provided, only include data sets tagged with exact matches.
+          in: query
+          name: tagRelationship
+          deprecated: true
+          schema:
+            $ref: '#/components/schemas/Relationship'
+        - description: Indicates the type of data
+          in: query
+          name: category
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/CategoryValue'
+          style: form
+          explode: true
+        - description: The region the data is applicable to.
+          in: query
+          name: spatialCoverage
+          allowReserved: true
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/SpatialCoverage'
+          style: form
+          explode: true
+        - description: >-
+            Note - Use extendedText. This field has been deprecated. Free text
+            search for data sets.
+          in: query
+          name: text
+          deprecated: true
+          schema:
+            type: string
+            example: Weather
+          allowReserved: true
+        - description: >-
+            Free text search for data sets matching title; summary; description;
+            tags; concepts; and source.
+          in: query
+          name: extendedText
+          schema:
+            type: string
+            example: Soil
+          allowReserved: true
+        - description: >-
+            Only show datasets accessible by these identities. Can be 'PUBLIC',
+            a user ID or an organisation ID.
+          in: query
+          name: identities
+          schema:
+            type: array
+            items:
+              type: string
+              example: PUBLIC
+          style: form
+          explode: true
+        - description: Defines whether to return only featured data sets
+          in: query
+          name: onlyFeatured
+          schema:
+            type: boolean
+        - description: Defines whether my editable data sets should be shown.
+          in: query
+          name: showEditable
+          schema:
+            type: boolean
+        - description: Defines whether hidden data sets should be shown.
+          in: query
+          name: showHidden
+          schema:
+            type: boolean
+        - description: >-
+            Set the page number. Should not be specified in conjunction with
+            offset or limit.
+          in: query
+          name: pageNum
+          schema:
+            type: integer
+            minimum: 1
+        - description: >-
+            Set the page size. Should not be specified in conjunction with
+            offset or limit.
+          in: query
+          name: pageSize
+          schema:
+            type: integer
+            minimum: 1
+        - description: >-
+            Set the pagination offset. Should not be specified in conjunction
+            with pageNum or pageSize.
+          in: query
+          name: offset
+          schema:
+            type: integer
+            minimum: 0
+        - description: >-
+            Choose whether to search across all metadata on a data set, or just
+            the title.
+          in: query
+          name: searchType
+          schema:
+            type: string
+            enum:
+              - title
+              - all
+        - description: >-
+            Set the pagination limit. Should not be specified in conjunction
+            with pageNum or pageSize.
+          in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+        - description: >-
+            Note - This feature will no longer be available once we move to a
+            different backend. "Format response to convert any new concepts to
+            legacy concepts"
+          in: query
+          name: legacyConcepts
+          deprecated: true
+          schema:
+            type: boolean
+        - description: Criterion by which to order the results
+          in: query
+          name: sort
+          schema:
+            type: string
+            enum:
+              - title
+              - title-descending
+              - relevance
+        - description: The private data exchange for which to retrieve records
+          in: query
+          name: exchange
+          schema:
+            $ref: '#/components/schemas/Exchange'
+        - in: query
+          name: metadataStandardName
+          allowReserved: true
+          schema:
+            type: array
+            items:
+              type: string
+              example: Environment Agency Metadata Profile
+        - in: query
+          name: draftStatus
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/DraftStatus'
+        - in: query
+          name: publishedStatus
+          schema:
+            type: array
+            items:
+              oneOf:
+                - $ref: '#/components/schemas/PublishedStatus'
+                - type: string
+                  enum:
+                    - unpublished
+        - in: query
+          name: licence
+          allowReserved: true
+          schema:
+            type: array
+            items:
+              type: string
+              example: Open Government Licence
+      responses:
+        '200':
+          description: List all data sets.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataSets'
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                $ref: '#/components/schemas/DataSetListAllDataSetsResponse'
+    post:
+      tags:
+        - Dataset
+      summary: Create a single data set catalog entry.
+      operationId: Dataset_createSingleCatalogEntry
+      security: []
+      description: Creates a single catalog entry.
+      requestBody:
+        description: The data set to create.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DatasetCreateSingleCatalogEntryRequest'
+      responses:
+        '201':
+          description: Creates a single catalog entry for a data set.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EntryUpdateResponse'
+  /data-sets/{dataSetId}:
+    get:
+      tags:
+        - Dataset
+      summary: Get a single data set catalog entry.
+      operationId: Dataset_getSingleCatalogEntry
+      security: []
+      description: Get a single data set catalog entry.
+      parameters:
+        - name: dataSetId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/DatasetId'
+      responses:
+        '200':
+          description: Returns a single catalog entry from catalog.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataSet'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/DatasetGetSingleCatalogEntryResponse'
+    put:
+      tags:
+        - Dataset
+      summary: Update a single data set catalog entry.
+      operationId: Dataset_updateSingleEntry
+      security: []
+      description: Updates a single catalog entry.
+      parameters:
+        - name: dataSetId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/DatasetId'
+      requestBody:
+        description: The updated data set information.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DataSet'
+        required: true
+      responses:
+        '200':
+          description: Updates a single catalog entry for a data set.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataSet'
+    patch:
+      tags:
+        - Dataset
+      summary: Update a single data set catalog entry.
+      operationId: Dataset_updateSingleCatalogEntry
+      security: []
+      description: Updates a single catalog entry.
+      parameters:
+        - name: dataSetId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/DatasetId'
+      requestBody:
+        description: The updated data set information.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DataSetPatch'
+        required: true
+      responses:
+        '200':
+          description: Updates a single catalog entry for a data set.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataSet'
+    delete:
+      tags:
+        - Dataset
+      summary: Delete a Data Set
+      operationId: Dataset_deleteSingleDataSet
+      security: []
+      description: Delete a single Data Set
+      parameters:
+        - name: dataSetId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/DatasetId'
+      responses:
+        '200':
+          description: Response if deleted properly
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DatasetDeleteSingleDataSetResponse'
+  /data-sets/{dataSetId}/draft:
+    get:
+      tags:
+        - Dataset
+      summary: Get the draft changes on a data set catalog entry.
+      operationId: Dataset_getDraftChanges
+      security: []
+      description: Get the draft changes on a data set catalog entry.
+      parameters:
+        - name: dataSetId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/DatasetId'
+      responses:
+        '200':
+          description: Returns the draft changes on a data set.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataSet'
+    delete:
+      tags:
+        - Dataset
+      summary: Discards the draft changes on a data set catalog entry.
+      operationId: Dataset_discardDraftChanges
+      security: []
+      description: Discards the draft changes on a data set catalog entry.
+      parameters:
+        - name: dataSetId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/DatasetId'
+      responses:
+        '200':
+          description: Draft changes were discarded.
+  /data-sets/{dataSetId}/draft-status:
+    put:
+      tags:
+        - Status
+      summary: Set the draft status for the data set catalog entry.
+      operationId: Status_setDraftStatus
+      security: []
+      description: Set the draft status for the data set catalog entry.
+      parameters:
+        - name: dataSetId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/DatasetId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StatusSetDraftStatusRequest'
+      responses:
+        '200':
+          description: Updates a single catalog entry for a data set.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EntryUpdateResponse'
+  /data-sets/{dataSetId}/fileDataset:
+    get:
+      tags:
+        - Dataset
+      summary: Get file dataset id from dataset
+      operationId: Dataset_getFileDatasetId
+      security: []
+      description: Get file dataset id from dataset
+      parameters:
+        - name: dataSetId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/DatasetId'
+      responses:
+        '200':
+          description: Returns the file management Id for this dataset
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DatasetGetFileDatasetIdResponse'
+    post:
+      tags:
+        - Dataset
+      summary: Create and attach file dataset
+      operationId: Dataset_createFileDataset
+      security: []
+      description: >
+        Create and attach file dataset. If the file dataset already exists, this
+        will not do anything. Note this should usually be automatically created
+        when creating a catalogue entry.
+      parameters:
+        - name: dataSetId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/DatasetId'
+      responses:
+        '200':
+          description: Returns the file management Id for this dataset
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DatasetCreateFileDatasetResponse'
+  /data-sets/{dataSetId}/access:
+    get:
+      tags:
+        - Dataset
+      summary: Get the entitlements on a data set.
+      operationId: Dataset_getEntitlements
+      security: []
+      description: Gets the entitlements on a data set.
+      parameters:
+        - name: dataSetId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/DatasetId'
+      responses:
+        '200':
+          description: The access set on the data set
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DatasetGetEntitlementsResponse'
+    patch:
+      tags:
+        - Dataset
+      summary: Set the entitlements and on a data set for all identities.
+      operationId: Dataset_setEntitlements
+      security: []
+      description: Set the entitlements and on a data set for all identities.
+      parameters:
+        - name: dataSetId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/DatasetId'
+      requestBody:
+        description: The access to update.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DatasetSetEntitlementsRequest'
+      responses:
+        '200':
+          description: The access set on the data set
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DatasetSetEntitlementsResponse'
+  /data-sets/{dataSetId}/validationReport:
+    get:
+      tags:
+        - Dataset
+      summary: >-
+        Get the schematron validation report using the data sets validation
+        profile
+      operationId: Dataset_getValidationReport
+      description: >-
+        Get the schematron validation report using the data sets validation
+        profile. Throws an error if there is no validation profile
+      parameters:
+        - name: dataSetId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/DatasetId'
+      responses:
+        '200':
+          description: The image for the data set.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DatasetGetValidationReportResponse'
+  /data-sets/{dataSetId}/draft/validationReport:
+    get:
+      tags:
+        - Dataset
+      summary: >-
+        Get the schematron validation report using the data sets validation
+        profile
+      operationId: Dataset_getValidationReport
+      description: >-
+        Get the schematron validation report using the data sets validation
+        profile. Throws an error if there is no validation profile
+      parameters:
+        - name: dataSetId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/DatasetId'
+      responses:
+        '200':
+          description: The image for the data set.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DatasetGetValidationReport200Response'
+  /images/{imageType}/{imageId}:
+    get:
+      tags:
+        - Image
+      summary: Get an image used in the catalogue.
+      operationId: Image_getRawImage
+      security: []
+      description: >-
+        Get an image referenced on a data set. This will always return the raw
+        image data.
+      parameters:
+        - name: imageType
+          in: path
+          required: true
+          schema:
+            type: string
+            enum:
+              - custom
+              - unsplash
+        - name: imageId
+          in: path
+          required: true
+          schema:
+            type: string
+        - description: >-
+            Whether to provide a thumbnail image. If set to true and no
+            thumbnail exists, the full image will be returned
+          name: thumbnail
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - 'true'
+              - 'false'
+            default: 'false'
+      responses:
+        '200':
+          description: The image for the data set.
+  /data-sets/{dataSetId}/image:
+    put:
+      tags:
+        - Dataset
+      summary: Set the image for a data set.
+      operationId: Dataset_setImage
+      security: []
+      description: >-
+        Set the image for a data set. Can either be an image upload a plain text
+        string representing the unsplash image id.
+      parameters:
+        - name: dataSetId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/DatasetId'
+      responses:
+        '200':
+          description: The imageUrl for the data set.
+  /access-requests:
+    get:
+      tags:
+        - AccessRequest
+      operationId: AccessRequest_list
+      security: []
+      parameters:
+        - name: dataSetId
+          in: query
+          schema:
+            $ref: '#/components/schemas/DatasetId'
+        - name: requestingEntityId
+          in: query
+          schema:
+            type: string
+        - name: entityId
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+          style: form
+          explode: true
+      responses:
+        '200':
+          description: The outstanding access requests for the data set.
+        '400':
+          description: This request is not supported
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/AccessRequestListResponse'
+    post:
+      tags:
+        - AccessRequest
+      operationId: AccessRequest_createNewRequest
+      security: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccessRequestCreateNewRequestRequest'
+      responses:
+        '200':
+          description: The outstanding access requests for the data set.
+        '400':
+          description: This request is not supported
+          content:
+            application/xml: {}
+  /access-requests/{requestId}:
+    delete:
+      tags:
+        - AccessRequest
+      operationId: AccessRequest_deleteRequestById
+      security: []
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: dataSetId
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/DatasetId'
+        - name: accepted
+          in: query
+          required: false
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Dismiss access requests for the data set.
+  /import:
+    post:
+      tags:
+        - Import
+      operationId: Import_dataSets
+      requestBody:
+        content:
+          application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+            schema:
+              $ref: '#/components/schemas/ImportDataSetsRequest'
+      responses:
+        '200':
+          description: Import was successful.
+  /templates:
+    get:
+      tags:
+        - Template
+      summary: List all templates you have permission to view.
+      operationId: Template_listPermissionsToView
+      description: List all templates you have permission to view.
+      responses:
+        '200':
+          description: The template result set.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TemplateListPermissionsToViewResponse'
+    post:
+      tags:
+        - Template
+      summary: Create a new template for creating catalogue entries.
+      operationId: Template_createCatalogEntry
+      description: >-
+        Creates a single template that can be used to create similar catalogue
+        entries.
+      requestBody:
+        description: The data set to create.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DataSetTemplateMetadata'
+      responses:
+        '201':
+          description: Creates a single catalog entry for a template.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EntryUpdateResponse'
+  /templates/{templateId}:
+    parameters:
+      - name: templateId
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/TemplateId'
+    get:
+      tags:
+        - Template
+      summary: Get a specific template
+      operationId: Template_getSpecificTemplate
+      security: []
+      responses:
+        '200':
+          description: Get template
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataSetTemplateEntity'
+    delete:
+      tags:
+        - Template
+      summary: Delete a specific template
+      operationId: Template_deleteSpecificTemplate
+      security: []
+      responses:
+        '200':
+          description: Creates a single catalog entry for a data set.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EntryUpdateResponse'
+    put:
+      tags:
+        - Template
+      summary: Update a template
+      operationId: Template_updateTemplateItem
+      security: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DataSetTemplateMetadata'
+      responses:
+        '200':
+          description: Updates a Template entry
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataSetTemplateEntity'
+    patch:
+      tags:
+        - Template
+      summary: Update a template
+      operationId: Template_updateTemplateItem
+      security: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DataSetTemplatePatchMetadata'
+      responses:
+        '200':
+          description: Updates a Template entry
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataSetTemplateEntity'
+  /harvest/{group}/csw:
+    parameters:
+      - name: group
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/GroupCode'
+      - name: service
+        in: query
+        schema:
+          description: Name of the service being called
+          type: string
+          enum:
+            - CSW
+      - name: request
+        in: query
+        schema:
+          description: Name of the operation being called
+          type: string
+          enum:
+            - GetRecords
+            - GetRecordById
+            - GetCapabilities
+      - name: version
+        in: query
+        schema:
+          description: Version of the operation being called
+          type: string
+      - name: startPosition
+        in: query
+        schema:
+          description: which record position the catalog should start generating output
+          type: number
+          default: 1
+          minimum: 1
+      - name: maxRecords
+        in: query
+        schema:
+          description: >-
+            the maximum number of records that should be returned from the
+            result set of a query
+          type: number
+          default: 10
+          minimum: 1
+      - name: id
+        in: query
+        explode: true
+        schema:
+          description: >-
+            A list of record identifiers for the records that a CSW shall return
+            to the client
+          type: array
+          items:
+            type: string
+            format: uuid
+      - name: outputSchema
+        in: query
+        explode: true
+        schema:
+          description: >-
+            This parameter does not affect the response, it only exists to
+            satisfy CSW format
+          type: string
+          enum:
+            - http://www.isotc211.org/2005/gmd
+      - name: elementsetname
+        in: query
+        explode: true
+        schema:
+          description: >-
+            This parameter does not affect the response, it only exists to
+            satisfy CSW format
+          type: string
+          enum:
+            - full
+            - brief
+            - summary
+      - name: outputFormat
+        in: query
+        explode: true
+        schema:
+          description: >-
+            This parameter does not affect the response, it only exists to
+            satisfy CSW format
+          type: string
+          enum:
+            - application/xml
+      - name: typeNames
+        in: query
+        explode: true
+        schema:
+          description: >-
+            This parameter does not affect the response, it only exists to
+            satisfy CSW format
+          type: string
+          enum:
+            - gmd:MD_Metadata
+            - csw:Record
+      - name: resultType
+        in: query
+        explode: true
+        schema:
+          description: >-
+            This parameter does not affect the response, it only exists to
+            satisfy CSW format
+          type: string
+    get:
+      tags:
+        - Harvest
+      summary: Harvest xml data on the given group
+      operationId: Harvest_xmlDataOnGroup
+      security: []
+      responses:
+        '200':
+          description: Get harvest data
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/HarvestXmlDataOnGroupResponse'
+    post:
+      tags:
+        - Harvest
+      summary: Harvest xml data on the given group
+      operationId: Harvest_xmlDataOnGroupPost
+      security: []
+      responses:
+        '200':
+          description: Get harvest data
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/HarvestXmlDataOnGroupPostResponse'
+        '400':
+          description: Bad request
+          content:
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/HarvestXmlDataOnGroupPost400Response'
+  /harvest/{group}/dcat:
+    parameters:
+      - name: group
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/GroupCode'
+    get:
+      tags:
+        - Dataset
+      summary: >-
+        Get the DCAT metadata for the given group. This will retrieve metadata
+        for all the non spatial datasets in the public domain.
+      operationId: Dataset_getNonSpatialDataForGroup
+      security: []
+      responses:
+        '200':
+          description: Get Metadata as DCAT
+          content:
+            text/turtle:
+              schema:
+                $ref: '#/components/schemas/DatasetGetNonSpatialDataForGroupResponse'
+components:
+  securitySchemes:
+    sec0:
+      type: apiKey
+      in: header
+      name: ocp-apim-subscription-key
+    JWT:
+      description: For requests to https://app.agrimetrics.co.uk/backend.
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    apiKeyHeader:
+      description: For requests to https://api.agrimetrics.co.uk
+      type: apiKey
+      name: Ocp-Apim-Subscription-Key
+      in: header
+    xUserHeader:
+      description: For internal use only.
+      type: apiKey
+      name: x-user-id
+      in: header
+    apiKeyQuery:
+      description: >-
+        (NOT RECOMMENDED) For requests where sending custom headers is not
+        possible.
+      type: apiKey
+      name: subscription-key
+      in: query
+  schemas:
+    RestError:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Error Message
+    NewLayers:
+      type: object
+      properties:
+        layers:
+          type: array
+          items:
+            $ref: '#/components/schemas/ServiceDefinitionResponse'
+        layerId:
+          type: string
+          example: 97130f06-6242-463f-bf19-0dd6f5a58cfb
+    CostSummary:
+      type: object
+      required:
+        - totalCost
+        - numberOfChargeableItems
+      properties:
+        totalCost:
+          type: number
+          example: 0
+        numberOfChargeableItems:
+          type: integer
+          example: 1
+        totalNumberOfItems:
+          type: integer
+          example: 1
+    GeoJSONPolygon:
+      type: object
+      required:
+        - type
+        - coordinates
+      properties:
+        type:
+          type: string
+          enum:
+            - Polygon
+        coordinates:
+          type: array
+          minItems: 1
+          maxItems: 1
+          items:
+            type: array
+            minItems: 4
+            items:
+              type: array
+              items:
+                anyOf:
+                  - $ref: '#/components/schemas/EPSG4326Longitude'
+                  - $ref: '#/components/schemas/EPSG4326Latitude'
+              minItems: 2
+              maxItems: 3
+            example:
+              - - -1.3623046875
+                - 52.8691297276852
+              - - -1.16455078125
+                - 52.736291655910925
+              - - -0.9228515625
+                - 52.65639394198803
+              - - -0.37353515625
+                - 52.76289173758374
+              - - -1.3623046875
+                - 52.8691297276852
+    GeoJSONMultiPolygon:
+      type: object
+      required:
+        - type
+        - coordinates
+      properties:
+        type:
+          type: string
+          enum:
+            - MultiPolygon
+        coordinates:
+          type: array
+          minItems: 1
+          items:
+            type: array
+            minItems: 1
+            maxItems: 1
+            items:
+              type: array
+              minItems: 4
+              items:
+                type: array
+                items:
+                  anyOf:
+                    - $ref: '#/components/schemas/EPSG4326Longitude'
+                    - $ref: '#/components/schemas/EPSG4326Latitude'
+                minItems: 2
+                maxItems: 3
+              example:
+                - - -1.3623046875
+                  - 52.8691297276852
+                - - -1.16455078125
+                  - 52.736291655910925
+                - - -0.9228515625
+                  - 52.65639394198803
+                - - -0.37353515625
+                  - 52.76289173758374
+                - - -1.3623046875
+                  - 52.8691297276852
+    BinaryFile:
+      type: string
+      format: binary
+    Band:
+      type: object
+      required:
+        - index
+        - stats
+        - totalNumPixels
+        - pixelCounts
+      properties:
+        index:
+          type: string
+          example: Band 1
+        stats:
+          type: object
+          required:
+            - min
+            - mean
+            - median
+            - max
+            - std
+          properties:
+            min:
+              type: number
+              example: 14
+            mean:
+              type: number
+              example: 47.695621490478516
+            median:
+              type: number
+              example: 43
+            max:
+              type: number
+              example: 100
+            std:
+              type: number
+              example: 20.756450653076172
+        totalNumPixels:
+          type: number
+          example: 128288
+        pixelCounts:
+          description: >
+            This object represents the number of pixel-value occurrences in the
+            band. For example, a pixel-value `12.0` that occurs `3` times would
+            be represented as `"12.0": 3` in this object.
+          type: object
+          example:
+            '14.0': 3
+            '15.0': 43
+            '16.0': 192
+            '17.0': 397
+            '18.0': 734
+          additionalProperties:
+            type: number
+    Statistics:
+      type: object
+      required:
+        - bands
+      properties:
+        bands:
+          type: array
+          items:
+            $ref: '#/components/schemas/Band'
+    Layer:
+      type: object
+      required:
+        - layerId
+        - description
+        - links
+      properties:
+        description:
+          type: string
+          example: Geospatial Layer
+        layerId:
+          type: string
+          example: 97130f06-6242-463f-bf19-0dd6f5a58cfb
+        links:
+          type: object
+          required:
+            - self
+            - search
+          properties:
+            self:
+              type: string
+              format: uri
+              example: >-
+                https://api.agrimetrics.co.uk/geospatial/layers/97130f06-6242-463f-bf19-0dd6f5a58cfb
+            search:
+              type: string
+              format: uri
+              example: >-
+                https://api.agrimetrics.co.uk/geospatial/layers/97130f06-6242-463f-bf19-0dd6f5a58cfb/search
+    BoundingBox:
+      type: object
+      required:
+        - type
+        - coordinates
+      properties:
+        type:
+          type: string
+          enum:
+            - bounding-box
+        coordinates:
+          type: object
+          required:
+            - minlat
+            - minlon
+            - maxlat
+            - maxlon
+          properties:
+            minlat:
+              $ref: '#/components/schemas/EPSG4326Latitude'
+            minlon:
+              $ref: '#/components/schemas/EPSG4326Longitude'
+            maxlat:
+              $ref: '#/components/schemas/EPSG4326Latitude'
+            maxlon:
+              $ref: '#/components/schemas/EPSG4326Longitude'
+    EPSG4326Longitude:
+      type: number
+      minimum: -180
+      maximum: 180
+      example: 2.1234234
+    EPSG4326Latitude:
+      type: number
+      minimum: -90
+      maximum: 90
+      example: -1.1234234
+    GeoJSONPoint:
+      description: >-
+        This is a GeoJSON Point. The coordinates array must be EPSG:4326 with
+        [longitude,latitude] order.
+      type: object
+      required:
+        - type
+        - coordinates
+      properties:
+        type:
+          type: string
+          enum:
+            - Point
+        coordinates:
+          type: array
+          minItems: 2
+          maxItems: 2
+          items:
+            anyOf:
+              - $ref: '#/components/schemas/EPSG4326Longitude'
+              - $ref: '#/components/schemas/EPSG4326Latitude'
+          example:
+            - -91.85
+            - 15.52
+    GeneralGeometry:
+      oneOf:
+        - $ref: '#/components/schemas/BoundingBox'
+        - $ref: '#/components/schemas/GeoJSONPolygon'
+        - $ref: '#/components/schemas/GeoJSONMultiPolygon'
+    Times:
+      type: array
+      example:
+        - '2018-01-01T00:00:00.000Z'
+        - '2019-01-01T00:00:00.000Z'
+      items:
+        type: string
+        format: date-time
+    ISO8601Datetime:
+      type: string
+      pattern: '[0-9]{8}T[0-9]{6}Z'
+      example: 20130310T180000Z
+    OutputFormats:
+      type: string
+      enum:
+        - shape-zip
+        - application/json
+        - csv
+        - GML3
+        - image/tiff
+        - KML
+        - OGR-GDB
+        - OGR-MIF
+        - OGR-TAB
+        - DXF
+    DatasetId:
+      description: The ID of a dataset in the catalog
+      type: string
+      format: uuid
+      example: 97130f06-6242-463f-bf19-0dd6f5a58cfb
+    LayerId:
+      type: string
+      format: uuid
+      example: 97130f06-6242-463f-bf19-0dd6f5a58cfb
+    PolygonOrBBoxSearchBase:
+      type: object
+      required:
+        - geometry
+      properties:
+        geometry:
+          $ref: '#/components/schemas/GeneralGeometry'
+        time:
+          type: string
+          format: date-time
+          example: '2017-01-01T00:00:00.000Z'
+    PolygonOrBBoxSearch:
+      allOf:
+        - $ref: '#/components/schemas/PolygonOrBBoxSearchBase'
+        - type: object
+          properties:
+            outputFormat:
+              $ref: '#/components/schemas/OutputFormats'
+    PointSearchBase:
+      type: object
+      required:
+        - geometry
+        - distance
+      properties:
+        geometry:
+          $ref: '#/components/schemas/GeoJSONPoint'
+        distance:
+          type: integer
+          minimum: 10
+          example: 10
+        time:
+          type: string
+          format: date-time
+          example: '2017-01-01T00:00:00.000Z'
+    PointSearch:
+      allOf:
+        - $ref: '#/components/schemas/PointSearchBase'
+        - type: object
+          properties:
+            outputFormat:
+              $ref: '#/components/schemas/OutputFormats'
+    ServiceDefinition:
+      type: object
+      required:
+        - datasetId
+        - layerName
+        - service
+        - WMS
+        - WFS
+        - WCS
+        - OGCApiFeatures
+        - OGCApiTiles
+        - WMTS
+      properties:
+        datasetId:
+          type: string
+          example: a420450f-ef42-4fc9-a137-69456bdad016
+        layerName:
+          type: string
+          example: Geospatial Layer
+        service:
+          type: string
+          enum:
+            - WCS
+            - WFS
+        WFS:
+          type: string
+          enum:
+            - 'Y'
+            - 'N'
+        WCS:
+          type: string
+          enum:
+            - 'Y'
+            - 'N'
+        WMS:
+          type: string
+          enum:
+            - 'Y'
+            - 'N'
+        WMTS:
+          type: string
+          enum:
+            - 'Y'
+            - 'N'
+        OGCApiFeatures:
+          type: string
+          enum:
+            - 'Y'
+            - 'N'
+        OGCApiTiles:
+          type: string
+          enum:
+            - 'Y'
+            - 'N'
+        temporal:
+          type: boolean
+          example: true
+        datastore:
+          type: string
+          example: Datastore Name
+        geoserverHostName:
+          type: string
+          example: geoserver-test.agrimetrics.co.uk
+        geometryField:
+          type: string
+          example: geom
+        billable:
+          $ref: '#/components/schemas/Billable'
+        defaultEPSGCode:
+          type: number
+          example: 4326
+    ServiceDefinitionResponse:
+      type: object
+      required:
+        - layerId
+        - datasetId
+        - layerName
+        - service
+        - WMS
+        - WFS
+        - WCS
+        - OGCApiFeatures
+        - OGCApiTiles
+        - WMTS
+      properties:
+        layerId:
+          type: string
+          example: 97130f06-6242-463f-bf19-0dd6f5a58cfb
+        datasetId:
+          type: string
+          example: a420450f-ef42-4fc9-a137-69456bdad016
+        layerName:
+          type: string
+          example: Geospatial Layer
+        service:
+          type: string
+          enum:
+            - WCS
+            - WFS
+        temporal:
+          type: boolean
+          example: true
+        datastore:
+          type: string
+          example: Datastore Name
+        geoserverHostName:
+          type: string
+          example: geoserver-test.agrimetrics.co.uk
+        geometryField:
+          type: string
+          example: geom
+        billable:
+          $ref: '#/components/schemas/Billable'
+        defaultEPSGCode:
+          type: number
+          example: 4326
+        WMS:
+          type: string
+          enum:
+            - 'Y'
+            - 'N'
+        WMTS:
+          type: string
+          enum:
+            - 'Y'
+            - 'N'
+        WFS:
+          type: string
+          enum:
+            - 'Y'
+            - 'N'
+        WCS:
+          type: string
+          enum:
+            - 'Y'
+            - 'N'
+        OGCApiFeatures:
+          type: string
+          enum:
+            - 'Y'
+            - 'N'
+        OGCApiTiles:
+          type: string
+          enum:
+            - 'Y'
+            - 'N'
+    Billable:
+      type: object
+      required:
+        - billingDataType
+        - billingCreditType
+        - billingCreditCost
+      properties:
+        billingDataType:
+          type: string
+        billingCreditType:
+          type: string
+        billingCreditCost:
+          type: number
+    RequestId:
+      type: string
+      format: uuid
+      example: 97130f06-6242-463f-bf19-0dd6f5a58cfb
+    uniqueLinkId:
+      type: string
+    DataRequestResponse:
+      type: array
+      items:
+        type: object
+        required:
+          - requestId
+          - datasetId
+          - datasetName
+          - status
+          - requestedDate
+          - requesterEmail
+        properties:
+          requestId:
+            description: The ID of the data request
+            type: string
+            format: uuid
+          datasetId:
+            description: The ID of the dataset that the data request relates to
+            type: string
+            format: uuid
+          datasetName:
+            description: The name of the dataset that the data request relates to
+            type: string
+          status:
+            description: The status of the data request
+            type: string
+            enum:
+              - pending
+              - approved
+              - denied
+              - cancelled
+          requestedDate:
+            description: The date the data request was made
+            type: string
+          requesterEmail:
+            description: The requesters email address
+    DataRequestDetails:
+      type: array
+      items:
+        type: object
+        required:
+          - requestId
+          - datasetId
+          - datasetName
+          - status
+          - requestedDate
+        properties:
+          requestId:
+            description: The ID of the data request
+            type: string
+            format: uuid
+          datasetId:
+            description: The ID of the dataset that the data request relates to
+            type: string
+            format: uuid
+          datasetName:
+            description: The name of the dataset that the data request relates to
+            type: string
+          status:
+            description: The status of the data request
+            type: string
+            enum:
+              - pending
+              - approved
+              - denied
+              - cancelled
+          requestedDate:
+            description: The date the data request was made
+            type: string
+          reviewedDate:
+            description: The date the data request was approved or rejected
+          requestedFormat:
+            description: The format the user would like the data to be provided in
+            type: string
+            enum:
+              - application/geo+json
+              - application/gml+xml; version=3.2
+              - application/vnd.google-earth.kml+xml
+              - application/zipped-shapefile
+              - application/x.gdb+zip
+              - application/x.mid-mif+zip
+              - application/x.tab+zip
+              - application/dxf
+              - image/tiff
+          projectName:
+            description: The name of the project the data is for
+            type: string
+          projectManagerName:
+            description: The name of the project manager who can approve the request
+            type: string
+          projectManagerEmail:
+            description: >-
+              The email address of the project manager who can approve the
+              request
+            type: string
+          requesterEmail:
+            description: The email of the person who made the data request
+            type: string
+          expiryDate:
+            description: >-
+              The date until which the data from an approved request can be
+              downloaded
+            type: string
+          uniqueLinkId:
+            type: string
+    DataRequest:
+      type: object
+      required:
+        - projectName
+        - projectManagerName
+        - projectManagerEmail
+        - datasetId
+        - datasetName
+        - requestedFormat
+      properties:
+        projectName:
+          description: The name of the project the data is for
+          type: string
+        projectManagerName:
+          description: The name of the project manager who can approve the request
+          type: string
+        projectManagerEmail:
+          description: The email address of the project manager who can approve the request
+          type: string
+        datasetId:
+          description: The ID of the dataset that the data request relates to
+          type: string
+          format: uuid
+        datasetName:
+          description: The name of the dataset that the data request relates to
+          type: string
+        geoJsonAOI:
+          description: >-
+            The area of interest that the user is requesting access to as a
+            stringified GeoJSON
+          type: string
+        shapefileAOI:
+          description: >-
+            The area of interest that the user is requesting access to as a
+            zipped shapefile
+          type: string
+          format: binary
+        requestedFormat:
+          description: The format the user would like the data to be provided in
+          type: string
+          enum:
+            - application/geo+json
+            - application/gml+xml; version=3.2
+            - application/vnd.google-earth.kml+xml
+            - application/zipped-shapefile
+            - application/x.gdb+zip
+            - application/x.mid-mif+zip
+            - application/x.tab+zip
+            - application/dxf
+            - image/tiff
+    Category:
+      type: object
+      properties:
+        value:
+          $ref: '#/components/schemas/CategoryValue'
+        label:
+          description: The label of the category
+          type: string
+    Categories:
+      type: array
+      items:
+        $ref: '#/components/schemas/Category'
+    Creator:
+      type: object
+      properties:
+        value:
+          description: The value of the creator
+          type: string
+        label:
+          description: The label of the creator
+          type: string
+    Concept:
+      type: object
+      required:
+        - value
+        - label
+      properties:
+        value:
+          description: The value of the concept
+          type: string
+        label:
+          description: The label of the concept
+          type: string
+    Concepts:
+      type: array
+      items:
+        $ref: '#/components/schemas/Concept'
+    TagsOrConcepts:
+      type: array
+      items:
+        $ref: '#/components/schemas/TagOrConcept'
+    TagOrConcept:
+      type: object
+      required:
+        - label
+        - type
+      properties:
+        value:
+          description: The id of the tag
+          type: string
+        label:
+          description: The label of the tag
+          type: string
+        type:
+          description: The type of the tag
+          type: string
+          enum:
+            - tag
+            - concept
+    Exchange:
+      type: string
+      enum:
+        - agrimetrics
+        - defra
+    DataSets:
+      type: object
+      required:
+        - dataSets
+      properties:
+        dataSets:
+          description: An array of data sets
+          type: array
+          items:
+            $ref: '#/components/schemas/DataSet'
+        concepts:
+          $ref: '#/components/schemas/Concepts'
+    BasicDataSetInfo:
+      type: object
+      required:
+        - id
+        - title
+        - entryType
+      properties:
+        title:
+          description: Title for the data set.
+          type: string
+        id:
+          $ref: '#/components/schemas/DatasetId'
+        entryType:
+          $ref: '#/components/schemas/EntryType'
+    DataSet:
+      type: object
+      required:
+        - title
+        - description
+        - entryType
+      properties:
+        tags:
+          description: List of tags on this data set.
+          type: array
+          items:
+            description: tag value
+            type: string
+            maxLength: 80
+        summary:
+          description: Summary of the data set.
+          type: string
+          maxLength: 140
+        title:
+          description: Title for the data set.
+          type: string
+        description:
+          description: Description of the data set.
+          type: string
+        id:
+          $ref: '#/components/schemas/DatasetId'
+        entryType:
+          $ref: '#/components/schemas/EntryType'
+        exchange:
+          $ref: '#/components/schemas/Exchange'
+        alternativeTitles:
+          type: array
+          items:
+            type: string
+        scoringURI:
+          description: Scoring URI of the model.
+          type: string
+        endpointKey:
+          description: Endpoint key for the model.
+          type: string
+        isOwner:
+          description: Whether the current user is the owner of this data set.
+          type: boolean
+        publisher:
+          description: The ID of the publisher.
+          type: string
+        createdAt:
+          description: Data set creation timestamp.
+          type: number
+          format: int64
+        published:
+          description: Data set publication timestamp.
+          type: number
+          format: int64
+        metadataModified:
+          description: Metadata last-modification timestmap.
+          type: number
+          format: int64
+        usedBy:
+          description: Other data sets using this data set.
+          type: array
+          items:
+            $ref: '#/components/schemas/BasicDataSetInfo'
+        derivedFrom:
+          description: >
+            Data sets used to generate this data set. When updating a data set,
+            use an array of IDs. When GETting the data set, the return type will
+            be `BasicDataSetInfo`.
+          type: array
+          items:
+            oneOf:
+              - $ref: '#/components/schemas/BasicDataSetInfo'
+              - $ref: '#/components/schemas/DatasetId'
+        entitlements:
+          description: Entitlements for the current user.
+          type: array
+          items:
+            $ref: '#/components/schemas/Entitlement'
+        entitlementsByIdentity:
+          description: Array of entitlements by user identity.
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              $ref: '#/components/schemas/Entitlement'
+        creator:
+          description: Creator of the data set.
+          type: string
+        dataReliability:
+          description: Free text description about the reliability of this dataset.
+          type: string
+        license:
+          description: License of the data set.
+          type: string
+          deprecated: true
+        licence:
+          description: Licence and use limitations.
+          $ref: '#/components/schemas/Licence'
+        landingPage:
+          description: >-
+            DEPRECATED. This has been replaced with the resources attribute.
+            Reference URI of the data set.
+          type: string
+          deprecated: true
+        resources:
+          description: Links containing more information on the data set
+          type: array
+          items:
+            $ref: '#/components/schemas/Resource'
+        dataFormats:
+          description: Format of the data set
+          type: array
+          items:
+            $ref: '#/components/schemas/DataFormat'
+        pricingDescription:
+          description: Pricing description of the data set.
+          type: string
+        spatialCoverage:
+          $ref: '#/components/schemas/SpatialCoverage'
+        spatialResolution:
+          description: The resolution of data set in meters.
+          type: number
+        geospatialExtent:
+          description: The geospatial extent of the data on the data set
+          $ref: '#/components/schemas/GeospatialExtent'
+        temporalCoverage:
+          description: The time frame this data set covers.
+          type: string
+          pattern: ^\d{4}-[01]\d-[0-3]\d(?:-\d{4}-[01]\d-[0-3]\d)?$
+        temporalResolution:
+          description: The sampling time period of the data set.
+          type: string
+          enum:
+            - P1Y
+            - P1M
+            - P1D
+            - PT1H
+            - PT1M
+            - PT1S
+        accrualPeriodicity:
+          description: The frequency at which data set is published.
+          $ref: '#/components/schemas/AccrualPeriodicity'
+        distributions:
+          type: array
+          items:
+            type: object
+            properties:
+              description:
+                description: Description on how to access the data set.
+                type: string
+              service:
+                description: A data service that gives access to the data set.
+                type: string
+        issued:
+          description: The date when the data set was issued.
+          type: string
+          pattern: ^\d{4}-[01]\d-[0-3]\d$
+        modified:
+          description: An timestamp of when the data in this dataset was last updated
+          type: number
+        keywords:
+          description: >-
+            List of keywords on this data set. keywords is deprecated - use tags
+            instead
+          type: array
+          deprecated: true
+          items:
+            description: keyword value
+            type: string
+        topics:
+          description: List of topics on this data set
+          type: array
+          items:
+            $ref: '#/components/schemas/Topic'
+        workflowKeywords:
+          description: List of workflow keywords on this data set
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkflowKeywords'
+        taxonomyKeywords:
+          description: List of keywords based on specific taxonomies
+          type: array
+          items:
+            $ref: '#/components/schemas/TaxonomyKeywords'
+        category:
+          description: Category of this data set.
+          $ref: '#/components/schemas/CategoryValue'
+        visibility:
+          description: Whether or not this data set should be displayed in the index.
+          type: string
+          enum:
+            - visible
+            - hidden
+        concepts:
+          description: >-
+            List of concepts on this data set. Check the concepts endpoint to
+            see valid values.
+          type: array
+          items:
+            description: concept URI
+            type: string
+        dataSet:
+          description: Information about the file data set
+          type: object
+          properties:
+            id:
+              type: string
+            type:
+              type: string
+              enum:
+                - file
+        services:
+          description: List of services available on the data set
+          type: array
+          items:
+            description: Service URI and Label
+            type: object
+            properties:
+              uri:
+                type: string
+              label:
+                type: string
+        sampleData:
+          description: Optional location to download sample data
+          type: object
+          properties:
+            csv:
+              type: string
+            json:
+              type: string
+        image:
+          $ref: '#/components/schemas/ImageRepresentation'
+        coordinateReferenceSystemId:
+          description: URL to the specification of the coordinate system used in the data
+          type: string
+        spatialRepresentationType:
+          description: Type of the geospatial data
+          type: string
+        lineage:
+          description: >-
+            Information about the creation and quality assurance process of the
+            dataset
+          type: string
+        fromTemplate:
+          description: >-
+            Information about which template was used to create the dataset
+            record
+          type: string
+        contacts:
+          description: List of contacts for this data set
+          type: array
+          items:
+            $ref: '#/components/schemas/Contact'
+        metadataContact:
+          description: Contact for the metadata on this data set
+          $ref: '#/components/schemas/Contact'
+        publicContact:
+          description: Public contact for the metadata on this data set
+          $ref: '#/components/schemas/PublicContact'
+        approvalForAccessNumber:
+          description: Approval for access status number
+          type: number
+        approvalForAccessStatus:
+          description: Approval for access status value
+          type: string
+          enum:
+            - AfA (Information Requests only)
+            - AfA (Public Register)
+            - AfA (Publication Scheme and Information for Re-Use Register)
+            - AfA (Publication Scheme)
+            - Not AfA (To be Assessessed with Guidance)
+            - Not AfA (To be Assessed)
+            - Not Applicable - Third Party Dataset
+            - Open Data Risk Assessment
+        language:
+          description: Language used on the data set
+          type: string
+        characterSet:
+          description: Character set used on the data set
+          type: string
+        hierarchyLevel:
+          description: Hierarchy level of the data set
+          type: string
+        metadataLanguage:
+          description: Language used on the metadata
+          type: string
+        metadataCharacterSet:
+          description: Character set used on the metadata
+          type: string
+        metadataStandardName:
+          type: string
+        metadataStandardVersion:
+          type: string
+        draftStatus:
+          $ref: '#/components/schemas/DraftStatus'
+        draftNotes:
+          description: Any notes added during review of the data set
+          type: string
+        publishedStatus:
+          $ref: '#/components/schemas/PublishedStatus'
+    DataSetTemplateMetadata:
+      description: Used as params for POST/PUT requests
+      type: object
+      properties:
+        description:
+          type: string
+        name:
+          type: string
+        dataSet:
+          $ref: '#/components/schemas/DataSetPatch'
+        entitlements:
+          $ref: '#/components/schemas/BatchIdentityInputEntitlements'
+        creatorEntitlements:
+          $ref: '#/components/schemas/Entitlements'
+        exchange:
+          description: Currently only used when creating templates
+          $ref: '#/components/schemas/Exchange'
+      required:
+        - name
+    DataSetTemplatePatchMetadata:
+      description: Used as params for PATCH requests
+      type: object
+      properties:
+        description:
+          type: string
+        name:
+          type: string
+        dataSet:
+          $ref: '#/components/schemas/DataSetPatch'
+        entitlements:
+          $ref: '#/components/schemas/BatchIdentityInputEntitlements'
+        creatorEntitlements:
+          $ref: '#/components/schemas/Entitlements'
+    DataSetTemplateEntity:
+      description: Returned from API responses, includes id and other required properties
+      allOf:
+        - type: object
+          properties:
+            id:
+              type: string
+          required:
+            - id
+            - dataSet
+            - entitlements
+        - $ref: '#/components/schemas/DataSetTemplateMetadata'
+    DataSetPatch:
+      type: object
+      properties:
+        tags:
+          description: List of tags on this data set.
+          type: array
+          items:
+            description: tag value
+            type: string
+            maxLength: 80
+          nullable: true
+        summary:
+          description: Summary of the data set.
+          type: string
+          maxLength: 140
+        title:
+          description: Title for the data set.
+          type: string
+        description:
+          description: Description of the data set.
+          type: string
+        alternativeTitles:
+          type: array
+          items:
+            type: string
+        scoringURI:
+          description: ScoringURI for the model.
+          type: string
+        endpointKey:
+          description: Endpoint key for the model.
+          type: string
+        derivedFrom:
+          description: >
+            Data sets used to generate this data set. When updating a data set,
+            use an array of IDs. When GETting the data set, the return type will
+            be `BasicDataSetInfo`.
+          type: array
+          items:
+            oneOf:
+              - $ref: '#/components/schemas/BasicDataSetInfo'
+              - $ref: '#/components/schemas/DatasetId'
+          nullable: true
+        creator:
+          description: Creator of the data set.
+          type: string
+          nullable: true
+        dataReliability:
+          description: Free text description about the reliability of this dataset.
+          type: string
+          nullable: true
+        license:
+          description: License of the data set.
+          type: string
+          nullable: true
+          deprecated: true
+        licence:
+          description: Licensing information and access constraint
+          type: object
+          required:
+            - text
+          properties:
+            text:
+              description: the name or contents of the licence
+              type: string
+            url:
+              description: link to the contents of the licence
+              type: string
+            useLimitationStatement:
+              description: >-
+                INSPIRE Limitations On Public Access, see:
+                https://inspire.ec.europa.eu/metadata-codelist/LimitationsOnPublicAccess
+              type: string
+            attributionStatement:
+              description: copyright statement
+              type: string
+            useConstraints:
+              description: >-
+                INSPIRE Conditions Applying To Access and Use, see:
+                https://inspire.ec.europa.eu/metadata-codelist/ConditionsApplyingToAccessAndUse
+              type: string
+          nullable: true
+        resources:
+          description: Links containing more information on the data set
+          type: array
+          items:
+            $ref: '#/components/schemas/Resource'
+          nullable: true
+        dataFormats:
+          description: Format of the data set
+          type: array
+          items:
+            $ref: '#/components/schemas/DataFormat'
+          nullable: true
+        spatialCoverage:
+          description: The geo spatial coverage of the data set.
+          type: string
+          enum:
+            - United Kingdom
+            - England
+            - Northern Ireland
+            - Scotland
+            - Wales
+            - Canada
+            - Ethiopia
+            - France
+            - India
+            - Kenya
+            - Mexico
+            - Netherlands
+            - Spain
+            - Tanzania
+            - Uganda
+            - United States
+            - Global only
+            - null
+          nullable: true
+        spatialResolution:
+          description: The resolution of data set in meters.
+          type: number
+          nullable: true
+        geospatialExtent:
+          description: The geospatial extent of the data on the data set
+          type: object
+          nullable: true
+          required:
+            - northBoundLatitude
+            - eastBoundLongitude
+            - southBoundLatitude
+            - westBoundLongitude
+          properties:
+            northBoundLatitude:
+              type: number
+            eastBoundLongitude:
+              type: number
+            southBoundLatitude:
+              type: number
+            westBoundLongitude:
+              type: number
+        temporalCoverage:
+          description: The time frame this data set covers.
+          type: string
+          pattern: ^\d{4}-[01]\d-[0-3]\d(?:-\d{4}-[01]\d-[0-3]\d)?$
+          nullable: true
+        temporalExtent:
+          type: object
+          properties:
+            begin:
+              description: The beginning of the period of time covered by the data set.
+              type: string
+            end:
+              description: >-
+                The end of the period of time covered by the data set. If empty,
+                the collection of data is ongoing.
+              type: string
+          required:
+            - begin
+        temporalResolution:
+          description: The sampling time period of the data set.
+          type: string
+          enum:
+            - P1Y
+            - P1M
+            - P1D
+            - PT1H
+            - PT1M
+            - PT1S
+            - null
+          nullable: true
+        topics:
+          type: array
+          items:
+            $ref: '#/components/schemas/Topic'
+        workflowKeywords:
+          description: List of workflow keywords on this data set
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkflowKeywords'
+        taxonomyKeywords:
+          description: List of keywords based on specific taxonomies
+          type: array
+          items:
+            $ref: '#/components/schemas/TaxonomyKeywords'
+        accrualPeriodicity:
+          description: The frequency at which data set is published.
+          type: string
+          enum:
+            - Hourly
+            - Daily
+            - Three times a week
+            - Semiweekly
+            - Weekly
+            - Three times a month
+            - Biweekly
+            - Semimonthly
+            - Monthly
+            - Bimonthly
+            - Quarterly
+            - Three times a year
+            - Semiannual
+            - Annual
+            - Biennial
+            - Triennial
+            - Continuous
+            - Irregular
+            - continual
+            - daily
+            - weekly
+            - fortnightly
+            - monthly
+            - quarterly
+            - biannually
+            - annually
+            - asNeeded
+            - irregular
+            - notPlanned
+            - unknown
+            - null
+          nullable: true
+        issued:
+          description: The date when the data set was issued.
+          type: string
+          pattern: ^\d{4}-[01]\d-[0-3]\d$
+          nullable: true
+        createdAt:
+          description: Data set creation timestamp.
+          type: number
+          format: int64
+          nullable: true
+        published:
+          description: Data set publication timestamp.
+          type: number
+          format: int64
+          nullable: true
+        publishedStatus:
+          $ref: '#/components/schemas/PublishedStatus'
+        modified:
+          description: An timestamp of when the data in this dataset was last updated
+          type: number
+          nullable: true
+        category:
+          description: Category of this data set.
+          $ref: '#/components/schemas/CategoryValue'
+        visibility:
+          description: Whether or not this data set should be displayed in the index.
+          type: string
+          enum:
+            - visible
+            - hidden
+        pricingDescription:
+          description: Pricing description of the data set.
+          type: string
+        distributions:
+          type: array
+          items:
+            type: object
+            properties:
+              description:
+                description: Description on how to access the data set.
+                type: string
+              service:
+                description: A data service that gives access to the data set.
+                type: string
+        approvalForAccessNumber:
+          description: Approval for access status number
+          type: number
+          nullable: true
+        approvalForAccessStatus:
+          description: Approval for access status value
+          type: string
+          enum:
+            - AfA (Information Requests only)
+            - AfA (Public Register)
+            - AfA (Publication Scheme and Information for Re-Use Register)
+            - AfA (Publication Scheme)
+            - Not AfA (To be Assessessed with Guidance)
+            - Not AfA (To be Assessed)
+            - Not Applicable - Third Party Dataset
+            - Open Data Risk Assessment
+            - null
+          nullable: true
+        contacts:
+          description: List of contacts for this data set
+          type: array
+          items:
+            $ref: '#/components/schemas/Contact'
+        metadataContact:
+          description: Contact for the metadata on this data set
+          type: object
+          required:
+            - organisationName
+            - role
+          properties:
+            organisationName:
+              description: Organisation name for this contact
+              type: string
+            individualName:
+              description: Individual name for this contact
+              type: string
+            emailAddress:
+              description: Email address for this contact
+              type: string
+            role:
+              description: The role of this contact as it relates to the data set
+              type: string
+              enum:
+                - resourceProvider
+                - custodian
+                - owner
+                - user
+                - distributor
+                - originator
+                - pointOfContact
+                - principalInvestigator
+                - processor
+                - publisher
+                - author
+          nullable: true
+        lineage:
+          description: >-
+            Information about the creation and quality assurance process of the
+            dataset
+          type: string
+          nullable: true
+        language:
+          description: Language used on the data set
+          type: string
+          nullable: true
+        characterSet:
+          description: Character set used on the data set
+          type: string
+          nullable: true
+        hierarchyLevel:
+          description: Hierarchy level of the data set
+          type: string
+          nullable: true
+        metadataLanguage:
+          description: Language used on the metadata
+          type: string
+          nullable: true
+        metadataCharacterSet:
+          description: Character set used on the metadata
+          type: string
+          nullable: true
+        metadataStandardName:
+          type: string
+          nullable: true
+        metadataStandardVersion:
+          type: string
+          nullable: true
+        coordinateReferenceSystemId:
+          description: URL to the specification of the coordinate system used in the data
+          type: string
+          nullable: true
+        spatialRepresentationType:
+          description: Type of the geospatial data
+          type: string
+          nullable: true
+    EntryType:
+      description: The type of the entry, data set or model
+      type: string
+      enum:
+        - model
+        - dataSet
+    GroupCode:
+      description: Name of group being harvested
+      type: string
+      enum:
+        - apha
+        - defra
+        - ea
+        - ne
+        - rpa
+    TemplateId:
+      description: The ID of a template in the catalog
+      type: string
+      format: uuid
+    Resource:
+      type: object
+      required:
+        - url
+      properties:
+        description:
+          description: Description of what the URL represents.
+          type: string
+        url:
+          description: URL to obtain more information on this data set.
+          type: string
+        id:
+          description: ID for this resource item.
+          type: string
+        name:
+          description: Name for what the URL represents.
+          type: string
+        private:
+          description: Indicates whether the resource metadata is sensitive data.
+          type: boolean
+    Contact:
+      type: object
+      required:
+        - organisationName
+        - role
+      properties:
+        organisationName:
+          description: Organisation name for this contact
+          type: string
+        individualName:
+          description: Individual name for this contact
+          type: string
+        positionName:
+          description: Position of this contact within their organisation
+          type: string
+        emailAddress:
+          description: Email address for this contact
+          type: string
+        role:
+          description: The role of this contact as it relates to the data set
+          type: string
+          enum:
+            - resourceProvider
+            - custodian
+            - owner
+            - user
+            - distributor
+            - originator
+            - pointOfContact
+            - principalInvestigator
+            - processor
+            - publisher
+            - author
+    PublicContact:
+      type: object
+      required:
+        - organisationName
+        - role
+      properties:
+        organisationName:
+          description: Organisation name for this contact
+          type: string
+        url:
+          description: Support url for this contact
+          type: string
+        urlLabel:
+          description: Title of the support website
+          type: string
+        emailAddress:
+          description: Email address for this contact
+          type: string
+        role:
+          description: The role of this contact as it relates to the data set
+          type: string
+          enum:
+            - pointOfContact
+    CreateFromTemplatePayload:
+      type: object
+      required:
+        - templateId
+      properties:
+        title:
+          description: Title for the data set.
+          type: string
+        description:
+          description: Description of the data set.
+          type: string
+        templateId:
+          $ref: '#/components/schemas/TemplateId'
+        exchange:
+          $ref: '#/components/schemas/Exchange'
+    DraftStatus:
+      description: The workflow status of this data set's draft
+      type: string
+      enum:
+        - submitted
+        - approved
+        - rejected
+    PublishedStatus:
+      description: >-
+        The publication status of this data set. Published data-sets have been
+        approved by an admin
+      type: string
+      enum:
+        - published
+        - retired
+    ImageRepresentation:
+      description: A data set image.
+      type: object
+      properties:
+        type:
+          type: string
+        url:
+          type: string
+          format: uri
+        thumbnailUrl:
+          type: string
+          format: uri
+        author:
+          description: The author of the image and a link to their website.
+          type: object
+          properties:
+            name:
+              type: string
+            url:
+              type: string
+              format: uri
+    EntryUpdateResponse:
+      type: object
+      properties:
+        status:
+          description: A message describing the result of the operation
+          type: string
+        id:
+          description: The ID for the new catalog entry.
+          type: string
+    IdentityInput:
+      description: An entity, such as a user or organisation.
+      type: object
+      properties:
+        id:
+          description: The Auth0 id of a user, or uuid of another identity
+          type: string
+        email:
+          description: The email address of a user
+          type: string
+        name:
+          description: >-
+            The name of the user. Will be ignored, but allowed so GET data can
+            be round-tripped.
+          type: string
+        type:
+          description: The type of the identity
+          type: string
+          enum:
+            - user
+            - organisation
+            - public
+      required:
+        - type
+    Entitlement:
+      type: string
+      enum:
+        - read
+        - write
+        - grant
+    Entitlements:
+      description: The entitlements an identity has on a resource
+      type: object
+      properties:
+        catalog:
+          type: object
+          properties:
+            read:
+              type: boolean
+            readSensitive:
+              type: boolean
+            write:
+              type: boolean
+        dataSet:
+          type: object
+          properties:
+            read:
+              type: boolean
+            write:
+              type: boolean
+        isAdmin:
+          type: boolean
+      required:
+        - catalog
+        - isAdmin
+    BatchIdentityInputEntitlements:
+      type: array
+      items:
+        type: object
+        required:
+          - identity
+          - entitlements
+        properties:
+          identity:
+            $ref: '#/components/schemas/IdentityInput'
+          entitlements:
+            $ref: '#/components/schemas/Entitlements'
+    IdentityEntitlements:
+      description: Entitlements for an identity on a resource, and details of the identity
+      type: object
+      properties:
+        identity:
+          description: The entity with the entitlements on this resource
+          type: object
+          properties:
+            id:
+              type: string
+            type:
+              type: string
+            name:
+              type: string
+        entitlements:
+          $ref: '#/components/schemas/Entitlements'
+    DataFormat:
+      type: object
+      required:
+        - dataFormat
+      properties:
+        version:
+          type: string
+        dataFormat:
+          type: string
+    GeospatialExtent:
+      type: object
+      required:
+        - northBoundLatitude
+        - eastBoundLongitude
+        - southBoundLatitude
+        - westBoundLongitude
+      properties:
+        northBoundLatitude:
+          type: number
+        eastBoundLongitude:
+          type: number
+        southBoundLatitude:
+          type: number
+        westBoundLongitude:
+          type: number
+    SpatialCoverage:
+      description: The geo spatial coverage of the data set.
+      type: string
+      enum:
+        - United Kingdom
+        - England
+        - Northern Ireland
+        - Scotland
+        - Wales
+        - Canada
+        - Ethiopia
+        - France
+        - India
+        - Kenya
+        - Mexico
+        - Netherlands
+        - Spain
+        - Tanzania
+        - Uganda
+        - United States
+        - Global only
+    CategoryValue:
+      description: The value of the category
+      type: string
+      enum:
+        - free
+        - standard
+        - premium
+        - on-request
+    TagValue:
+      description: The value of the tag
+      type: string
+    Relationship:
+      type: string
+      enum:
+        - narrower
+        - broader
+    Licence:
+      description: Licensing information and access constraint
+      type: object
+      required:
+        - text
+      properties:
+        text:
+          description: the name or contents of the licence
+          type: string
+        url:
+          description: link to the contents of the licence
+          type: string
+        useLimitationStatement:
+          description: >-
+            INSPIRE Limitations On Public Access, see:
+            https://inspire.ec.europa.eu/metadata-codelist/LimitationsOnPublicAccess
+          type: string
+        attributionStatement:
+          description: copyright statement
+          type: string
+        useConstraints:
+          description: >-
+            INSPIRE Conditions Applying To Access and Use, see:
+            https://inspire.ec.europa.eu/metadata-codelist/ConditionsApplyingToAccessAndUse
+          type: string
+    Topic:
+      description: topic value
+      type: string
+      enum:
+        - farming
+        - biota
+        - boundaries
+        - climatologyMeteorologyAtmosphere
+        - economy
+        - elevation
+        - environment
+        - geoscientificInformation
+        - health
+        - imageryBaseMapsEarthCover
+        - intelligenceMilitary
+        - inlandWaters
+        - location
+        - oceans
+        - planningCadastre
+        - society
+        - structure
+        - transportation
+        - utilitiesCommunication
+    WorkflowKeywords:
+      description: Workflow keyword value
+      type: string
+      enum:
+        - OpenData
+        - NonSpatial
+        - NotOpen
+        - ConditionalData
+        - PartnerDataset
+        - InternalOnly
+        - ThirdParty
+        - DatasetBundle
+        - RetiredOpenData
+        - RetiredNotOpen
+        - RetiredConditionalData
+        - RetiredPartnerDataset
+        - RetiredInternalOnly
+        - RetiredThirdParty
+        - RetiredDatasetBundle
+        - RetiredNonSpatial
+    TaxonomyKeywords:
+      description: Taxonomy keyword values
+      type: object
+      required:
+        - valueUri
+        - valueLabel
+        - sourceUri
+        - sourceLabel
+      properties:
+        valueUri:
+          type: string
+          example: http://www.eionet.europa.eu/gemet/concept/4118
+        valueLabel:
+          type: string
+          example: hydrology
+        sourceUri:
+          type: string
+          example: http://inspire.ec.europa.eu/theme
+        sourceLabel:
+          type: string
+          example: GEMET - INSPIRE themes, version 1.0
+    AccrualPeriodicity:
+      description: Accrual periodicity options
+      type: string
+      enum:
+        - Hourly
+        - Daily
+        - Three times a week
+        - Semiweekly
+        - Weekly
+        - Three times a month
+        - Biweekly
+        - Semimonthly
+        - Monthly
+        - Bimonthly
+        - Quarterly
+        - Three times a year
+        - Semiannual
+        - Annual
+        - Biennial
+        - Triennial
+        - Continuous
+        - Irregular
+        - continual
+        - daily
+        - weekly
+        - fortnightly
+        - monthly
+        - quarterly
+        - biannually
+        - annually
+        - asNeeded
+        - irregular
+        - notPlanned
+        - unknown
+    AuthenticationGetJwtRequest:
+      type: object
+      properties:
+        username:
+          description: Agrimetrics Catalog username
+          type: string
+        password:
+          description: Agrimetrics Catalog password
+          type: string
+    QueryLayerCutShapeBoundaryAndRetrieveRequest:
+      type: object
+    QueryLayerCutShapeBoundaryAndRetrieveRequest1:
+      type: string
+      format: binary
+    ManageDatasetIngestFileNewLayerRequest:
+      type: object
+      required:
+        - fileUri
+      properties:
+        fileUri:
+          type: string
+          example: >-
+            https://api.agrimetrics.co.uk/file-management/data-sets/5e74c298-515d-408d-8926-974abc696092/files/samplehabitats.zip
+    ShapefileConvertToGeoJsonRequest:
+      type: string
+      format: binary
+    ManageLayerAddGeoTiffRequest:
+      type: object
+      properties:
+        datetime:
+          $ref: '#/components/schemas/ISO8601Datetime'
+        file:
+          description: The file to upload.
+          type: string
+          format: binary
+    ManageLayerIngestFileRequest:
+      type: object
+      required:
+        - fileId
+      properties:
+        fileId:
+          type: string
+          example: >-
+            https://api.agrimetrics.co.uk/file-management/data-sets/5e74c298-515d-408d-8926-974abc696092/files/samplehabitats.zip
+        fileName:
+          type: string
+          pattern: .((tif[f]?)|zip)$
+          example: samplehabitats.zip
+        datetime:
+          $ref: '#/components/schemas/ISO8601Datetime'
+    ManageLayerSetStyleRequest:
+      type: object
+      properties:
+        file:
+          type: string
+          format: binary
+    QueryLayerSearchGeometryRequest:
+      oneOf:
+        - $ref: '#/components/schemas/PolygonOrBBoxSearch'
+        - $ref: '#/components/schemas/PointSearch'
+    QueryLayerCalculateCostRequest:
+      oneOf:
+        - $ref: '#/components/schemas/PolygonOrBBoxSearchBase'
+        - $ref: '#/components/schemas/PointSearchBase'
+    QueryLayerCalculateStatisticsWithinGeometryRequest:
+      type: object
+      required:
+        - geometry
+      properties:
+        geometry:
+          $ref: '#/components/schemas/GeneralGeometry'
+        time:
+          type: string
+          format: date-time
+          example: '2017-01-01T00:00:00.000Z'
+    ServiceDefinitionUpdateExistingDefinitionRequest:
+      type: object
+      properties:
+        billable:
+          $ref: '#/components/schemas/Billable'
+        defaultEPSGCode:
+          type: number
+          example: 4326
+    DataRequestUpdateRequestRequest:
+      type: object
+      properties:
+        status:
+          description: The status of the data request
+          type: string
+          enum:
+            - cancelled
+            - pending
+    WfsQueryDataOpenGisRequest:
+      type: object
+    DatasetCreateSingleCatalogEntryRequest:
+      oneOf:
+        - $ref: '#/components/schemas/DataSet'
+        - $ref: '#/components/schemas/CreateFromTemplatePayload'
+    StatusSetDraftStatusRequest:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          oneOf:
+            - $ref: '#/components/schemas/DraftStatus'
+            - type: string
+              enum:
+                - null
+              nullable: true
+        notes:
+          description: Any notes added during review of the data set
+          type: string
+    DatasetSetEntitlementsRequest:
+      type: object
+      required:
+        - entitlements
+      properties:
+        entitlements:
+          $ref: '#/components/schemas/BatchIdentityInputEntitlements'
+    AccessRequestCreateNewRequestRequest:
+      type: object
+      required:
+        - dataSetId
+        - requestingEntityId
+        - requestMessage
+      properties:
+        dataSetId:
+          $ref: '#/components/schemas/DatasetId'
+        requestingEntityId:
+          description: ID for the entity which is requesting access.
+          type: string
+        requesterName:
+          description: Name of the user who requested access.
+          type: string
+        requesterEmail:
+          description: Contact email address for the user who requested access.
+          type: string
+        requestMessage:
+          description: Free text message provided by the user when requesting access.
+          type: string
+    ImportDataSetsRequest:
+      type: string
+      format: binary
+    AuthenticationGetJwtResponse:
+      type: object
+      properties:
+        jwts:
+          type: object
+          properties:
+            agrimetrics:
+              type: object
+              properties:
+                token_type:
+                  type: string
+                  example: Bearer
+                access_token:
+                  type: string
+                  example: 9d7e80a0-ad76-4a5c-8810-91ffc9d5858f
+    AuthenticationGetJwt400Response:
+      type: object
+      properties: {}
+    StatusGetCatalogApiStatusResponse:
+      type: object
+      required:
+        - version
+        - _links
+      properties:
+        version:
+          type: string
+        _links:
+          type: object
+          required:
+            - self
+          properties:
+            self:
+              type: object
+              required:
+                - href
+              properties:
+                href:
+                  type: string
+    QueryLayerCutShapeBoundaryAndRetrieveResponse:
+      type: string
+      format: binary
+    QueryLayerCutShapeBoundaryAndRetrieve200Response:
+      type: string
+      format: binary
+    QueryLayerCutShapeBoundaryAndRetrieve403Response:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+    QueryLayerCutShapeBoundaryAndRetrieve404Response:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+    QueryLayerCutShapeBoundaryAndRetrieve406Response:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+    QueryDatasetListLayersWithinDatasetResponse:
+      type: object
+      required:
+        - layers
+      properties:
+        layers:
+          type: array
+          items:
+            $ref: '#/components/schemas/Layer'
+    QueryDatasetListLayersWithinDataset403Response:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+    QueryDatasetListLayersWithinDataset404Response:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+    QueryLayerMetadataResponse:
+      type: object
+      required:
+        - geometry
+        - layerId
+        - description
+        - links
+        - outputFormats
+      properties:
+        description:
+          type: string
+          example: Geospatial Layer
+        layerId:
+          type: string
+          example: 97130f06-6242-463f-bf19-0dd6f5a58cfb
+        links:
+          type: object
+          required:
+            - self
+            - search
+          properties:
+            self:
+              type: string
+              format: uri
+              example: >-
+                https://api.agrimetrics.co.uk/geospatial/layers/97130f06-6242-463f-bf19-0dd6f5a58cfb
+            search:
+              type: string
+              format: uri
+              example: >-
+                https://api.agrimetrics.co.uk/geospatial/layers/97130f06-6242-463f-bf19-0dd6f5a58cfb/search
+        geometry:
+          $ref: '#/components/schemas/BoundingBox'
+        times:
+          $ref: '#/components/schemas/Times'
+        outputFormats:
+          type: array
+          items:
+            $ref: '#/components/schemas/OutputFormats'
+    ManageLayerAddGeoTiffResponse:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+    ManageLayerSetStyleResponse:
+      type: object
+      properties: {}
+      example: {}
+    DataRequestCreateSingleAccessRequestResponse:
+      type: object
+      properties:
+        message:
+          type: string
+    DataRequestUpdateRequestResponse:
+      type: object
+      properties:
+        message:
+          type: string
+    DataRequestGetResultsResponse:
+      type: string
+      format: binary
+    DataRequestGetResults200Response:
+      type: string
+      format: binary
+    DataRequestGetResults406Response:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+    WmsQueryLayerWithOpenGisResponse:
+      type: string
+    WmsQueryWithOpenGisResponse:
+      type: string
+    WmtsQueryDataSetWmtsResponse:
+      type: string
+    WfsQueryDataWithOpenGisResponse:
+      type: string
+    WfsQueryDataOpenGisResponse:
+      type: string
+    WfsQueryDataOpenGis200Response:
+      type: string
+    OgcapiFeaturesQueryResponse:
+      type: string
+    OgcapiQueryFeaturesOpenapiResponse:
+      type: string
+    OgcapiFeaturesQueryConformanceResponse:
+      type: string
+    OgcapiQueryFeaturesFunctionResponse:
+      type: string
+    OgcapiQueryFeaturesCollectionResponse:
+      type: string
+    OgcapiFeaturesQueryOgcResponse:
+      type: string
+    OgcapiFeaturesQueryablesResponse:
+      type: string
+    OgcapiQueryFeaturesCollectionItemsResponse:
+      type: string
+    OgcapiFeaturesQuery200Response:
+      type: string
+    OgcApiTilesQueryTilesV1Response:
+      type: string
+    OgcApiTilesGetConformanceResponse:
+      type: string
+    OgcApiTilesQueryCollectionsResponse:
+      type: string
+    OgcApiTilesQueryCollectionByIdResponse:
+      type: string
+    OgcApiTilesQueryCollectionQueryablesResponse:
+      type: string
+    OgcApiTilesGetTilesCollectionResponse:
+      type: string
+    OgcApiTilesGetQueryTilesCollectionResponse:
+      type: string
+    OgcApiTilesQueryTileMatrixSetsResponse:
+      type: string
+    OgcApiTilesQueryTileMatrixSets200Response:
+      type: string
+    WmtsRestQueryTilejsonImageFormatResponse:
+      type: string
+    WmtsRestQueryTileMatrixSetResponse:
+      type: string
+    WmtsRestServiceQueryResponse:
+      type: string
+    WcsQueryDataResponse:
+      type: string
+    WcsQueryData200Response:
+      type: string
+    EsriRestServiceQueryResponse:
+      type: string
+    EsriRestServiceQuery200Response:
+      type: string
+    DatasetListValidTagsResponse:
+      type: object
+      properties:
+        tags:
+          $ref: '#/components/schemas/TagsOrConcepts'
+    DataSetListAllDataSetsResponse:
+      type: string
+      format: binary
+    DatasetDeleteSingleDataSetResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        id:
+          type: string
+    DatasetGetSingleCatalogEntryResponse:
+      type: object
+    DatasetGetFileDatasetIdResponse:
+      type: object
+      properties:
+        fileDatasetId:
+          type: string
+    DatasetCreateFileDatasetResponse:
+      type: object
+      properties:
+        fileDatasetId:
+          type: string
+    DatasetGetEntitlementsResponse:
+      type: object
+      properties:
+        entitlements:
+          type: array
+          items:
+            $ref: '#/components/schemas/IdentityEntitlements'
+    DatasetSetEntitlementsResponse:
+      type: object
+      properties: {}
+      example: {}
+    DatasetGetValidationReportResponse:
+      type: object
+      required:
+        - valid
+        - errorMessages
+      properties:
+        valid:
+          type: boolean
+        errorMessages:
+          type: array
+          items:
+            type: string
+    DatasetGetValidationReport200Response:
+      type: object
+      required:
+        - valid
+        - errorMessages
+      properties:
+        valid:
+          type: boolean
+        errorMessages:
+          type: array
+          items:
+            type: string
+    AccessRequestListResponse:
+      type: object
+    TemplateListPermissionsToViewResponse:
+      type: object
+      properties:
+        templates:
+          type: array
+          items:
+            $ref: '#/components/schemas/DataSetTemplateEntity'
+      required:
+        - templates
+    HarvestXmlDataOnGroupResponse:
+      type: object
+    HarvestXmlDataOnGroupPostResponse:
+      type: string
+    HarvestXmlDataOnGroupPost400Response:
+      type: string
+    DatasetGetNonSpatialDataForGroupResponse:
+      type: object
+security:
+  - JWT: []
+x-readme:
+  headers: []
+  explorer-enabled: true
+  proxy-enabled: true
+  samples-enabled: true
+x-readme-fauxas: true
+_id: 64d9ee2bbd209a0ba3d7eeb6
