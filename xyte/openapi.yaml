@@ -1,0 +1,3739 @@
+openapi: 3.0.3
+info:
+  title: Testing API
+  description: >-
+    Xyte's Device Cloud is the first all-in-one servitization platform designed
+    for device and hardware manufacturers to cloudify, operate, support, and
+    commercialize their connected devices in a unified platform. 
+
+
+    We enable OEMs across different industries to navigate their digital
+    journey, transforming their devices into integrated business solutions that
+    combine hardware, software and services. The only business and commerce
+    platform designed specifically for IoT device manufacturers, our
+    fully-federated Device Cloud empowers OEMs to manage the complete lifecycle
+    of their devices, from the minute they leave the warehouse through
+    aftermarket sales to end customers.
+
+
+    Our out-of-the-box applications for asset management, remote support,
+    ecommerce and subscription management, financing, and a powerful and secure
+    back office suite help OEMs boost revenue and market growth, optimize
+    operational efficiencies, gain instant insights into equipment and device
+    performance, and develop sustainable customer relationships.
+  version: '1'
+  x-api-status-urls: false
+  x-konfig-ignore:
+    object-with-no-properties: true
+    potential-incorrect-type: true
+servers:
+  - url: '{url}'
+    variables:
+      url:
+        default: url
+tags:
+  - name: Device
+  - name: Ticket
+paths:
+  /v1/devices:
+    post:
+      tags:
+        - Device
+      summary: Register Device
+      operationId: Device_createRegistration
+      security: []
+      description: ''
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceCreateRegistrationRequest'
+            examples:
+              Request Example:
+                value:
+                  hardware_key: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxxx
+                  cloud_id: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxxx
+                  mac: '11:22:33:44:55:66'
+                  sn: '112'
+                  firmware_version: 1.0.1
+                  name: test device
+      responses:
+        '400':
+          description: '400'
+          content:
+            application/json:
+              examples:
+                Hardware key is invalid:
+                  value: |-
+                    {
+                        "error": "Hardware key is invalid"
+                    }
+              schema:
+                $ref: '#/components/schemas/DeviceCreateRegistration400Response'
+        '422':
+          description: '422'
+          content:
+            application/json:
+              examples:
+                Nano id has already been taken:
+                  value: |-
+                    {
+                        "error": "Cloud id has already been taken"
+
+                    }
+                Serial number has already been taken:
+                  value: |-
+                    {
+                        "error": "Sn has already been taken"
+                    }
+                Firmware version cannot be blank:
+                  value: |-
+                    {
+                    "error": "Firmware version can't be blank"
+                    }
+              schema:
+                $ref: '#/components/schemas/DeviceCreateRegistration422Response'
+        2XX:
+          description: 2XX
+          content:
+            application/json:
+              examples:
+                Result:
+                  value: |-
+                    {
+                        "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxxx",
+                        "access_key": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+                        "hub_url": "https://us-1.endpoints.xyte.io",
+                        "hub_url_static_cert": "https://us-1.cssl.endpoints.xyte.io",
+                        "mqtt_hub_url": "mqtt://mqtt-us-1.endpoints.xyte.io:15582"
+                    }
+              schema:
+                $ref: '#/components/schemas/DeviceCreateRegistrationResponse'
+      deprecated: false
+  /v1/devices/{parent_id}/children:
+    post:
+      tags:
+        - Device
+      summary: Register Child Device
+      operationId: Device_registerChildDevice
+      description: ''
+      parameters:
+        - description: The ID of the parent device
+          name: parent_id
+          in: path
+          schema:
+            type: string
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceRegisterChildDeviceRequest'
+      responses:
+        '201':
+          description: '201'
+          content:
+            application/json:
+              examples:
+                '- Success':
+                  value: |-
+                    {
+                        "id": "11111111-2222...",
+                        "access_key": "Secret key for this device..."
+                    }
+              schema:
+                $ref: '#/components/schemas/DeviceRegisterChildDeviceResponse'
+        '401':
+          description: '401'
+          content:
+            application/json:
+              examples:
+                '- Invalid device id or access key':
+                  value: |-
+                    {
+                        "error": "Not authorized"
+                    }
+              schema:
+                $ref: '#/components/schemas/DeviceRegisterChildDevice401Response'
+        '404':
+          description: '404'
+          content:
+            text/plain:
+              examples:
+                '- Unknown model ID':
+                  value: |-
+                    {
+                        "error": "Model not found"
+                    }
+              schema:
+                $ref: '#/components/schemas/DeviceRegisterChildDevice404Response'
+      deprecated: false
+    get:
+      tags:
+        - Device
+      summary: Get Child Devices
+      operationId: Device_getChildDevices
+      description: ''
+      parameters:
+        - description: The ID of the parent device
+          name: parent_id
+          in: path
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              examples:
+                Result:
+                  value: |-
+                    [
+                      {
+                        "id": "4389c73f-eeea-4fca-8d34-072ec0b5469a",
+                        "sn": "32412",
+                        "mac": null,
+                        "state": null,
+                        "last_seen": "2021-12-08T14:32:11.318Z",
+                        "name": "future guy",
+                        "firmware_version": "1.0.1",
+                        "vendor": "The future",
+                        "model": "T-1000",
+                        "claimed": "Skynet",
+                        "details": {}
+                      },
+                      {},
+                      {}
+                    ]
+              schema:
+                $ref: '#/components/schemas/DeviceGetChildDevicesResponse'
+        '401':
+          description: '401'
+          content:
+            application/json:
+              examples:
+                Result:
+                  value: |-
+                    {
+                      "error": "Not authorized"
+                    }
+              schema:
+                $ref: '#/components/schemas/DeviceGetChildDevices401Response'
+      deprecated: false
+  /v1/devices/{deviceId}:
+    put:
+      tags:
+        - Device
+      summary: Update Device
+      operationId: Device_updateDevice
+      description: ''
+      parameters:
+        - name: deviceId
+          in: path
+          schema:
+            type: string
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceUpdateDeviceRequest'
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              examples:
+                '- Success':
+                  value: |-
+                    {
+                        "id": "xxxxxxxxx",
+                        "partner": {
+                            "sn": "xxxxxx",
+                            "mac": "xxxxxxxxxx",
+                            "vendor": "xVision",
+                            "model": "Display - Test Device"
+                        },
+                        "config": {
+                            "version": 0,
+                            "last_updated": "2023-03-02T16:47:41.960Z"
+                        },
+                        "state": {
+                            "temp": 39,
+                            "status": "online",
+                            "eco_mode": false,
+                            "presence": false,
+                            "temp_dir": 4,
+                            "data_rate": 50,
+                            "coffee_used": 10000,
+                            "power_status": true,
+                            "ambient_light": 50,
+                            "data_rate_dir": 0,
+                            "motion_sensor": true,
+                            "coffee_used_dir": 2,
+                            "ambient_light_dir": 5
+                        },
+                        "last_seen": "2023-03-05T13:53:59.840Z",
+                        "custom": {
+                            "prompt": null
+                        },
+                        "name": " test",
+                        "firmware_version": "1.0.1",
+                        "claimed": "test lab",
+                        "details": {
+                            "checking": "Cool"
+                        },
+                        "test": false
+                    }
+              schema:
+                $ref: '#/components/schemas/DeviceUpdateDeviceResponse'
+        '401':
+          description: '401'
+          content:
+            application/json:
+              examples:
+                '- Invalid device id or access key':
+                  value: |-
+                    {
+                        "error": "Not authorized"
+                    }
+              schema:
+                $ref: '#/components/schemas/DeviceUpdateDevice401Response'
+      deprecated: false
+    get:
+      tags:
+        - Device
+      summary: Get Device Info
+      operationId: Device_getInfo
+      description: ''
+      parameters:
+        - name: deviceId
+          in: path
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              examples:
+                '- Success':
+                  value: |-
+                    {
+                        "id": "99xxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx",
+                        "partner": {
+                            "sn": "1234",
+                            "mac": "11:22:11:22:33:33",
+                            "vendor": "xVision",
+                            "model": "Phone 550"
+                        },
+                        "config": {
+                            "vol": 100,
+                            "version": 1,
+                            "last_updated": "2022-02-17T09:57:07.216Z"
+                        },
+                        "state": {
+                            "status": "offline"
+                        },
+                        "last_seen": "2022-02-17T09:55:35.250Z",
+                        "custom": {
+                            "prompt": null
+                        },
+                        "name": "Phone 550- Desktop",
+                        "firmware_version": "1.0.2",
+                        "claimed": "xvision lab"
+                    }
+              schema:
+                $ref: '#/components/schemas/DeviceGetInfoResponse'
+        '400':
+          description: '400'
+          content:
+            application/json:
+              examples:
+                '- Invalid device id or access key':
+                  value: |-
+                    {
+                        "error": "Not authorized"
+                    }
+              schema:
+                $ref: '#/components/schemas/DeviceGetInfo400Response'
+      deprecated: false
+  /v1/devices/{deviceId}/cloud_settings:
+    put:
+      tags:
+        - Device
+      summary: Set Cloud Settings
+      operationId: Device_updateCloudSettings
+      description: ''
+      parameters:
+        - name: deviceId
+          in: path
+          schema:
+            type: string
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceUpdateCloudSettingsRequest'
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              examples:
+                '- Success':
+                  value: '{success:true}'
+              schema:
+                $ref: '#/components/schemas/DeviceUpdateCloudSettingsResponse'
+        '401':
+          description: '401'
+          content:
+            application/json:
+              examples:
+                '- Invalid device id or access key':
+                  value: |-
+                    {
+                        "error": "Not authorized"
+                    }
+              schema:
+                $ref: '#/components/schemas/DeviceUpdateCloudSettings401Response'
+      deprecated: false
+  /v1/devices/{deviceId}/telemetry:
+    post:
+      tags:
+        - Device
+      summary: Send Telemetry
+      operationId: Device_sendTelemetry
+      description: ''
+      parameters:
+        - name: deviceId
+          in: path
+          schema:
+            type: string
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceSendTelemetryRequest'
+            examples:
+              Request Example:
+                value:
+                  status: online
+                  timestamp: '2022-08-04T11:40:22.836Z'
+                  telemetries:
+                    fan_speed: 100.1
+                    connection: 4g
+                    usbc: true
+      responses:
+        '201':
+          description: '201'
+          content:
+            application/json:
+              examples:
+                '- Success':
+                  value: |-
+                    {
+                        "config_version": 0,
+                        "command": false,
+                        "info_version": 0,
+                        "new_licenses": true,
+                        "latest_fw_version": "1.3.4",
+                        "latest_fw_file_id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+                        "space_data_version": 4,
+                        "success": true
+                    }
+              schema:
+                $ref: '#/components/schemas/DeviceSendTelemetryResponse'
+        '401':
+          description: '401'
+          content:
+            application/json:
+              examples:
+                Result:
+                  value: |-
+                    {
+                        "error": "Not authorized"
+                    }
+              schema:
+                $ref: '#/components/schemas/DeviceSendTelemetry401Response'
+        '422':
+          description: '422'
+          content:
+            application/json:
+              examples:
+                '- Error in data':
+                  value: |-
+                    {
+                        "error": "Missing 'telemetries' object"
+                    }
+              schema:
+                $ref: '#/components/schemas/DeviceSendTelemetry422Response'
+      deprecated: false
+  /v1/devices/{deviceId}/children/telemetries:
+    post:
+      tags:
+        - Device
+      summary: Send Child Telemetries
+      operationId: Device_sendChildTelemetries
+      description: ''
+      parameters:
+        - name: deviceId
+          in: path
+          schema:
+            type: string
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceSendChildTelemetriesRequest'
+            examples:
+              Request Example:
+                value:
+                  11303e81-5d56-4910-a472-68676375d995:
+                    status: online
+                    telemetries:
+                      speed: 10
+                      fuel: 99
+                  b4adc748-4462-4933-8173-9d40e0a17d22:
+                    status: offline
+      responses:
+        '201':
+          description: '201'
+          content:
+            application/json:
+              examples:
+                '- Success':
+                  value: "{\n\t\"11303e81-5d56-4910-a472-68676375d995\": {\n\t\t\"config_version\": 0,\n\t\t\"command\": false,\n\t\t\"info_version\": 0,\n\t\t\"new_licenses\": false,\n\t\t\"latest_fw_version\": null,\n\t\t\"latest_fw_file_id\": null,\n\t\t\"space_data_version\": 1,\n\t\t\"success\": true\n\t},\n\t\"b4adc748-4462-4933-8173-9d40e0a17d22\": {\n\t\t\"config_version\": 0,\n\t\t\"command\": false,\n\t\t\"info_version\": 0,\n\t\t\"new_licenses\": false,\n\t\t\"latest_fw_version\": null,\n\t\t\"latest_fw_file_id\": null,\n\t\t\"space_data_version\": 2,\n\t\t\"success\": true\n\t}\n}"
+              schema:
+                $ref: '#/components/schemas/DeviceSendChildTelemetriesResponse'
+        '401':
+          description: '401'
+          content:
+            application/json:
+              examples:
+                Result:
+                  value: |-
+                    {
+                        "error": "Not authorized"
+                    }
+              schema:
+                $ref: '#/components/schemas/DeviceSendChildTelemetries401Response'
+        '422':
+          description: '422'
+          content:
+            application/json:
+              examples:
+                '- Error in data':
+                  value: "{\n\t\"11303e81-5d56-4910-a472-68676375d995\": {\n\t\t\"error\": \"Common telemetries.speed must be string, number or boolean\"\n\t},\n\t\"b4adc748-4462-4933-8173-9d40e0a17d22\": {\n\t\t\"config_version\": 0,\n\t\t\"command\": false,\n\t\t\"info_version\": 0,\n\t\t\"new_licenses\": false,\n\t\t\"latest_fw_version\": null,\n\t\t\"latest_fw_file_id\": null,\n\t\t\"space_data_version\": 2,\n\t\t\"success\": true\n\t}\n}"
+              schema:
+                $ref: '#/components/schemas/DeviceSendChildTelemetries422Response'
+      deprecated: false
+  /v1/devices/{deviceId}/config:
+    get:
+      tags:
+        - Device
+      summary: Get Config
+      operationId: Device_getConfig
+      description: ''
+      parameters:
+        - name: deviceId
+          in: path
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              examples:
+                '- Success':
+                  value: "{\n  \"name\": \"My device\",\n  \"version\": 10,\n  \"last_updated\": \"2020-01-01T01:01:01.000+00:00\",\n  \"config\": {\n  \t  \"network\": {\n   \t\t\t   \"ip\": \"192.168....\",\n   \t\t\t   \"...\": \"...\"\n    },\n    \"other\": {\n     \t \"data\": \"...\"\n    }\n  }\n}"
+              schema:
+                $ref: '#/components/schemas/DeviceGetConfigResponse'
+        '401':
+          description: '401'
+          content:
+            application/json:
+              examples:
+                '- Invalid device id or access key':
+                  value: |-
+                    {
+                        "error": "Not authorized"
+                    }
+              schema:
+                $ref: '#/components/schemas/DeviceGetConfig401Response'
+      deprecated: false
+    post:
+      tags:
+        - Device
+      summary: Set Config
+      operationId: Device_setConfig
+      description: ''
+      parameters:
+        - name: deviceId
+          in: path
+          schema:
+            type: string
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceSetConfigRequest'
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              examples:
+                '- Success':
+                  value: |-
+                    {
+                        "success": true,
+                        "version": 11
+                    }
+              schema:
+                $ref: '#/components/schemas/DeviceSetConfigResponse'
+        '401':
+          description: '401'
+          content:
+            application/json:
+              examples:
+                '- Invalid device id or access key':
+                  value: |-
+                    {
+                        "error": "Not authorized"
+                    }
+              schema:
+                $ref: '#/components/schemas/DeviceSetConfig401Response'
+        '422':
+          description: '422'
+          content:
+            application/json:
+              examples:
+                '- Can not set lower config version than the one on server':
+                  value: |-
+                    {
+                        "error": "Error setting config with old version, latest is [:version]"
+                    }
+              schema:
+                $ref: '#/components/schemas/DeviceSetConfig422Response'
+      deprecated: false
+  /v1/devices/{deviceId}/command:
+    get:
+      tags:
+        - Device
+      summary: Get Command
+      operationId: Device_getCommand
+      description: ''
+      parameters:
+        - name: deviceId
+          in: path
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              examples:
+                ' - Pending command found':
+                  value: |-
+                    {
+                        "id": 50,
+                        "status": "pending",
+                        "name": "upgrade",
+                        "parameters": {
+                            "url": "https://firmware.xyte.io/55sfTacc34Accq.obj",
+                            "version": "1.0.2"
+                        }
+                '- No pending command':
+                  value: '{}'
+              schema:
+                $ref: '#/components/schemas/DeviceGetCommandResponse'
+        '401':
+          description: '401'
+          content:
+            application/json:
+              examples:
+                '- Invalid device id or access key':
+                  value: |-
+                    {
+                        "error": "Not authorized"
+                    }
+              schema:
+                $ref: '#/components/schemas/DeviceGetCommand401Response'
+      deprecated: false
+    post:
+      tags:
+        - Device
+      summary: Update Command
+      operationId: Device_sendCommand
+      description: ''
+      parameters:
+        - name: deviceId
+          in: path
+          schema:
+            type: string
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceSendCommandRequest'
+            examples:
+              Request Example:
+                value:
+                  status: done
+                  message: great success!
+                  id: xxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              examples:
+                '- Success':
+                  value: |-
+                    {
+                        "success": true
+                    }
+              schema:
+                $ref: '#/components/schemas/DeviceSendCommandResponse'
+        '401':
+          description: '401'
+          content:
+            application/json:
+              examples:
+                '- Invalid device id or access key':
+                  value: |-
+                    {
+                        "error": "Not authorized"
+                    }
+              schema:
+                $ref: '#/components/schemas/DeviceSendCommand401Response'
+        '404':
+          description: '404'
+          content:
+            application/json:
+              examples:
+                '- No pending command':
+                  value: |-
+                    {
+                        "error": "no command"
+                    }
+              schema:
+                $ref: '#/components/schemas/DeviceSendCommand404Response'
+        '422':
+          description: '422'
+          content:
+            application/json:
+              examples:
+                ' - Invalid command status supplied':
+                  value: |-
+                    {
+                        "error": "invalid status: done/in-progress/failed"
+                    }
+              schema:
+                $ref: '#/components/schemas/DeviceSendCommand422Response'
+      deprecated: false
+  /v1/devices/{deviceId}/dumps/{mime-type}/{filename}:
+    post:
+      tags:
+        - Device
+      summary: Send Dump
+      operationId: Device_sendDumpFile
+      description: ''
+      parameters:
+        - name: deviceId
+          in: path
+          schema:
+            type: string
+          required: true
+        - name: mime-type
+          in: path
+          schema:
+            type: string
+            default: text/plain
+          required: true
+        - name: filename
+          in: path
+          schema:
+            type: string
+            default: filename
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceSendDumpFileRequest'
+      responses:
+        '201':
+          description: '201'
+          content:
+            application/json:
+              examples:
+                '- Success':
+                  value: |-
+                    {
+                        "id": "e3fb6648-6e6..."
+                    }
+              schema:
+                $ref: '#/components/schemas/DeviceSendDumpFileResponse'
+        '401':
+          description: '401'
+          content:
+            application/json:
+              examples:
+                '- Invalid device id or access key':
+                  value: |-
+                    {
+                        "error": "Not authorized"
+                    }
+              schema:
+                $ref: '#/components/schemas/DeviceSendDumpFile401Response'
+        '422':
+          description: '422'
+          content:
+            application/json:
+              examples:
+                '- Empty dump not allowed':
+                  value: |-
+                    {
+                        "error": "Data can't be blank"
+                    }
+              schema:
+                $ref: '#/components/schemas/DeviceSendDumpFile422Response'
+      deprecated: false
+  /v1/devices/{deviceId}/dumps/{dumpId}:
+    put:
+      tags:
+        - Device
+      summary: Append Dump File
+      operationId: Device_appendDumpFile
+      description: ''
+      parameters:
+        - name: deviceId
+          in: path
+          schema:
+            type: string
+          required: true
+        - name: dumpId
+          in: path
+          schema:
+            type: string
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceAppendDumpFileRequest'
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              examples:
+                '- Success':
+                  value: |-
+                    {
+                        "length": 1000
+                    }
+              schema:
+                $ref: '#/components/schemas/DeviceAppendDumpFileResponse'
+        '401':
+          description: '401'
+          content:
+            application/json:
+              examples:
+                '- Invalid device id or access key':
+                  value: |-
+                    {
+                        "error": "Not authorized"
+                    }
+              schema:
+                $ref: '#/components/schemas/DeviceAppendDumpFile401Response'
+      deprecated: false
+  /v1/devices/{deviceId}/licenses:
+    get:
+      tags:
+        - Device
+      summary: Get Licenses
+      operationId: Device_getLicenses
+      description: ''
+      parameters:
+        - name: deviceId
+          in: path
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              examples:
+                '- Pending licenses':
+                  value: |-
+                    [
+                    {
+                            "data": "device specific license info...",
+                            "signature": "RSA signature...",
+                            "id": "ec101553-050c...",
+                            "add": true
+                        },
+                        {
+                            "data": "device specific license info...",
+                            "signature": "RSA signature...",
+                            "id": "cf00c764-b37a...",
+                            "remove": true
+                        }
+                      ]
+                '- No license changes required':
+                  value: '[]'
+              schema:
+                $ref: '#/components/schemas/DeviceGetLicensesResponse'
+        '401':
+          description: '401'
+          content:
+            application/json:
+              examples:
+                '- Invalid device id or access key':
+                  value: |-
+                    {
+                        "error": "Not authorized"
+                    }
+              schema:
+                $ref: '#/components/schemas/DeviceGetLicenses401Response'
+      deprecated: false
+    post:
+      tags:
+        - Device
+      summary: Update License
+      operationId: Device_updateLicense
+      description: ''
+      parameters:
+        - name: deviceId
+          in: path
+          schema:
+            type: string
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceUpdateLicenseRequest'
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              examples:
+                ' - Success':
+                  value: |-
+                    {
+                        "data": "device specific license info...",
+                        "signature": "49a3dd9d-7858...",
+                        "id": "8ed0a1d8-3b38...",
+                        "expires_at": "2030-01-01T01:00:00Z"
+                    }
+              schema:
+                $ref: '#/components/schemas/DeviceUpdateLicenseResponse'
+        '401':
+          description: '401'
+          content:
+            application/json:
+              examples:
+                '- Invalid device id or access key':
+                  value: |-
+                    {
+                        "error": "Not authorized"
+                    }
+              schema:
+                $ref: '#/components/schemas/DeviceUpdateLicense401Response'
+        '404':
+          description: '404'
+          content:
+            application/json:
+              examples:
+                '- No license found with this id':
+                  value: |-
+                    {
+                        "error": "Couldn't find License"
+                    }
+              schema:
+                $ref: '#/components/schemas/DeviceUpdateLicense404Response'
+        '422':
+          description: '422'
+          content:
+            application/json:
+              examples:
+                '- Invalid state request':
+                  value: |-
+                    {
+                        "error": "State can't switch to error from inuse"
+                    }
+              schema:
+                $ref: '#/components/schemas/DeviceUpdateLicense422Response'
+      deprecated: false
+  /v1/devices/{deviceId}/license:
+    get:
+      tags:
+        - Device
+      summary: Get License
+      operationId: Device_getLicense
+      description: ''
+      parameters:
+        - name: deviceId
+          in: path
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              examples:
+                '- Pending licenses':
+                  value: |-
+                    [
+                    {
+                            "data": "device specific license info...",
+                            "signature": "RSA signature...",
+                            "id": "ec101553-050c...",
+                            "add": true
+                        },
+                        {
+                            "data": "device specific license info...",
+                            "signature": "RSA signature...",
+                            "id": "cf00c764-b37a...",
+                            "remove": true
+                        }
+                      ]
+                '- No license changes required':
+                  value: '[]'
+              schema:
+                $ref: '#/components/schemas/DeviceGetLicenseResponse'
+        '401':
+          description: '401'
+          content:
+            application/json:
+              examples:
+                '- Invalid device id or access key':
+                  value: |-
+                    {
+                        "error": "Not authorized"
+                    }
+              schema:
+                $ref: '#/components/schemas/DeviceGetLicense401Response'
+      deprecated: false
+  /v1/devices/{deviceId}/space:
+    get:
+      tags:
+        - Device
+      summary: Get Space Info
+      operationId: Device_getSpaceInfo
+      description: ''
+      parameters:
+        - name: deviceId
+          in: path
+          schema:
+            type: string
+          required: true
+      responses:
+        '201':
+          description: '201'
+          content:
+            application/json:
+              examples:
+                '- Success':
+                  value: |-
+                    {
+                        "location": {
+                            "coordinates": {
+                                "lat": 51.165691,
+                                "lng": 10.451526
+                            },
+                            "utc_offset": 60,
+                            "name": "Germany"
+                        },
+                        "temperature_units": "celsius",
+                        "maintenance": false,
+                        "name": "Interactive Class",
+                        "local_time": "2022-03-17T10:55:28+01:00"
+                    }
+              schema:
+                $ref: '#/components/schemas/DeviceGetSpaceInfoResponse'
+        '422':
+          description: '422'
+          content:
+            application/json:
+              examples:
+                '- Error in data':
+                  value: |-
+                    {
+                      "error": "Device not in space"
+                    }
+              schema:
+                $ref: '#/components/schemas/DeviceGetSpaceInfo422Response'
+      deprecated: false
+  /v1/devices/{deviceId}/files/{fileUuid}:
+    get:
+      tags:
+        - Device
+      summary: Get File
+      operationId: Device_getFile
+      description: ''
+      parameters:
+        - name: deviceId
+          in: path
+          schema:
+            type: string
+          required: true
+        - name: fileUuid
+          in: path
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              examples:
+                '- Success':
+                  value: |-
+                    "id": "b0b1a8aa-488f-46a8-b405-2828caaf3927",
+                        "name": "foo 1",
+                        "url": "https://s3-eu-west-1.amazonaws.com/static.staging.syncpro.io/user_uploads/2803eff4-b6b2-4b19-8a36-6ad52076360f-samplefile.png",
+                        "desc": "Foo test",
+                        "file_type": "firmware",
+                        "version": "1.0.1",
+                        "created_at": "2021-08-11T14:38:36.930Z",
+                        "public_notes": "Version 1.0.1 changes"
+                      }
+              schema:
+                $ref: '#/components/schemas/DeviceGetFileResponse'
+        '400':
+          description: '400'
+          content:
+            application/json:
+              examples:
+                '- File not found':
+                  value: |-
+                    {
+                      "error": "File not found"
+                    }
+              schema:
+                $ref: '#/components/schemas/DeviceGetFile400Response'
+      deprecated: false
+  /v1/devices/{deviceId}/files:
+    get:
+      tags:
+        - Device
+      summary: Get Files
+      operationId: Device_getFiles
+      description: ''
+      parameters:
+        - name: deviceId
+          in: path
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              examples:
+                '- Success':
+                  value: |-
+                    [
+                      {
+                        "id": "b0b1a8aa-488f-46a8-b405-2828caaf3927",
+                        "name": "foo 1",
+                        "url": "https://s3-eu-west-1.amazonaws.com/static.staging.syncpro.io/user_uploads/2803eff4-b6b2-4b19-8a36-6ad52076360f-samplefile.png",
+                        "desc": "Foo test",
+                        "file_type": "firmware",
+                        "version": "1.0.1",
+                        "created_at": "2021-08-11T14:38:36.930Z",
+                        "public_notes": "version 1.0.1 changes"
+                      },
+                        "id": [file_id_2],
+                        "name": [file_name_2],
+                        "url": [file_url_2],
+                        "desc": [file_desc_2],
+                        "file_type": [file_type_2],
+                        "version": [file_version_2],
+                        "created_at": [file_creation_date_2],
+                        "public_notes": [public_notes_2]
+                      },
+                    ]
+              schema:
+                $ref: '#/components/schemas/DeviceGetFilesResponse'
+        '400':
+          description: '400'
+          content:
+            application/json:
+              examples:
+                '- File not found':
+                  value: |-
+                    {
+                      "error": "File not found"
+                    }
+              schema:
+                $ref: '#/components/schemas/DeviceGetFiles400Response'
+      deprecated: false
+  /v1/devices/{deviceId}/incidents:
+    post:
+      tags:
+        - Device
+      summary: Open Incident
+      operationId: Device_openIncident
+      description: ''
+      parameters:
+        - name: deviceId
+          in: path
+          schema:
+            type: string
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceOpenIncidentRequest'
+            examples:
+              Request Example:
+                value:
+                  title: Device cover is open
+                  description: >-
+                    The top guard cover is open and will prevent any device
+                    operation until closed.
+                  issue: cover_open
+                  priority: 1
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              examples:
+                '- Success':
+                  value: "{\n\t\"incident_id\": \"eef9bcec-9335....\"\n}"
+              schema:
+                $ref: '#/components/schemas/DeviceOpenIncidentResponse'
+        '401':
+          description: '401'
+          content:
+            application/json:
+              examples:
+                Result:
+                  value: |-
+                    {
+                        "error": "Not authorized"
+                    }
+              schema:
+                $ref: '#/components/schemas/DeviceOpenIncident401Response'
+        '422':
+          description: '422'
+          content:
+            application/json:
+              examples:
+                '- Error in data':
+                  value: "{\n\t\"error\": \"Priority must be between 1 and 5\"\n}"
+              schema:
+                $ref: '#/components/schemas/DeviceOpenIncident422Response'
+      deprecated: false
+    get:
+      tags:
+        - Device
+      summary: Get Incidents
+      operationId: Device_getIncidents
+      description: ''
+      parameters:
+        - description: Device's unique ID
+          name: deviceId
+          in: path
+          schema:
+            type: string
+          required: true
+      responses:
+        '201':
+          description: '201'
+          content:
+            application/json:
+              examples:
+                '- Success':
+                  value: "{\n\t\"success\": true\n}"
+              schema:
+                $ref: '#/components/schemas/DeviceGetIncidentsResponse'
+        '401':
+          description: '401'
+          content:
+            application/json:
+              examples:
+                Result:
+                  value: |-
+                    {
+                        "error": "Not authorized"
+                    }
+              schema:
+                $ref: '#/components/schemas/DeviceGetIncidents401Response'
+        '404':
+          description: '404'
+          content:
+            application/json:
+              examples:
+                '- Error in data':
+                  value: "{\n\t\"error\": \"Incident not found\"\n}"
+              schema:
+                $ref: '#/components/schemas/DeviceGetIncidents404Response'
+      deprecated: false
+  /v1/devices/{deviceId}/incidents/{incidentId}:
+    delete:
+      tags:
+        - Device
+      summary: Close Incident
+      operationId: Device_closeIncident
+      description: ''
+      parameters:
+        - description: Unique Device ID
+          name: deviceId
+          in: path
+          schema:
+            type: string
+          required: true
+        - description: The unique id of the incident to close
+          name: incidentId
+          in: path
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              examples:
+                '- Success':
+                  value: "{\n\t\"success\": true\n}"
+              schema:
+                $ref: '#/components/schemas/DeviceCloseIncidentResponse'
+        '401':
+          description: '401'
+          content:
+            application/json:
+              examples:
+                Result:
+                  value: |-
+                    {
+                        "error": "Not authorized"
+                    }
+              schema:
+                $ref: '#/components/schemas/DeviceCloseIncident401Response'
+        '404':
+          description: '404'
+          content:
+            application/json:
+              examples:
+                '- Error in data':
+                  value: "{\n\t\"error\": \"Incident not found\"\n}"
+              schema:
+                $ref: '#/components/schemas/DeviceCloseIncident404Response'
+      deprecated: false
+  /core/v1/partner/devices:
+    get:
+      tags:
+        - Device
+      summary: List Devices
+      operationId: Device_listDevices
+      security:
+        - sec0: []
+      description: ''
+      parameters:
+        - description: Filter by model id
+          name: model_id
+          in: query
+          schema:
+            type: string
+        - description: Filter by Serial Number
+          name: sn
+          in: query
+          schema:
+            type: string
+        - description: Filter by MAC address
+          name: mac
+          in: query
+          schema:
+            type: string
+        - description: Pagination selector
+          name: page
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              examples:
+                '- Success':
+                  value: |-
+                    {
+                        "data": [
+                            {
+                                "id": "....-03cfda750cfa",
+                                "sn": "123",
+                                "mac": "11:00:00:00:00:00",
+                                "cloud_id": "....",
+                                "status": null,
+                                "last_seen_at": "2022-11-06T09:52:47.546Z",
+                                "details": {},
+                                "state": {},
+                                "model": {
+                                    "id": "....-d75e0abec7d2",
+                                    "name": "model name",
+                                    "sub_model": "sub model"
+                                },
+                                "firmware": {
+                                    "version": "1.0.1"
+                                }
+                            }
+                            ],
+                        "page_info": {
+                            "has_next": false,
+                            "total_count": 32
+                        }
+                    }
+              schema:
+                $ref: '#/components/schemas/DeviceListDevicesResponse'
+        '401':
+          description: '401'
+          content:
+            application/json:
+              examples:
+                Invalid API key:
+                  value: |-
+                    {
+                        "error": "Not authorized"
+                    }
+              schema:
+                $ref: '#/components/schemas/DeviceListDevices401Response'
+      deprecated: false
+  /core/v1/partner/devices/{device_id}:
+    get:
+      tags:
+        - Device
+      summary: Get Device Info
+      operationId: Device_getInfo
+      security:
+        - sec0: []
+      description: ''
+      parameters:
+        - description: Device's unique ID
+          name: device_id
+          in: path
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              examples:
+                '- Success':
+                  value: |-
+                    {
+                        "data": [
+                            {
+                                "id": "....-03cfda750cfa",
+                                "sn": "123",
+                                "mac": "11:00:00:00:00:00",
+                                "cloud_id": "....",
+                                "status": null,
+                                "last_seen_at": "2022-11-06T09:52:47.546Z",
+                                "details": {},
+                                "state": {},
+                                "model": {
+                                    "id": "....-d75e0abec7d2",
+                                    "name": "model name",
+                                    "sub_model": "sub model"
+                                },
+                                "firmware": {
+                                    "version": "1.0.1"
+                                }
+                            }
+                            ],
+                        "page_info": {
+                            "has_next": false,
+                            "total_count": 32
+                        }
+                    }
+              schema:
+                $ref: '#/components/schemas/DeviceGetInfo200Response'
+        '401':
+          description: '401'
+          content:
+            application/json:
+              examples:
+                Invalid API key:
+                  value: |-
+                    {
+                        "error": "Not authorized"
+                    }
+              schema:
+                $ref: '#/components/schemas/DeviceGetInfo401Response'
+      deprecated: false
+    delete:
+      tags:
+        - Device
+      summary: Delete Device
+      operationId: Device_deleteDevice
+      security:
+        - sec0: []
+      description: ''
+      parameters:
+        - description: Device's unique ID
+          name: device_id
+          in: path
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              examples:
+                '- Success':
+                  value: |-
+                    {
+                        "success": true
+                    }
+              schema:
+                $ref: '#/components/schemas/DeviceDeleteDeviceResponse'
+        '401':
+          description: '401'
+          content:
+            application/json:
+              examples:
+                Invalid API key:
+                  value: |-
+                    {
+                        "error": "Not authorized"
+                    }
+              schema:
+                $ref: '#/components/schemas/DeviceDeleteDevice401Response'
+        '404':
+          description: '404'
+          content:
+            application/json:
+              examples:
+                Result:
+                  value: |-
+                    {
+                        "error": "Errors::NotFound"
+                    }
+              schema:
+                $ref: '#/components/schemas/DeviceDeleteDevice404Response'
+      deprecated: false
+  /core/v1/partner/devices/{device_id}/telemetries:
+    get:
+      tags:
+        - Device
+      summary: Get Device Telemetries
+      operationId: Device_getTelemetries
+      security:
+        - sec0: []
+      description: ''
+      parameters:
+        - description: Unique Device ID
+          name: device_id
+          in: path
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              examples:
+                '- Success':
+                  value: |-
+                    [
+                        {
+                            "created_at": "2024-01-21T17:23:22Z",
+                            "device_timestamp": "2024-01-21T17:23:22Z",
+                            "telemetries": {
+                                "temp": 22,
+                                "input": "hdmi",
+                                "status": "online",
+                                "fan_speed": 5.5
+                            }
+                        }
+                    ]
+              schema:
+                $ref: '#/components/schemas/DeviceGetTelemetriesResponse'
+        '401':
+          description: '401'
+          content:
+            application/json:
+              examples:
+                Invalid API key:
+                  value: |-
+                    {
+                        "error": "Not authorized"
+                    }
+              schema:
+                $ref: '#/components/schemas/DeviceGetTelemetries401Response'
+        '404':
+          description: '404'
+          content:
+            application/json:
+              examples:
+                Result:
+                  value: |-
+                    {
+                        "error": "Errors::NotFound"
+                    }
+              schema:
+                $ref: '#/components/schemas/DeviceGetTelemetries404Response'
+      deprecated: false
+  /core/v1/partner/devices/{device_id}/config:
+    get:
+      tags:
+        - Device
+      summary: Get Device Configuration
+      operationId: Device_getConfig
+      security:
+        - sec0: []
+      description: ''
+      parameters:
+        - description: Unique Device ID
+          name: device_id
+          in: path
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              examples:
+                '- Success':
+                  value: |-
+                    {
+                        "version": 0,
+                        "last_updated": "2023-01-24T14:05:19Z",
+                        "config": {}
+                    }
+              schema:
+                $ref: '#/components/schemas/DeviceGetConfig200Response'
+        '401':
+          description: '401'
+          content:
+            application/json:
+              examples:
+                Invalid API key:
+                  value: |-
+                    {
+                        "error": "Not authorized"
+                    }
+              schema:
+                $ref: '#/components/schemas/DeviceGetConfig401Response'
+        '404':
+          description: '404'
+          content:
+            application/json:
+              examples:
+                Result:
+                  value: |-
+                    {
+                        "error": "Errors::NotFound"
+                    }
+              schema:
+                $ref: '#/components/schemas/DeviceGetConfig404Response'
+      deprecated: false
+  /core/v1/partner/devices/{device_id}/commands:
+    get:
+      tags:
+        - Device
+      summary: Get Device Commands
+      operationId: Device_listCommands
+      security:
+        - sec0: []
+      description: ''
+      parameters:
+        - description: Unique Device ID
+          name: device_id
+          in: path
+          schema:
+            type: string
+          required: true
+        - description: >-
+            Filter by command status: scheduled, pending, done, failed, aborted,
+            in_progress
+          name: status
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              examples:
+                '- Success':
+                  value: |-
+                    {
+                        "data": [
+                            {
+                                "id": "....-a7b49f736ef1",
+                                "status": "pending",
+                                "name": "reboot",
+                                "parameters": null
+                            }
+                           ],
+                        "page_info": {
+                            "has_next": false,
+                            "total_count": 7
+                        }
+                    }
+              schema:
+                $ref: '#/components/schemas/DeviceListCommandsResponse'
+        '401':
+          description: '401'
+          content:
+            application/json:
+              examples:
+                Invalid API key:
+                  value: |-
+                    {
+                        "error": "Not authorized"
+                    }
+              schema:
+                $ref: '#/components/schemas/DeviceListCommands401Response'
+        '404':
+          description: '404'
+          content:
+            application/json:
+              examples:
+                Result:
+                  value: |-
+                    {
+                        "error": "Errors::NotFound"
+                    }
+              schema:
+                $ref: '#/components/schemas/DeviceListCommands404Response'
+      deprecated: false
+  /core/v1/partner/devices/{device_id}/history:
+    get:
+      tags:
+        - Device
+      summary: Get Device State History
+      operationId: Device_getStateHistory
+      security:
+        - sec0: []
+      description: ''
+      parameters:
+        - description: Unique Device ID
+          name: device_id
+          in: path
+          schema:
+            type: string
+          required: true
+        - description: 'Filter by state: online, offline, unavailable, error'
+          name: status
+          in: query
+          schema:
+            type: string
+        - description: Query range
+          name: from
+          in: query
+          schema:
+            type: string
+            format: date-time
+            default: beginning of current month
+        - description: Query range
+          name: to
+          in: query
+          schema:
+            type: string
+            format: date-time
+            default: Current time
+        - description: Pagination (500 records per page)
+          name: page
+          in: query
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              examples:
+                '- Success':
+                  value: |-
+                    {
+                        "data": [
+                            {
+                                "created_at": "2024-01-01T00:15:00Z",
+                                "state": {
+                                    "temp": 302,
+                                    "input": "hdmi",
+                                    "power": 48,
+                                    "status": "online",
+                                    "fan_speed": 5.5
+                                }
+                            },
+                        "page_info": {
+                            "has_next": false,
+                            "total_count": 7
+                        }
+                    }
+              schema:
+                $ref: '#/components/schemas/DeviceGetStateHistoryResponse'
+        '401':
+          description: '401'
+          content:
+            application/json:
+              examples:
+                Invalid API key:
+                  value: |-
+                    {
+                        "error": "Not authorized"
+                    }
+              schema:
+                $ref: '#/components/schemas/DeviceGetStateHistory401Response'
+        '404':
+          description: '404'
+          content:
+            application/json:
+              examples:
+                Result:
+                  value: |-
+                    {
+                        "error": "Errors::NotFound"
+                    }
+              schema:
+                $ref: '#/components/schemas/DeviceGetStateHistory404Response'
+      deprecated: false
+  /core/v1/partner/devices/histories:
+    get:
+      tags:
+        - Device
+      summary: Get All Device's State History
+      operationId: Device_getAllDeviceStateHistories
+      security:
+        - sec0: []
+      description: ''
+      parameters:
+        - description: 'Filter by state: online, offline, unavailable, error'
+          name: status
+          in: query
+          schema:
+            type: string
+        - description: Query range
+          name: from
+          in: query
+          schema:
+            type: string
+            format: date-time
+            default: beginning of current month
+        - description: Query range
+          name: to
+          in: query
+          schema:
+            type: string
+            format: date-time
+            default: Current time
+        - description: Pagination (500 records per page)
+          name: page
+          in: query
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              examples:
+                '- Success':
+                  value: |-
+                    {
+                        "data": [
+                            {
+                                "created_at": "2024-01-01T00:15:00Z",
+                                "state": {
+                                    "temp": 302,
+                                    "input": "hdmi",
+                                    "power": 48,
+                                    "status": "online",
+                                    "fan_speed": 5.5
+                                }
+                            },
+                        "page_info": {
+                            "has_next": false,
+                            "total_count": 7
+                        }
+                    }
+              schema:
+                $ref: '#/components/schemas/DeviceGetAllDeviceStateHistoriesResponse'
+        '401':
+          description: '401'
+          content:
+            application/json:
+              examples:
+                Invalid API key:
+                  value: |-
+                    {
+                        "error": "Not authorized"
+                    }
+              schema:
+                $ref: >-
+                  #/components/schemas/DeviceGetAllDeviceStateHistories401Response
+      deprecated: false
+  /core/v1/partner/tickets:
+    get:
+      tags:
+        - Ticket
+      summary: List Tickets
+      operationId: Ticket_list
+      security:
+        - sec0: []
+      description: ''
+      parameters: []
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              examples:
+                '- Success':
+                  value: "[\n\t{\n\t\t\"id\": \"a83e7a2e...\",\n\t\t\"title\": \"Device not turning on\",\n\t\t\"description\": \"Light is on but no noise\",\n\t\t\"status\": \"open\",\n\t\t\"created_at\": \"2023-09-03T07:40:54Z\",\n\t\t\"device_id\": \"a3983ff2.....\",\n\t\t\"user_name\": \"Demo User\",\n\t\t\"user_email\": \"demo@xyte.io\"\n\t}\n]"
+              schema:
+                $ref: '#/components/schemas/TicketListResponse'
+        '401':
+          description: '401'
+          content:
+            application/json:
+              examples:
+                Invalid API key:
+                  value: |-
+                    {
+                        "error": "Not authorized"
+                    }
+              schema:
+                $ref: '#/components/schemas/TicketList401Response'
+      deprecated: false
+  /core/v1/partner/tickets/{ticket_id} (COPY):
+    get:
+      tags:
+        - Ticket
+      summary: Get Ticket
+      operationId: Ticket_getById
+      security:
+        - sec0: []
+      description: ''
+      parameters:
+        - description: Unique ticket ID
+          name: ticket_id
+          in: path
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              examples:
+                '- Success':
+                  value: "{\n\t\"id\": \"b9a53d31...\",\n\t\"title\": \"Ticket title\",\n\t\"description\": \"Ticket description\",\n\t\"status\": \"resolved\",\n\t\"created_at\": \"2023-07-05T11:37:26Z\",\n\t\"device_id\": \"a3983ff2...\",\n\t\"user_name\": \"Demo User\",\n\t\"user_email\": \"demo@xyte.io\",\n\t\"comments\": [\n\t\t{\n\t\t\t\"id\": 1,\n\t\t\t\"text\": \"Can someone help me please?\",\n\t\t\t\"created_at\": \"2023-08-14T06:22:42.310Z\",\n\t\t\t\"system\": false,\n\t\t\t\"user\": \"Demo User\",\n\t\t\t\"owner\": \"Xyte Lab\",\n\t\t\t\"owner_type\": \"organization\"\n\t\t}\n ]\n}"
+              schema:
+                $ref: '#/components/schemas/TicketGetByIdResponse'
+        '401':
+          description: '401'
+          content:
+            application/json:
+              examples:
+                Invalid API key / Ticket not found:
+                  value: |-
+                    {
+                        "error": "Not authorized"
+                    }
+              schema:
+                $ref: '#/components/schemas/TicketGetById401Response'
+      deprecated: false
+  /core/v1/partner/tickets/{ticket_id}:
+    put:
+      tags:
+        - Ticket
+      summary: Update Ticket
+      operationId: Ticket_updateTicketById
+      security:
+        - sec0: []
+      description: ''
+      parameters:
+        - description: Unique ticket ID
+          name: ticket_id
+          in: path
+          schema:
+            type: string
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TicketUpdateTicketByIdRequest'
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              examples:
+                '- Success':
+                  value: "{\n\t\"id\": \"b9a53d31...\",\n\t\"title\": \"Ticket title\",\n\t\"description\": \"Ticket description\",\n\t\"status\": \"resolved\",\n\t\"created_at\": \"2023-07-05T11:37:26Z\",\n\t\"device_id\": \"a3983ff2...\",\n\t\"user_name\": \"Demo User\",\n\t\"user_email\": \"demo@xyte.io\",\n\t\"comments\": [\n\t\t{\n\t\t\t\"id\": 1,\n\t\t\t\"text\": \"Can someone help me please?\",\n\t\t\t\"created_at\": \"2023-08-14T06:22:42.310Z\",\n\t\t\t\"system\": false,\n\t\t\t\"user\": \"Demo User\",\n\t\t\t\"owner\": \"Xyte Lab\",\n\t\t\t\"owner_type\": \"organization\"\n\t\t}\n ]\n}"
+              schema:
+                $ref: '#/components/schemas/TicketUpdateTicketByIdResponse'
+        '401':
+          description: '401'
+          content:
+            application/json:
+              examples:
+                Invalid API key / Ticket not found:
+                  value: |-
+                    {
+                        "error": "Not authorized"
+                    }
+              schema:
+                $ref: '#/components/schemas/TicketUpdateTicketById401Response'
+      deprecated: false
+  /core/v1/partner/tickets/{ticket_id}/resolved:
+    post:
+      tags:
+        - Ticket
+      summary: Close Ticket
+      operationId: Ticket_close
+      security:
+        - sec0: []
+      description: ''
+      parameters:
+        - description: Unique ticket ID
+          name: ticket_id
+          in: path
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              examples:
+                '- Success':
+                  value: "{\n\t\"id\": \"b9a53d31...\",\n\t\"title\": \"Ticket title\",\n\t\"description\": \"Ticket description\",\n\t\"status\": \"resolved\",\n\t\"created_at\": \"2023-07-05T11:37:26Z\",\n\t\"device_id\": \"a3983ff2...\",\n\t\"user_name\": \"Demo User\",\n\t\"user_email\": \"demo@xyte.io\",\n\t\"comments\": [\n\t\t{\n\t\t\t\"id\": 1,\n\t\t\t\"text\": \"Can someone help me please?\",\n\t\t\t\"created_at\": \"2023-08-14T06:22:42.310Z\",\n\t\t\t\"system\": false,\n\t\t\t\"user\": \"Demo User\",\n\t\t\t\"owner\": \"Xyte Lab\",\n\t\t\t\"owner_type\": \"organization\"\n\t\t}\n ]\n}"
+              schema:
+                $ref: '#/components/schemas/TicketCloseResponse'
+        '401':
+          description: '401'
+          content:
+            application/json:
+              examples:
+                Invalid API key / Ticket not found:
+                  value: |-
+                    {
+                        "error": "Not authorized"
+                    }
+              schema:
+                $ref: '#/components/schemas/TicketClose401Response'
+        '403':
+          description: '403'
+          content:
+            application/json:
+              examples:
+                Invalid state:
+                  value: "{\n\t\"error\": \"Cannot move from resolved to resolved\"\n}"
+              schema:
+                $ref: '#/components/schemas/TicketClose403Response'
+      deprecated: false
+  /core/v1/partner/tickets/{ticket_id}/message:
+    post:
+      tags:
+        - Ticket
+      summary: Add Comment
+      operationId: Ticket_addComment
+      security:
+        - sec0: []
+      description: ''
+      parameters:
+        - description: Unique ticket ID
+          name: ticket_id
+          in: path
+          schema:
+            type: string
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TicketAddCommentRequest'
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              examples:
+                '- Success':
+                  value: "{\n\t\"id\": \"b9a53d31...\",\n\t\"title\": \"Ticket title\",\n\t\"description\": \"Ticket description\",\n\t\"status\": \"resolved\",\n\t\"created_at\": \"2023-07-05T11:37:26Z\",\n\t\"device_id\": \"a3983ff2...\",\n\t\"user_name\": \"Demo User\",\n\t\"user_email\": \"demo@xyte.io\",\n\t\"comments\": [\n\t\t{\n\t\t\t\"id\": 1,\n\t\t\t\"text\": \"Can someone help me please?\",\n\t\t\t\"created_at\": \"2023-08-14T06:22:42.310Z\",\n\t\t\t\"system\": false,\n\t\t\t\"user\": \"Demo User\",\n\t\t\t\"owner\": \"Xyte Lab\",\n\t\t\t\"owner_type\": \"organization\"\n\t\t}\n ]\n}"
+              schema:
+                $ref: '#/components/schemas/TicketAddCommentResponse'
+        '401':
+          description: '401'
+          content:
+            application/json:
+              examples:
+                Invalid API key / Ticket not found:
+                  value: |-
+                    {
+                        "error": "Not authorized"
+                    }
+              schema:
+                $ref: '#/components/schemas/TicketAddComment401Response'
+      deprecated: false
+components:
+  securitySchemes:
+    sec0:
+      type: apiKey
+      in: header
+      name: Authorization
+      x-bearer-format: ''
+  schemas:
+    DeviceCreateRegistrationRequest:
+      type: object
+      required:
+        - sn
+        - firmware_version
+        - hardware_key
+      properties:
+        mac:
+          description: MAC address of the device
+          type: string
+        sn:
+          description: Unique device serial number
+          type: string
+        cloud_id:
+          description: Unique device identifier (must specify this or mac)
+          type: string
+        firmware_version:
+          description: Semver based firmware version
+          type: string
+          default: 1.0.0
+        hardware_key:
+          description: Key defined in the model's hardware key section
+          type: string
+        name:
+          description: Display name for the end-user
+          type: string
+        details:
+          description: Generic JSON object with unconstrained data
+          type: object
+          properties: {}
+        sub_model:
+          description: Additional model details text
+          type: string
+        parent_id:
+          description: UUID of the parent device
+          type: string
+    DeviceRegisterChildDeviceRequest:
+      type: object
+      required:
+        - firmware_version
+        - model_id
+      properties:
+        firmware_version:
+          type: string
+        model_id:
+          type: string
+        sub_model:
+          type: string
+        sn:
+          type: string
+        mac:
+          type: string
+        name:
+          type: string
+        details:
+          type: object
+          properties: {}
+    DeviceUpdateDeviceRequest:
+      type: object
+      properties:
+        firmware_version:
+          type: string
+        name:
+          description: Friendly device name
+          type: string
+        space_version:
+          description: Latest version of the space information the device has applied
+          type: string
+        config_version:
+          description: Latest version of the configuration the device has applied
+          type: string
+        details:
+          description: >-
+            Details of the device. Will be visible in a different tab on the
+            device's view calls 'Details'.
+          type: object
+          properties: {}
+    DeviceUpdateCloudSettingsRequest:
+      type: object
+      properties:
+        property:
+          description: The Property you would like to change
+          type: string
+        value:
+          description: The value to set for the given propery
+          type: string
+    DeviceSendTelemetryRequest:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          default: online
+        timestamp:
+          type: string
+          format: date
+        telemetries:
+          type: string
+          format: json
+        override:
+          type: boolean
+    DeviceSendChildTelemetriesRequest:
+      type: object
+      required:
+        - RAW_BODY
+      properties:
+        RAW_BODY:
+          description: Mapping of child device UUIDs to telemetry data for each device
+          type: object
+          properties: {}
+    DeviceSetConfigRequest:
+      type: object
+      properties:
+        RAW_BODY:
+          description: Put your raw JSON config here
+          type: string
+          format: json
+    DeviceSendCommandRequest:
+      type: object
+      required:
+        - status
+        - id
+      properties:
+        status:
+          type: string
+          default: done
+        message:
+          type: string
+        id:
+          type: string
+    DeviceSendDumpFileRequest:
+      type: object
+      required:
+        - RAW_BODY
+      properties:
+        RAW_BODY:
+          description: Raw configuration dump
+          type: string
+          format: binary
+    DeviceAppendDumpFileRequest:
+      type: object
+      required:
+        - RAW_BODY
+      properties:
+        RAW_BODY:
+          type: string
+    DeviceUpdateLicenseRequest:
+      type: object
+      required:
+        - id
+        - state
+      properties:
+        id:
+          type: string
+        state:
+          type: string
+        error:
+          type: string
+    DeviceOpenIncidentRequest:
+      type: object
+      required:
+        - title
+      properties:
+        title:
+          description: Short title
+          type: string
+        description:
+          type: string
+        priority:
+          description: Critical, High, Moderate, Low, Planning
+          type: string
+          default: '3'
+          enum:
+            - '1'
+            - '2'
+            - '3'
+            - '4'
+            - '5'
+        issue:
+          description: >-
+            Short text to uniquely identify the issue (only one incident of each
+            issue type can be open at a time)
+          type: string
+          default: Randomly generated tag
+        RAW_BODY:
+          type: string
+    TicketUpdateTicketByIdRequest:
+      type: object
+      properties:
+        title:
+          description: New ticket title
+          type: string
+        description:
+          description: New ticket description
+          type: string
+    TicketAddCommentRequest:
+      type: object
+      properties:
+        message:
+          description: Message to post
+          type: string
+    DeviceCreateRegistrationResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          example: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxxx
+        access_key:
+          type: string
+          example: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+        hub_url:
+          type: string
+          example: https://us-1.endpoints.xyte.io
+        hub_url_static_cert:
+          type: string
+          example: https://us-1.cssl.endpoints.xyte.io
+        mqtt_hub_url:
+          type: string
+          example: mqtt://mqtt-us-1.endpoints.xyte.io:15582
+    DeviceCreateRegistration400Response:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Hardware key is invalid
+    DeviceCreateRegistration422Response:
+      oneOf:
+        - title: Nano id has already been taken
+          type: object
+          properties:
+            error:
+              type: string
+              example: Cloud id has already been taken
+        - title: Serial number has already been taken
+          type: object
+          properties:
+            error:
+              type: string
+              example: Sn has already been taken
+        - title: Firmware version cannot be blank
+          type: object
+          properties:
+            error:
+              type: string
+              example: Firmware version can't be blank
+    DeviceGetChildDevicesResponse:
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: string
+            example: 4389c73f-eeea-4fca-8d34-072ec0b5469a
+          sn:
+            type: string
+            example: '32412'
+          mac: {}
+          state: {}
+          last_seen:
+            type: string
+            example: '2021-12-08T14:32:11.318Z'
+          name:
+            type: string
+            example: future guy
+          firmware_version:
+            type: string
+            example: 1.0.1
+          vendor:
+            type: string
+            example: The future
+          model:
+            type: string
+            example: T-1000
+          claimed:
+            type: string
+            example: Skynet
+          details:
+            type: object
+            properties: {}
+    DeviceGetChildDevices401Response:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Not authorized
+    DeviceRegisterChildDeviceResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 11111111-2222...
+        access_key:
+          type: string
+          example: Secret key for this device...
+    DeviceRegisterChildDevice401Response:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Not authorized
+    DeviceRegisterChildDevice404Response:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Model not found
+    DeviceGetInfoResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 99xxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx
+        partner:
+          type: object
+          properties:
+            sn:
+              type: string
+              example: '1234'
+            mac:
+              type: string
+              example: '11:22:11:22:33:33'
+            vendor:
+              type: string
+              example: xVision
+            model:
+              type: string
+              example: Phone 550
+        config:
+          type: object
+          properties:
+            version:
+              type: integer
+              example: 1
+              default: 0
+            vol:
+              type: integer
+              example: 100
+              default: 0
+            last_updated:
+              type: string
+              example: '2022-02-17T09:57:07.216Z'
+        state:
+          type: object
+          properties:
+            status:
+              type: string
+              example: offline
+        last_seen:
+          type: string
+          example: '2022-02-17T09:55:35.250Z'
+        custom:
+          type: object
+          properties:
+            prompt: {}
+        name:
+          type: string
+          example: Phone 550- Desktop
+        firmware_version:
+          type: string
+          example: 1.0.2
+        claimed:
+          type: string
+          example: xvision lab
+    DeviceGetInfo400Response:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Not authorized
+    DeviceUpdateDeviceResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          example: xxxxxxxxx
+        partner:
+          type: object
+          properties:
+            sn:
+              type: string
+              example: xxxxxx
+            mac:
+              type: string
+              example: xxxxxxxxxx
+            vendor:
+              type: string
+              example: xVision
+            model:
+              type: string
+              example: Display - Test Device
+        config:
+          type: object
+          properties:
+            version:
+              type: integer
+              example: 0
+              default: 0
+            last_updated:
+              type: string
+              example: '2023-03-02T16:47:41.960Z'
+        state:
+          type: object
+          properties:
+            temp:
+              type: integer
+              example: 39
+              default: 0
+            status:
+              type: string
+              example: online
+            eco_mode:
+              type: boolean
+              example: false
+              default: true
+            presence:
+              type: boolean
+              example: false
+              default: true
+            temp_dir:
+              type: integer
+              example: 4
+              default: 0
+            data_rate:
+              type: integer
+              example: 50
+              default: 0
+            coffee_used:
+              type: integer
+              example: 10000
+              default: 0
+            power_status:
+              type: boolean
+              example: true
+              default: true
+            ambient_light:
+              type: integer
+              example: 50
+              default: 0
+            data_rate_dir:
+              type: integer
+              example: 0
+              default: 0
+            motion_sensor:
+              type: boolean
+              example: true
+              default: true
+            coffee_used_dir:
+              type: integer
+              example: 2
+              default: 0
+            ambient_light_dir:
+              type: integer
+              example: 5
+              default: 0
+        last_seen:
+          type: string
+          example: '2023-03-05T13:53:59.840Z'
+        custom:
+          type: object
+          properties:
+            prompt: {}
+        name:
+          type: string
+          example: ' test'
+        firmware_version:
+          type: string
+          example: 1.0.1
+        claimed:
+          type: string
+          example: test lab
+        details:
+          type: object
+          properties:
+            checking:
+              type: string
+              example: Cool
+        test:
+          type: boolean
+          example: false
+          default: true
+    DeviceUpdateDevice401Response:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Not authorized
+    DeviceUpdateCloudSettingsResponse:
+      type: string
+      example: '{success:true}'
+    DeviceUpdateCloudSettings401Response:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Not authorized
+    DeviceSendTelemetryResponse:
+      type: object
+      properties:
+        config_version:
+          type: integer
+          example: 0
+          default: 0
+        command:
+          type: boolean
+          example: false
+          default: true
+        info_version:
+          type: integer
+          example: 0
+          default: 0
+        new_licenses:
+          type: boolean
+          example: true
+          default: true
+        latest_fw_version:
+          type: string
+          example: 1.3.4
+        latest_fw_file_id:
+          type: string
+          example: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+        space_data_version:
+          type: integer
+          example: 4
+          default: 0
+        success:
+          type: boolean
+          example: true
+          default: true
+    DeviceSendTelemetry401Response:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Not authorized
+    DeviceSendTelemetry422Response:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Missing 'telemetries' object
+    DeviceSendChildTelemetriesResponse:
+      type: object
+      properties:
+        11303e81-5d56-4910-a472-68676375d995:
+          type: object
+          properties:
+            config_version:
+              type: integer
+              example: 0
+              default: 0
+            command:
+              type: boolean
+              example: false
+              default: true
+            info_version:
+              type: integer
+              example: 0
+              default: 0
+            new_licenses:
+              type: boolean
+              example: false
+              default: true
+            latest_fw_version: {}
+            latest_fw_file_id: {}
+            space_data_version:
+              type: integer
+              example: 1
+              default: 0
+            success:
+              type: boolean
+              example: true
+              default: true
+        b4adc748-4462-4933-8173-9d40e0a17d22:
+          type: object
+          properties:
+            config_version:
+              type: integer
+              example: 0
+              default: 0
+            command:
+              type: boolean
+              example: false
+              default: true
+            info_version:
+              type: integer
+              example: 0
+              default: 0
+            new_licenses:
+              type: boolean
+              example: false
+              default: true
+            latest_fw_version: {}
+            latest_fw_file_id: {}
+            space_data_version:
+              type: integer
+              example: 2
+              default: 0
+            success:
+              type: boolean
+              example: true
+              default: true
+    DeviceSendChildTelemetries401Response:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Not authorized
+    DeviceSendChildTelemetries422Response:
+      type: object
+      properties:
+        11303e81-5d56-4910-a472-68676375d995:
+          type: object
+          properties:
+            error:
+              type: string
+              example: Common telemetries.speed must be string, number or boolean
+        b4adc748-4462-4933-8173-9d40e0a17d22:
+          type: object
+          properties:
+            config_version:
+              type: integer
+              example: 0
+              default: 0
+            command:
+              type: boolean
+              example: false
+              default: true
+            info_version:
+              type: integer
+              example: 0
+              default: 0
+            new_licenses:
+              type: boolean
+              example: false
+              default: true
+            latest_fw_version: {}
+            latest_fw_file_id: {}
+            space_data_version:
+              type: integer
+              example: 2
+              default: 0
+            success:
+              type: boolean
+              example: true
+              default: true
+    DeviceGetConfigResponse:
+      type: object
+      properties:
+        version:
+          type: integer
+          example: 10
+          default: 0
+        name:
+          type: string
+          example: My device
+        last_updated:
+          type: string
+          example: '2020-01-01T01:01:01.000+00:00'
+        config:
+          type: object
+          properties:
+            network:
+              type: object
+              properties:
+                ip:
+                  type: string
+                  example: 192.168....
+                ...:
+                  type: string
+                  example: ...
+            other:
+              type: object
+              properties:
+                data:
+                  type: string
+                  example: ...
+    DeviceGetConfig401Response:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Not authorized
+    DeviceSetConfigResponse:
+      type: object
+      properties:
+        version:
+          type: integer
+          example: 11
+          default: 0
+        success:
+          type: boolean
+          example: true
+          default: true
+    DeviceSetConfig401Response:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Not authorized
+    DeviceSetConfig422Response:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Error setting config with old version, latest is [:version]
+    DeviceGetCommandResponse:
+      type: object
+      properties: {}
+    DeviceGetCommand401Response:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Not authorized
+    DeviceSendCommandResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+          default: true
+    DeviceSendCommand401Response:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Not authorized
+    DeviceSendCommand404Response:
+      type: object
+      properties:
+        error:
+          type: string
+          example: no command
+    DeviceSendCommand422Response:
+      type: object
+      properties:
+        error:
+          type: string
+          example: 'invalid status: done/in-progress/failed'
+    DeviceSendDumpFileResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          example: e3fb6648-6e6...
+    DeviceSendDumpFile401Response:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Not authorized
+    DeviceSendDumpFile422Response:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Data can't be blank
+    DeviceAppendDumpFileResponse:
+      type: object
+      properties:
+        length:
+          type: integer
+          example: 1000
+          default: 0
+    DeviceAppendDumpFile401Response:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Not authorized
+    DeviceGetLicensesResponse:
+      oneOf:
+        - title: '- Pending licenses'
+          type: array
+          items:
+            type: object
+            properties:
+              data:
+                type: string
+                example: device specific license info...
+              signature:
+                type: string
+                example: RSA signature...
+              id:
+                type: string
+                example: ec101553-050c...
+              add:
+                type: boolean
+                example: true
+                default: true
+        - title: '- No license changes required'
+          type: array
+          items:
+            description: >-
+              WARNING: Missing items property in array schema. Missing items
+              property has been filled with this AnyType schema.
+    DeviceGetLicenses401Response:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Not authorized
+    DeviceUpdateLicenseResponse:
+      type: object
+      properties:
+        data:
+          type: string
+          example: device specific license info...
+        signature:
+          type: string
+          example: 49a3dd9d-7858...
+        id:
+          type: string
+          example: 8ed0a1d8-3b38...
+        expires_at:
+          type: string
+          example: '2030-01-01T01:00:00Z'
+    DeviceUpdateLicense401Response:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Not authorized
+    DeviceUpdateLicense404Response:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Couldn't find License
+    DeviceUpdateLicense422Response:
+      type: object
+      properties:
+        error:
+          type: string
+          example: State can't switch to error from inuse
+    DeviceGetLicenseResponse:
+      oneOf:
+        - title: '- Pending licenses'
+          type: array
+          items:
+            type: object
+            properties:
+              data:
+                type: string
+                example: device specific license info...
+              signature:
+                type: string
+                example: RSA signature...
+              id:
+                type: string
+                example: ec101553-050c...
+              add:
+                type: boolean
+                example: true
+                default: true
+        - title: '- No license changes required'
+          type: array
+          items:
+            description: >-
+              WARNING: Missing items property in array schema. Missing items
+              property has been filled with this AnyType schema.
+    DeviceGetLicense401Response:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Not authorized
+    DeviceGetSpaceInfoResponse:
+      type: object
+      properties:
+        location:
+          type: object
+          properties:
+            coordinates:
+              type: object
+              properties:
+                lat:
+                  type: number
+                  example: 51.165691
+                  default: 0
+                lng:
+                  type: number
+                  example: 10.451526
+                  default: 0
+            utc_offset:
+              type: integer
+              example: 60
+              default: 0
+            name:
+              type: string
+              example: Germany
+        temperature_units:
+          type: string
+          example: celsius
+        maintenance:
+          type: boolean
+          example: false
+          default: true
+        name:
+          type: string
+          example: Interactive Class
+        local_time:
+          type: string
+          example: '2022-03-17T10:55:28+01:00'
+    DeviceGetSpaceInfo422Response:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Device not in space
+    DeviceGetFileResponse:
+      type: string
+      example: |-
+        "id": "b0b1a8aa-488f-46a8-b405-2828caaf3927",
+            "name": "foo 1",
+            "url": "https://s3-eu-west-1.amazonaws.com/static.staging.syncpro.io/user_uploads/2803eff4-b6b2-4b19-8a36-6ad52076360f-samplefile.png",
+            "desc": "Foo test",
+            "file_type": "firmware",
+            "version": "1.0.1",
+            "created_at": "2021-08-11T14:38:36.930Z",
+            "public_notes": "Version 1.0.1 changes"
+          }
+    DeviceGetFile400Response:
+      type: object
+      properties:
+        error:
+          type: string
+          example: File not found
+    DeviceGetFilesResponse:
+      type: string
+      example: |-
+        [
+          {
+            "id": "b0b1a8aa-488f-46a8-b405-2828caaf3927",
+            "name": "foo 1",
+            "url": "https://s3-eu-west-1.amazonaws.com/static.staging.syncpro.io/user_uploads/2803eff4-b6b2-4b19-8a36-6ad52076360f-samplefile.png",
+            "desc": "Foo test",
+            "file_type": "firmware",
+            "version": "1.0.1",
+            "created_at": "2021-08-11T14:38:36.930Z",
+            "public_notes": "version 1.0.1 changes"
+          },
+            "id": [file_id_2],
+            "name": [file_name_2],
+            "url": [file_url_2],
+            "desc": [file_desc_2],
+            "file_type": [file_type_2],
+            "version": [file_version_2],
+            "created_at": [file_creation_date_2],
+            "public_notes": [public_notes_2]
+          },
+        ]
+    DeviceGetFiles400Response:
+      type: object
+      properties:
+        error:
+          type: string
+          example: File not found
+    DeviceGetIncidentsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+          default: true
+    DeviceGetIncidents401Response:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Not authorized
+    DeviceGetIncidents404Response:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Incident not found
+    DeviceOpenIncidentResponse:
+      type: object
+      properties:
+        incident_id:
+          type: string
+          example: eef9bcec-9335....
+    DeviceOpenIncident401Response:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Not authorized
+    DeviceOpenIncident422Response:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Priority must be between 1 and 5
+    DeviceCloseIncidentResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+          default: true
+    DeviceCloseIncident401Response:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Not authorized
+    DeviceCloseIncident404Response:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Incident not found
+    DeviceListDevicesResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                example: ....-03cfda750cfa
+              sn:
+                type: string
+                example: '123'
+              mac:
+                type: string
+                example: '11:00:00:00:00:00'
+              cloud_id:
+                type: string
+                example: ....
+              status: {}
+              last_seen_at:
+                type: string
+                example: '2022-11-06T09:52:47.546Z'
+              details:
+                type: object
+                properties: {}
+              state:
+                type: object
+                properties: {}
+              model:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    example: ....-d75e0abec7d2
+                  name:
+                    type: string
+                    example: model name
+                  sub_model:
+                    type: string
+                    example: sub model
+              firmware:
+                type: object
+                properties:
+                  version:
+                    type: string
+                    example: 1.0.1
+        page_info:
+          type: object
+          properties:
+            has_next:
+              type: boolean
+              example: false
+              default: true
+            total_count:
+              type: integer
+              example: 32
+              default: 0
+    DeviceListDevices401Response:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Not authorized
+    DeviceDeleteDeviceResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+          default: true
+    DeviceDeleteDevice401Response:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Not authorized
+    DeviceDeleteDevice404Response:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Errors::NotFound
+    DeviceGetInfo200Response:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                example: ....-03cfda750cfa
+              sn:
+                type: string
+                example: '123'
+              mac:
+                type: string
+                example: '11:00:00:00:00:00'
+              cloud_id:
+                type: string
+                example: ....
+              status: {}
+              last_seen_at:
+                type: string
+                example: '2022-11-06T09:52:47.546Z'
+              details:
+                type: object
+                properties: {}
+              state:
+                type: object
+                properties: {}
+              model:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    example: ....-d75e0abec7d2
+                  name:
+                    type: string
+                    example: model name
+                  sub_model:
+                    type: string
+                    example: sub model
+              firmware:
+                type: object
+                properties:
+                  version:
+                    type: string
+                    example: 1.0.1
+        page_info:
+          type: object
+          properties:
+            has_next:
+              type: boolean
+              example: false
+              default: true
+            total_count:
+              type: integer
+              example: 32
+              default: 0
+    DeviceGetInfo401Response:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Not authorized
+    DeviceGetTelemetriesResponse:
+      type: array
+      items:
+        type: object
+        properties:
+          created_at:
+            type: string
+            example: '2024-01-21T17:23:22Z'
+          device_timestamp:
+            type: string
+            example: '2024-01-21T17:23:22Z'
+          telemetries:
+            type: object
+            properties:
+              temp:
+                type: integer
+                example: 22
+                default: 0
+              input:
+                type: string
+                example: hdmi
+              status:
+                type: string
+                example: online
+              fan_speed:
+                type: number
+                example: 5.5
+                default: 0
+    DeviceGetTelemetries401Response:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Not authorized
+    DeviceGetTelemetries404Response:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Errors::NotFound
+    DeviceGetConfig200Response:
+      type: object
+      properties:
+        version:
+          type: integer
+          example: 0
+          default: 0
+        last_updated:
+          type: string
+          example: '2023-01-24T14:05:19Z'
+        config:
+          type: object
+          properties: {}
+    DeviceGetConfig404Response:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Errors::NotFound
+    DeviceListCommandsResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              parameters: {}
+              id:
+                type: string
+                example: ....-a7b49f736ef1
+              status:
+                type: string
+                example: pending
+              name:
+                type: string
+                example: reboot
+        page_info:
+          type: object
+          properties:
+            has_next:
+              type: boolean
+              example: false
+              default: true
+            total_count:
+              type: integer
+              example: 7
+              default: 0
+    DeviceListCommands401Response:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Not authorized
+    DeviceListCommands404Response:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Errors::NotFound
+    DeviceGetStateHistoryResponse:
+      type: string
+      example: |-
+        {
+            "data": [
+                {
+                    "created_at": "2024-01-01T00:15:00Z",
+                    "state": {
+                        "temp": 302,
+                        "input": "hdmi",
+                        "power": 48,
+                        "status": "online",
+                        "fan_speed": 5.5
+                    }
+                },
+            "page_info": {
+                "has_next": false,
+                "total_count": 7
+            }
+        }
+    DeviceGetStateHistory401Response:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Not authorized
+    DeviceGetStateHistory404Response:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Errors::NotFound
+    DeviceGetAllDeviceStateHistoriesResponse:
+      type: string
+      example: |-
+        {
+            "data": [
+                {
+                    "created_at": "2024-01-01T00:15:00Z",
+                    "state": {
+                        "temp": 302,
+                        "input": "hdmi",
+                        "power": 48,
+                        "status": "online",
+                        "fan_speed": 5.5
+                    }
+                },
+            "page_info": {
+                "has_next": false,
+                "total_count": 7
+            }
+        }
+    DeviceGetAllDeviceStateHistories401Response:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Not authorized
+    TicketListResponse:
+      type: array
+      items:
+        type: object
+        properties:
+          title:
+            type: string
+            example: Device not turning on
+          description:
+            type: string
+            example: Light is on but no noise
+          id:
+            type: string
+            example: a83e7a2e...
+          status:
+            type: string
+            example: open
+          created_at:
+            type: string
+            example: '2023-09-03T07:40:54Z'
+          device_id:
+            type: string
+            example: a3983ff2.....
+          user_name:
+            type: string
+            example: Demo User
+          user_email:
+            type: string
+            example: demo@xyte.io
+    TicketList401Response:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Not authorized
+    TicketGetByIdResponse:
+      type: object
+      properties:
+        title:
+          type: string
+          example: Ticket title
+        description:
+          type: string
+          example: Ticket description
+        id:
+          type: string
+          example: b9a53d31...
+        status:
+          type: string
+          example: resolved
+        created_at:
+          type: string
+          example: '2023-07-05T11:37:26Z'
+        device_id:
+          type: string
+          example: a3983ff2...
+        user_name:
+          type: string
+          example: Demo User
+        user_email:
+          type: string
+          example: demo@xyte.io
+        comments:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+                example: 1
+                default: 0
+              text:
+                type: string
+                example: Can someone help me please?
+              created_at:
+                type: string
+                example: '2023-08-14T06:22:42.310Z'
+              system:
+                type: boolean
+                example: false
+                default: true
+              user:
+                type: string
+                example: Demo User
+              owner:
+                type: string
+                example: Xyte Lab
+              owner_type:
+                type: string
+                example: organization
+    TicketGetById401Response:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Not authorized
+    TicketUpdateTicketByIdResponse:
+      type: object
+      properties:
+        title:
+          type: string
+          example: Ticket title
+        description:
+          type: string
+          example: Ticket description
+        id:
+          type: string
+          example: b9a53d31...
+        status:
+          type: string
+          example: resolved
+        created_at:
+          type: string
+          example: '2023-07-05T11:37:26Z'
+        device_id:
+          type: string
+          example: a3983ff2...
+        user_name:
+          type: string
+          example: Demo User
+        user_email:
+          type: string
+          example: demo@xyte.io
+        comments:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+                example: 1
+                default: 0
+              text:
+                type: string
+                example: Can someone help me please?
+              created_at:
+                type: string
+                example: '2023-08-14T06:22:42.310Z'
+              system:
+                type: boolean
+                example: false
+                default: true
+              user:
+                type: string
+                example: Demo User
+              owner:
+                type: string
+                example: Xyte Lab
+              owner_type:
+                type: string
+                example: organization
+    TicketUpdateTicketById401Response:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Not authorized
+    TicketCloseResponse:
+      type: object
+      properties:
+        title:
+          type: string
+          example: Ticket title
+        description:
+          type: string
+          example: Ticket description
+        id:
+          type: string
+          example: b9a53d31...
+        status:
+          type: string
+          example: resolved
+        created_at:
+          type: string
+          example: '2023-07-05T11:37:26Z'
+        device_id:
+          type: string
+          example: a3983ff2...
+        user_name:
+          type: string
+          example: Demo User
+        user_email:
+          type: string
+          example: demo@xyte.io
+        comments:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+                example: 1
+                default: 0
+              text:
+                type: string
+                example: Can someone help me please?
+              created_at:
+                type: string
+                example: '2023-08-14T06:22:42.310Z'
+              system:
+                type: boolean
+                example: false
+                default: true
+              user:
+                type: string
+                example: Demo User
+              owner:
+                type: string
+                example: Xyte Lab
+              owner_type:
+                type: string
+                example: organization
+    TicketClose401Response:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Not authorized
+    TicketClose403Response:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Cannot move from resolved to resolved
+    TicketAddCommentResponse:
+      type: object
+      properties:
+        title:
+          type: string
+          example: Ticket title
+        description:
+          type: string
+          example: Ticket description
+        id:
+          type: string
+          example: b9a53d31...
+        status:
+          type: string
+          example: resolved
+        created_at:
+          type: string
+          example: '2023-07-05T11:37:26Z'
+        device_id:
+          type: string
+          example: a3983ff2...
+        user_name:
+          type: string
+          example: Demo User
+        user_email:
+          type: string
+          example: demo@xyte.io
+        comments:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+                example: 1
+                default: 0
+              text:
+                type: string
+                example: Can someone help me please?
+              created_at:
+                type: string
+                example: '2023-08-14T06:22:42.310Z'
+              system:
+                type: boolean
+                example: false
+                default: true
+              user:
+                type: string
+                example: Demo User
+              owner:
+                type: string
+                example: Xyte Lab
+              owner_type:
+                type: string
+                example: organization
+    TicketAddComment401Response:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Not authorized
+security:
+  - sec0: []
+x-readme:
+  headers: []
+  explorer-enabled: true
+  proxy-enabled: true
+  samples-enabled: true
+x-readme-fauxas: true
+_id: 62bc65283c764a0043591441:64f6d165bde1e90068d3e00f
