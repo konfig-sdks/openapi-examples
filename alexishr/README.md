@@ -3,7 +3,7 @@
 # [AlexisHR](https://alexishr.com)
 
 Alexis kompletta HR-plattform förenklar din och medarbetarnas vardag
-genom automatisering och intuitiv hantering av personaladministration. 
+genom automatisering och intuitiv hantering av personaladministration.
 
 Vi ger företag möjlighet att spara tid, fatta klokare beslut och i slutändan skapa en bättre arbetsplats. En modern och enkel lösning med samlad funktionalitet som låter dig arbeta datadrivet och hantera allt mellan onboarding till offboarding, men också tidrapportering, medarbetarsamtal och integrationer.
 
