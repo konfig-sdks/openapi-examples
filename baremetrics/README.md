@@ -2,11 +2,11 @@
 
 # [Baremetrics](https://baremetrics.com)
 
-Baremetrics provides real-time subscription metrics for teams built with Stripe, Shopify Partners, Braintree, Recurly, Chargebee, Google Play, and App Store Connect. 
+Baremetrics provides real-time subscription metrics for teams built with Stripe, Shopify Partners, Braintree, Recurly, Chargebee, Google Play, and App Store Connect.
 
-In addition to metrics, Baremetrics provides tools that help you reduce churn and grow your business faster: 
+In addition to metrics, Baremetrics provides tools that help you reduce churn and grow your business faster:
 
-Recover: Prevent failed charges and keep your hard-earned revenue with our 100% automated toolkit. 
+Recover: Prevent failed charges and keep your hard-earned revenue with our 100% automated toolkit.
 
 Cancellation insights: Learn exactly why your customers cancel, calculate lost revenue by cancellation reason, and send automated emails to win customers back.
 

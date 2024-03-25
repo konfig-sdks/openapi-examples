@@ -2,7 +2,7 @@
 
 # [Agrimetrics](https://agrimetrics.co.uk)
 
-Radical new answers are needed to feed a growing population and protect our planet. 
+Radical new answers are needed to feed a growing population and protect our planet.
 
 Agrimetrics provides data and tools to agrifood businesses, researchers and policy-makers to address our most pressing global food challenges. This is a unique opportunity for the food and farming sectors, working together, to drive sustainable productivity.
 
