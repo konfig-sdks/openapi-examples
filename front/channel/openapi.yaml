@@ -1,0 +1,267 @@
+openapi: 3.0.0
+info:
+  title: Channel API
+  description: >-
+    Front is a customer operations platform that enables support, sales, and
+    account management teams to deliver exceptional service at scale. Front
+    streamlines customer communication by combining the efficiency of a help
+    desk and the familiarity of email, with automated workflows and real-time
+    collaboration behind the scenes. 
+
+
+    With Front, teams can centralize messages across channels, route them to the
+    right person, and unlock visibility and insights across all of their
+    customer operations. More than 8000 businesses use Front to drive
+    operational efficiency that prevents churn, improves retention, and propels
+    customer growth.
+  version: 1.0.0
+  contact:
+    name: Front Platform
+    url: https://community.front.com
+servers:
+  - url: https://api2.frontapp.com
+tags:
+  - name: Messages
+  - name: Channels
+paths:
+  /channels/{channel_id}:
+    patch:
+      tags:
+        - Channels
+      summary: Update Channel
+      operationId: Channels_updateChannel
+      description: Update a channel.
+      parameters:
+        - description: >-
+            The Channel ID. Alternatively, you can supply the channel address as
+            a [resource
+            alias](https://dev.frontapp.com/docs/resource-aliases-1).
+          in: path
+          name: channel_id
+          required: true
+          schema:
+            type: string
+            default: cha_123
+      requestBody:
+        description: Channel details
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateChannel'
+      responses:
+        '204':
+          description: No content
+  /channels/{channel_id}/inbound_messages:
+    post:
+      tags:
+        - Messages
+      summary: Sync inbound message
+      operationId: Messages_importReceivedMessage
+      description: Import a message that was received by the channel.
+      parameters:
+        - description: >-
+            The channel ID. Alternatively, you can supply the channel address as
+            a [resource
+            alias](https://dev.frontapp.com/docs/resource-aliases-1).
+          in: path
+          name: channel_id
+          required: true
+          schema:
+            type: string
+            default: cha_123
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InboundMessage'
+      responses:
+        '202':
+          $ref: '#/components/responses/acceptedMessage'
+  /channels/{channel_id}/outbound_messages:
+    post:
+      tags:
+        - Messages
+      summary: Sync outbound message
+      operationId: Messages_importSyncedMessage
+      description: Import a message that was sent from the channel.
+      parameters:
+        - description: >-
+            The channel ID. Alternatively, you can supply the channel address as
+            a [resource
+            alias](https://dev.frontapp.com/docs/resource-aliases-1).
+          in: path
+          name: channel_id
+          required: true
+          schema:
+            type: string
+            default: cha_123
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OutboundMessage'
+      responses:
+        '202':
+          $ref: '#/components/responses/acceptedMessage'
+components:
+  responses:
+    acceptedMessage:
+      description: An accepted message
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/MessagesImportReceivedMessageResponse'
+  securitySchemes:
+    http:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    InboundMessage:
+      required:
+        - sender
+        - body
+        - metadata
+      properties:
+        sender:
+          description: Data of the sender
+          type: object
+          required:
+            - handle
+          properties:
+            name:
+              description: Name of the sender
+              type: string
+            handle:
+              description: >-
+                Handle of the sender. It can be any string used to uniquely
+                identify the sender
+              type: string
+        subject:
+          description: Subject of the message
+          type: string
+        body:
+          description: Body of the message
+          type: string
+        metadata:
+          type: object
+          required:
+            - external_id
+            - external_conversation_id
+          properties:
+            external_id:
+              description: External identifier of the message
+              type: string
+              maxLength: 200
+            external_conversation_id:
+              description: >-
+                External identifier of the conversation. Will be used to thread
+                messages.
+              type: string
+              maxLength: 200
+        delivered_at:
+          description: Time in seconds at which message was created in external system
+          type: integer
+        attachments:
+          description: >-
+            Binary data of attached files. Must use `Content-Type:
+            multipart/form-data` if specified. See
+            [example](https://gist.github.com/hdornier/e04d04921032e98271f46ff8a539a4cb)
+            or read more about
+            [Attachments](https://dev.frontapp.com/docs/attachments-1).  Max 25
+            MB.
+          type: array
+          items:
+            type: string
+            format: binary
+    OutboundMessage:
+      description: >-
+        Payload to receive an outbound message from an external system into
+        Front.
+      required:
+        - to
+        - body
+        - metadata
+      properties:
+        sender_name:
+          description: Name of the sender
+          type: string
+        to:
+          description: Data of the message recipient
+          type: array
+          items:
+            type: object
+            required:
+              - handle
+            properties:
+              name:
+                description: Name of the recipient
+                type: string
+              handle:
+                description: >-
+                  Handle of the recipient. It can be any string used to uniquely
+                  identify the sender
+                type: string
+        subject:
+          description: Subject of the message
+          type: string
+        author_id:
+          description: ID of the teammate on behalf of whom the message is sent
+          type: string
+        body:
+          description: Body of the message
+          type: string
+        metadata:
+          type: object
+          required:
+            - external_id
+            - external_conversation_id
+          properties:
+            external_id:
+              description: External identifier of the message
+              type: string
+              maxLength: 200
+            external_conversation_id:
+              description: >-
+                External identifier of the conversation. Will be used to thread
+                messages.
+              type: string
+              maxLength: 200
+        delivered_at:
+          description: Time in seconds at which message was created in external system
+          type: integer
+        attachments:
+          description: >-
+            Binary data of attached files. Must use `Content-Type:
+            multipart/form-data` if specified. See
+            [example](https://gist.github.com/hdornier/e04d04921032e98271f46ff8a539a4cb)
+            or read more about
+            [Attachments](https://dev.frontapp.com/docs/attachments-1).  Max 25
+            MB.
+          type: array
+          items:
+            type: string
+            format: binary
+    UpdateChannel:
+      properties:
+        status:
+          description: Status of the channel
+          type: string
+          enum:
+            - offline
+            - ok
+    MessagesImportReceivedMessageResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          default: accepted
+        message_uid:
+          description: Message unique identifier
+          type: string
+security:
+  - http: []
+x-api-id: front
+x-explorer-enabled: false
+x-proxy-enabled: true
+x-samples-enabled: true
