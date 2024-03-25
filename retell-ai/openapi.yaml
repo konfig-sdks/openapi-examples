@@ -1,4 +1,4 @@
-openapi: 3.0.0
+openapi: 3.0.3
 info:
   title: Retell SDK
   description: >-
@@ -17,13 +17,12 @@ servers:
   - description: The production server.
     url: https://api.retellai.com
 tags:
+  - name: PhoneNumber
   - name: Agent
+  - name: Retell
   - name: Call
+  - name: RetellLLM
 paths:
-  x-speakeasy-errors:
-    statusCodes:
-      - 4XX
-      - 5XX
   /register-call:
     post:
       tags:
@@ -88,9 +87,6 @@ paths:
           $ref: '#/components/responses/UnprocessableContent'
         '500':
           $ref: '#/components/responses/InternalServerError'
-      x-speakeasy-usage-example:
-        title: Retrieve a on-going or finished call
-        description: Retrieve details of a specific call
   /list-calls:
     get:
       tags:
@@ -160,9 +156,6 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '500':
           $ref: '#/components/responses/InternalServerError'
-      x-speakeasy-usage-example:
-        title: List all web or phone calls
-        description: Retrieve call details
   /create-agent:
     post:
       tags:
@@ -192,9 +185,6 @@ paths:
           $ref: '#/components/responses/UnprocessableContent'
         '500':
           $ref: '#/components/responses/InternalServerError'
-      x-speakeasy-usage-example:
-        title: Create a new voice AI agent
-        description: Create a new agent
   /get-agent/{agent_id}:
     get:
       tags:
@@ -226,9 +216,6 @@ paths:
           $ref: '#/components/responses/UnprocessableContent'
         '500':
           $ref: '#/components/responses/InternalServerError'
-      x-speakeasy-usage-example:
-        title: Retrieve details of an agent
-        description: Retrieve details of a specific agent
   /list-agents:
     get:
       tags:
@@ -248,9 +235,6 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '500':
           $ref: '#/components/responses/InternalServerError'
-      x-speakeasy-usage-example:
-        title: List all agents
-        description: List all agents
   /update-agent/{agent_id}:
     patch:
       tags:
@@ -288,9 +272,6 @@ paths:
           $ref: '#/components/responses/UnprocessableContent'
         '500':
           $ref: '#/components/responses/InternalServerError'
-      x-speakeasy-usage-example:
-        title: Update an existing agent
-        description: Update an existing agent
   /delete-agent/{agent_id}:
     delete:
       tags:
@@ -318,9 +299,325 @@ paths:
           $ref: '#/components/responses/UnprocessableContent'
         '500':
           $ref: '#/components/responses/InternalServerError'
-      x-speakeasy-usage-example:
-        title: Delete an existing agent
-        description: Delete an existing agent
+  /create-retell-llm:
+    post:
+      tags:
+        - Retell
+      operationId: Retell_newLlm
+      security:
+        - api_key: []
+      description: Create a new Retell LLM
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RetellLLMBase'
+      responses:
+        '201':
+          description: Successfully created a new Retell LLM.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RetellLLMResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /get-retell-llm/{llm_id}:
+    get:
+      tags:
+        - Retell
+      operationId: Retell_getLlmDetails
+      security:
+        - api_key: []
+      description: Retrieve details of a specific Retell LLM
+      parameters:
+        - description: Unique id of the Retell LLM to be retrieved.
+          in: path
+          name: llm_id
+          schema:
+            type: string
+            example: 16b980523634a6dc504898cda492e939
+          required: true
+      responses:
+        '200':
+          description: Successfully retrieved an Retell LLM.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RetellLLMResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/UnprocessableContent'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /list-retell-llms:
+    get:
+      tags:
+        - RetellLLM
+      operationId: RetellLlm_listAll
+      security:
+        - api_key: []
+      description: List all retell LLM
+      responses:
+        '200':
+          description: Successfully retrieved all Retell LLM.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RetellLlmListAllResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /update-retell-llm/{llm_id}:
+    patch:
+      tags:
+        - Retell
+      operationId: Retell_updateLlm
+      security:
+        - api_key: []
+      description: Update an existing Retell LLM
+      parameters:
+        - description: Unique id of the Retell LLM to be updated.
+          in: path
+          name: llm_id
+          schema:
+            type: string
+            example: 16b980523634a6dc504898cda492e939
+          required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RetellLLMBase'
+      responses:
+        '200':
+          description: Successfully updated an Retell LLM.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RetellLLMResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/UnprocessableContent'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /delete-retell-llm/{llm_id}:
+    delete:
+      tags:
+        - Retell
+      operationId: Retell_deleteLlm
+      security:
+        - api_key: []
+      description: Delete an existing Retell LLM
+      parameters:
+        - description: Unique id of the Retell LLM to be deleted.
+          in: path
+          name: llm_id
+          schema:
+            type: string
+            example: oBeDLoLOeuAbiuaMFXRtDOLriTJ5tSxD
+          required: true
+      responses:
+        '204':
+          description: No Content
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/UnprocessableContent'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /create-phone-number:
+    post:
+      tags:
+        - PhoneNumber
+      operationId: PhoneNumber_purchaseNumberAndBindAgent
+      security:
+        - api_key: []
+      description: Buy a new phone number & Bind an agent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: >-
+                #/components/schemas/PhoneNumberPurchaseNumberAndBindAgentRequest
+      responses:
+        '201':
+          description: Successfully created a new number.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PhoneNumberResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /get-phone-number/{phone_number}:
+    get:
+      tags:
+        - PhoneNumber
+      operationId: PhoneNumber_getDetails
+      security:
+        - api_key: []
+      description: Retrieve details of a specific phone number
+      parameters:
+        - description: >-
+            BCP 47 format of the number (+country code, then number with no
+            space, no special characters), used as the unique identifier for
+            phone number APIs.
+          in: path
+          name: phone_number
+          schema:
+            type: string
+            example: 14157774444
+          required: true
+      responses:
+        '200':
+          description: Successfully retrieved an Retell LLM.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PhoneNumberResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/UnprocessableContent'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /list-phone-numbers:
+    get:
+      tags:
+        - PhoneNumber
+      operationId: PhoneNumber_getAllNumbers
+      security:
+        - api_key: []
+      description: List all phone numbers
+      responses:
+        '200':
+          description: Successfully retrieved all phone numbers.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PhoneNumberGetAllNumbersResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /update-phone-number/{phone_number}:
+    patch:
+      tags:
+        - PhoneNumber
+      operationId: PhoneNumber_updateRetellLlm
+      security:
+        - api_key: []
+      description: Update an existing Retell LLM
+      parameters:
+        - description: >-
+            BCP 47 format of the number (+country code, then number with no
+            space, no special characters), used as the unique identifier for
+            phone number APIs.
+          in: path
+          name: phone_number
+          schema:
+            type: string
+            example: 14157774444
+          required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PhoneNumberUpdateRetellLlmRequest'
+      responses:
+        '200':
+          description: Successfully updated an phone number object.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PhoneNumberResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/UnprocessableContent'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /delete-phone-number/{phone_number}:
+    delete:
+      tags:
+        - PhoneNumber
+      operationId: PhoneNumber_removePhoneNumber
+      security:
+        - api_key: []
+      description: Delete an existing phone number
+      parameters:
+        - description: >-
+            BCP 47 format of the number (+country code, then number with no
+            space, no special characters), used as the unique identifier for
+            phone number APIs.
+          in: path
+          name: phone_number
+          schema:
+            type: string
+            example: 14157774444
+          required: true
+      responses:
+        '204':
+          description: No Content
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/UnprocessableContent'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /create-phone-call:
+    post:
+      tags:
+        - Call
+      operationId: Call_makeConnection
+      security:
+        - api_key: []
+      description: Create a new phone call
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CallMakeConnectionRequest'
+      responses:
+        '201':
+          description: Successfully made an outbound call.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CallBase'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/UnprocessableContent'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 components:
   responses:
     BadRequest:
@@ -361,11 +658,12 @@ components:
             $ref: '#/components/schemas/CallEstablishConnection500Response'
   securitySchemes:
     api_key:
-      description: API key for authentication. You can find it in dashboard.
+      description: >-
+        Authentication header containing API key (find it in dashboard). The
+        format is "Bearer YOUR_API_KEY"
       type: http
       scheme: bearer
       bearerFormat: string
-      x-speakeasy-example: YOUR_API_KEY
   schemas:
     CallBase:
       type: object
@@ -500,6 +798,60 @@ components:
             id. Not used for processing, when we connect to your LLM websocket
             server, you can then get it from the call object.
           type: object
+        retell_llm_dynamic_variables:
+          description: >-
+            Add optional dynamic variables in key value pairs of string that
+            injects into your Retell LLM prompt and tool description. Only
+            applicable for Retell LLM.
+          type: object
+          additionalProperties: {}
+          example:
+            customer_name: John Doe
+    Utterance:
+      type: object
+      required:
+        - role
+        - content
+        - words
+      properties:
+        role:
+          description: Documents whether this utterance is spoken by agent or user.
+          type: string
+          enum:
+            - agent
+            - user
+          example: agent
+        content:
+          description: Transcript of the utterances.
+          type: string
+          example: hi how are you doing?
+        words:
+          description: >-
+            Array of words in the utternace with the word timestamp. Useful for
+            understanding what word was spoken at what time. Note that the word
+            timestamp is not guranteed to be accurate, it's more like an
+            approximation.
+          type: array
+          example:
+            - word: hi
+              start: 0.7
+              end: 1.3
+          items:
+            type: object
+            properties:
+              word:
+                description: Word transcript (with punctuation if applicable).
+                type: string
+              start:
+                description: >-
+                  Start time of the word in the call in second. This is relative
+                  audio time, not wall time.
+                type: number
+              end:
+                description: >-
+                  End time of the word in the call in second. This is relative
+                  audio time, not wall time.
+                type: number
     CallDetail:
       allOf:
         - $ref: '#/components/schemas/CallBase'
@@ -529,11 +881,65 @@ components:
 
                 Agent: have a nice day
                  
+            transcript_object:
+              description: >-
+                Transcript of the call in the format of a list of utterance,
+                with timestamp. Available after call ends.
+              type: array
+              items:
+                $ref: '#/components/schemas/Utterance'
             recording_url:
               description: Recording of the call. Available after call ends.
               type: string
               example: >-
                 https://retellai.s3.us-west-2.amazonaws.com/Jabr9TXYYJHfvl6Syypi88rdAHYHmcq6/recording.wav
+            public_log_url:
+              description: >-
+                Public log of the call, containing details about all the
+                requests and responses received in LLM WebSocket, latency
+                tracking for each turntaking, helpful for debugging and tracing.
+                Available after call ends.
+              type: string
+              example: >-
+                https://retellai.s3.us-west-2.amazonaws.com/Jabr9TXYYJHfvl6Syypi88rdAHYHmcq6/public_log.txt
+            e2e_latency:
+              description: >-
+                End to end latency (from user stops talking to agent start
+                talking) tracking of the call, available after call ends. This
+                latency does not account for the network trip time from Retell
+                server to user frontend.
+              type: object
+              properties:
+                p50:
+                  description: 50 percentile of end to end latency.
+                  type: number
+                  example: 0.8
+                p90:
+                  description: 90 percentile of end to end latency.
+                  type: number
+                  example: 1.2
+                p95:
+                  description: 95 percentile of end to end latency.
+                  type: number
+                  example: 1.5
+                p99:
+                  description: 99 percentile of end to end latency.
+                  type: number
+                  example: 2.7
+                max:
+                  description: Maximum end to end latency in the call.
+                  type: number
+                  example: 2.7
+                min:
+                  description: Minimum end to end latency in the call.
+                  type: number
+                  example: 0.5
+                num:
+                  description: >-
+                    Number of turn change. We track latency every time turn
+                    change between user and agent.
+                  type: number
+                  example: 10
     BaseAgent:
       type: object
       properties:
@@ -704,6 +1110,440 @@ components:
         - llm_websocket_url
         - voice_id
         - last_modification_timestamp
+    RetellLLMResponse:
+      allOf:
+        - properties:
+            llm_id:
+              description: Unique id of Retell LLM.
+              type: string
+              example: oBeDLoLOeuAbiuaMFXRtDOLriTJ5tSxD
+            llm_websocket_url:
+              description: >-
+                The LLM Websocket URL constructed from unique id of Retell LLM.
+                Used in agent API to create / update agent.
+              type: string
+              example: >-
+                wss://api.retellai.com/retell-llm/llm-websocket/oBeDLoLOeuAbiuaMFXRtDOLriTJ5tSxD
+        - $ref: '#/components/schemas/RetellLLMBase'
+        - properties:
+            last_modification_timestamp:
+              description: >-
+                Last modification timestamp (milliseconds since epoch). Either
+                the time of last update or creation if no updates available.
+              type: integer
+              example: 1703413636133
+      required:
+        - llm_id
+        - llm_websocket_url
+        - last_modification_timestamp
+    RetellLLMBase:
+      type: object
+      properties:
+        general_prompt:
+          description: >-
+            General prompt that's appended to system prompt no matter what state
+            the agent is in. 
+
+
+            - System prompt (with state) = general prompt + state prompt.
+
+
+            - System prompt (no state) = general prompt.
+          type: string
+          example: You are ...
+        general_tools:
+          description: >-
+            A list of tools the model may call (to get external knowledge, call
+            API, etc). You can select from some common predefined tools like end
+            call, transfer call, etc; or you can create your own custom tool
+            (last option) for the LLM to use. 
+
+
+            - Tools of LLM (with state) = general tools + state tools + state
+            transitions
+
+
+            - Tools of LLM (no state) = general tools
+          type: array
+          items:
+            $ref: '#/components/schemas/Tool'
+          example:
+            - description: End the call with user only when user explicitly requests it.
+              type: end_call
+              name: end_call
+        states:
+          description: >-
+            States of the LLM. This is to help reduce prompt length and tool
+            choices when the call can be broken into distinct states. With
+            shorter prompts and less tools, the LLM can better focus and follow
+            the rules, minimizing hallucination. If this field is not set, the
+            agent would only have general prompt and general tools (essentially
+            one state).
+          type: array
+          items:
+            $ref: '#/components/schemas/State'
+          example:
+            - name: information_collection
+              state_prompt: You will follow the steps below to collect information...
+              edges:
+                - description: >-
+                    Transition to book an appointment if the user is due for an
+                    annual checkup based on the last checkup time collected.
+                  destination_state_name: appointment_booking
+                  speak_during_transition: false
+              tools:
+                - description: >-
+                    Transfer to the support team when user seems angry or
+                    explicitly requests a human agent
+                  type: transfer_call
+                  name: transfer_to_support
+                  number: '16175551212'
+            - name: appointment_booking
+              state_prompt: You will follow the steps below to book an appointment...
+              tools:
+                - description: >-
+                    Book an annual check up when user provided name, email,
+                    phone number, and have selected a time.
+                  type: book_appointment_cal
+                  name: book_appointment
+                  cal_api_key: cal_live_xxxxxxxxxxxx
+                  event_type_id: 60444
+                  timezone: America/Los_Angeles
+        starting_state:
+          description: Name of the starting state. Required if states is not empty.
+          type: string
+          example: information_collection
+        begin_message:
+          description: >-
+            First utterance said by the agent in the call. If not set, LLM will
+            dynamically generate a message. If set to "", agent will wait for
+            user to speak first.
+          type: string
+          example: Hey I am a virtual assistant calling from Retell Hospital.
+    EndCallTool:
+      type: object
+      properties:
+        description:
+          description: Describes when to end the call.
+          type: string
+        type:
+          type: string
+          enum:
+            - end_call
+        name:
+          description: >-
+            Name of the tool. Must be unique within all tools available to LLM
+            at any given time (general tools + state tools + state transitions).
+          type: string
+      required:
+        - type
+        - name
+    TransferCallTool:
+      type: object
+      properties:
+        description:
+          description: Describes when to transfer the call.
+          type: string
+        type:
+          type: string
+          enum:
+            - transfer_call
+        name:
+          description: >-
+            Name of the tool. Must be unique within all tools available to LLM
+            at any given time (general tools + state tools + state edges).
+          type: string
+          example: transfer_to_support
+        number:
+          description: >-
+            The number to transfer to in E.164 format (a + and country code,
+            then the phone number with no space or other special characters).
+            For example, +16175551212.
+          type: string
+      required:
+        - type
+        - name
+        - number
+    CheckAvailabilityCalTool:
+      type: object
+      properties:
+        description:
+          description: Describes when to check availability.
+          type: string
+        type:
+          type: string
+          enum:
+            - check_availability_cal
+        name:
+          description: >-
+            Name of the tool. Must be unique within all tools available to LLM
+            at any given time (general tools + state tools + state transitions).
+          type: string
+        cal_api_key:
+          description: >-
+            Cal.com Api key that have access to the cal.com event you want to
+            check availability for.
+          type: string
+        event_type_id:
+          description: >-
+            Cal.com event type id number for the cal.com event you want to check
+            availability for.
+          type: number
+        timezone:
+          description: >-
+            Timezone to be used when checking availability, must be in [IANA
+            timezone
+            database](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones).
+            If not specified, will check if user specified timezone in call, and
+            if not, will use the timezone of the Retell servers.
+          type: string
+      required:
+        - type
+        - name
+        - cal_api_key
+        - event_type_id
+    BookAppointmentCalTool:
+      type: object
+      properties:
+        description:
+          description: Describes when to book the appointment.
+          type: string
+        type:
+          type: string
+          enum:
+            - book_appointment_cal
+        name:
+          description: >-
+            Name of the tool. Must be unique within all tools available to LLM
+            at any given time (general tools + state tools + state transitions).
+          type: string
+        cal_api_key:
+          description: >-
+            Cal.com Api key that have access to the cal.com event you want to
+            book appointment.
+          type: string
+        event_type_id:
+          description: >-
+            Cal.com event type id number for the cal.com event you want to book
+            appointment.
+          type: number
+        timezone:
+          description: >-
+            Timezone to be used when booking appointment, must be in [IANA
+            timezone
+            database](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones).
+            If not specified, will check if user specified timezone in call, and
+            if not, will use the timezone of the Retell servers.
+          type: string
+      required:
+        - type
+        - name
+        - cal_api_key
+        - event_type_id
+    CustomTool:
+      type: object
+      properties:
+        description:
+          description: Describes what this tool does and when to call this tool.
+          type: string
+        parameters:
+          $ref: '#/components/schemas/ToolParameter'
+        type:
+          type: string
+          enum:
+            - custom
+        name:
+          description: >-
+            Name of the tool. Must be unique within all tools available to LLM
+            at any given time (general tools + state tools + state edges).
+          type: string
+        url:
+          description: >-
+            The URL we will post the function name and arguments to get a result
+            for the function. Usually this is your server.
+          type: string
+        speak_during_execution:
+          description: >-
+            Determines whether the agent would say sentence like "One moment,
+            let me check that." when executing the function. Recommend to turn
+            on if your function call takes over 1s (including network) to
+            complete, so that your agent remains responsive.
+          type: boolean
+        speak_after_execution:
+          description: >-
+            Determines whether the agent would call LLM another time and speak
+            when the result of function is obtained. Usually this needs to get
+            turned on so user can get update for the function call.
+          type: boolean
+        execution_message_description:
+          description: >-
+            The description for the sentence agent say during execution. Only
+            applicable when speak_during_execution is true. Can write what to
+            say or even provide examples. The default is "The message you will
+            say to callee when calling this tool. Make sure it fits into the
+            conversation smoothly.".
+          type: string
+      required:
+        - type
+        - name
+        - url
+        - description
+        - speak_during_execution
+        - speak_after_execution
+    Tool:
+      oneOf:
+        - $ref: '#/components/schemas/EndCallTool'
+        - $ref: '#/components/schemas/TransferCallTool'
+        - $ref: '#/components/schemas/CheckAvailabilityCalTool'
+        - $ref: '#/components/schemas/BookAppointmentCalTool'
+        - $ref: '#/components/schemas/CustomTool'
+    State:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          description: Name of the state, must be unique for each state.
+          example: information_collection
+          type: string
+        state_prompt:
+          description: |-
+            Prompt of the state, will be appended to the system prompt of LLM. 
+
+             - System prompt = general prompt + state prompt.
+          example: |-
+            ## Task
+            You will follow the steps below...
+          type: string
+        edges:
+          description: >-
+            Edges of the state define how and what state can be reached from
+            this state.
+          type: array
+          items:
+            $ref: '#/components/schemas/StateEdge'
+        tools:
+          description: >-
+            A list of tools specific to this state the model may call (to get
+            external knowledge, call API, etc). You can select from some common
+            predefined tools like end call, transfer call, etc; or you can
+            create your own custom tool (last option) for the LLM to use. 
+
+
+            - Tools of LLM = general tools + state tools + state transitions
+          type: array
+          items:
+            $ref: '#/components/schemas/Tool'
+    StateEdge:
+      type: object
+      required:
+        - destination_state_name
+        - description
+        - speak_during_transition
+      properties:
+        description:
+          description: >-
+            Describes what's the transition and at what time / criteria should
+            this transition happen.
+          type: string
+        parameters:
+          description: >-
+            Describes what parameters you want to extract out when the
+            transition changes. The parameters extracted here can be referenced
+            in prompts & function descriptions of later states via dynamic
+            variables. The parameters the functions accepts, described as a JSON
+            Schema object. See [JSON Schema
+            reference](https://json-schema.org/understanding-json-schema/) for
+            documentation about the format.
+          $ref: '#/components/schemas/ToolParameter'
+        destination_state_name:
+          description: >-
+            The destination state name when going through transition of state
+            via this edge. State transition internally is implemented as a tool
+            call of LLM, and a tool call with name
+            "transition_to_{destination_state_name}" will get created. Feel free
+            to reference it inside the prompt.
+          type: string
+        speak_during_transition:
+          description: >-
+            After the state transitions, the agent would speak based on the new
+            prompt and tools in the new state. This bit here controls whether to
+            speak a transition sentence during the transition (so agent would
+            say sentences like "Let's move on to the next section to help you
+            set up an acount.", and state transitions, and agent continue to
+            speak.). Usually this is not necessary, and is recommended to set to
+            false to avoid LLM repeating itself during and after transition.
+          type: boolean
+    ToolParameter:
+      description: >-
+        The parameters the functions accepts, described as a JSON Schema object.
+        See [JSON Schema
+        reference](https://json-schema.org/understanding-json-schema/) for
+        documentation about the format. Omitting parameters defines a function
+        with an empty parameter list.
+      type: object
+      required:
+        - type
+        - properties
+      properties:
+        type:
+          description: Type must be "object" for a JSON Schema object.
+          type: string
+          enum:
+            - object
+        properties:
+          description: >-
+            The value of properties is an object, where each key is the name of
+            a property and each value is a schema used to validate that
+            property.
+          type: object
+          additionalProperties: {}
+        required:
+          description: >-
+            List of names of required property when generating this parameter.
+            LLM will do its best to generate the required properties in its
+            function arguments. Property must exist in properties.
+          type: array
+          items:
+            type: string
+    PhoneNumberResponse:
+      type: object
+      required:
+        - phone_number
+        - phone_number_pretty
+        - agent_id
+        - area_code
+        - last_modification_timestamp
+      properties:
+        phone_number:
+          description: >-
+            BCP 47 format of the number (+country code, then number with no
+            space, no special characters), used as the unique identifier for
+            phone number APIs.
+          type: string
+          example: 14157774444
+        phone_number_pretty:
+          description: Pretty printed phone number, provided for your reference.
+          type: string
+          example: +1 (415) 777-4444
+        agent_id:
+          description: >-
+            Unique id of agent to bind to newly obtained number. The number will
+            automatically use the agent when doing inbound / outbound calls.
+          type: string
+          example: oBeDLoLOeuAbiuaMFXRtDOLriTJ5tSxD
+        area_code:
+          description: >-
+            Area code of the number to obtain. Format is a 3 digit integer.
+            Currently only supports US area code.
+          type: integer
+          example: 415
+        last_modification_timestamp:
+          description: >-
+            Last modification timestamp (milliseconds since epoch). Either the
+            time of last update or creation if no updates available.
+          type: integer
+          example: 1703413636133
     CallEstablishConnectionRequest:
       type: object
       required:
@@ -803,12 +1643,83 @@ components:
             id. Not used for processing, when we connect to your LLM websocket
             server, you can then get it from the call object.
           type: object
+        retell_llm_dynamic_variables:
+          description: >-
+            Add optional dynamic variables in key value pairs of string that
+            injects into your Retell LLM prompt and tool description. Only
+            applicable for Retell LLM.
+          type: object
+          additionalProperties: {}
+          example:
+            customer_name: John Doe
     AgentCreateNewAgentRequest:
       allOf:
         - $ref: '#/components/schemas/BaseAgent'
         - required:
             - llm_websocket_url
             - voice_id
+    PhoneNumberPurchaseNumberAndBindAgentRequest:
+      type: object
+      required:
+        - agent_id
+      properties:
+        agent_id:
+          description: >-
+            Unique id of agent to bind to newly obtained number. The number will
+            automatically use the agent when doing inbound / outbound calls.
+          type: string
+          example: oBeDLoLOeuAbiuaMFXRtDOLriTJ5tSxD
+        area_code:
+          description: >-
+            Area code of the number to obtain. Format is a 3 digit integer.
+            Currently only supports US area code.
+          type: integer
+          example: 415
+    PhoneNumberUpdateRetellLlmRequest:
+      type: object
+      required:
+        - agent_id
+      properties:
+        agent_id:
+          description: >-
+            Unique id of agent to bind to number. The number will automatically
+            use the agent when doing inbound / outbound calls.
+          type: string
+    CallMakeConnectionRequest:
+      type: object
+      required:
+        - phone_number
+      properties:
+        phone_number:
+          type: object
+          required:
+            - from
+            - to
+          properties:
+            from:
+              description: The number you own in BCP 47 format.
+              type: string
+              example: 14157774444
+            to:
+              description: The number you want to call, in BCP 47 format.
+              type: string
+              example: 12137774445
+        override_agent_id:
+          description: >-
+            For this particular call, override the agent used with this agent
+            id. This does not bind the agent to this number, this is for one
+            time override.
+          type: string
+          example: oBeDLoLOeuAbiuaMFXRtDOLriTJ5tSxD
+        retell_llm_dynamic_variables:
+          description: >-
+            Add optional dynamic variables in key value pairs of string that
+            injects into your Retell LLM prompt and tool description. Only
+            applicable for Retell LLM.
+          type: object
+          additionalProperties: {}
+          example:
+            customer_name: John Doe
     CallEstablishConnectionResponse:
       type: object
       properties:
@@ -853,3 +1764,11 @@ components:
       type: array
       items:
         $ref: '#/components/schemas/AgentResponse'
+    RetellLlmListAllResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/RetellLLMResponse'
+    PhoneNumberGetAllNumbersResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/PhoneNumberResponse'
