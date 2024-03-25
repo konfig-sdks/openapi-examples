@@ -4400,7 +4400,7 @@ paths:
     patch:
       tags:
         - Meetings
-      summary: Update Live Stream Status
+      summary: Update livestream status
       operationId: Meetings_livestreamStatusUpdate
       security:
         - openapi_oauth:
@@ -4411,12 +4411,11 @@ paths:
         Zoom allows users to [livestream a
         meeting](https://support.zoom.us/hc/en-us/articles/115001777826-Live-Streaming-Meetings-or-Webinars-Using-a-Custom-Service)
         to a custom platform. Update the status of a meeting's livestream.  
-           
-         
-        **Prerequisites:**  
-         
-        * Meeting host must have a Pro license.  
-         
+
+
+        **Prerequisites:**
+
+        * Meeting host must have a Pro license.
 
 
         **Scopes:** `meeting:write:admin`,`meeting:write`
@@ -4424,7 +4423,7 @@ paths:
 
         **[Rate Limit
         Label](https://marketplace.zoom.us/docs/api-reference/rate-limits#rate-limits):**
-        `Light`
+        `LIGHT`
       parameters:
         - description: |-
             The meeting's ID. 
@@ -4445,43 +4444,44 @@ paths:
               $ref: '#/components/schemas/MeetingsLivestreamStatusUpdateRequest'
       responses:
         '204':
-          description: |+
-            **HTTP Status Code:** `204`   
-             
-            Meeting livestream updated.
-
+          description: '**HTTP Status Code:** `204` <br> Meeting livestream updated.'
         '400':
-          description: >+
+          description: |
             **HTTP Status Code:** `400` <br>
-             Bad Request
+             Bad Request  
 
-            **Error Code:** `3000` <br>
-
-            Cannot access webinar info.<br>
-
-
-            **Error Code:** `1010` <br>
-
-            User does not belong to this account: {accountId}.
-
-
+             **Error Code:** `3000` <br>
+             Cannot access webinar info. <br>
             **Error Code:** `3161` <br>
-
-            Meeting hosting and scheduling capabilities are not allowed for your
-            user account.
-
+             Your user account is not allowed meeting hosting and scheduling capabilities. <br>
+            **Error Code:** `4400` <br>
+             End-to-end encrypted meetings currently do not support the livestreaming feature. <br>
+            **Error Code:** `300` <br>
+             Invalid meeting ID. <br>
+            **Error Code:** `4927` <br>
+             Meeting {meetingId} has not started. <br>
         '404':
-          description: |+
+          description: |
             **HTTP Status Code:** `404` <br>
-             Not Found
+             Not Found  
 
-            **Error Code:** `1001` <br>
-            User {userId} does not exist.<br>
+             **Error Code:** `3001` <br>
+             Meeting does not exist: {meetingId}. <br>
+        '429':
+          description: |-
+            **HTTP Status Code:** `429` <br>
+             Too Many Requests  
 
+             
       extensions:
+        x-permissions:
+          - User:Edit
         x-macro-scopes:
           - meeting:write:admin
           - meeting:write
+        x-granular-scopes:
+          - meeting:update:livestream_status
+          - meeting:update:livestream_status:admin
   /meetings/{meetingId}/meeting_summary:
     get:
       tags:
@@ -16858,44 +16858,58 @@ components:
           type: string
           example: 720p
     MeetingsLivestreamStatusUpdateRequest:
-      description: Meeting live stream status.
+      description: The meeting's livestream status.
       type: object
       properties:
         action:
           description: |-
-            Update the status of a live stream.
-
-            The value can be one of the following:  
-             
-            `start`: Start a live stream.   
-             
-            `stop`: Stop an ongoing live stream.
+            The meeting's livestream status.
+            * `start` - Start a livestream.
+            * `stop` - Stop an ongoing livestream.
+            * `mode` - Control a livestream view at runtime.
           type: string
           example: start
-          extensions:
-            x-enum-descriptions:
-              - Start a meeting live stream.
-              - Stop a meeting live stream.
           enum:
             - start
             - stop
+            - mode
         settings:
-          description: >-
-            Update the settings of a live streaming session. The settings can
-            only be updated for a live stream that has been stopped. You can not
-            update the settings of an ongoing live stream.
+          description: The meeting's livestreaming settings.
           type: object
           properties:
             active_speaker_name:
-              description: Display the name of the active speaker during a live stream.
+              description: >-
+                Whether to display the name of the active speaker during a
+                meeting's livestream. Use this field if you pass the `start`
+                value for the `action` field.
               type: boolean
               example: true
             display_name:
-              description: Display name of the live stream.
+              description: >-
+                The display name of the meeting's livestream. Use this field if
+                you pass the `start` value for the `action` field.
               maxLength: 50
               minLength: 1
               type: string
               example: Jill Chill
+            layout:
+              description: "The layout of the meeting's livestream. Use this field if you pass the `start` or `mode` value for the `action` field.\r\n* `follow_host` - Follow host view.\r\n* `gallery_view` - Gallery view.\r\n* `speaker_view` - Speaker view."
+              type: string
+              example: follow_host
+              default: follow_host
+              enum:
+                - follow_host
+                - gallery_view
+                - speaker_view
+            close_caption:
+              description: "The livestream's closed caption type for this session. Use this field if you pass the `start` or `mode` value for the `action` field.\r\n* `burnt-in` - Burnt in captions.\r\n* `embedded` - Embedded captions.\r\n* `off` - Turn off captions."
+              type: string
+              example: burnt-in
+              default: burnt-in
+              enum:
+                - burnt-in
+                - embedded
+                - 'off'
     MeetingsCreatePollRequest:
       title: Meeting and Webinar Polling Object
       description: Information about meeting and webinar polling.
