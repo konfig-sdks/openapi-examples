@@ -1,0 +1,1868 @@
+openapi: 3.0.3
+info:
+  title: Timmi Absences API
+  description: Welcome on the documentation for Timmi Absences API.
+  version: '1.0'
+  contact:
+    name: Timmi Absences
+    url: https://www.lucca.fr
+    email: developers@lucca.fr
+  x-konfig-ignore:
+    object-with-no-properties: true
+    potential-incorrect-type: true
+servers:
+  - description: Your production environment (France)
+    url: https://example.ilucca.net
+  - description: Your test environment (France)
+    url: https://example.ilucca-test.net
+tags:
+  - description: Absences imports
+    name: Imports
+  - description: Workflow object for submiting an absence.
+    name: Leave Requests
+  - description: Absences taken on a given day
+    name: Leaves
+paths:
+  /api/v3/leaves:
+    parameters: []
+    get:
+      tags:
+        - Leaves
+      summary: List leaves
+      operationId: Leaves_getApprovedList
+      description: "Retrieve a list of approved leaves for one or several users on a given period.\n\nThe `leavePeriod.ownerId` query parameter is required ans is used to: \n\n- retrieve Leaves of a specific user: `?leavePeriod.ownerId=5`\n- retrieve Leaves of several users: `?leavePeriod.ownerId=5,6`\n- retrieve Leaves of a specific group of users: `?leavePeriod.owner.departmentId=3`\n\nThe\_`date`\_query parameter can operate comparisons with a given date-time value:\n\n- `?date=2021-01-01`: strict equality.\n- `?date=since,2021-01-01`: greater than or equal.\n- `?date=until,2021-01-01`: lower than or equal.\n- `?date=between,2021-01-01,2021-01-31`: comprised between two dates."
+      parameters:
+        - $ref: '#/components/parameters/Timmi-Timesheet-v3_Paging'
+        - schema:
+            type: string
+          in: query
+          name: leaveAccountId
+        - description: Employee's identifier
+          schema:
+            type: array
+            items:
+              description: >-
+                WARNING: Missing items property in array schema. Missing items
+                property has been filled with this AnyType schema.
+          in: query
+          name: leavePeriod.ownerId
+          required: true
+        - description: '{comparator},{date-time}'
+          schema:
+            type: string
+          in: query
+          name: date
+          required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeavesGetApprovedListResponse'
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+        '404':
+          description: Not Found
+        '500':
+          description: Internal Server Error
+  /api/v3/leaves/{leaveId}:
+    parameters:
+      - description: Identifier of the leave.
+        schema:
+          type: string
+        name: leaveId
+        in: path
+        required: true
+    get:
+      tags:
+        - Leaves
+      summary: Get a leave by id
+      operationId: Leaves_getById
+      description: Retrieve a single Leave by its unique identifier.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeavesGetByIdResponse'
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+        '404':
+          description: Not Found
+        '500':
+          description: Internal Server Error
+    delete:
+      tags:
+        - Leaves
+      summary: Cancellation of a leave
+      operationId: Leaves_cancelLeaveById
+      description: Cancel a single Leave by its unique identifier.
+      responses:
+        '200':
+          description: OK
+  /api/v3/leaveRequests:
+    parameters: []
+    get:
+      tags:
+        - Leave Requests
+      summary: List leave requests
+      operationId: LeaveRequests_list
+      description: Retrieve a list of Leave Requests
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaveRequestsListResponse'
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+        '404':
+          description: Not Found
+        '500':
+          description: Internal Server Error
+  /api/v3/leaveRequests/{leaveRequestId}:
+    parameters:
+      - schema:
+          type: string
+        name: leaveRequestId
+        in: path
+        required: true
+    get:
+      tags:
+        - Leave Requests
+      summary: Get a leave request by id
+      operationId: LeaveRequests_getById
+      description: Retrieve a single Leave Request by its unique identifier
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaveRequestsGetByIdResponse'
+              examples: {}
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+        '404':
+          description: Not Found
+        '500':
+          description: Internal Server Error
+    delete:
+      tags:
+        - Leave Requests
+      summary: Request to cancel a leave request
+      operationId: LeaveRequests_cancelRequest
+      description: Request to cancel a single Leave Request by its unique identifier
+      responses:
+        '200':
+          description: OK
+  /api/v3/leaveRequests/{leaveRequestId}/approvals:
+    parameters:
+      - schema:
+          type: string
+        name: leaveRequestId
+        in: path
+        required: true
+    post:
+      tags:
+        - Leave Requests
+      summary: Approve or deny a leave request
+      operationId: LeaveRequests_approveDeny
+      description: |
+        Approve or deny a single Leave Request by its unique identifier
+
+        Only the Leave Requests pending approval can be approved or denied.
+
+        A comment is required to deny a Leave Request.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LeaveRequestsApproveDenyRequest'
+            examples:
+              example:
+                value:
+                  approved: false
+                  comment: your presence is required at the working meeting
+      responses:
+        '200':
+          description: OK
+  /figgo/api/public/services/v1.0/leaveEntitlementsImport:
+    parameters: []
+    post:
+      tags:
+        - Imports
+      summary: Import entitlements (deprecated)
+      operationId: Imports_entitlementsBatchImport
+      description: >
+        **Supported file formats:**
+
+        - CSV
+          - "UTF-8" encoding
+          - separator “;”
+        - XSLX
+
+
+        **Columns to fill in:**
+
+
+        Column name | Description
+
+        --- | ---
+
+        LegalEntityCode | Employee legal entity code
+
+        EmployeeNumber | Employee payroll number
+
+        LastName | Last name
+
+        FirstName | First name
+
+        Account number or name (one column per account) | Value to import for
+        the account defined in the header.
+
+
+
+        *Remark:
+
+        A template file can be downloaded from the import page (Credit / Debit>
+        A group of collaborators> File import).*
+
+
+        In the event of a malformed (or unrecognized) file, no data will be
+        imported; the problems detected will be specified in the `globalErrors`
+        field.
+
+
+        If successful, the number of imported lines is indicated by the
+        “successLinesCount” field; the lines in error are detailed in the
+        `lineErrors` field.
+
+
+
+        *Remarks:
+
+        Any import made by the API is of course available in the import history.
+
+        A simulation returns the same level of information, but does not trigger
+        an import*
+
+
+        **List of errors handled**
+
+
+        Here is the list of fatal errors, which can be returned in the
+        `globalErrors`:
+
+        - Unauthorized
+
+        - FileEmpty,
+
+        - FileExtensionNotSupported,
+
+        - ColumnsFormatNotSupported,
+
+        - AccountColumnMissing,
+
+        - ColumnNamesDistinct,
+
+        - LineErrorForbiddenInStrictMode,
+
+
+        The list of line processing errors, which can be restored in the
+        `lineErrors`:
+
+        - AccountNotFound,
+
+        - AccountsNotFound,
+
+        - AccountColumnsProcessing,
+
+        - LegalEntityCodesNotFound,
+
+        - MissingValuesForAccount,
+
+        - AccountNotAvailableForUser,
+
+        - LegalEntityCodeRequired,
+
+        - EmployeeNumberRequired,
+
+        - LoginRequired,
+
+        - LoginNotFound,
+
+        - AccountNumberRequired,
+
+        - LegalEntityNotFound,
+
+        - EmployeeNumberNotExist,
+
+        - EmployeeNumberNotInLegalEntity,
+
+        - FistNameAndLastNameNotMatching,
+
+        - FistNameNotMatching,
+
+        - LastLameNotMatching,
+
+        - FistNameAndLastNameNotMatchingEmployeeNumber,
+
+        - FistNameNotMatchingEmployeeNumber,
+
+        - LastLameNotMatchingEmployeeNumber,
+
+        - FistNameAndLastNameNotMatchingLogin,
+
+        - FistNameNotMatchingLogin,
+
+        - LastLameNotMatchingLogin,
+
+        - DuplicatedLine,
+
+        - AmbiguousLegalEntity,
+
+        - ColumnNotExists,
+
+        - LegalEntityNameNotAvailable,
+
+        - AccountNameNotUnique
+
+
+        The list of import generation errors:
+
+        - UnableToCreditAccount
+      parameters:
+        - description: >-
+            In strict mode, if the import has errors, nothing is imported.
+            Without strict mode, the lines in error are ignored and those in
+            success are imported.
+          schema:
+            type: boolean
+            default: false
+          in: query
+          name: strict
+        - description: >-
+            Allows you to simulate the import. In this case, the response
+            indicates the theoretical result of the import without any data
+            being recorded.
+          schema:
+            type: boolean
+            default: false
+          in: query
+          name: simulate
+      requestBody:
+        description: ''
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ImportsEntitlementsBatchImportRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/ImportResponse'
+      deprecated: true
+  /timmi-absences/api/public/services/v1.0/leaveEntitlementsImport:
+    post:
+      tags:
+        - Imports
+      summary: Import entitlements
+      operationId: Imports_importLeaveEntitlements
+      description: >
+        **Supported file formats:**
+
+        - CSV
+          - "UTF-8" encoding
+          - separator “;”
+        - XSLX
+
+
+        **Columns to fill in:**
+
+
+        Column name | Description
+
+        --- | ---
+
+        LegalEntityCode | Employee legal entity code
+
+        EmployeeNumber | Employee payroll number
+
+        LastName | Last name
+
+        FirstName | First name
+
+        Account number or name (one column per account) | Value to import for
+        the account defined in the header.
+
+
+
+        *Remark:
+
+        A template file can be downloaded from the import page (Credit / Debit>
+        A group of collaborators> File import).*
+
+
+        In the event of a malformed (or unrecognized) file, no data will be
+        imported; the problems detected will be specified in the `globalErrors`
+        field.
+
+
+        If successful, the number of imported lines is indicated by the
+        “successLinesCount” field; the lines in error are detailed in the
+        `lineErrors` field.
+
+
+
+        *Remarks:
+
+        Any import made by the API is of course available in the import history.
+
+        A simulation returns the same level of information, but does not trigger
+        an import*
+
+
+        **List of errors handled**
+
+
+        Here is the list of fatal errors, which can be returned in the
+        `globalErrors`:
+
+        - Unauthorized
+
+        - FileEmpty,
+
+        - FileExtensionNotSupported,
+
+        - ColumnsFormatNotSupported,
+
+        - AccountColumnMissing,
+
+        - ColumnNamesDistinct,
+
+        - LineErrorForbiddenInStrictMode,
+
+
+        The list of line processing errors, which can be restored in the
+        `lineErrors`:
+
+        - AccountNotFound,
+
+        - AccountsNotFound,
+
+        - AccountColumnsProcessing,
+
+        - LegalEntityCodesNotFound,
+
+        - MissingValuesForAccount,
+
+        - AccountNotAvailableForUser,
+
+        - LegalEntityCodeRequired,
+
+        - EmployeeNumberRequired,
+
+        - LoginRequired,
+
+        - LoginNotFound,
+
+        - AccountNumberRequired,
+
+        - LegalEntityNotFound,
+
+        - EmployeeNumberNotExist,
+
+        - EmployeeNumberNotInLegalEntity,
+
+        - FistNameAndLastNameNotMatching,
+
+        - FistNameNotMatching,
+
+        - LastLameNotMatching,
+
+        - FistNameAndLastNameNotMatchingEmployeeNumber,
+
+        - FistNameNotMatchingEmployeeNumber,
+
+        - LastLameNotMatchingEmployeeNumber,
+
+        - FistNameAndLastNameNotMatchingLogin,
+
+        - FistNameNotMatchingLogin,
+
+        - LastLameNotMatchingLogin,
+
+        - DuplicatedLine,
+
+        - AmbiguousLegalEntity,
+
+        - ColumnNotExists,
+
+        - LegalEntityNameNotAvailable,
+
+        - AccountNameNotUnique
+
+
+        The list of import generation errors:
+
+        - UnableToCreditAccount
+      parameters:
+        - description: >-
+            In strict mode, if the import has errors, nothing is imported.
+            Without strict mode, the lines in error are ignored and those in
+            success are imported.
+          name: strict
+          in: query
+          schema:
+            type: boolean
+            default: false
+        - description: >-
+            Allows you to simulate the import. In this case, the response
+            indicates the theoretical result of the import without any data
+            being recorded.
+          name: simulate
+          in: query
+          schema:
+            type: boolean
+            default: false
+      requestBody:
+        description: ''
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ImportsImportLeaveEntitlementsRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/ImportResponse'
+  /figgo/api/public/services/v1.0/leaveEntitlementsReplace:
+    parameters: []
+    post:
+      tags:
+        - Imports
+      summary: Replace entitlements (deprecated)
+      operationId: Imports_replaceEntitlements
+      description: >
+        **Supported file formats:**
+
+        - CSV
+          - "UTF-8" encoding
+          - separator “;”
+        - XSLX
+
+
+        **Columns to fill in:**
+
+
+        Column name | Description
+
+        --- | ---
+
+        LegalEntityCode | Employee legal entity code
+
+        EmployeeNumber | Employee payroll number
+
+        LastName | Last name
+
+        FirstName | First name
+
+        Account number or name (one column per account) | Value to import for
+        the account defined in the header.
+
+
+
+        *Remark:
+
+        A template file can be downloaded from the import page (Credit / Debit>
+        A group of collaborators> File import).*
+
+
+        In the event of a malformed (or unrecognized) file, no data will be
+        imported; the problems detected will be specified in the `globalErrors`
+        field.
+
+
+        If successful, the number of imported lines is indicated by the
+        “successLinesCount” field; the lines in error are detailed in the
+        `lineErrors` field.
+
+
+
+        *Remarks:
+
+        Any import made by the API is of course available in the import history.
+
+        A simulation returns the same level of information, but does not trigger
+        an import*
+
+
+        **List of errors handled**
+
+
+        Here is the list of fatal errors, which can be returned in the
+        `globalErrors`:
+
+        - Unauthorized
+
+        - FileEmpty,
+
+        - FileExtensionNotSupported,
+
+        - ColumnsFormatNotSupported,
+
+        - AccountColumnMissing,
+
+        - ColumnNamesDistinct,
+
+        - LineErrorForbiddenInStrictMode,
+
+
+        The list of line processing errors, which can be restored in the
+        `lineErrors`:
+
+        - AccountNotFound,
+
+        - AccountsNotFound,
+
+        - AccountColumnsProcessing,
+
+        - LegalEntityCodesNotFound,
+
+        - MissingValuesForAccount,
+
+        - AccountNotAvailableForUser,
+
+        - LegalEntityCodeRequired,
+
+        - EmployeeNumberRequired,
+
+        - LoginRequired,
+
+        - LoginNotFound,
+
+        - AccountNumberRequired,
+
+        - LegalEntityNotFound,
+
+        - EmployeeNumberNotExist,
+
+        - EmployeeNumberNotInLegalEntity,
+
+        - FistNameAndLastNameNotMatching,
+
+        - FistNameNotMatching,
+
+        - LastLameNotMatching,
+
+        - FistNameAndLastNameNotMatchingEmployeeNumber,
+
+        - FistNameNotMatchingEmployeeNumber,
+
+        - LastLameNotMatchingEmployeeNumber,
+
+        - FistNameAndLastNameNotMatchingLogin,
+
+        - FistNameNotMatchingLogin,
+
+        - LastLameNotMatchingLogin,
+
+        - DuplicatedLine,
+
+        - AmbiguousLegalEntity,
+
+        - ColumnNotExists,
+
+        - LegalEntityNameNotAvailable,
+
+        - AccountNameNotUnique
+
+
+        The list of import generation errors:
+
+        - UnableToCreditAccount
+      parameters:
+        - description: >-
+            In strict mode, if the import has errors, nothing is imported.
+            Without strict mode, the lines in error are ignored and those in
+            success are imported.
+          schema:
+            type: boolean
+            default: false
+          in: query
+          name: strict
+        - description: >-
+            Allows you to simulate the import. In this case, the response
+            indicates the theoretical result of the import without any data
+            being recorded.
+          schema:
+            type: boolean
+            default: false
+          in: query
+          name: simulate
+      requestBody:
+        description: ''
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ImportsReplaceEntitlementsRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/ImportResponse'
+      deprecated: true
+  /timmi-absences/api/public/services/v1.0/leaveEntitlementsReplace:
+    post:
+      tags:
+        - Imports
+      summary: Replace entitlements
+      operationId: Imports_replaceEntitlements
+      description: >
+        **Supported file formats:**
+
+        - CSV
+          - "UTF-8" encoding
+          - separator “;”
+        - XSLX
+
+
+        **Columns to fill in:**
+
+
+        Column name | Description
+
+        --- | ---
+
+        LegalEntityCode | Employee legal entity code
+
+        EmployeeNumber | Employee payroll number
+
+        LastName | Last name
+
+        FirstName | First name
+
+        Account number or name (one column per account) | Value to import for
+        the account defined in the header.
+
+
+
+        *Remark:
+
+        A template file can be downloaded from the import page (Credit / Debit>
+        A group of collaborators> File import).*
+
+
+        In the event of a malformed (or unrecognized) file, no data will be
+        imported; the problems detected will be specified in the `globalErrors`
+        field.
+
+
+        If successful, the number of imported lines is indicated by the
+        “successLinesCount” field; the lines in error are detailed in the
+        `lineErrors` field.
+
+
+
+        *Remarks:
+
+        Any import made by the API is of course available in the import history.
+
+        A simulation returns the same level of information, but does not trigger
+        an import*
+
+
+        **List of errors handled**
+
+
+        Here is the list of fatal errors, which can be returned in the
+        `globalErrors`:
+
+        - Unauthorized
+
+        - FileEmpty,
+
+        - FileExtensionNotSupported,
+
+        - ColumnsFormatNotSupported,
+
+        - AccountColumnMissing,
+
+        - ColumnNamesDistinct,
+
+        - LineErrorForbiddenInStrictMode,
+
+
+        The list of line processing errors, which can be restored in the
+        `lineErrors`:
+
+        - AccountNotFound,
+
+        - AccountsNotFound,
+
+        - AccountColumnsProcessing,
+
+        - LegalEntityCodesNotFound,
+
+        - MissingValuesForAccount,
+
+        - AccountNotAvailableForUser,
+
+        - LegalEntityCodeRequired,
+
+        - EmployeeNumberRequired,
+
+        - LoginRequired,
+
+        - LoginNotFound,
+
+        - AccountNumberRequired,
+
+        - LegalEntityNotFound,
+
+        - EmployeeNumberNotExist,
+
+        - EmployeeNumberNotInLegalEntity,
+
+        - FistNameAndLastNameNotMatching,
+
+        - FistNameNotMatching,
+
+        - LastLameNotMatching,
+
+        - FistNameAndLastNameNotMatchingEmployeeNumber,
+
+        - FistNameNotMatchingEmployeeNumber,
+
+        - LastLameNotMatchingEmployeeNumber,
+
+        - FistNameAndLastNameNotMatchingLogin,
+
+        - FistNameNotMatchingLogin,
+
+        - LastLameNotMatchingLogin,
+
+        - DuplicatedLine,
+
+        - AmbiguousLegalEntity,
+
+        - ColumnNotExists,
+
+        - LegalEntityNameNotAvailable,
+
+        - AccountNameNotUnique
+
+
+        The list of import generation errors:
+
+        - UnableToCreditAccount
+      parameters:
+        - description: >-
+            In strict mode, if the import has errors, nothing is imported.
+            Without strict mode, the lines in error are ignored and those in
+            success are imported.
+          name: strict
+          in: query
+          schema:
+            type: boolean
+            default: false
+        - description: >-
+            Allows you to simulate the import. In this case, the response
+            indicates the theoretical result of the import without any data
+            being recorded.
+          name: simulate
+          in: query
+          schema:
+            type: boolean
+            default: false
+      requestBody:
+        description: ''
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ImportsReplaceEntitlementsRequest1'
+      responses:
+        '200':
+          $ref: '#/components/responses/ImportResponse'
+  /api/v3/services/importLeavePeriods:
+    parameters: []
+    post:
+      tags:
+        - Imports
+      summary: Import leaves (deprecated)
+      operationId: Imports_absenceBatchCreate
+      description: >
+        Create absences in batch from a CSV file.
+
+
+        **Important notice: Absence imports cannot be cancelled.** 
+
+
+        In case of a mistake absences must be deleted manually through the
+        interface or using the API (see Use cases). **Use import with care!**
+
+
+
+        **File format**
+
+
+        Type: CSV (with semicolon ";")
+
+
+        Encoding: UTF-8
+
+
+
+        All the following fields must be present with the field name in the
+        header:
+
+
+        - legalEntity : establishment of the employee
+
+        - employeeNumber : employee number
+
+        - lastName : last name of the employee
+
+        - firstName : firstname of the employee
+
+        - accountId : absence account id in Timmi Absences (you can find it in
+        the leave accounts admin page)
+
+        - startDate : absence start date (DD/MM/YYYY)
+
+        - flagStartDate : AM (if the absences starts in the morning) or PM (if
+        the absence starts in the afternoon)
+
+        - endDate : absence end date (DD/MM/YYYY)
+
+        - flagEndDate : AM (if the absences ends at noon) or PM (if the absences
+        ends in the afternoon)
+
+        - isApproved : yes or no. Compulsory if the absence type is subject to
+        approval, optional otherwise.
+
+
+        **History**
+
+        Import history is available in the import module, including imports made
+        using the API.
+      parameters:
+        - description: Support CSV files only
+          schema:
+            type: string
+            enum:
+              - csv
+            default: csv
+          in: query
+          name: type
+          required: true
+        - description: Use `false` to simulate the import.
+          schema:
+            type: boolean
+            default: false
+          in: query
+          name: create
+        - description: >-
+            Use `true` if absences should **not** be deducted from the user
+            balance. Use `false` if absences should be deducted from the user
+            balance. Note: if the absence type doesn’t have balance management,
+            absence won’t impact the balance in any case.
+          schema:
+            type: boolean
+          in: query
+          name: recredit
+        - description: Filename
+          schema:
+            type: string
+            example: import.csv
+          in: query
+          name: originalFileName
+          required: true
+        - description: >-
+            Use `true` to force synchronization of the absences in the sync
+            webservice (sync to Exchange/0365, Google Calendar, Webhook or ADP
+            GXP, depending on configuration). Use `false` to import absences
+            without synchronizing absences.
+          schema:
+            type: boolean
+          in: query
+          name: synchronize
+        - description: Use `true` to allow replacing existing absences
+          schema:
+            type: boolean
+          in: query
+          name: overrideLeaves
+      requestBody:
+        description: ''
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ImportsAbsenceBatchCreateRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportsAbsenceBatchCreateResponse'
+      deprecated: true
+  /timmi-absences/api/imports/v1.0/leavePeriods:
+    parameters: []
+    post:
+      tags:
+        - Imports
+      summary: Import leaves
+      operationId: Imports_createAbsencesBatch
+      description: >
+        Create absences in batch from a CSV file.
+
+
+        **Important notice: Absence imports cannot be cancelled.** 
+
+
+        In case of a mistake absences must be deleted manually through the
+        interface or using the API (see Use cases). **Use import with care!**
+
+
+        **File format**
+
+
+        Content-Type: CSV. Column divider is semicolon ";". Line breaks between
+        rows.
+
+
+        Encoding: UTF-8
+
+
+        All the following fields must be present with the field name in the
+        header:
+
+
+        - legalEntity: Name of the establishment the employee belongs to.
+
+        - employeeNumber: Employee number.
+
+        - lastName: Family (last) name of the employee.
+
+        - firstName: Given (first) name of the employee.
+
+        - accountId: Identifier of the absence account in Timmi Absences (can be
+        found in the leave accounts admin page).
+
+        - startDate: Start date of the absence, formatted as `DD/MM/YYYY`.
+
+        - flagStartDate: `"AM"` if the absence starts in the morning or `"PM"`
+        if the absence starts in the afternoon.
+
+        - endDate: End date of the absence, formatted as `DD/MM/YYYY`.
+
+        - flagEndDate: `"AM"` if the absence ends at noon or `"PM"` if the
+        absence ends in the afternoon.
+
+        - isApproved: `true` or `false`. Dictates whether the absence request
+        should be created and already approved. 
+          Required if the type of the absence requires approval, optional otherwise.
+
+        **History**
+
+        Import history is available in the import module. It includes imports
+        made via the API.
+      parameters:
+        - description: Use `false` to simulate the import.
+          schema:
+            type: boolean
+          in: query
+          name: create
+        - description: >-
+            Use `true` if absences should **not** be deducted from the user
+            balance. Use `false` if absences should be deducted from the user
+            balance. Note: if the absence type doesn’t have balance management,
+            absence won’t impact the balance in any case.
+          schema:
+            type: boolean
+          in: query
+          name: recredit
+        - description: Filename
+          schema:
+            type: string
+            default: import.csv
+          in: query
+          name: originalFileName
+        - description: >-
+            Use `true` to force synchronization of the absences in the sync
+            webservice (sync to Exchange/0365, Google Calendar, Webhook or ADP
+            GXP, depending on configuration). Use `false` to import absences
+            without synchronizing absences.
+          schema:
+            type: boolean
+          in: query
+          name: synchronize
+        - description: >-
+            Use `true` if you want to import absences with the asynchronous
+            processing (you have to request
+            figgo/api/imports/v1.0/leavePeriods/{summaryId}/progress API to
+            track the status). Use `false` if you want import absences with the
+            synchronous processing (the response is sent when the file is fully
+            imported).
+          schema:
+            type: boolean
+          in: query
+          name: async
+      requestBody:
+        description: >
+          Content of the CSV file to import. Each file in its dedicated part
+
+          of the multipart request. Parts are divided by the 'boundary' string
+
+          set in the Content-Type HTTP header.
+
+
+          Example of a single file request body:
+
+          ```
+
+          --myBoundary
+
+          Content-Disposition: form-data;
+          name="figgo-import-5875e9dd-0b1f-4a9f-8756-0f25fb0a2946.csv";
+          filename="figgo-import-5875e9dd-0b1f-4a9f-8756-0f25fb0a2946.csv"
+
+          Content-Type: application/vnd.ms-excel
+
+
+          legalEntity;employeeNumber;lastName;firstName;accountId;startDate;flagStartDate;endDate;flagEndDate;isApproved
+
+          Lucca FR;M0029;Bart;Maurice;1322;16/08/2022;am;17/08/2022;pm;true
+
+          Lucca FR;M0029;Bart;Maurice;1322;22/08/2022;am;23/08/2022;pm;false
+
+          Lucca FR;M0029;Bart;Maurice;8;29/08/2022;am;30/08/2022;pm;true
+
+          --myBoundary--
+
+          ```
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ImportsCreateAbsencesBatchRequest'
+            encoding:
+              files:
+                contentType: application/vnd.ms-excel
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportsCreateAbsencesBatchResponse'
+  /timmi-absences/api/imports/v1.0/leavePeriods/{summaryId}/progress:
+    parameters:
+      - description: Identifier of the import
+        schema:
+          type: string
+        name: summaryId
+        in: path
+        required: true
+    get:
+      tags:
+        - Imports
+      summary: Get import leaves progress
+      operationId: Imports_getProgress
+      description: Retrieve the progress of Import leaves API request.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportsGetProgressResponse'
+components:
+  parameters:
+    Timmi-Timesheet-v3_Paging:
+      description: '{offset},{limit}. Defaults to 0,1000.'
+      name: paging
+      in: query
+      required: true
+      schema:
+        type: string
+        example: 100,0
+  responses:
+    ImportResponse:
+      description: Example response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ImportsEntitlementsBatchImportResponse'
+          examples:
+            ImportResponse:
+              value:
+                successLinesCount: 0
+                globalErrors:
+                  columnsFormatNotSupported: >-
+                    The file must have columns 'login, lastName, firstName' or
+                    'code, employeeNumber, lastName, firstName'.
+                lineErrors:
+                  '7':
+                    loginNotFound: User login not found
+                  '8':
+                    duplicatedLine: Line 8 is identical to line 23
+                  '9':
+                    lastLameNotMatchingLogin: Lastname does not match to the login of this employee
+                    accountNotAvailableForUser: The user does not have access to the account 6
+  schemas:
+    Leave:
+      title: The Leave resource
+      description: >-
+        Absences from work, wether they are planned or not, are described in
+        Lucca using three concepts : **LeaveRequests**, **LeavePeriods** and
+        **Leaves**.
+
+
+        A **LeaveRequest** represent the request made by employees when planning
+        time off. This resource is used for workflow purposes.
+
+
+        A **LeavePeriod** is the continuous period of absence requested by the
+        employee or entered by HR. It is linked to a **LeaveRequest** if
+        workflow applies.
+
+
+        A **Leave** is the subdivision of a **LeavePeriod**. There is one
+        **Leave** per half-day of the **LeavePeriod**. Each **Leave** is linked
+        to a **LeaveAccount**, which represent the type of leave (PTO, Sick
+        Leave, Congés payés, RTT, etc).
+
+
+        ![Timmi Absences -
+        UML](https://stoplight.io/api/v1/projects/cHJqOjEwNjgxNg/images/6yaK9GNTQ08)
+
+
+        There can only be one **Leave** per half-day. This prevents duplicates.
+
+        For **Leaves** expressed in hours (as opposed to **Leaves** in days),
+        the duration of the **Leave** is stored in the value field of the
+        **Leave**. The previous constraint implies that there can only be one
+        type of **Leave** per half-day. This issue is solved in the next version
+        of the API.
+
+
+        ## Fields
+      type: object
+      examples: []
+      x-tags:
+        - Leaves
+      properties:
+        id:
+          description: Unique identifier for the Leave
+          type: string
+        date:
+          description: Date of the leave in ISO format `yyyy-mm-dd`
+          type: string
+          format: date
+        isAm:
+          description: Has the value `true` for morning or the value `false` for afternoon
+          type: boolean
+        leaveAccountId:
+          description: Unique identifier for the attached LeaveAccount
+          type: integer
+        leaveAccount:
+          $ref: '#/components/schemas/LeaveAccount'
+        leavePeriodId:
+          description: Unique identifier for the attached LeavePeriod
+          type: integer
+        leavePeriod:
+          $ref: '#/components/schemas/LeavePeriod'
+        value:
+          description: Leave duration in hours
+          type:
+            - string
+            - 'null'
+          format: duration
+        creationDate:
+          description: Time at which the object was created
+          type: string
+          format: date-time
+        isActive:
+          description: >
+            Has the value `true` when the Leave exists (for pending or confirmed
+            LeavePeriods), or the value `false` when it has been deleted (for
+            canceled or denied LeaveRequests).
+          type: boolean
+        cancellationDate:
+          description: Time at which the request was canceled
+          type:
+            - 'null'
+            - string
+          format: date-time
+        cancellationUserId:
+          description: 'Unique identifier for the user who canceled the request '
+          type:
+            - 'null'
+            - integer
+          default: null
+        comment:
+          description: Comments
+          type: string
+      required:
+        - id
+        - date
+        - isAm
+        - leaveAccountId
+        - leavePeriodId
+    LeavePeriod:
+      title: The LeavePeriod resource
+      description: >-
+        Absences from work, wether they are planned or not, are described in
+        Lucca using three concepts : **LeaveRequests**, **LeavePeriods** and
+        **Leaves**.
+
+
+        A **LeaveRequest** represent the request made by employees when planning
+        time off. This resource is used for workflow purposes.
+
+
+        A **LeavePeriod** is the continuous period of absence requested by the
+        employee or entered by HR. It is linked to a **LeaveRequest** if
+        workflow applies.
+
+
+        A **Leave** is the subdivision of a **LeavePeriod**. There is one
+        **Leave** per half-day of the **LeavePeriod**. Each **Leave** is linked
+        to a **LeaveAccount**, which represent the type of leave (PTO, Sick
+        Leave, Congés payés, RTT, etc).
+         
+        ![Timmi Absences -
+        UML](../assets/images/ROunRiCm34LtdeB8M206UeCucG9qABfq9aIs5Y9BBKNPGv6xrrOSH4CcKG-F_F-GZTJA621VVFmXfH5Te9pn3n2Fv2xVcahaKmf9yNFm9YjFog8tTWoBjB1UDSqjkZOd1ueygpUJYAP5OF0iwBow80XmItmJckH3VejaWpK-hE1Tr2S-y_BFHbRoCdHT1zTsRRFgLfgZQFLzFgNuvNKKVhfKTIQJwlRZFR9tBfLePtxIOQ9G.png)
+
+
+        ## Fields
+      type: object
+      examples: []
+      x-tags:
+        - Leave Requests
+      properties:
+        id:
+          description: Unique identifier for the LeavePeriod
+          type: number
+        ownerId:
+          description: 'Unique identifier for the user '
+          type: number
+        isConfirmed:
+          description: >-
+            Has the value `true` for approved LeavePeriod or the value `false`
+            for LeavePeriod pending approval
+          type: boolean
+        confirmationDate:
+          description: Time at which the LeavePeriod was approved
+          type:
+            - 'null'
+            - string
+          format: date-time
+        attachmentId:
+          description: Unique identifier for the attached document
+          type:
+            - 'null'
+            - string
+        leaves:
+          type: array
+          items:
+            $ref: '#/components/schemas/Leave'
+        logs:
+          type: array
+          items:
+            $ref: '#/components/schemas/LeavePeriodLog'
+    LeavePeriodLog:
+      title: The LeavePeriodLog resource
+      description: '## Fields'
+      x-stoplight:
+        id: elwwnh4nqyuhf
+      type: object
+      properties:
+        id:
+          type: integer
+        date:
+          type: string
+          format: date-time
+        comment:
+          type: string
+        status:
+          description: |
+            - 0 = PENDING_APPROVAL
+            - 2 = APPROVED
+            - 3 = DENIED
+            - 4 = CANCELLED
+            - 5 = CANCELLATION_PENDING
+          type: number
+          enum:
+            - 0
+            - 2
+            - 3
+            - 4
+            - 5
+    LeaveRequest:
+      title: The LeaveRequest resource
+      description: >-
+        Absences from work, wether they are planned or not, are described in
+        Lucca using three concepts : **LeaveRequests**, **LeavePeriods** and
+        **Leaves**.
+
+
+        A **LeaveRequest** represent the request made by employees when planning
+        time off. This resource is used for workflow purposes.
+
+
+        A **LeavePeriod** is the continuous period of absence requested by the
+        employee or entered by HR. It is linked to a **LeaveRequest** if
+        workflow applies.
+
+
+        A **Leave** is the subdivision of a **LeavePeriod**. There is one
+        **Leave** per half-day of the **LeavePeriod**. Each **Leave** is linked
+        to a **LeaveAccount**, which represent the type of leave (PTO, Sick
+        Leave, Congés payés, RTT, etc).
+
+
+        ![Timmi Absences -
+        UML](../assets/images/ROunRiCm34LtdeB8M206UeCucG9qABfq9aIs5Y9BBKNPGv6xrrOSH4CcKG-F_F-GZTJA621VVFmXfH5Te9pn3n2Fv2xVcahaKmf9yNFm9YjFog8tTWoBjB1UDSqjkZOd1ueygpUJYAP5OF0iwBow80XmItmJckH3VejaWpK-hE1Tr2S-y_BFHbRoCdHT1zTsRRFgLfgZQFLzFgNuvNKKVhfKTIQJwlRZFR9tBfLePtxIOQ9G.png)
+
+
+        **LeaveRequests** status are by default in the `pending_approval` state.
+        **LeaveRequests** status can be `approved`, `denied`, `cancelled` or in
+        the `cancellation_pending` state.
+
+
+        ## Fields
+      type: object
+      examples: []
+      x-tags:
+        - Leave Requests
+      properties:
+        id:
+          description: Unique identifier for the LeaveRequest
+          type: integer
+        leavePeriodId:
+          description: Unique identifier for the attached LeavePeriod
+          format: date-time
+          type: integer
+        leavePeriod:
+          $ref: '#/components/schemas/LeavePeriod'
+        status:
+          description: |
+            Status of the Leave request. Can be : 
+
+            0 = PENDING_APPROVAL
+
+            2 = APPROVED
+
+            3 = DENIED
+
+            4 = CANCELLED
+
+            5 = CANCELLATION_PENDING
+          type: number
+          enum:
+            - 0
+            - 2
+            - 3
+            - 4
+            - 5
+        creationDate:
+          description: Time at which the object was created
+          type: string
+          format: date-time
+        nextApproverId:
+          description: Unique identifier for the next approver
+          type:
+            - 'null'
+            - integer
+        cancellationUserId:
+          description: Unique identifier for the user that cancelled the Leave Request
+          type:
+            - 'null'
+            - integer
+        cancellationDate:
+          description: Time at which the object was cancelled
+          type:
+            - 'null'
+            - string
+          format: date-time
+        isActive:
+          description: >-
+            Has the value `true` for acitve Leave Request or the value `false`
+            for cancelled Leave Request
+          type: boolean
+        approvals:
+          type: array
+          items:
+            $ref: '#/components/schemas/LeaveRequestApproval'
+        cancellationRequests:
+          type: array
+          items:
+            $ref: '#/components/schemas/CancellationRequest'
+    LeaveAccount:
+      title: The LeaveAccount resource
+      description: >-
+        **LeaveAccounts** are the type of absences that can be selected by the
+        user
+
+
+
+        ## Fields
+      x-tags:
+        - Leaves
+      type: object
+      examples: []
+      properties:
+        id:
+          description: Unique identifier for the LeaveAccount
+          type: integer
+        name:
+          description: Name of the LeaveAccount
+          type: string
+    LeaveRequestApproval:
+      title: The LeaveRequestApproval resource
+      description: '## Fields'
+      type: object
+      examples: []
+      x-tags:
+        - Leave Requests
+      properties:
+        id:
+          description: Unique identifier for the LeaveRequestApproval
+          type: integer
+        date:
+          type: string
+          format: date-time
+        approverId:
+          description: Unique identifier for the approver
+          type: number
+        substitutedApproverId:
+          description: |
+            0 = PENDING_APPROVAL
+
+            2 = APPROVED
+
+            3 = DENIED
+
+            4 = CANCELLED
+
+            5 = CANCELLATION_PENDING
+          type: integer
+          enum:
+            - 0
+            - 2
+            - 3
+            - 4
+            - 5
+        approved:
+          description: >-
+            Has the value `true` for approved LeaveRequest or the value `false`
+            for LeaveRequest pending approval
+          type: boolean
+        comment:
+          description: Comments
+          type: string
+    CancellationRequest:
+      title: The CancellationRequest resource
+      description: '## Fields'
+      x-tags:
+        - Leave Requests
+      type: object
+      examples: []
+      properties:
+        id:
+          type: integer
+        authorId:
+          type: integer
+        comment:
+          type: string
+        rank:
+          description: |
+            0 = PENDING_APPROVAL
+
+            2 = APPROVED
+
+            3 = DENIED
+
+            4 = CANCELLED
+
+            5 = CANCELLATION_PENDING
+          type: number
+          enum:
+            - 0
+            - 2
+            - 3
+            - 4
+            - 5
+        approved:
+          type: boolean
+        creationDate:
+          type: string
+          format: date-time
+        nextApproverId:
+          type:
+            - 'null'
+            - number
+        isActive:
+          type: boolean
+    LeaveRequestsApproveDenyRequest:
+      type: object
+      properties:
+        approved:
+          type: boolean
+        comment:
+          type:
+            - 'null'
+            - string
+    ImportsEntitlementsBatchImportRequest:
+      type: object
+      properties:
+        File:
+          type: string
+          contentMediaType: application/octet-stream
+        Description:
+          description: >-
+            Description of the entries generated by the import (visible to users
+            in the account details).
+          type: string
+        ReferenceDate:
+          description: |-
+            Reference date (text mode).
+            Respect the format: yyyy-MM-ddThh: mm: ss
+          type: string
+          format: date-time
+    ImportsImportLeaveEntitlementsRequest:
+      type: object
+      properties:
+        File:
+          type: string
+          contentMediaType: application/octet-stream
+        Description:
+          description: >-
+            Description of the entries generated by the import (visible to users
+            in the account details).
+          type: string
+        ReferenceDate:
+          description: |-
+            Reference date (text mode).
+            Respect the format: yyyy-MM-ddThh: mm: ss
+          type: string
+          format: date-time
+    ImportsReplaceEntitlementsRequest:
+      type: object
+      properties:
+        File:
+          type: string
+          contentMediaType: application/octet-stream
+        Description:
+          description: >-
+            Description of the entries generated by the import (visible to users
+            in the account details).
+          type: string
+        ReferenceDate:
+          description: |-
+            Reference date (text mode).
+            Respect the format: yyyy-MM-ddThh: mm: ss
+          type: string
+          format: date-time
+        EntryTypes:
+          description: >-
+            Types of entries to take into account, separated by commas, from the
+            following list:
+
+            AutoAccruals,
+
+            ManualAccruals,
+
+            Regularisations,
+
+            EntitlementsImport,
+
+            Seniority,
+
+            Fractionnement,
+
+            TimeSavings,
+
+            Comp
+
+
+            By default: `AutoAccruals, ManualAccruals, Regularizations` which
+            correspond to the main cases of acquisition (automatic acquisition,
+            manual adjustments, regularisations).
+          type: string
+          default: AutoAccruals,ManualAccruals,Regularizations
+    ImportsReplaceEntitlementsRequest1:
+      type: object
+      properties:
+        File:
+          type: string
+          contentMediaType: application/octet-stream
+        Description:
+          description: >-
+            Description of the entries generated by the import (visible to users
+            in the account details).
+          type: string
+        ReferenceDate:
+          description: |-
+            Reference date (text mode).
+            Respect the format: yyyy-MM-ddThh: mm: ss
+          type: string
+          format: date-time
+        EntryTypes:
+          description: >-
+            Types of entries to take into account, separated by commas, from the
+            following list:
+
+            AutoAccruals,
+
+            ManualAccruals,
+
+            Regularisations,
+
+            EntitlementsImport,
+
+            Seniority,
+
+            Fractionnement,
+
+            TimeSavings,
+
+            Comp
+
+
+            By default: `AutoAccruals, ManualAccruals, Regularizations` which
+            correspond to the main cases of acquisition (automatic acquisition,
+            manual adjustments, regularisations).
+          type: string
+          default: AutoAccruals,ManualAccruals,Regularizations
+    ImportsAbsenceBatchCreateRequest:
+      type: object
+    ImportsCreateAbsencesBatchRequest:
+      type: object
+      properties:
+        files:
+          type: array
+          items:
+            type: string
+    LeavesGetApprovedListResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/Leave'
+    LeavesGetByIdResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/Leave'
+    LeaveRequestsListResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/LeaveRequest'
+            count:
+              type: integer
+    LeaveRequestsGetByIdResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/LeaveRequest'
+    ImportsEntitlementsBatchImportResponse:
+      type: object
+      properties:
+        successLinesCount:
+          type: integer
+        globalErrors:
+          type: object
+        lineErrors:
+          type: object
+    ImportsAbsenceBatchCreateResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            id:
+              type: string
+            report:
+              type: object
+              properties:
+                id:
+                  type: string
+                name:
+                  type: string
+                url:
+                  type: string
+                  format: uri
+            generatedAt:
+              type: string
+              format: date-time
+            status:
+              description: |
+                0 = Pending
+
+                10 = Started
+
+                20 = Finished
+
+                100 = Failed
+              type: integer
+              enum:
+                - 0
+                - 10
+                - 20
+                - 100
+            lineTotal:
+              type: integer
+            testErrorTotal:
+              type: integer
+            totalStep:
+              type: integer
+            expectedCreationTotal:
+              type: integer
+            expectedUpdateTotal:
+              type: integer
+            testNonBlockingErrorTotal:
+              type: integer
+            currentStep:
+              type: integer
+            creationTotal:
+              type: integer
+            updateTotal:
+              type: integer
+            importErrorTotal:
+              type: integer
+    ImportsCreateAbsencesBatchResponse:
+      type: object
+      properties:
+        summaryId:
+          type: string
+          format: uuid
+        hasError:
+          type: boolean
+      x-examples:
+        example-1:
+          summaryId: 51564472-08cc-4410-94cc-a2b67f77f980
+          hasError: false
+    ImportsGetProgressResponse:
+      description: 0:not started, 1-99:in progress, 100:success, -1:error
+      type: integer
+  securitySchemes:
+    Authorization:
+      description: Header value must be equal to `lucca application={yourApiKey}`
+      name: Authorization
+      type: apiKey
+      in: header
+security:
+  - Authorization: []

@@ -1,0 +1,1642 @@
+openapi: 3.0.3
+info:
+  title: Timmi Timesheet API
+  description: |
+    Welcome on the documentation for the Timmi Timesheet API.
+  version: '1.0'
+  contact:
+    name: Timmi
+    url: https://www.lucca.fr
+    email: developers@lucca.fr
+  x-konfig-ignore:
+    potential-incorrect-type: true
+servers:
+  - description: Your production environment (France)
+    url: https://example.ilucca.net
+  - description: Your test environment (France)
+    url: https://example.ilucca-test.net
+tags:
+  - description: TimeEntries are the actual working hours observed by a user.
+    name: TimeEntries
+  - description: All actions regarding the approval process of timesheets.
+    name: Workflow
+  - description: Reporting features of Timmi Timesheet.
+    name: Reports
+  - description: Collection of time-entries for a User over a week / month.
+    name: Timesheets
+  - description: Time-entries referencing axis-sections to describe what the user has done.
+    name: Activities
+  - description: Time-entries indicating working hours.
+    name: Attendance
+paths:
+  /api/v3/timeentries:
+    parameters: []
+    get:
+      tags:
+        - TimeEntries
+      summary: List TimeEntries
+      operationId: TimeEntries_listTimeEntries
+      description: >-
+        Retrieve a list of TimeEntries.
+
+
+        The `startsAt` query parameter can operate comparisons with a given
+        date-time value:
+
+        - `?startsAt=2021-01-01`: strict equality.
+
+        - `?startsAt=since,2021-01-01`: greater than or equal.
+
+        - `?startsAt=until,2021-01-01`: lower than or equal.
+
+        - `?startsAt=between,2021-01-01,2021-01-31`: comprised between two
+        dates.
+
+
+        To retrieve the total count of all TimeEntries (on all pages), please
+        include the field `?field=collection.count`.
+      parameters:
+        - $ref: '#/components/parameters/paging'
+        - description: User's identifier
+          schema:
+            type: array
+            items:
+              description: >-
+                WARNING: Missing items property in array schema. Missing items
+                property has been filled with this AnyType schema.
+          in: query
+          name: ownerId
+          style: form
+        - description: '{comparator},{date-time}'
+          schema:
+            type: string
+            example: between,2021-01-01,2021-02-01
+          in: query
+          name: startsAt
+        - description: Filter on a comma-separated list of AxisSections identifiers.
+          schema:
+            type: array
+            items:
+              description: >-
+                WARNING: Missing items property in array schema. Missing items
+                property has been filled with this AnyType schema.
+          in: query
+          name: axisSections.id
+          style: form
+        - description: Filter on a comma-separated list of AxisSections codes.
+          schema:
+            type: array
+            items:
+              description: >-
+                WARNING: Missing items property in array schema. Missing items
+                property has been filled with this AnyType schema.
+          in: query
+          name: axisSections.code
+          style: form
+        - description: '{comparator},{date-time}'
+          schema:
+            type: string
+            example: since,2021-01-01T08:45:23Z
+          in: query
+          name: modifiedAt
+        - description: '{comparator},{date-time}'
+          schema:
+            type: string
+            example: since,2021-01-01T08:45:23Z
+          in: query
+          name: archivedAt
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimeEntriesListTimeEntriesResponse'
+        '400':
+          $ref: '#/components/responses/ResponseProblem'
+        '401':
+          $ref: '#/components/responses/ResponseProblem'
+        '404':
+          $ref: '#/components/responses/ResponseProblem'
+        '500':
+          $ref: '#/components/responses/ResponseProblem'
+    post:
+      tags:
+        - TimeEntries
+      summary: Create new TimeEntries
+      operationId: TimeEntries_createMultiple
+      description: >-
+        <!-- theme: warning --> 
+
+        >#### Warning
+
+        > This endpoint will soon be deprecated, please use [Timmi Timesheet v4
+        API](Timmi-Timesheet.yaml/paths/~1timmi-timesheet~1services~1time-entries/put)
+
+
+        You can create a single or multiple TimeEntries for a given user.
+
+
+        Beware, a new TimeEntry cannot intersect with a submitted or approved
+        timesheet.
+      requestBody:
+        description: Create a single of multiple TimeEntry (toggle body type).
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TimeEntriesCreateMultipleRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimeEntriesCreateMultipleResponse'
+        '400':
+          $ref: '#/components/responses/ResponseProblem'
+        '401':
+          $ref: '#/components/responses/ResponseProblem'
+        '403':
+          $ref: '#/components/responses/ResponseProblem'
+        '404':
+          $ref: '#/components/responses/ResponseProblem'
+        '500':
+          $ref: '#/components/responses/ResponseProblem'
+    put:
+      tags:
+        - TimeEntries
+      summary: Update multiple TimeEntries
+      operationId: TimeEntries_updateMultiple
+      description: >-
+        <!-- theme: warning --> 
+
+        >#### Warning
+
+        > This endpoint will soon be deprecated, please use [Timmi Timesheet v4
+        API](Timmi-Timesheet.yaml/paths/~1timmi-timesheet~1services~1time-entries/put)
+
+
+        Update one or several TimeEntries. The "id" field must be sent and
+        correspond to an existing TimeEntry.
+      requestBody:
+        description: >-
+          You can either update a single or multiple TimeEntries. Pick the
+          correct body type accordingly.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TimeEntriesUpdateMultipleRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimeEntriesUpdateMultipleResponse'
+        '400':
+          $ref: '#/components/responses/ResponseProblem'
+        '401':
+          $ref: '#/components/responses/ResponseProblem'
+        '403':
+          $ref: '#/components/responses/ResponseProblem'
+        '500':
+          $ref: '#/components/responses/ResponseProblem'
+      deprecated: true
+    delete:
+      tags:
+        - TimeEntries
+      summary: Delete multiple TimeEntries
+      operationId: TimeEntries_deleteMultiple
+      description: >-
+        <!-- theme: warning --> 
+
+        >#### Warning
+
+        > This endpoint will soon be deprecated, please use [Timmi Timesheet v4
+        API](Timmi-Timesheet.yaml/paths/~1timmi-timesheet~1services~1time-entries/put)
+
+
+        Delete one or several TimeEntries. The "id" field of each TimeEntry must
+        be sent and correspond to an existing TimeEntry.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TimeEntriesDeleteMultipleRequest'
+      responses:
+        '200':
+          description: OK
+        '400':
+          $ref: '#/components/responses/ResponseProblem'
+        '401':
+          $ref: '#/components/responses/ResponseProblem'
+        '403':
+          $ref: '#/components/responses/ResponseProblem'
+        '404':
+          $ref: '#/components/responses/ResponseProblem'
+        '500':
+          $ref: '#/components/responses/ResponseProblem'
+  /api/v3/timeentries/{timeEntryId}:
+    parameters:
+      - description: Identifier of the TimeEntry.
+        schema:
+          type: integer
+        name: timeEntryId
+        in: path
+        required: true
+    get:
+      tags:
+        - TimeEntries
+      summary: Get a TimeEntry by id
+      operationId: TimeEntries_getById
+      description: Retrieve a single TimeEntry identified by its unique identifier.
+      parameters: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimeEntriesGetByIdResponse'
+        '400':
+          $ref: '#/components/responses/ResponseProblem'
+        '401':
+          $ref: '#/components/responses/ResponseProblem'
+        '404':
+          $ref: '#/components/responses/ResponseProblem'
+        '500':
+          $ref: '#/components/responses/ResponseProblem'
+    put:
+      tags:
+        - TimeEntries
+      summary: Update a TimeEntry by id
+      operationId: TimeEntries_updateById
+      description: >-
+        <!-- theme: warning --> 
+
+        >#### Warning
+
+        > This endpoint will soon be deprecated, please use [Timmi Timesheet v4
+        API](Timmi-Timesheet.yaml/paths/~1timmi-timesheet~1services~1time-entries/put)
+
+
+        Update fields of a single TimeEntry identified by its unique id.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TimeEntry'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimeEntriesUpdateByIdResponse'
+        '400':
+          $ref: '#/components/responses/ResponseProblem'
+        '401':
+          $ref: '#/components/responses/ResponseProblem'
+        '403':
+          $ref: '#/components/responses/ResponseProblem'
+        '404':
+          $ref: '#/components/responses/ResponseProblem'
+        '500':
+          $ref: '#/components/responses/ResponseProblem'
+    delete:
+      tags:
+        - TimeEntries
+      summary: Delete a TimeEntry by id
+      operationId: TimeEntries_removeById
+      description: >-
+        <!-- theme: warning --> 
+
+        >#### Warning
+
+        > This endpoint will soon be deprecated, please use [Timmi Timesheet v4
+        API](Timmi-Timesheet.yaml/paths/~1timmi-timesheet~1services~1time-entries/put)
+
+
+        Delete a single TimeEntry. Deletion is irrevocable.
+      responses:
+        '200':
+          description: OK
+        '400':
+          $ref: '#/components/responses/ResponseProblem'
+        '401':
+          $ref: '#/components/responses/ResponseProblem'
+        '403':
+          $ref: '#/components/responses/ResponseProblem'
+        '404':
+          $ref: '#/components/responses/ResponseProblem'
+        '500':
+          $ref: '#/components/responses/ResponseProblem'
+  /api/v3/timmitimesheets:
+    parameters: []
+    get:
+      tags:
+        - Timesheets
+      summary: List timesheets
+      operationId: Timesheets_list
+      description: List all timesheets satisfying query filters.
+      parameters:
+        - description: User's identifier.
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/Timesheet/properties/ownerId'
+          in: query
+          name: ownerId
+          style: form
+        - description: Filter on the start date of the timesheet.
+          schema:
+            type: string
+            example: between,2022-01-01,2022-02-01
+          in: query
+          name: startsOn
+        - description: Filter on the timesheet workflow status.
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/Timesheet/properties/status'
+          in: query
+          name: status
+          style: form
+        - description: Filter on the end date of the timesheet.
+          schema:
+            type: string
+            example: until,2022-01-01
+          in: query
+          name: endsOn
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimesheetsListResponse'
+        '400':
+          $ref: '#/components/responses/ResponseProblem'
+        '401':
+          $ref: '#/components/responses/ResponseProblem'
+        '404':
+          $ref: '#/components/responses/ResponseProblem'
+        '500':
+          $ref: '#/components/responses/ResponseProblem'
+  /api/v3/timmitimesheets/remindable:
+    get:
+      tags:
+        - Timesheets
+      summary: List due timesheets
+      operationId: Timesheets_listDue
+      description: >-
+        List timesheet that are not yet submitted (status: 0). 
+
+        You must filter on either `ownerIds`, `managerIds` or `legalEntityIds`.
+
+        As long as a timesheet is not submitted, its unique identifier is equal
+        to zero.
+      parameters:
+        - description: List unique identifier of submitters.
+          name: ownerIds
+          in: query
+          schema:
+            type: array
+            items:
+              type: integer
+        - description: List unique identifier of submitters' legal establishments.
+          name: legalEntityIds
+          in: query
+          schema:
+            type: array
+            items:
+              type: integer
+        - description: List unique identifier of submitters' manager.
+          name: managerIds
+          in: query
+          schema:
+            type: array
+            items:
+              type: integer
+        - description: Prevent older timesheets to be returned.
+          schema:
+            type: string
+            format: date
+          in: query
+          name: start
+        - description: >-
+            Prevent earlier timesheets to be returned (date excluded). Defaults
+            to today when not sent.
+          schema:
+            type: string
+            format: date
+          in: query
+          name: end
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimesheetsListDueResponse'
+        '400':
+          $ref: '#/components/responses/ResponseProblem'
+        '401':
+          $ref: '#/components/responses/ResponseProblem'
+        '500':
+          $ref: '#/components/responses/ResponseProblem'
+  /timmi/services/workflow/remind:
+    parameters: []
+    post:
+      tags:
+        - Workflow
+      summary: Remind Timesheets
+      operationId: Workflow_sendReminderEmail
+      description: Remind user of a due timesheet. Sends him/her an email.
+      requestBody:
+        description: Timesheets are identified by startsAt, endsAt & ownerId.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkflowSendReminderEmailRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/ResponseWorkflowService'
+        '400':
+          $ref: '#/components/responses/ResponseWorkflowService'
+        '401':
+          $ref: '#/components/responses/ResponseWorkflowService'
+        '403':
+          $ref: '#/components/responses/ResponseWorkflowService'
+        '404':
+          $ref: '#/components/responses/ResponseWorkflowService'
+        '500':
+          $ref: '#/components/responses/ResponseWorkflowService'
+  /timmi/services/workflow/submit:
+    parameters: []
+    post:
+      tags:
+        - Workflow
+      summary: Submit Timesheets
+      operationId: Workflow_submitTimesheet
+      description: >-
+        <!-- theme: warning -->
+
+        > #### Warning
+
+        > This endpoint will soon be deprecated, please use [Timmi Timesheet v4
+        API](../reference/Timmi-Timesheet.yaml/paths/~1timmi-timesheet~1api~1timesheets~1submit/post)
+
+
+        Timesheet is created and its status is set to `1` (pending approval). In
+        some cases, timesheet may then be automatically approved (`status: 2`),
+        depending on the application settings.
+
+
+        Once submitted, all comprised TimeEntries for user can no longer be
+        modified. In order to be able to modify them, the timesheet must first
+        be rejected through `cancel`, `deny` or `invalidate` operations (depends
+        on the current timesheet status).
+      requestBody:
+        description: Timesheets are identified by startsAt, endsAt & ownerId.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkflowSubmitTimesheetRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/ResponseWorkflowService'
+        '400':
+          $ref: '#/components/responses/ResponseWorkflowService'
+        '401':
+          $ref: '#/components/responses/ResponseWorkflowService'
+        '403':
+          $ref: '#/components/responses/ResponseWorkflowService'
+        '404':
+          $ref: '#/components/responses/ResponseWorkflowService'
+        '500':
+          $ref: '#/components/responses/ResponseWorkflowService'
+  /timmi/services/workflow/cancel:
+    parameters: []
+    post:
+      tags:
+        - Workflow
+      summary: Cancel Timesheets by id
+      operationId: Workflow_cancelTimesheetById
+      description: >-
+        <!-- theme: warning --> 
+
+        >#### Warning
+
+        > This endpoint will soon be deprecated, please use [Timmi Timesheet v4
+        API](../reference/Timmi-Timesheet.yaml/paths/~1timmi-timesheet~1api~1timesheets~1{id}~1cancel/post)
+
+
+        Cancel a timesheet's submission. Can only be achieved by the original
+        submitter as long as the timesheet's not approved.
+
+
+        Sets the timesheet status to `3` (rejected).
+      requestBody:
+        description: ''
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkflowCancelTimesheetByIdRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/ResponseWorkflowService'
+        '400':
+          $ref: '#/components/responses/ResponseWorkflowService'
+        '401':
+          $ref: '#/components/responses/ResponseWorkflowService'
+        '403':
+          $ref: '#/components/responses/ResponseWorkflowService'
+        '404':
+          $ref: '#/components/responses/ResponseWorkflowService'
+        '500':
+          $ref: '#/components/responses/ResponseWorkflowService'
+  /timmi/services/workflow/approve:
+    parameters: []
+    post:
+      tags:
+        - Workflow
+      summary: Approve Timesheets by id
+      operationId: Workflow_approveTimesheetsById
+      description: >-
+        <!-- theme: warning --> 
+
+        >#### Warning
+
+        > This endpoint will soon be deprecated, please use [Timmi Timesheet v4
+        API](../reference/Timmi-Timesheet.yaml/paths/~1timmi-timesheet~1api~1timesheets~1{id}~1approve/post)
+
+
+        Multiple approvals can be required, depending on the configuration.
+
+
+        Once all approvals needed are satisfied, the timesheet status is set to
+        `2: Approved`.
+
+
+        Comprised TimeEntries can only be modified by rejecting the timesheet
+        through the "invalidate" operation.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkflowApproveTimesheetsByIdRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/ResponseWorkflowService'
+        '400':
+          $ref: '#/components/responses/ResponseWorkflowService'
+        '401':
+          $ref: '#/components/responses/ResponseWorkflowService'
+        '403':
+          $ref: '#/components/responses/ResponseWorkflowService'
+        '404':
+          $ref: '#/components/responses/ResponseWorkflowService'
+        '500':
+          $ref: '#/components/responses/ResponseWorkflowService'
+  /timmi/services/workflow/deny:
+    parameters: []
+    post:
+      tags:
+        - Workflow
+      summary: Deny Timesheets by id
+      operationId: Workflow_denyTimesheetById
+      description: >-
+        <!-- theme: warning --> 
+
+        >#### Warning
+
+        > This endpoint will soon be deprecated, please use [Timmi Timesheet v4
+        API](../reference/Timmi-Timesheet.yaml/paths/~1timmi-timesheet~1api~1timesheets~1{id}~1deny/post)
+
+
+        Denies a submitted timesheet pending approval. Sets its status to `3`
+        (rejected) and a new timesheet may be submitted for this User and
+        [StartsOn - EndsOn[.
+
+
+        Comment is mandatory.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkflowDenyTimesheetByIdRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/ResponseWorkflowService'
+        '400':
+          $ref: '#/components/responses/ResponseWorkflowService'
+        '401':
+          $ref: '#/components/responses/ResponseWorkflowService'
+        '403':
+          $ref: '#/components/responses/ResponseWorkflowService'
+        '404':
+          $ref: '#/components/responses/ResponseWorkflowService'
+        '500':
+          $ref: '#/components/responses/ResponseWorkflowService'
+  /timmi/services/workflow/invalidate:
+    parameters: []
+    post:
+      tags:
+        - Workflow
+      summary: Invalidate Timesheets by id
+      operationId: Workflow_invalidateTimesheetById
+      description: >-
+        <!-- theme: warning --> 
+
+        >#### Warning
+
+        > This endpoint will soon be deprecated, please use [Timmi Timesheet v4
+        API](../reference/Timmi-Timesheet.yaml/paths/~1timmi-timesheet~1api~1timesheets~1{id}~1invalidate/post)
+
+
+        Rejects an approved timesheet. Sets its status to `3` (rejected). A new
+        timesheet may then be submitted for this User and [StartsOn - EndsOn[.
+
+
+        Comment is mandatory.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkflowInvalidateTimesheetByIdRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/ResponseWorkflowService'
+        '400':
+          $ref: '#/components/responses/ResponseWorkflowService'
+        '401':
+          $ref: '#/components/responses/ResponseWorkflowService'
+        '403':
+          $ref: '#/components/responses/ResponseWorkflowService'
+        '404':
+          $ref: '#/components/responses/ResponseWorkflowService'
+        '500':
+          $ref: '#/components/responses/ResponseWorkflowService'
+  /timmi-timesheet/api/reports:
+    post:
+      tags:
+        - Reports
+      summary: Create a new Report
+      operationId: Reports_createBasedOnTemplate
+      description: >-
+        <!-- theme: info -->
+
+        > This endpoint does not adhere to the "v3 API endpoints" principles.
+        The "fields" query parameter is not supported, but all fields are
+        systematically returned.
+
+
+        A report can only be created based on an existing report-template. So
+        you first need to retrieve the report-template unique identifier
+        `templateId`.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Report'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Report'
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal Server Error
+  /timmi-timesheet/api/reports/{reportId}/download-csv:
+    parameters:
+      - description: Identifier of the report.
+        schema:
+          type: integer
+        name: reportId
+        in: path
+        required: true
+    get:
+      tags:
+        - Reports
+      summary: Download Report as CSV
+      operationId: Reports_downloadCsvReport
+      description: >-
+        <!-- theme: info -->
+
+        > This endpoint does not adhere to the "v3 API endpoints" principles.
+
+
+        Download a report content as an CSV file `.csv`.
+
+
+        Column delimiter and numbers formating depends on the authentified
+        user's culture.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/octet-stream:
+              schema:
+                $ref: '#/components/schemas/ReportsDownloadCsvReportResponse'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Not Found
+        '500':
+          description: Internal Server Error
+  /timmi-timesheet/api/reports/{reportId}/download-excel:
+    parameters:
+      - description: Identifier of the report.
+        schema:
+          type: integer
+        name: reportId
+        in: path
+        required: true
+    get:
+      tags:
+        - Reports
+      summary: Download Report as Excel
+      operationId: Reports_downloadExcelReport
+      description: >-
+        <!-- theme: info -->
+
+        > This endpoint does not adhere to the "v3 API endpoints" principles.
+
+
+        Download a report content as an Excel file `.xls`.
+
+
+        Column delimiter and numbers formating depends on the authentified
+        user's culture.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/octet-stream:
+              schema:
+                $ref: '#/components/schemas/ReportsDownloadExcelReportResponse'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Not Found
+        '500':
+          description: Internal Server Error
+components:
+  parameters:
+    paging:
+      description: '{offset},{limit}. Defaults to 0,1000.'
+      name: paging
+      in: query
+      required: true
+      schema:
+        type: string
+        example: 100,0
+  responses:
+    ResponseProblem:
+      description: Problem
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TimeEntriesDeleteMultipleResponse'
+    ResponseWorkflowService:
+      description: Workflow response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/WorkflowSendReminderEmailResponse'
+  schemas:
+    TimeEntry:
+      title: The Time Entry resource
+      description: >-
+        TimeEntries are the working time sequences spent by a user on any given
+        day.
+
+
+        These ressources are exposed in the `/api/v3/timeentries` endpoint.
+
+
+        TimeEntries come in different **units** and **submission modes**.
+
+
+        ## About units & duration
+
+
+        Timmi Timesheet supports up to 3 different units when it comes to
+        entering TimeEntries. These are:
+
+        - `0: Days` In this case, the user does not enter the exact hours he/she
+        started working, but rather the total duration spent as a fraction of a
+        day. For example: "John worked half a day on Monday".
+
+        - `1: Hours` In this case, the user still does not enter the exact
+        hours, but only the duration spent in hours. For example: "John worked
+        7h30min yesterday".
+
+        - `2: Time` In this unit, the user has to enter the actual time he/she
+        started working, as well as the end time. For example: "John started
+        working at 08:00 for 3 hours, thus ending at 11:00".
+
+
+        ```csharp
+
+        enum TimeEntryUnit:
+
+        {
+            Days = 0,
+            Hours = 1,
+            Time = 2
+        }
+
+        ```
+
+
+        Whichever the unit, the TimeEntry is mainly determined by three
+        properties:
+
+        - `(int) ownerId`: The user it belongs to.
+
+        - `(date-time) startsAt`: The date and time when the user started
+        working. In `Days` and `Hours` units, the time part can only be
+        `00:00:00` for "morning" (AM) or `12:00:00` for the "afternoon" (PM).
+
+        - `(duration) duration`: The total time spent by the user from the time
+        he/she started. In all units, this property is serialized as a string
+        compliant with the Timespan formating: `d.hh:mm:ss` where `d` is the
+        number of days (can be omitted if equal to zero which is in most cases),
+        `hh` the number of hours, `mm` the number of minutes, and `ss` the
+        number of seconds.
+
+
+        <!-- theme: warning -->
+
+        > #### StartsAt and timezones
+
+        > The `startsAt` date-time property must be considered a
+        [floating](https://www.w3.org/International/wiki/FloatingTime)
+        date-time. As such, no UTC offset should be sent when creating or
+        editing a TimeEntry.
+
+
+        <!-- theme: warning -->
+
+        > #### Max duration
+
+        > A TimeEntry cannot have a duration longer than 24h00 (ie one full
+        day). 
+
+
+        Some examples :
+
+        ```js
+
+        // TIME UNIT
+
+        // Case: "John (id: 416) worked between 09:45 and 12:15 on January, 1st
+        2021."
+
+        var timeEntry = {
+          "ownerId": 416,
+          "startsAt": "2021-01-01 09:45:00",
+          "duration: "02:30:00",
+          "unit": 2
+        };
+
+
+        // HOURS UNIT
+
+        // Case: "John (id: 416) spent 4h45min working on January, 1st 2021 in
+        the morning"
+
+        var timeEntry = {
+          "ownerId": 416,
+          "startsAt": "2021-01-01 00:00:00",
+          "duration: "04:45:00",
+          "unit": 1
+        }
+
+
+        // DAYS UNIT
+
+        // Case: "John (id: 416) worked on the afternoon of January, 1st 2021"
+
+        var timeEntry = {
+          "ownerId": 416,
+          "startsAt": "2021-01-01 12:00:00",
+          "duration: "12:00:00",
+          "unit": 0
+        }
+
+        ```
+
+
+        ## About submission modes
+
+
+        There are 2 submission modes in Timmi Timesheet:
+
+        - **Attendance**: the user is expected to enter the sequences of work
+        without much detail.
+
+        - **Activities**: the user is expected to enter the time spent on each
+        task / project / whatever.
+
+
+        Therefore, TimeEntries in activities mode have a supplementary property:
+        the set of task / project / cost center / ... the user worked on. These
+        analytical items are called AxisSections. [More info
+        here](docs/General/Resources/010.AxisSection.md).
+
+
+
+        ```json
+
+        {
+          "ownerId": 416,
+          "startsAt": "2021-01-01 00:00:00",
+          "duration: "04:45:00",
+          "unit": 1,
+          "axisSections": [
+            {
+              "name": "R&D",
+              "axis": {
+                "name": "Cost centers"
+              }
+            },
+            {
+              "name": "My awesome project",
+              "axis": {
+                "name": "Projects"
+              }
+            },
+            {
+              "name": "Testing",
+              "axis": {
+                "name": "Tasks"
+              }
+            }
+          ]
+        }
+
+        ```
+
+
+        ## About time types
+
+        Each time-entry can reference a time type via its `timeTypeId` property.
+
+
+        Time types are a configured working time classification. It is generally
+        used as a way of discriminating different types of working hours
+        regarding compensation:
+
+        - Attendance
+
+        - Travels
+
+        - etc...
+
+
+        Time types can only be used on users that belong to a specific
+        regulation (ie time and attendance policy) mode: `timeTrackingMode:
+        typed`. Whenever it is not the case, the `timeTypeId` property should be
+        left `null`.
+
+
+        ## Fields
+      type: object
+      examples: []
+      x-tags:
+        - TimeEntries
+      properties:
+        id:
+          description: Unique identifier for this object.
+          type: integer
+          minimum: 1
+          readOnly: true
+        startsAt:
+          description: >-
+            The timeEntry start date and time. Please do NOT send any
+            offset/timezone information ("Z", "+01:00", etc...).
+          type: string
+          format: date-time
+          example: '2022-01-01T08:00:00'
+        duration:
+          description: 'Format: d.hh:mm:ss. Max: "1.00:00:00" (ie 24 hours).'
+          type: string
+          format: timespan
+          default: '00:00:00'
+          example: '03:45:00'
+        unit:
+          description: >-
+            0: Days (eg "1/2 day"). 1: Hours (eg "8h15min"). 2: Time (eg
+            "23:45:00").
+          type: integer
+          enum:
+            - 0
+            - 1
+            - 2
+          example: 0
+        endsAt:
+          type: string
+          format: date-time
+          readOnly: true
+        ownerId:
+          description: The user's unique identifier.
+          type: integer
+          minimum: 1
+        authorId:
+          description: Identifier of the user who initially created this TimeEntry.
+          type: integer
+          readOnly: true
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+        creationSource:
+          description: |-
+            0: Fallback on theoretical TimeEntries.
+            1: Application of bookmarked week.
+            2: Manual creation.
+            3: Import
+          type: integer
+          enum:
+            - 0
+            - 1
+            - 2
+            - 3
+          default: 2
+        modifierId:
+          description: The unique identifier of the user who last updated the TimeEntry.
+          type: integer
+          readOnly: true
+        modifiedAt:
+          description: Date and time when TimeEntry was last modified.
+          type: integer
+          readOnly: true
+        layer:
+          description: |-
+            0: Actual.
+            1: Theoretical
+          type: integer
+          readOnly: true
+        axisSections:
+          description: >-
+            When not in activity mode, send an empty array, or do not serialize
+            this property.
+          type: array
+          items:
+            $ref: '#/components/schemas/AxisSection'
+        comment:
+          description: Only used on activities (TimeEntries w/ AxisSections).
+          type:
+            - 'null'
+            - object
+          properties:
+            content:
+              type: string
+            authorId:
+              type: integer
+              readOnly: true
+            createdAt:
+              type: string
+              format: date-time
+              readOnly: true
+        timeTypeId:
+          type:
+            - integer
+            - 'null'
+      required:
+        - startsAt
+        - duration
+        - unit
+        - ownerId
+    Timesheet:
+      title: The Timesheet resource
+      description: >-
+        ## Definitions
+
+
+        Timesheets are TimeEntries containers. A timesheet belongs to a single
+        user `owner` and ranges over several days `[startsOn - endsOn[` (endsOn
+        excluded). Its range depends on the submission frequency set up in Timmi
+        Timesheet (weekly / monthly).
+
+
+        A timesheet purpose is to ease the approval workflow: rather than
+        approving each TimeEntry individually, they are approved in a weekly /
+        monthly batch.
+
+
+        The approval workflow looks like this:
+
+
+        ![Timmi Timesheet - Approval
+        workflow](https://stoplight.io/api/v1/projects/cHJqOjEwNjgxNg/images/xfjxCP2RUa4)
+
+
+        Thus, a timesheet:
+
+        - is created upon submission ;
+
+        - is "pending approval" (`status: 1`) as long as all approvers have not
+        approved it ;
+
+        - is "approved" (`status: 2`) once all approvers have approved it ;
+
+        - may become "rejected" (`status: 3`) whenever:
+          - the submitter cancels the submission, which is possible as long as the timesheet is not fully approved ;
+          - one of the approvers denies the timesheet ;
+          - an administrator invalidates the timesheet, which is only possible once the timesheet is fully approved.
+
+        Once a timesheet is rejected, a new one has to be submitted and the
+        workflow starts again.
+
+
+        ## Fields
+      type: object
+      properties:
+        id:
+          type: string
+        status:
+          description: >
+            - 0: the timesheet is yet to be submitted
+
+            - 1: the timesheet has been submitted and approval is still pending
+
+            - 2: the timesheet has been submitted and approved.
+
+            - 3: the timesheet has been rejected (cancelled after submission,
+            denied upon approval or invalidated after having been approved)
+          type: integer
+          enum:
+            - 0
+            - 1
+            - 2
+            - 3
+        startsOn:
+          type: string
+          format: date
+        endsOn:
+          type: string
+        ownerId:
+          type: integer
+          minimum: 1
+        owner:
+          allOf:
+            - $ref: '#/components/schemas/TimesheetUser'
+            - type: object
+              properties:
+                manager:
+                  $ref: '#/components/schemas/TimesheetUser'
+        statuteId:
+          description: Identifier of the applicable "statute" (configuration).
+          type: integer
+      x-tags:
+        - Timesheets
+    Report:
+      title: The Report resource
+      description: >-
+        ## Status
+
+
+        The generation of a report content is a background process. As long as
+        this process is not complete, the report status stays `pending`. Once
+        the report is complete, its status is set to `done`. May an error be
+        encountered while generating its content, then its status is set to
+        `error`.
+
+
+        The report content can only be viewed and downloaded once it is `done`.
+
+
+        ## Start & end dates
+
+
+        Start `startsOn` and end `endsOn` dates can be left `null`. In this
+        case, default dates from the report-template are applied.
+
+
+        ## Filters
+
+
+        Filters are usually set in the report-template. But these can be
+        overriden for a given report.
+
+
+        ## Fields
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        status:
+          type: string
+          enum:
+            - pending
+            - done
+            - error
+          readOnly: true
+        name:
+          type: string
+          readOnly: true
+        templateId:
+          type: string
+        startsOn:
+          type: string
+          format: date
+        endsOn:
+          type: string
+          format: date
+        filters:
+          type:
+            - array
+            - 'null'
+          items:
+            type: object
+            properties:
+              kind:
+                type: string
+              values:
+                type: array
+                items:
+                  type: number
+        columns:
+          type: array
+          items:
+            type: object
+            properties:
+              kind:
+                type: string
+              name:
+                type: string
+              category:
+                type: string
+              isRequired:
+                type: boolean
+              isDefault:
+                type: boolean
+              isPeriodic:
+                description: >-
+                  Periodic columns will be duplicated as many times as there are
+                  occurrences of periodicity in the report.
+                type: boolean
+            readOnly: true
+          readOnly: true
+      required:
+        - templateId
+      x-tags:
+        - Reports
+    AxisSection:
+      title: The Axis Section resource
+      description: >-
+        You can [read more about this resource
+        here](reference/Organization-v3.yaml/components/schemas/AxisSection).
+      type: object
+      properties:
+        description:
+          type: string
+          readOnly: true
+        id:
+          type: integer
+          minimum: 1
+        code:
+          type: string
+          readOnly: true
+        name:
+          type: string
+          readOnly: true
+        multilingualName:
+          type: string
+          readOnly: true
+        ownerId:
+          type: integer
+          minimum: 1
+          readOnly: true
+        startOn:
+          type: string
+          format: date-time
+          readOnly: true
+        endOn:
+          type: string
+          format: date-time
+          readOnly: true
+        active:
+          type: boolean
+          readOnly: true
+        axisId:
+          type: integer
+          readOnly: true
+        parentAxisSections:
+          type: array
+          items:
+            $ref: '#/components/schemas/AxisSection'
+          readOnly: true
+        childrenAxisSections:
+          type: array
+          items:
+            $ref: '#/components/schemas/AxisSection'
+          readOnly: true
+      x-tags:
+        - TimeEntries
+    Transfer:
+      title: Transfer
+      description: Transfer defines a change in pay's element distribution
+      x-stoplight:
+        id: 8ubrw13wqq6dy
+      type: object
+      properties:
+        transferAuthorizationId:
+          description: Unique identifier of the associated transfer authorization.
+          type: integer
+          minimum: 1
+        amount:
+          description: 'Format: d.hh:mm:ss. Max: "1.00:00:00" (ie 24 hours).'
+          type: string
+          format: timespan
+          default: '00:00:00'
+          example: '03:45:00'
+        comment:
+          type: string
+    TimesheetUser:
+      title: Timesheet User
+      x-stoplight:
+        id: 69qybe95taej8
+      type: object
+      properties:
+        id:
+          description: Unique identifier of this User.
+          type: integer
+          minimum: 1
+        firstName:
+          description: Given name.
+          type: string
+        lastName:
+          description: Family name
+          type: string
+        mail:
+          description: Email address.
+          type: string
+          format: email
+        legalEntityId:
+          description: >-
+            Unique identifier of the legal establishment this user currently has
+            a work contract with.
+          type: integer
+    TimeEntriesDeleteMultipleRequest:
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: integer
+            minimum: 0
+        required:
+          - id
+    TimeEntriesCreateMultipleRequest:
+      oneOf:
+        - description: Create a single TimeEntry
+          $ref: '#/components/schemas/TimeEntry'
+        - description: Create multiple TimeEntries
+          type: array
+          items:
+            $ref: '#/components/schemas/TimeEntry'
+    TimeEntriesUpdateMultipleRequest:
+      oneOf:
+        - $ref: '#/components/schemas/TimeEntry'
+        - type: array
+          items:
+            $ref: '#/components/schemas/TimeEntry'
+    WorkflowSendReminderEmailRequest:
+      type: object
+      properties:
+        timesheets:
+          type: array
+          items:
+            type: object
+            properties:
+              startsAt:
+                type: string
+                format: date
+              endsAt:
+                type: string
+                format: date
+              ownerId:
+                type: integer
+                minimum: 1
+              comment:
+                type: string
+            required:
+              - startsAt
+              - endsAt
+              - ownerId
+    WorkflowSubmitTimesheetRequest:
+      type: object
+      properties:
+        timesheets:
+          type: array
+          items:
+            type: object
+            properties:
+              startsAt:
+                type: string
+                format: date
+              endsAt:
+                type: string
+                format: date
+              ownerId:
+                type: integer
+                minimum: 1
+              transfers:
+                type: array
+                minItems: 0
+                items:
+                  $ref: '#/components/schemas/Transfer'
+            required:
+              - startsAt
+              - endsAt
+              - ownerId
+    WorkflowCancelTimesheetByIdRequest:
+      type: object
+      properties:
+        timesheets:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              comment:
+                type: string
+            required:
+              - id
+    WorkflowApproveTimesheetsByIdRequest:
+      type: object
+      properties:
+        timesheets:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              transfers:
+                type: array
+                items: {}
+            required:
+              - id
+    WorkflowDenyTimesheetByIdRequest:
+      type: object
+      properties:
+        timesheets:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              comment:
+                type: string
+            required:
+              - id
+              - comment
+    WorkflowInvalidateTimesheetByIdRequest:
+      type: object
+      properties:
+        timesheets:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              comment:
+                type: string
+            required:
+              - id
+    TimeEntriesDeleteMultipleResponse:
+      type: object
+      properties:
+        Status:
+          description: HTTP status code.
+          type: integer
+          example: 401
+        Message:
+          description: Human readable error message.
+          type: string
+          example: Unauthorized
+    TimeEntriesListTimeEntriesResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            count:
+              type: integer
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/TimeEntry'
+    TimeEntriesCreateMultipleResponse:
+      type: object
+      properties:
+        data:
+          oneOf:
+            - $ref: '#/components/schemas/TimeEntry'
+            - type: object
+              properties:
+                items:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/TimeEntry'
+    TimeEntriesUpdateMultipleResponse:
+      type: object
+      properties:
+        data:
+          oneOf:
+            - $ref: '#/components/schemas/TimeEntry'
+            - type: object
+              properties:
+                items:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/TimeEntry'
+    TimeEntriesGetByIdResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/TimeEntry'
+    TimeEntriesUpdateByIdResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/TimeEntry'
+    TimesheetsListResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/TimesheetUser'
+            count:
+              type: integer
+    TimesheetsListDueResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/TimesheetUser'
+            count:
+              type: integer
+    WorkflowSendReminderEmailResponse:
+      type: object
+      properties:
+        Status:
+          description: HTTP status code.
+          type: integer
+        Message:
+          description: Human readable error message (when error).
+          type:
+            - string
+            - 'null'
+        Items:
+          type: array
+          items:
+            type: object
+            properties:
+              Id:
+                type: integer
+              ExceptionMessage:
+                type: string
+              Status:
+                type: integer
+                enum:
+                  - 0
+              Title:
+                type: string
+              Url:
+                description: URL of the relevant timesheet.
+                type: string
+                format: uri
+    ReportsDownloadCsvReportResponse:
+      type: string
+    ReportsDownloadExcelReportResponse:
+      type: string
+  securitySchemes:
+    Authorization:
+      description: Header value must be equal to `lucca application={yourApiKey}`
+      name: Authorization
+      type: apiKey
+      in: header
+security:
+  - Authorization: []

@@ -1,0 +1,1376 @@
+openapi: 3.0.3
+info:
+  title: Cleemy Expenses
+  description: |
+    Welcome on the documentation for the CleemyExpenses API.
+  version: '1.0'
+  contact:
+    name: Cleemy
+    url: https://www.lucca.fr
+    email: developers@lucca.fr
+  x-konfig-ignore:
+    potential-incorrect-type: true
+servers:
+  - description: Your production environment (France)
+    url: https://example.ilucca.net
+  - description: Your test environment (France)
+    url: https://example.ilucca-test.net
+tags:
+  - description: Singular expenses.
+    name: Expenses
+  - description: Collection of expenses submitted for approval.
+    name: ExpenseClaims
+paths:
+  /api/v3/expenseTempItems:
+    get:
+      tags:
+        - Expenses
+      summary: List ExpenseTempItems (temporary expense)
+      operationId: Expenses_listTempItems
+      description: >-
+        Retrieve a list of `ExpenseTempItems`.
+
+
+        The `purchasedOn` query parameter can operate comparisons with a given
+        date-time value:
+
+        - `?purchasedOn=2021-01-01`: strict equality.
+
+        - `?purchasedOn=since,2021-01-01`: greater than or equal.
+
+        - `?purchasedOn=until,2021-01-01`: lower than or equal.
+
+        - `?purchasedOn=between,2021-01-01,2021-01-31`: comprised between two
+        dates.
+      parameters:
+        - description: Comma-separated list of user identifiers (int).
+          schema:
+            type: array
+            items:
+              description: >-
+                WARNING: Missing items property in array schema. Missing items
+                property has been filled with this AnyType schema.
+          in: query
+          name: ownerId
+        - description: '{fieldName},{''asc''||''desc''}. Example: `?orderby=purchasedOn,desc`'
+          schema:
+            type: string
+          in: query
+          name: orderBy
+        - description: 'Examples: `between,2022-01-01,202201-31`.'
+          schema:
+            type: string
+          in: query
+          name: purchasedOn
+        - $ref: '#/components/parameters/paging'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExpensesListTempItemsResponse'
+        '400':
+          $ref: '#/components/responses/ResponseProblem'
+        '401':
+          $ref: '#/components/responses/ResponseProblem'
+        '500':
+          $ref: '#/components/responses/ResponseProblem'
+    post:
+      tags:
+        - Expenses
+      summary: Create a new temporary expense
+      operationId: Expenses_createNewTemporaryExpense
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExpenseTempItem'
+            examples: {}
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExpensesCreateNewTemporaryExpenseResponse'
+              examples: {}
+        '400':
+          $ref: '#/components/responses/ResponseProblem'
+        '401':
+          $ref: '#/components/responses/ResponseProblem'
+        '403':
+          $ref: '#/components/responses/ResponseProblem'
+        '500':
+          $ref: '#/components/responses/ResponseProblem'
+  /api/v3/expenseTempItems/{expenseTempItemId}:
+    parameters:
+      - description: Unique identifier of the ExpenseTempItem.
+        schema:
+          type: integer
+        name: expenseTempItemId
+        in: path
+        required: true
+    get:
+      tags:
+        - Expenses
+      summary: Get an ExpenseTempItem by id
+      operationId: Expenses_getById
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExpensesGetByIdResponse'
+        '400':
+          $ref: '#/components/responses/ResponseProblem'
+        '401':
+          $ref: '#/components/responses/ResponseProblem'
+        '404':
+          $ref: '#/components/responses/ResponseProblem'
+        '500':
+          $ref: '#/components/responses/ResponseProblem'
+    put:
+      tags:
+        - Expenses
+      summary: Update an ExpenseTempItem by id
+      operationId: Expenses_updateExpenseTempItem
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExpenseTempItem'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExpensesUpdateExpenseTempItemResponse'
+        '400':
+          $ref: '#/components/responses/ResponseProblem'
+        '401':
+          $ref: '#/components/responses/ResponseProblem'
+        '403':
+          $ref: '#/components/responses/ResponseProblem'
+        '404':
+          $ref: '#/components/responses/ResponseProblem'
+        '500':
+          $ref: '#/components/responses/ResponseProblem'
+  /api/v3/expenseClaims/creation:
+    post:
+      tags:
+        - ExpenseClaims
+      summary: Create a new ExpenseClaim
+      operationId: ExpenseClaims_createNewExpenseClaim
+      description: >-
+        When a user wants to declare his expenses, he creates an `ExpenseClaim`.
+
+
+        An `ExpenseClaim` is created by regrouping one or more
+        `ExpenseTempItems` and converting them into ExpenseClaimItems.
+
+
+        Once created, an `ExpenseClaim` has to be approved by his manager.
+
+
+        Multiple `ExpenseClaims` can be created through a single request.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExpenseClaimsCreateNewExpenseClaimRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/ExpenseClaimsCreateNewExpenseClaimResponse
+        '400':
+          $ref: '#/components/responses/ResponseProblem'
+        '401':
+          $ref: '#/components/responses/ResponseProblem'
+        '403':
+          $ref: '#/components/responses/ResponseProblem'
+        '500':
+          $ref: '#/components/responses/ResponseProblem'
+  /api/v3/expenseClaims:
+    parameters: []
+    get:
+      tags:
+        - ExpenseClaims
+      summary: List ExpenseClaims
+      operationId: ExpenseClaims_list
+      description: >-
+        Retrieve a list of `ExpenseClaims`.
+
+
+        The `declaredOn` query parameter can operate comparisons with a given
+        date-time value:
+
+        - `?declaredOn=2021-01-01`: strict equality.
+
+        - `?declaredOn=since,2021-01-01`: greater than or equal.
+
+        - `?declaredOn=until,2021-01-01`: lower than or equal.
+
+        - `?declaredOn=between,2021-01-01,2021-01-31`: comprised between two
+        dates.
+      parameters:
+        - description: Comma-separated list of user identifiers (int).
+          schema:
+            type: array
+            items:
+              type: integer
+          in: query
+          name: ownerId
+        - description: '{fieldName},{''asc''||''desc''}. Example: `?orderby=declaredOn,desc`'
+          schema:
+            type: string
+          in: query
+          name: orderBy
+        - description: 'Examples: `between,2022-01-01,202201-31`.'
+          schema:
+            type: string
+          in: query
+          name: declaredOn
+        - $ref: '#/components/parameters/paging'
+        - description: >-
+            1: Created; 2: PartiallyApproved; 3: Approved; 4: Controlled; 5:
+            ApprovedAndControlled; 6: PaymentInitiated; 7: Paid; 8: Refused; 9:
+            Cancelled. Examples: `2,3` or `PartiallyApproved,Approved`.
+          schema:
+            type: string
+          in: query
+          name: statusId
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExpenseClaimsListResponse'
+        '400':
+          $ref: '#/components/responses/ResponseProblem'
+        '401':
+          $ref: '#/components/responses/ResponseProblem'
+        '500':
+          $ref: '#/components/responses/ResponseProblem'
+components:
+  parameters:
+    paging:
+      description: '{offset},{limit}. Defaults to 0,1000.'
+      name: paging
+      in: query
+      required: true
+      schema:
+        type: string
+        example: 100,0
+  responses:
+    ResponseProblem:
+      description: Problem
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ExpensesListTempItems400Response'
+  schemas:
+    ExpenseTempItem:
+      title: The ExpenseTempItem Resource
+      description: >-
+        The `ExpenseTempItem`, or "temporary expense" is an expense that has not
+        yet been declared (within an expense report) by its owner (the user who
+        made the expense).
+      type: object
+      x-examples:
+        example-1:
+          id: 11022
+          purchasedOn: '2016-06-08T00:00:00'
+          originalTransaction:
+            grossAmount: 45.26
+            currencyId: GBP
+            currency:
+              id: GBP
+              symbol: £
+            isExpenseAbroad: false
+          processedAmounts:
+            amount: 57.9
+            reimbursedAmount: 57.9
+            grossAmount: 57.9
+            currencyId: EUR
+            currency:
+              id: EUR
+              name: Euro
+              url: https://lucca.ilucca.net/api/v3/currencies/EUR
+            netAmount: 57.9
+            vatBases:
+              - countryVatRateId: 2
+                countryVatRate:
+                  id: 2
+                  name: null
+                  url: https://lucca.ilucca.net/api/v3/countryvatrates/2
+                vatAmount: 0
+                amountExcludingVat: 57.9
+                isDeprecatedVat: false
+          expenseNatureId: 1
+          mileage:
+            distance: null
+            power: null
+            waypoints: null
+          quantity: 1
+          effectiveQuantity: 3
+          attendees:
+            internal:
+              - id: 338
+                displayName: Catteau Bruno
+            external:
+              - id: 46
+                displayName: Test Corp / Test TS
+          axisSections:
+            - id: 658
+              code: RDEV
+              name: Recherche & Développement
+              axisId: 4
+          customFields:
+            '1':
+              code: 'false'
+              name: Non
+          merchant: Pub The Wellington
+          comment: Exemple dépense
+          originalReceipt: null
+          receiptPreview: null
+          warnings:
+            dayOff: false
+            isConstrained: false
+            showDayOffWarning: false
+            isAboveWarningLimit: false
+            isAbsoluteLimitOverridden: false
+          authorizedActions:
+            isCancellable: true
+            isEditable: true
+          source:
+            value: 6
+            id: 6
+            code: Api
+            name: API
+          ownerId: 361
+          paymentMethod:
+            value: 0
+            id: 0
+            code: User
+            name: Collaborateur
+          status:
+            value: 2
+            id: 2
+            code: Valid
+            name: Valide
+      examples: []
+      x-tags:
+        - Expenses
+      properties:
+        id:
+          type: integer
+          minimum: 1
+          readOnly: true
+        purchasedOn:
+          description: Day the expense was made.
+          type: string
+          format: date-time
+        originalTransaction:
+          description: Expense amount in original currency.
+          type: object
+          properties:
+            grossAmount:
+              type: number
+              multipleOf: 0.01
+            currencyId:
+              $ref: '#/components/schemas/CurrencyId'
+            isExpenseAbroad:
+              description: >-
+                Whether the expense was made in a different country than the
+                owner establishment's.
+              type: boolean
+            currency:
+              $ref: '#/components/schemas/Currency'
+        processedAmounts:
+          description: Various amounts in the establishment's currency.
+          type: object
+          properties:
+            grossAmount:
+              description: >-
+                Original transaction amount converted into the establishment's
+                currency.
+              type: number
+              multipleOf: 0.01
+            currencyId:
+              $ref: '#/components/schemas/CurrencyId'
+            currency:
+              $ref: '#/components/schemas/Currency'
+            netAmount:
+              description: The converted amount after the expense policy has been applied.
+              type: number
+              multipleOf: 0.01
+            vatBases:
+              type: array
+              items:
+                type: object
+                properties:
+                  countryVatRateId:
+                    type: integer
+                    minimum: 1
+                  countryVatRate:
+                    description: Applicable VAT rate for this amount.
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        minimum: 1
+                      name:
+                        type: string
+                      url:
+                        type: string
+                        format: uri
+                  vatAmount:
+                    type: number
+                    multipleOf: 0.01
+                  amountExcludingVat:
+                    type: number
+                    multipleOf: 0.01
+          readOnly: true
+        expenseNatureId:
+          description: >-
+            Nature of the expense: Meals, Train, Taxi, Hotels, Taxi, Mileage...
+            List depends on the app configuration.
+          type: integer
+          minimum: 1
+        mileage:
+          description: Additional information when the expense type is mileage.
+          type:
+            - object
+            - 'null'
+          properties:
+            distance:
+              description: Distance where the unit depends on the establishment.
+              type: number
+            power:
+              description: Tax horsepower of the vehicle.
+              type: number
+            waypoints:
+              description: The collection of waypoints including intermediate waypoints.
+              type: array
+              items: {}
+        quantity:
+          description: The quantity when the expense type is 'Quantity'.
+          type: integer
+          minimum: 1
+          default: 1
+        effectiveQuantity:
+          description: >-
+            Calculated quantity when the expense type is 'Quantity' or
+            'Invitations' (number of attendees).
+          type: integer
+          minimum: 1
+          readOnly: true
+        attendees:
+          description: Additional information when the expense type is 'Invitation'.
+          type:
+            - object
+            - 'null'
+          properties:
+            internal:
+              description: 'Attendees who work for the company (ie: Users in the system).'
+              type: array
+              items:
+                $ref: '#/components/schemas/User'
+            external:
+              description: 'External attendees (eg: clients, candidates).'
+              type: array
+              items:
+                description: Id of the custom field.
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    minimum: 1
+                  displayName:
+                    type: string
+        axisSections:
+          description: Axis sections values.
+          type:
+            - array
+            - 'null'
+          items:
+            $ref: '#/components/schemas/AxisSection'
+        customFields:
+          description: Values for custom fields.
+          type:
+            - object
+            - 'null'
+          additionalProperties:
+            type: object
+            properties:
+              code:
+                description: Value inputted by the user.
+                type: string
+              name:
+                description: >-
+                  Label corresponding to the input value based on the
+                  configuration (eg: 'Yes' for checkbox).
+                type: string
+                readOnly: true
+        merchant:
+          description: Merchant of the expense.
+          type:
+            - string
+            - 'null'
+        comment:
+          type:
+            - string
+            - 'null'
+        expenseReceipts:
+          description: The original receipt (PDF file, image, ...).
+          type:
+            - array
+            - 'null'
+          items:
+            $ref: '#/components/schemas/ExpenseReceipt'
+        authorizedActions:
+          description: Authorized actions on the expense for the current user.
+          type: object
+          properties:
+            isCancellable:
+              description: Expense can be deleted by the current authenticated user.
+              type: boolean
+            isEditable:
+              description: Expense can be edited by the current authenticated user.
+              type: boolean
+          readOnly: true
+        sourceId:
+          $ref: '#/components/schemas/SourceId'
+        source:
+          $ref: '#/components/schemas/Enum'
+        ownerId:
+          description: Unique identifier of the user that made this expense.
+          type: integer
+        paymentMethodId:
+          $ref: '#/components/schemas/PaymentMethodId'
+        paymentMethod:
+          $ref: '#/components/schemas/Enum'
+        statusId:
+          $ref: '#/components/schemas/StatusId'
+        status:
+          $ref: '#/components/schemas/Enum'
+      required:
+        - purchasedOn
+        - expenseNatureId
+    ExpenseClaim:
+      title: The ExpenseClaim Resource
+      description: >-
+        When a user wants to declare his expenses, he creates an `ExpenseClaim`.
+
+
+        An `ExpenseClaim` is created by regrouping one or more
+        `ExpenseTempItems` and converting them into ExpenseClaimItems.
+
+
+        Once created, an `ExpenseClaim` has to be approved by his manager.
+
+
+        Multiple `ExpenseClaims` can be created through a single request.
+      type: object
+      x-tags:
+        - ExpenseClaims
+      x-stoplight:
+        id: fc3294987a78c
+      properties:
+        id:
+          type: integer
+          minimum: 1
+          readOnly: true
+        name:
+          description: >-
+            Name of the expense claim. If empty, it will be generated with the
+            month and year of the last of claim item.
+          type: string
+          maxLength: 255
+        declaredOn:
+          description: Day the expenseClaim has been declared (Time zone Europe/Paris).
+          type: string
+          format: date-time
+          readOnly: true
+        createdOn:
+          description: Day the expenseClaim has been created (Time zone Europe/Paris).
+          type: string
+          format: date-time
+          readOnly: true
+        modifiedOn:
+          description: Day the expenseClaim has been modified (Time zone Europe/Paris).
+          type: string
+          format: date-time
+          readOnly: true
+        paymentReceivedOn:
+          description: Day the expenseClaim has been paid (Time zone Europe/Paris).
+          type: string
+          format: date-time
+          readOnly: true
+        sourceId:
+          $ref: '#/components/schemas/SourceId'
+          readOnly: true
+        source:
+          $ref: '#/components/schemas/Enum'
+          readOnly: true
+        paymentMethodId:
+          $ref: '#/components/schemas/PaymentMethodId'
+          readOnly: true
+        paymentMethod:
+          $ref: '#/components/schemas/Enum'
+          readOnly: true
+        statusId:
+          $ref: '#/components/schemas/ClaimStatusId'
+          readOnly: true
+        status:
+          $ref: '#/components/schemas/Enum'
+          readOnly: true
+        approvalStateId:
+          $ref: '#/components/schemas/ApprovalStateId'
+          readOnly: true
+        approvalState:
+          $ref: '#/components/schemas/Enum'
+          readOnly: true
+        authorizedActions:
+          description: Authorized actions on the expenseClaim for the current user.
+          type: object
+          properties:
+            isCancellable:
+              description: >-
+                The expenseClaim can be deleted by the current authenticated
+                user.
+              type: boolean
+            isEditable:
+              description: >-
+                The expenseClaim can be edited by the current authenticated
+                user.
+              type: boolean
+            isApprovable:
+              description: >-
+                The expenseClaim can be approved by the current authenticated
+                user.
+              type: boolean
+            isControllable:
+              description: >-
+                The expenseClaim can be controlled by the current authenticated
+                user.
+              type: boolean
+            isUnControllable:
+              description: >-
+                The current authenticated user can cancel the control of the
+                expenseClaim.
+              type: boolean
+          readOnly: true
+        ownerId:
+          description: Unique identifier of the user that made this expenseClaim.
+          type: integer
+          readOnly: true
+        owner:
+          $ref: '#/components/schemas/Owner'
+        authorId:
+          description: Unique identifier of the user that created this grouping of expense.
+          type: integer
+        author:
+          $ref: '#/components/schemas/EntityBase'
+        legalEntityId:
+          type: integer
+        legalEntity:
+          $ref: '#/components/schemas/EntityBase'
+        departmentId:
+          type: integer
+        department:
+          $ref: '#/components/schemas/EntityBase'
+        currencyId:
+          $ref: '#/components/schemas/CurrencyId'
+        currency:
+          $ref: '#/components/schemas/Currency'
+      required:
+        - declaredOn
+        - createdOn
+        - modifiedOn
+    ApprovalStateId:
+      title: ApprovalStateId
+      description: |-
+        State of the approval of the expenseClaim.
+        - 0: the approval is created.
+        - 1: the expenseClaim has been partially approved.
+        - 2: the expenseClaim has been approved.
+        - 3: the expenseClaim has been refused.
+        - 4: the expenseClaim has been cancelled.
+      x-stoplight:
+        id: 87aaec5bfc487
+      type: object
+      properties:
+        id:
+          type: number
+          enum:
+            - 0
+            - 1
+            - 2
+            - 3
+            - 4
+    ClaimStatusId:
+      title: ClaimStatusId
+      description: |-
+        Status of the expenseClaim.
+        - 1: the expenseClaim is created.
+        - 2: the expenseClaim has been partially approved.
+        - 3: the expenseClaim has been approved.
+        - 4: the expenseClaim has been controlled.
+        - 5: the expenseClaim has been approved and controlled.
+        - 6: the payment of the expenseClaim has been initiated.
+        - 7: the expenseClaim has been paid.
+        - 8: the expenseClaim has been refused.
+        - 9: the expenseClaim has been cancelled.
+      x-stoplight:
+        id: 4669d280e9c36
+      type: object
+      properties:
+        id:
+          type: number
+          enum:
+            - 0
+            - 1
+            - 2
+            - 3
+            - 4
+            - 5
+            - 6
+            - 7
+            - 8
+    Currency:
+      title: Currency
+      description: ''
+      x-stoplight:
+        id: 2840ygv41p7be
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/CurrencyId'
+        name:
+          description: 'Label of the currency (eg: Pound sterling).'
+          type: string
+        url:
+          type: string
+          format: uri
+    CurrencyId:
+      title: CurrencyId
+      description: 'ISO code of the currency (eg: ''EUR'', ''USD'', ''GBP'', ...).'
+      x-stoplight:
+        id: kby33ilsirg33
+      type: string
+    EntityBase:
+      title: EntityBase
+      x-stoplight:
+        id: 1244a0846b0bd
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        url:
+          type: string
+    Enum:
+      title: Enum
+      description: ''
+      x-stoplight:
+        id: 7kzc8264nzaki
+      type: object
+      properties:
+        id:
+          type: number
+        name:
+          type: string
+          readOnly: true
+        code:
+          type: string
+    ExpenseReceipt:
+      title: ExpenseReceipt
+      description: An expense's receipt.
+      x-stoplight:
+        id: lx79dyr1vtka8
+      type: object
+      properties:
+        id:
+          type: string
+    Owner:
+      title: Owner
+      x-stoplight:
+        id: ff1b8ac2d9d2e
+      type: object
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        name:
+          type: string
+        url:
+          type: string
+          format: uri
+        firstName:
+          type: string
+        lastName:
+          type: string
+    PaymentMethodId:
+      title: PaymentMethodId
+      description: >-
+        How this expense was made: the owner used his money, an enterprise debit
+        card, or a Cleemy card:
+
+        - 0: User
+
+        - 1: CorporateCard
+
+        - 3: Cleemy Card
+      x-stoplight:
+        id: ne5zj41vezy0e
+      type: number
+      enum:
+        - 0
+        - 1
+        - 3
+    SourceId:
+      title: SourceId
+      description: |-
+        The source describes how the expense was created:
+        - 0: Legacy
+        - 1: OldImport
+        - 2: ImportByCb
+        - 3: ImportByNature
+        - 4: Anytime
+        - 5: BudgetInsight
+        - 6: Api
+        - 7: Ocr
+        - 8: Reconciliation
+        - 9: InvoiceAggregator
+        - 10: EmailAttachments
+        - 11: FtpStatementImport
+        - 12: CleemyPayment
+      x-stoplight:
+        id: 2u3my2xgs72qd
+      type: object
+      properties:
+        id:
+          type: string
+    StatusId:
+      title: StatusId
+      description: >-
+        Status of the expense.
+
+        - 0: the expense is not valid.
+
+        - 1: the expense has been completed by the system and review is still
+        pending
+
+        - 2: the expense has been completed and reviewed and it can be declared.
+      x-stoplight:
+        id: 47xkq5bpvld0b
+      type: object
+      properties:
+        id:
+          type: number
+          enum:
+            - 0
+            - 1
+            - 2
+    User:
+      User:
+        title: User
+        description: ''
+        type: object
+        properties:
+          id:
+            type: number
+          name:
+            type: string
+            minLength: 1
+          url:
+            type: string
+            minLength: 1
+          displayName:
+            type: string
+            minLength: 1
+          modifiedOn:
+            type: string
+            minLength: 1
+          lastName:
+            type: string
+            minLength: 1
+          firstName:
+            type: string
+            minLength: 1
+          login:
+            type: string
+            minLength: 1
+          mail:
+            type: string
+            minLength: 1
+          dtContractStart:
+            type: string
+            minLength: 1
+          dtContractEnd: {}
+          birthDate:
+            type: string
+            minLength: 1
+          employeeNumber:
+            type: string
+            minLength: 1
+          calendar:
+            type: object
+            properties:
+              id:
+                type: number
+              url:
+                type: string
+                minLength: 1
+              name:
+                type: string
+                minLength: 1
+            required:
+              - id
+              - url
+              - name
+          culture:
+            type: object
+            properties:
+              id:
+                type: number
+              name:
+                type: string
+                minLength: 1
+              url:
+                type: string
+                minLength: 1
+            required:
+              - id
+              - name
+              - url
+          picture:
+            type: object
+            properties:
+              id:
+                type: string
+                minLength: 1
+              url:
+                type: string
+                minLength: 1
+              name:
+                type: string
+                minLength: 1
+            required:
+              - id
+              - url
+              - name
+          applicationData:
+            type: object
+            properties:
+              profile_figgo:
+                type: object
+                properties:
+                  id:
+                    type: number
+                  name:
+                    type: string
+                    minLength: 1
+                  url:
+                    type: string
+                    minLength: 1
+                required:
+                  - id
+                  - name
+                  - url
+              profile_utime:
+                type: object
+                properties:
+                  id:
+                    type: number
+                  name:
+                    type: string
+                    minLength: 1
+                  url:
+                    type: string
+                    minLength: 1
+                required:
+                  - id
+                  - name
+                  - url
+            required:
+              - profile_figgo
+              - profile_utime
+          legalEntity:
+            type: object
+            properties:
+              id:
+                type: number
+              name:
+                type: string
+                minLength: 1
+              url:
+                type: string
+                minLength: 1
+            required:
+              - id
+              - name
+              - url
+          department:
+            type: object
+            properties:
+              id:
+                type: number
+              name:
+                type: string
+                minLength: 1
+              url:
+                type: string
+                minLength: 1
+            required:
+              - id
+              - name
+              - url
+          manager:
+            type: object
+            properties:
+              id:
+                type: number
+              name:
+                type: string
+                minLength: 1
+              url:
+                type: string
+                minLength: 1
+            required:
+              - id
+              - name
+              - url
+          rolePrincipal:
+            type: object
+            properties:
+              id:
+                type: number
+              name:
+                type: string
+                minLength: 1
+              url:
+                type: string
+                minLength: 1
+            required:
+              - id
+              - name
+              - url
+          habilitedRoles:
+            type: array
+            uniqueItems: true
+            minItems: 1
+            items:
+              required:
+                - id
+                - name
+                - url
+              properties:
+                id:
+                  type: number
+                name:
+                  type: string
+                  minLength: 1
+                url:
+                  type: string
+                  minLength: 1
+          userWorkCycles:
+            type: array
+            uniqueItems: true
+            minItems: 1
+            items:
+              required:
+                - Id
+                - OwnerID
+                - WorkCycleID
+                - StartsOn
+                - EndsOn
+              properties:
+                Id:
+                  type: number
+                OwnerID:
+                  type: number
+                WorkCycleID:
+                  type: number
+                StartsOn:
+                  type: string
+                  minLength: 1
+                EndsOn:
+                  type: string
+                  minLength: 1
+        required:
+          - id
+          - name
+          - url
+          - displayName
+          - modifiedOn
+          - lastName
+          - firstName
+          - login
+          - mail
+          - dtContractStart
+          - birthDate
+          - employeeNumber
+          - calendar
+          - culture
+          - picture
+          - applicationData
+          - legalEntity
+          - department
+          - manager
+          - rolePrincipal
+          - habilitedRoles
+          - userWorkCycles
+        x-examples:
+          example-1:
+            id: 416
+            name: John Doe
+            url: http://lucca.test/api/users/1
+            displayName: Doe John
+            modifiedOn: '2015-09-07T10:20:06.583'
+            lastName: DOE
+            firstName: John
+            login: jdoe
+            mail: no-reply@lucca.fr
+            dtContractStart: '2014-09-01T00:00:00'
+            dtContractEnd: null
+            birthDate: '1989-12-22T00:00:00'
+            employeeNumber: '00057'
+            calendar:
+              id: 1
+              url: http://lucca.test/api/v3/publicHolidayCalendars/1
+              name: Jours fériés en France
+            culture:
+              id: 1036
+              name: français (France)
+              url: http://lucca.test/api/v3/cultures/1036
+            picture:
+              id: 74d381db-dd4d-4f64-bc1e-582d806e58a8
+              url: >-
+                http://lucca.test/api/v3/files/74d381db-dd4d-4f64-bc1e-582d806e58a8
+              name: jdoe.png
+            applicationData:
+              profile_figgo:
+                id: 1
+                name: Cadre (218 jours)
+                url: https://lucca.local.dev/api/v3/leaveprofiles/1
+              profile_utime:
+                id: 1
+                name: Lucca
+                url: >-
+                  https://lucca.local.dev/api/v3/utimeprofile_ede6d6bb22bcb47bf5b839d5f653fc7e41122f0eea37a7786ea9e095537a705c/1
+            legalEntity:
+              id: 1
+              name: Lucca
+              url: http://lucca.test/api/v3/legalEntities/1
+            department:
+              id: 13
+              name: BU Timmi/Lucca
+              url: http://lucca.test/api/v3/departments/13
+            manager:
+              id: 383
+              name: Roger Smith
+              url: http://lucca.test/api/v3/users/383
+            rolePrincipal:
+              id: 55
+              name: User
+              url: http://lucca.test/api/v3/roles/55
+            habilitedRoles:
+              - id: 59
+                name: Employee +
+                url: http://lucca.test/api/v3/roles/59
+              - id: 63
+                name: Analytics access
+                url: http://lucca.test/api/roles/63
+            userWorkCycles:
+              - Id: 288
+                OwnerID: 416
+                WorkCycleID: 6
+                StartsOn: '1900-01-01T00:00:00'
+                EndsOn: '2015-03-09T00:00:00'
+              - Id: 289
+                OwnerID: 416
+                WorkCycleID: 9
+                StartsOn: '2015-03-10T00:00:00'
+                EndsOn: '2015-10-13T00:00:00'
+              - Id: 317
+                OwnerID: 416
+                WorkCycleID: 14
+                StartsOn: '2015-10-13T00:00:00'
+                EndsOn: '9999-12-31T00:00:00'
+    AxisSection:
+      AxisSection:
+        title: The Axis Section resource
+        description: >-
+          You can [read more about this resource
+          here](reference/Organization-v3.yaml/components/schemas/AxisSection).
+        type: object
+        properties:
+          description:
+            type: string
+            readOnly: true
+          id:
+            type: integer
+            minimum: 1
+          code:
+            type: string
+            readOnly: true
+          name:
+            type: string
+            readOnly: true
+          multilingualName:
+            type: string
+            readOnly: true
+          ownerId:
+            type: integer
+            minimum: 1
+            readOnly: true
+          startOn:
+            type: string
+            format: date-time
+            readOnly: true
+          endOn:
+            type: string
+            format: date-time
+            readOnly: true
+          active:
+            type: boolean
+            readOnly: true
+          axisId:
+            type: integer
+            readOnly: true
+          parentAxisSections:
+            type: array
+            items:
+              $ref: '#/components/schemas/AxisSection'
+            readOnly: true
+          childrenAxisSections:
+            type: array
+            items:
+              $ref: '#/components/schemas/AxisSection'
+            readOnly: true
+        x-tags:
+          - TimeEntries
+    ExpenseClaimsCreateNewExpenseClaimRequest:
+      type: array
+      x-examples:
+        example-1:
+          - title: Mars 2016
+            expenseTempItems:
+              - id: 4614
+              - id: 4630
+      items:
+        type: object
+        properties:
+          title:
+            description: 'Human readable name for this ExpenseClaim (eg: "May 2022").'
+            type: string
+          expenseTempItems:
+            description: >-
+              List of all temporary expenses identifiers that should be included
+              in this expense claim.
+            type: array
+            minItems: 1
+            items:
+              type: object
+              properties:
+                id:
+                  type: integer
+              required:
+                - id
+        required:
+          - title
+          - expenseTempItems
+    ExpensesListTempItemsResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/ExpenseTempItem'
+    ExpensesListTempItems400Response:
+      type: object
+      properties:
+        Status:
+          description: HTTP status code.
+          type: integer
+          example: 401
+        Message:
+          description: Human readable error message.
+          type: string
+          example: Unauthorized
+    ExpensesCreateNewTemporaryExpenseResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/ExpenseTempItem'
+    ExpensesGetByIdResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/ExpenseTempItem'
+    ExpensesUpdateExpenseTempItemResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/ExpenseTempItem'
+    ExpenseClaimsCreateNewExpenseClaimResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              createdExpenseClaim:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  nextApprover:
+                    type: object
+                    properties:
+                      firstName:
+                        type: string
+                      lastName:
+                        type: string
+      x-examples:
+        example-1:
+          createdExpenseClaim:
+            id: 369
+            nextApprover:
+              firstName: Will
+              lastName: Riker
+    ExpenseClaimsListResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/ExpenseClaim'
+  securitySchemes:
+    Authorization:
+      description: Header value must be equal to `lucca application={yourApiKey}`
+      name: Authorization
+      type: apiKey
+      in: header
+security:
+  - Authorization: []
+x-stoplight:
+  id: w9tbmpilgjq8x
