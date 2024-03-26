@@ -1,0 +1,4181 @@
+openapi: 3.0.3
+info:
+  title: Payments API inbound
+  description: >-
+    The Payments API enables you to do a custom integration with Peach Payments
+    and thereby support multiple payment methods.
+  version: 2.0.0
+  contact:
+    name: Peach Payments Support
+    url: https://support.peachpayments.com/support/home
+    email: support@peachpayments.com
+  termsOfService: https://swagger.io/terms/
+  license:
+    name: MIT
+    url: https://mit-license.org
+  x-konfig-ignore:
+    potential-incorrect-type: true
+servers:
+  - description: Sandbox environment.
+    url: https://testapi-v2.peachpayments.com
+  - description: Live environment.
+    url: https://api-v2.peachpayments.com
+tags:
+  - name: Batch
+  - name: Payments API inbound
+  - name: Checkout generation
+  - name: Payment
+  - name: Status
+  - name: Files
+  - name: Helpers
+  - name: Checkout V2 generation
+  - name: Payments API outbound
+paths:
+  /checkout/initiate:
+    post:
+      tags:
+        - Checkout generation
+      summary: Initiate redirect-based Checkout
+      operationId: CheckoutGeneration_initiateRedirectCheckout
+      description: >
+        Provide a redirect URL to the caller to redirect the user into the
+        Checkout experience. The POST request contains the entityId, signature,
+        purchase parameters, and any custom parameters that a merchant
+        optionally sends. This allows the checkout instance to be created from a
+        backend without requiring a "form post", or other similar method, from
+        the frontend.
+
+
+        For more information, see the
+        [documentation](https://developer.peachpayments.com/docs/checkout-payment#redirect-based-checkout).
+      parameters:
+        - description: An allowlisted domain for the merchant.
+          in: header
+          name: Referer
+          required: true
+          schema:
+            type: string
+          example: https://mydemostore.com
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Checkout'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Checkout'
+      responses:
+        '201':
+          description: Request processed successfully.
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/CheckoutGenerationInitiateRedirectCheckoutResponse
+        '400':
+          description: Invalid authentication information.
+        '500':
+          description: Internal server error.
+  /checkout:
+    post:
+      tags:
+        - Checkout generation
+      summary: Initiate Checkout
+      operationId: CheckoutGeneration_initiatePayment
+      description: >
+        Load the Checkout frontend to complete a payment. The POST request
+        contains the entityId, signature, purchase parameters, and any custom
+        parameters that a merchant optionally sends.
+
+
+        Sign the data on the backend and execute the POST from the browser.
+
+
+        For more information, see the
+        [documentation](https://developer.peachpayments.com/docs/checkout-payment#form-post-checkout).
+      parameters:
+        - description: An allowlisted domain for the merchant.
+          in: header
+          name: Referer
+          required: true
+          schema:
+            type: string
+          example: https://mydemostore.com
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Checkout'
+      responses:
+        '200':
+          description: Checkout successfully created.
+          content:
+            text/html:
+              schema:
+                $ref: '#/components/schemas/CheckoutPage'
+        '400':
+          description: A validation error has occurred with Checkout.
+          content:
+            text/html:
+              schema:
+                $ref: '#/components/schemas/CheckoutErrorPage'
+        '500':
+          description: Internal server error.
+      callbacks:
+        Checkout created:
+          '{$request.body#/notificationUrl}':
+            post:
+              description: Checkout created for request.
+              requestBody:
+                required: true
+                content:
+                  application/x-www-form-urlencoded:
+                    schema:
+                      $ref: '#/components/schemas/CheckoutCreatedWebhook'
+              responses:
+                '200':
+                  description: Return this code if your service accepts the webhook.
+        Checkout cancelled:
+          '{$request.body#/notificationUrl}':
+            post:
+              description: Checkout cancelled.
+              requestBody:
+                required: true
+                content:
+                  application/x-www-form-urlencoded:
+                    schema:
+                      $ref: '#/components/schemas/CheckoutCancelledWebhook'
+              responses:
+                '200':
+                  description: Return this code if your service accepts the webhook.
+        Checkout uncertain:
+          '{$request.body#/notificationUrl}':
+            post:
+              description: Checkout potentially cancelled.
+              requestBody:
+                required: true
+                content:
+                  application/x-www-form-urlencoded:
+                    schema:
+                      $ref: '#/components/schemas/CheckoutUncertainWebhook'
+              responses:
+                '200':
+                  description: Return this code if your service accepts the webhook.
+        Checkout pending:
+          '{$request.body#/notificationUrl}':
+            post:
+              description: Transaction created on the checkout instance.
+              requestBody:
+                required: true
+                content:
+                  application/x-www-form-urlencoded:
+                    schema:
+                      $ref: '#/components/schemas/CheckoutPendingWebhook'
+              responses:
+                '200':
+                  description: Return this code if your service accepts the webhook.
+        Checkout successful:
+          '{$request.body#/notificationUrl}':
+            post:
+              description: Checkout completed successfully.
+              requestBody:
+                required: true
+                content:
+                  application/x-www-form-urlencoded:
+                    schema:
+                      $ref: '#/components/schemas/CheckoutSuccessfulWebhook'
+              responses:
+                '200':
+                  description: Return this code if your service accepts the webhook.
+  /checkout/validate:
+    post:
+      tags:
+        - Checkout generation
+      summary: Validate Checkout request
+      operationId: CheckoutGeneration_validateRequest
+      description: Validate a request before trying to initiate a checkout session.
+      parameters:
+        - description: An allowlisted domain for the merchant.
+          in: header
+          name: Referer
+          required: true
+          schema:
+            type: string
+          example: https://mydemostore.com
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Checkout'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Checkout'
+      responses:
+        '200':
+          description: Valid request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                message: Valid request.
+        '400':
+          description: Invalid request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckoutGenerationValidateRequestResponse'
+              examples:
+                Invalid body:
+                  description: Body format not supported.
+                  value:
+                    message: Body is not in a valid format.
+                Missing referer header:
+                  description: Referer header required.
+                  value:
+                    message: Referer header is missing.
+                Duplicate signature:
+                  description: The same signature has been received in the last 24 hours.
+                  value:
+                    message: Duplicate signature.
+                Mismatched signature:
+                  description: >-
+                    The received signature does not match the generated
+                    signature.
+                  value:
+                    message: Signatures don't match.
+                Invalid entity ID:
+                  description: Invalid entity ID.
+                  value:
+                    message: Invalid entity ID.
+                Merchant domain is not whitelisted:
+                  description: >-
+                    The domain the request was received from is not whitelisted
+                    for the merchant.
+                  value:
+                    message: Merchant domain is not whitelisted.
+                Validation Error:
+                  description: Validation error with the Checkout body.
+                  value:
+                    validation_errors:
+                      amount: amount is required
+        '500':
+          description: Internal server error.
+  /status:
+    get:
+      tags:
+        - Status
+      summary: Query Checkout status
+      operationId: Status_checkoutStatusGet
+      description: >
+        Get the status of a checkout instance.
+
+
+        For more information, see the
+        [documentation](https://developer.peachpayments.com/docs/checkout-payment-status).
+      parameters:
+        - description: Merchant's entity ID.
+          in: query
+          name: authentication.entityId
+          schema:
+            type: string
+            example: 8ac7a4ca68c22c4d0168c2caab2e0025
+            maxLength: 64
+          required: true
+        - description: Checkout ID.
+          in: query
+          name: checkoutId
+          schema:
+            type: string
+            example: 948cc8dec52a11eb85290242ac130003
+            maxLength: 64
+        - description: Merchant transaction ID.
+          in: query
+          name: merchantTransactionId
+          schema:
+            type: string
+            example: OrderNo453432
+            maxLength: 64
+        - description: Signature of data signed with secret key of merchant.
+          in: query
+          name: signature
+          schema:
+            type: string
+            example: a668342244a9c77b08a2f9090d033d6e2610b431a5c0ca975f32035ed06164f4
+            maxLength: 64
+          required: true
+      responses:
+        '200':
+          description: OK.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckoutStatus'
+        '400':
+          description: Invalid state, check the body for more details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckoutError'
+        '500':
+          description: Internal server error.
+  /merchant_specs:
+    post:
+      tags:
+        - Helpers
+      summary: Retrieve a list of payment methods for a currency
+      operationId: Helpers_getPaymentMethods
+      description: >
+        Retrieve a list of enabled payment methods for a channel given a
+        particular currency.
+
+
+        For more information, see the
+        [documentation](https://developer.peachpayments.com/docs/checkout-merchant-specs). 
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HelpersGetPaymentMethodsRequest'
+      responses:
+        '200':
+          description: Request processed successfully.
+        '400':
+          description: Invalid authentication information.
+        '500':
+          description: Internal server error.
+  /v2/checkout:
+    post:
+      tags:
+        - Checkout V2 generation
+      summary: Initiate Checkout
+      operationId: CheckoutV2Generation_initiateCheckoutInstance
+      description: >
+        Create a checkout instance for use from Embedded Checkout.
+
+
+        For more information, see the
+        [documentation](https://developer.peachpayments.com/docs/checkout-embedded-tutorial#tutorial). 
+      parameters:
+        - description: An allowlisted domain for the merchant.
+          in: header
+          name: Referer
+          required: true
+          schema:
+            type: string
+          example: https://mydemostore.com
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckoutV2'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CheckoutV2'
+      responses:
+        '200':
+          description: Checkout successfully created.
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/CheckoutV2GenerationInitiateCheckoutInstanceResponse
+        '400':
+          description: A validation error has occurred with Checkout.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '401':
+          description: >-
+            Request lacks valid authentication, message in response contains
+            specifics.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '404':
+          description: Invalid entity ID passed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+  /api/channels/{entityId}/payments:
+    post:
+      tags:
+        - Payment
+      summary: Generate link
+      operationId: Payment_generateLink
+      description: >
+        Generate a unique payment link for a transaction and optionally send
+        this link to the recipient via email, SMS, WhatsApp, or a combination of
+        the three.
+
+
+        For more information, see the
+        [documentation](https://developer.peachpayments.com/docs/generate-link-1).
+      parameters:
+        - description: The entity for the request.
+          name: entityId
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 8ac7a4ca694cec2601694cf5f9360026
+          style: simple
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GenerateLinkPayment'
+      responses:
+        '200':
+          description: OK.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenerateLinkResponse'
+        '400':
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenerateLinkErrorResponse'
+        '401':
+          description: Request lacks valid authentication.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                message: Request lacks valid authentication.
+      callbacks:
+        Payment link created:
+          '{$request.body#/options/notificationUrl}':
+            post:
+              summary: Payment link created for request.
+              description: Event raised when a payment link is created.
+              requestBody:
+                required: true
+                content:
+                  application/json:
+                    schema:
+                      $ref: '#/components/schemas/PaymentLinkCreatedWebhook'
+              responses:
+                '200':
+                  description: Return this code if your service accepts the webhook.
+        Payment link opened:
+          '{$request.body#/options/notificationUrl}':
+            post:
+              summary: Payment link opened by a user.
+              description: Event raised when a user opens a payment link.
+              requestBody:
+                required: true
+                content:
+                  application/json:
+                    schema:
+                      $ref: '#/components/schemas/PaymentLinkOpenedWebhook'
+              responses:
+                '200':
+                  description: Return this code if your service accepts the webhook.
+        Payment link processing:
+          '{$request.body#/options/notificationUrl}':
+            post:
+              summary: Payment link is processing.
+              description: Event raised when a user is directed to Checkout to pay.
+              requestBody:
+                required: true
+                content:
+                  application/json:
+                    schema:
+                      $ref: '#/components/schemas/PaymentLinkProcessingWebhook'
+              responses:
+                '200':
+                  description: Return this code if your service accepts the webhook.
+        Payment link expired:
+          '{$request.body#/options/notificationUrl}':
+            post:
+              summary: Payment link expired.
+              description: Event raised when a payment link expires.
+              requestBody:
+                required: true
+                content:
+                  application/json:
+                    schema:
+                      $ref: '#/components/schemas/PaymentLinkExpiredWebhook'
+              responses:
+                '200':
+                  description: Return this code if your service accepts the webhook.
+        Payment link completed:
+          '{$request.body#/options/notificationUrl}':
+            post:
+              summary: Payment link completed.
+              description: Event raised when a payment link is completed.
+              requestBody:
+                required: true
+                content:
+                  application/json:
+                    schema:
+                      $ref: '#/components/schemas/PaymentLinkCompletedWebhook'
+              responses:
+                '200':
+                  description: Return this code if your service accepts the webhook.
+  /api/payments:
+    get:
+      tags:
+        - Payment
+      summary: Retrieve or export all payment links
+      operationId: Payment_getAllPaymentLinks
+      description: >-
+        Retrieve a paginated list or export a CSV of all payment links. To
+        export to CSV, change the request header's `Accept` value to `text/csv`.
+        For more information, see the
+        [documentation](https://developer.peachpayments.com/docs/retrieve-all-payment-links),
+        or to try it out, see our [Postman
+        collection](https://www.postman.com/peachpayments/workspace/peach-payments-public-workspace/request/13324425-265d80b0-5baa-478b-be10-debc942ca8f3).
+      parameters:
+        - description: >-
+            The unique merchant ID to scope the list to. Required if you're
+            exporting payment links to CSV.
+          name: merchant
+          in: query
+          required: false
+          schema:
+            type: string
+            example: 9f6ea39b121d11e89d9774d4352a31dz
+        - description: The offset from which to read data.
+          name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+        - description: The amount of items to retrieve.
+          name: perPage
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 50
+        - description: Retrieve all payment links from the start date onwards.
+          name: filters[startDate]
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+            example: '2018-03-20T09:12:28Z'
+        - description: Retrieve all payment links until the end date.
+          name: filters[endDate]
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+            example: '2018-03-20T09:12:28Z'
+        - description: The payment link status to filter on.
+          name: filters[status]
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - initiated
+              - processing
+              - expired
+              - cancelled
+              - completed
+            example: initiated
+        - description: The amount to filter by.
+          name: filters[amountValue]
+          in: query
+          required: false
+          schema:
+            type: number
+            example: 100
+        - description: How to use the amountValue for filtering.
+          name: filters[amountOperator]
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - lt
+              - lte
+              - gt
+              - gte
+              - eq
+            example: lt
+        - description: The sending option to filter on.
+          name: filters[sendingOptions]
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - sendEmail
+              - sendSms
+              - sendWhatsapp
+              - emailCc
+              - emailBcc
+            example: sendEmail
+      responses:
+        '200':
+          description: OK.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentGetAllPaymentLinksResponse'
+            text/csv:
+              schema:
+                $ref: '#/components/schemas/PaymentGetAllPaymentLinks200Response'
+        '401':
+          description: Request lacks valid authentication.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                message: Request lacks valid authentication.
+  /api/payments/{paymentId}:
+    delete:
+      tags:
+        - Payment
+      summary: Cancel link
+      operationId: Payment_cancelLink
+      description: >
+        Cancel a previously-generated link by supplying the unique paymentId
+        which is returned to you in the payment response.
+
+
+        For more information, see the
+        [documentation](https://developer.peachpayments.com/docs/cancel-link).
+      parameters:
+        - description: The ID of the payment. Returned when creating a new payment.
+          name: paymentId
+          in: path
+          required: true
+          schema:
+            type: string
+          style: simple
+          example: b95d6888-591b-4538-b508-6102cf1259c9
+      responses:
+        '200':
+          description: OK.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                message: >-
+                  Payment 12cc649f-70e9-4c50-8682-28eb94634ea6 has been
+                  successfully cancelled.
+        '401':
+          description: Request lacks valid authentication.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                message: Request lacks valid authentication.
+        '404':
+          description: The specified resource was not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                message: The specified resource was not found.
+    get:
+      tags:
+        - Status
+      summary: Query payment status
+      operationId: Status_queryPaymentStatus
+      description: >
+        Query the status of a payment.
+
+
+        For more information, see the
+        [documentation](https://developer.peachpayments.com/docs/query-payment).
+      parameters:
+        - description: Payment ID. Returned when creating a new payment.
+          name: paymentId
+          in: path
+          required: true
+          schema:
+            type: string
+          style: simple
+          example: b95d6888-591b-4538-b508-6102cf1259c9
+      responses:
+        '200':
+          description: OK.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusQueryPaymentStatusResponse'
+        '401':
+          description: Request lacks valid authentication.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                message: Request lacks valid authentication.
+        '404':
+          description: The specified resource was not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                message: The specified resource was not found.
+  /api/payments/{paymentId}/files/{fileId}:
+    get:
+      tags:
+        - Files
+      summary: Download a file
+      operationId: Files_downloadFile
+      description: Downloads a file that was attached to a payment link.
+      parameters:
+        - description: Payment ID.
+          name: paymentId
+          in: path
+          required: true
+          schema:
+            type: string
+          style: simple
+          example: b95d6888-591b-4538-b508-6102cf1259c9
+        - description: File ID.
+          name: fileId
+          in: path
+          required: true
+          schema:
+            type: string
+          style: simple
+          example: ca6cd55b-4be6-451d-bd72-fe5b7ec1f75z
+      responses:
+        '200':
+          description: OK.
+        '400':
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '401':
+          description: Request lacks valid authentication.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                message: Request lacks valid authentication.
+        '404':
+          description: The specified resource was not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                message: The specified resource was not found.
+  /api/attachments:
+    post:
+      tags:
+        - Files
+      summary: Upload a file
+      operationId: Files_uploadFile
+      description: >-
+        Upload a file so that it can be attached to a payment link. Only PDFs
+        smaller than 5 MB are supported.
+      requestBody:
+        description: File content.
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/FilesUploadFileRequest'
+            encoding:
+              file:
+                contentType: application/pdf
+      responses:
+        '200':
+          description: OK.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FilesUploadFileResponse'
+        '400':
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '401':
+          description: Request lacks valid authentication.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                message: Request lacks valid authentication.
+        '404':
+          description: The specified resource was not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                message: The specified resource was not found.
+  /api/channels/{entityId}/payments/batches:
+    post:
+      tags:
+        - Batch
+      summary: Generate batch link
+      operationId: Batch_generateLink
+      description: >
+        Returns a URL to which the batch file must be uploaded.
+
+
+        For more information, see the
+        [documentation](https://developer.peachpayments.com/docs/generate-bulk-payment-links).
+      parameters:
+        - description: The entity for the request.
+          name: entityId
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 8ac7a4ca694cec2601694cf5f9360026
+          style: simple
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BatchGenerateLinkRequest'
+      responses:
+        '200':
+          description: Batch ID and URL.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchGenerateLinkResponse'
+        '400':
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '401':
+          description: Request lacks valid authentication.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                message: Request lacks valid authentication.
+        '404':
+          description: The specified resource was not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                message: Channel not found.
+    get:
+      tags:
+        - Batch
+      summary: Get all batch statuses
+      operationId: Batch_getBatchStatuses
+      description: Query all batch statuses of a batch for a channel.
+      parameters:
+        - description: The entity for the request.
+          name: entityId
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 8ac7a4ca694cec2601694cf5f9360026
+          style: simple
+        - description: The offset from which to read data.
+          name: offset
+          in: query
+          required: false
+          schema:
+            type: number
+            default: 0
+        - description: The amount of items to retrieve.
+          name: perPage
+          in: query
+          required: false
+          schema:
+            type: number
+            default: 50
+        - description: Retrieve all batches from the start date onwards.
+          name: filters[startDate]
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+            example: '2018-03-20T09:12:28Z'
+        - description: Retrieve all batches until the end date.
+          name: filters[endDate]
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+            example: '2018-03-20T09:12:28Z'
+        - description: The payment link status to filter on.
+          name: filters[status]
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - initiated
+              - processing
+              - expired
+              - error
+              - completed
+            example: initiated
+      responses:
+        '200':
+          description: URL.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchGetBatchStatusesResponse'
+        '401':
+          description: Request lacks valid authentication.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                message: Request lacks valid authentication.
+        '404':
+          description: The specified resource was not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                message: Channel not found.
+  /api/batches/{batchId}:
+    get:
+      tags:
+        - Batch
+      summary: Batch link status
+      operationId: Batch_linkStatusGet
+      description: Returns the status of the batch.
+      parameters:
+        - description: The batch ID for the request.
+          name: batchId
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 421e1e63-ddd5-46ec-8812-74eda861259b
+          style: simple
+      responses:
+        '200':
+          description: Status received.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchResponse'
+        '404':
+          description: The specified resource was not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                message: Batch ID not found.
+  /api/batches/{batchId}/files:
+    get:
+      tags:
+        - Batch
+      summary: Get batch error files
+      operationId: Batch_getErrorFiles
+      description: >-
+        Returns a set of URLs that can be accessed to retrieve the batch error
+        files.
+      parameters:
+        - description: The batch for the request.
+          name: batchId
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 421e1e63-ddd5-46ec-8812-74eda861259b
+          style: simple
+      responses:
+        '200':
+          description: Error files.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchGetErrorFilesResponse'
+        '404':
+          description: The specified resource was not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                message: Batch ID not found.
+  /:
+    post:
+      tags:
+        - Payments API outbound
+      summary: Merchant webhook
+      operationId: merchant_webhook
+      description: >
+        Encrypted and decrypted webhook sent to merchant - retries if response
+        HTTP status code is not 200.
+
+
+        For more information, see the
+        [documentation](https://developer.peachpayments.com/docs/payments-api-flows#webhook-flow).
+      parameters:
+        - in: header
+          name: X-Initialization-Vector
+          schema:
+            description: Initialization vector used to decrypt webhook payload.
+            type: string
+            example: 34ba8cf802216b4fab4c3f1z
+        - in: header
+          name: X-Authentication-Tag
+          schema:
+            description: Authentication tag.
+            type: string
+            example: 50d697553c37c1f9865acc3dc0f8b5az
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JSONMerchantWebhook'
+          text/plain:
+            schema:
+              $ref: '#/components/schemas/PlainTextMerchantWebhook'
+      responses:
+        '200':
+          description: OK.
+  /payments:
+    post:
+      tags:
+        - Payments API inbound
+      summary: Payment
+      operationId: PaymentsApiInbound_initiateDebitTransaction
+      description: >
+        Initiate a debit transaction.
+
+
+        Certain parameters are mandatory for specific payment methods and
+        certain parameters act differently depending on the payment method. 
+
+
+        - For 1Voucher, `customer.mobile` (the customer's phone number for
+        receiving change vouchers and refunds) and `virtualAccount.password`
+        (the voucher PIN) are mandatory.
+
+        - For M-PESA, `virtualAccount.accountId` (the customer's 12-digit phone
+        number) is mandatory. M-PESA only accepts integer amounts, not decimals,
+        so round up your amount.
+
+        - For blink by Emtel and MCB Juice, `virtualAccount.accountId` (the
+        customer's 8-digit phone number) is mandatory.
+
+        - For Mobicred, `virtualAccount.accountId` (the customer's Mobicred
+        email address) and `virtualAccount.password` (the customer's Mobicred
+        password) are mandatory.
+
+        - For Capitec Pay, `virtualAccount.type` (the customer's identifier
+        type; `IDNUMBER`, `CELLPHONE`, or `ACCOUNTNUMBER`) and
+        `virtualAccount.accountId` (the customer's 13-digit ID number, 10-digit
+        phone number starting with `0`, or up-to 64-digit, alphanumeric bank
+        account number) are mandatory. High-risk merchants must provide the
+        verified `IDNUMBER` and cannot use the `CELLPHONE` or `ACCOUNTNUMBER`
+        account types.
+
+        - For EFTsecure, Payflex, ZeroPay, FinChoicePay, Scan to Pay, M-PESA,
+        blink by Emtel, Mobicred, Capitec Pay, Nebank Direct EFT, and MCB Juice,
+        the `shopperResultUrl` is mandatory.
+
+
+        For more information, see the
+        [documentation](https://developer.peachpayments.com/docs/payments-api-flows#payment-flow)
+        and for sample calls, see our [public Postman
+        collection](https://www.postman.com/peachpayments/workspace/peach-payments-public-workspace/request/13324425-693c4b18-dad5-4b6f-aeb0-99bc28b94812).
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentRequest'
+      responses:
+        '200':
+          description: OK.
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/PaymentsApiInboundInitiateDebitTransactionResponse
+        '400':
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error400Response'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    get:
+      tags:
+        - Payments API inbound
+      summary: Query a transaction by merchantTransactionId
+      operationId: transaction_status
+      description: >
+        Query the status of a transaction using the merchantTransactionId. Could
+        return multiple results.
+
+
+        For more information, see the
+        [documentation](https://developer.peachpayments.com/docs/payments-api-flows#transaction-status-flow).
+      parameters:
+        - in: query
+          name: authentication.userId
+          required: true
+          schema:
+            $ref: '#/components/schemas/UserId'
+        - in: query
+          name: authentication.password
+          required: true
+          schema:
+            $ref: '#/components/schemas/Password'
+        - in: query
+          name: authentication.entityId
+          required: true
+          schema:
+            $ref: '#/components/schemas/EntityId'
+        - in: query
+          name: merchantTransactionId
+          required: true
+          schema:
+            $ref: '#/components/schemas/MerchantTransactionId'
+      responses:
+        '200':
+          description: OK.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MerchantTransactionIdStatusResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /payments/{uniqueId}:
+    get:
+      tags:
+        - Payments API inbound
+      summary: Query a transaction by transaction ID
+      operationId: PaymentsApiInbound_queryTransactionById
+      description: >
+        Query the status of a transaction using the Peach Payments unique ID.
+
+
+        For more information, see the
+        [documentation](https://developer.peachpayments.com/docs/payments-api-flows#transaction-status-flow).
+      parameters:
+        - description: The Peach Payments unique ID for the transaction.
+          name: uniqueId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UniqueId'
+        - description: Authentication entityId.
+          name: authentication.entityId
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/EntityId'
+        - description: Authentication userId.
+          name: authentication.userId
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/UserId'
+        - description: Authentication password.
+          name: authentication.password
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/Password'
+      responses:
+        '200':
+          description: OK.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionIdStatusResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      tags:
+        - Payments API inbound
+      summary: Refund
+      operationId: PaymentsApiInbound_refundTransaction
+      description: >
+        Refund a successful debit transaction. You can only refund [certain
+        payment
+        methods](https://developer.peachpayments.com/docs/pp-payment-methods).
+
+
+        For more information, see the
+        [documentation](https://developer.peachpayments.com/docs/payments-api-flows#refund-flow).
+      parameters:
+        - description: The Peach Payments unique ID of the original debit transaction.
+          name: uniqueId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UniqueId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefundRequest'
+      responses:
+        '200':
+          description: OK.
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/PaymentsApiInboundRefundTransactionResponse
+        '400':
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error400Response'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '502':
+          $ref: '#/components/responses/RefundErrorResponse'
+components:
+  responses:
+    BadRequest:
+      description: Bad request.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error400Response'
+    Unauthorized:
+      description: Unauthorised.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFound:
+      description: Not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    InternalServerError:
+      description: Internal server error.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Forbidden:
+      description: Forbidden.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    RefundErrorResponse:
+      description: Bad gateway.
+      content:
+        application/json:
+          schema:
+            $ref: >-
+              #/components/schemas/PaymentsApiInboundRefundTransaction502Response
+  schemas:
+    Checkout:
+      type: object
+      properties:
+        authentication.entityId:
+          description: The entity for the request. By default, this is the channel ID.
+          type: string
+          maxLength: 32
+          example: 8ac7a4ca68c22c4d0168c2caab2e0025
+        signature:
+          description: >-
+            Token to verify the integrity of the payment, ensuring that only the
+            merchant sending the request is accepted.
+          type: string
+          maxLength: 64
+          example: a668342244a9c77b08a2f9090d033d6e2610b431a5c0ca975f32035ed06164f4
+        merchantTransactionId:
+          description: Merchant-provided reference number unique for your transactions.
+          type: string
+          maxLength: 16
+          minLength: 8
+          format: 8-16
+          example: OrderNo453432
+        amount:
+          description: >-
+            The amount of the payment request. The period is used as the decimal
+            separator. M-PESA does not support decimal amounts, so Checkout
+            automatically rounds them up.
+          type: string
+          format: ^[0-9]{1,8}(\\.[0-9]{2})?$
+          example: 1010.22
+        paymentType:
+          description: >
+            The payment type for the request. Accepts `DB`.
+
+
+            Does not accept `RG`, but you can tokenise a card by performing a DB
+            with `createRegistration`.
+
+
+            Refund transactions through the Dashboard or as described in the <a
+            href="https://developer.peachpayments.com/docs/checkout-refund"
+            target="_blank">documentation</a>.
+          type: string
+          enum:
+            - DB
+          example: DB
+        currency:
+          description: The currency code of the payment request amount.
+          type: string
+          enum:
+            - ZAR
+            - USD
+            - KES
+            - MUR
+            - GBP
+            - EUR
+          example: ZAR
+        nonce:
+          description: Unique value to represent each request.
+          type: string
+          example: UNQ00012345678
+          maxLength: 64
+          format: string (1-64)
+        shopperResultUrl:
+          description: >-
+            Checkout uses a POST request to redirect the customer to this URL
+            after the customer completes checkout. Must be a valid URL that can
+            be accessed through a browser.
+          type: string
+          format: string (6-2048)
+          example: https://mydemostore.com/OrderNo453432
+        defaultPaymentMethod:
+          description: >-
+            The preferred payment method which is active in the checkout page at
+            the point of redirecting.
+          type: string
+          enum:
+            - CARD
+            - MASTERPASS
+            - MOBICRED
+            - EFTSECURE
+            - MPESA
+            - 1FORYOU
+            - APLUS
+            - PAYPAL
+            - ZEROPAY
+            - PAYFLEX
+            - FINCHOICEPAY
+            - BLINKBYEMTEL
+            - CAPITECPAY
+            - NEDBANKDIRECTEFT
+            - PAYBYBANK
+            - APPLE PAY
+            - MCBJUICE
+          example: CARD
+        forceDefaultMethod:
+          description: Force the default payment method to be the only payment method.
+          type: string
+          enum:
+            - 'true'
+            - 'false'
+          example: 'false'
+          default: 'false'
+        merchantInvoiceId:
+          description: >-
+            Merchant-provided invoice number unique for your transactions. This
+            identifier is not sent onwards.
+          type: string
+          minLength: 8
+          maxLength: 255
+          format: string (8-255)
+          example: INV-0001
+        cancelUrl:
+          description: >-
+            The customer is redirected to this URL if they cancel checkout. It
+            must be a valid URL that can be reached through a browser.
+          type: string
+          format: string (6-2048)
+          example: https://mydemostore.com/OrderNo453432/cancelled
+        notificationUrl:
+          description: >-
+            Override the preconfigured webhook URL for this checkout instance,
+            any changes to checkout will send a webhook to this url.
+          type: string
+          format: string (6-2048)
+          example: https://mydemostore.com/OrderNo453432/webhook
+        customParameters[name]:
+          description: A name value pair used for sending custom information.
+          type: string
+          format: 'name: [a-zA-Z0-9\._]{3,64} value: [\s\S]{0,2048}'
+          example: 'name: Name1 value: Value1'
+        customer.merchantCustomerId:
+          description: >-
+            An identifier for this customer. Typically this is the ID that
+            identifies the shopper in the shop's system.
+          type: string
+          maxLength: 48
+          minLength: 0
+          format: '[\s\S]{0,48}'
+          example: 971020
+        customer.givenName:
+          description: >
+            The customer's first name or given name.
+
+
+            Required if you send in any other customer parameters, and for some
+            risk checks and payment providers.
+
+
+            Peach Payments recommends including the name so that it displays in
+            the Peach Dashboard and is available for subsequent queries.
+
+
+            Truncated after 48 characters.
+          type: string
+          maxLength: 48
+          minLength: 0
+          format: '[\s\S]{0,48}'
+          example: John
+        customer.surname:
+          description: >
+            The customer's last name or surname.
+
+
+            Required if you send in any other customer parameters, and for some
+            risk checks and payment providers.
+
+
+            Peach Payments recommends including the surname so that it displays
+            in the Peach Dashboard and is available for subsequent queries.
+
+
+            Truncated after 48 characters.
+          type: string
+          maxLength: 48
+          minLength: 0
+          format: '[\s\S]{0,48}'
+          example: Smith
+        customer.mobile:
+          description: The customer's mobile number.
+          type: string
+          maxLength: 24
+          minLength: 5
+          format: '[+0-9][0-9 \.()/-]{5,24}'
+          example: 27123456789
+        customer.email:
+          description: The customer's email address.
+          type: string
+          maxLength: 128
+          minLength: 6
+          format: '[\s\S]{6,128}'
+          example: johnsmith@mail.com
+        customer.status:
+          description: The customer's status. Accepts `NEW` or `EXISTING`.
+          type: string
+          enum:
+            - NEW
+            - EXISTING
+          example: EXISTING
+        customer.birthDate:
+          description: The customer's birth date in the yyyy-MM-dd format.
+          type: string
+          format: yyyy-MM-dd
+          example: '1970-02-17'
+        customer.ip:
+          description: The customer's IP address.
+          type: string
+          maxLength: 255
+          minLength: 1
+          format: '[\s\S]{1,255}'
+          example: 192.168.1.1
+        customer.phone:
+          description: The customer's phone number.
+          type: string
+          maxLength: 24
+          minLength: 5
+          format: '[+0-9][0-9 \.()/-]{5,24}'
+          example: 27123456789
+        customer.idNumber:
+          description: >-
+            The customer's ID number, required for high-risk merchants
+            supporting Capitec Pay.
+          type: string
+          maxLength: 13
+          minLength: 13
+          format: '[\s\S]{13,13}'
+          example: 9001010000084
+        billing.street1:
+          description: >-
+            The door number, floor, building number, building name, and/or
+            street name of the billing address.
+          type: string
+          maxLength: 100
+          minLength: 1
+          format: '[\s\S]{1,100}'
+          example: 1 Example Road
+        billing.street2:
+          description: The adjoining road or locality, if required, of the billing address.
+          type: string
+          maxLength: 100
+          minLength: 1
+          format: '[\s\S]{1,100}'
+          example: LocalityA
+        billing.city:
+          description: The town, district, or city of the billing address.
+          type: string
+          maxLength: 80
+          minLength: 1
+          format: '[\s\S]{1,80}'
+          example: Cape Town
+        billing.company:
+          description: The company of the billing address.
+          type: string
+          maxLength: 64
+          minLength: 1
+          format: '[\s\S]{1,64}'
+          example: CompanyA
+        billing.country:
+          description: The country of the billing address (ISO 3166-1).
+          type: string
+          maxLength: 3
+          minLength: 3
+          format: ISO 3166-1
+          example: ZA
+        billing.state:
+          description: The county, state, or region of the billing address.
+          type: string
+          maxLength: 50
+          minLength: 1
+          format: '[\s\S]{1,50}'
+          example: Western Cape
+        billing.postcode:
+          description: The postal code or ZIP code of the billing address.
+          type: string
+          maxLength: 30
+          minLength: 1
+          format: '[\s\S]{1,30}'
+          example: 1234
+        shipping.street1:
+          description: >-
+            The door number, floor, building number, building name, and/or
+            street name of the shipping address.
+          type: string
+          maxLength: 100
+          minLength: 1
+          format: '[\s\S]{1,100}'
+          example: 1 Example Road
+        shipping.street2:
+          description: >-
+            The adjoining road or locality, if required, of the shipping
+            address.
+          type: string
+          maxLength: 100
+          minLength: 1
+          format: '[\s\S]{1,100}'
+          example: LocalityA
+        shipping.city:
+          description: The town, district, or city of the shipping address.
+          type: string
+          maxLength: 80
+          minLength: 1
+          format: '[\s\S]{1,80}'
+          example: Cape Town
+        shipping.company:
+          description: The company of the shipping address.
+          type: string
+          maxLength: 64
+          minLength: 1
+          format: '[\s\S]{1,64}'
+          example: CompanyA
+        shipping.postcode:
+          description: The postal code or ZIP code of the shipping address.
+          type: string
+          maxLength: 30
+          minLength: 1
+          format: '[\s\S]{1,30}'
+          example: 1234
+        shipping.country:
+          description: The country of the shipping address (ISO 3166-1).
+          type: string
+          maxLength: 3
+          minLength: 3
+          format: ISO 3166-1
+          example: ZA
+        shipping.state:
+          description: The county, state, or region of the shipping address.
+          type: string
+          maxLength: 50
+          minLength: 1
+          format: '[\s\S]{1,50}'
+          example: Western Cape
+        cart.tax:
+          description: >-
+            The tax percentage applied to the price of the item in the shopping
+            cart.
+          type: string
+          format: ^[0-9]{1,8}(\\.[0-9]{2})?$
+          example: '15.00'
+        cart.shippingAmount:
+          description: The total amount of the cart item including quantity.
+          type: string
+          format: ^[0-9]{1,8}(\\.[0-9]{2})?$
+          example: '12.25'
+        cart.discount:
+          description: Discount amount applied on order amount.
+          type: string
+          format: ^[0-9]{1,8}(\\.[0-9]{2})?$
+          example: '02.25'
+        createRegistration:
+          description: Used to enable card tokenisation with COPYandPAY.
+          type: string
+          enum:
+            - 'true'
+            - 'false'
+          example: 'false'
+        originator:
+          description: >-
+            Used to provide a name for the application that is creating the
+            checkout instance.
+          type: string
+          maxLength: 100
+          example: Webstore
+        returnTo:
+          description: Text to display on "Return to Store" button on completing checkout.
+          type: string
+          enum:
+            - STORE
+            - INVOICE
+      required:
+        - authentication.entityId
+        - signature
+        - merchantTransactionId
+        - amount
+        - paymentType
+        - currency
+        - nonce
+        - shopperResultUrl
+    CheckoutStatus:
+      type: object
+      properties:
+        status:
+          description: The status of the object.
+          type: string
+          example: PROCESSING
+        timestamp:
+          description: The remaining time, in seconds, of the checkout instance.
+          type: string
+          example: 1800
+        redirect_url:
+          description: Redirect URL for Checkout.
+          type: string
+        redirect_post_data:
+          $ref: '#/components/schemas/RedirectPostData'
+    RedirectPostData:
+      type: object
+      properties:
+        amount:
+          description: The checkout amount.
+          type: string
+          example: '14.99'
+        checkoutId:
+          type: string
+          example: 948cc8dec52a11eb85290242ac130003
+        currency:
+          description: The currency code of the payment request amount.
+          type: string
+          enum:
+            - ZAR
+            - USD
+            - KES
+            - MUR
+            - GBP
+            - EUR
+          example: ZAR
+        merchantTransactionId:
+          description: The merchant transaction ID set when creating the checkout.
+          type: string
+        paymentType:
+          type: string
+          enum:
+            - DB
+          example: DB
+        result.code:
+          description: A code representing the transaction state.
+          type: string
+          example: 000.200.100
+        result.description:
+          description: A friendly message.
+          type: string
+          example: Successfully created checkout.
+        timestamp:
+          description: Date and time when the checkout was created.
+          type: string
+          example: '2021-06-17T14:22:22Z'
+    CheckoutError:
+      type: object
+      properties:
+        result.code:
+          description: A code representing the error.
+          type: string
+          example: 200.300.404
+        result.description:
+          description: A friendly error message.
+          type: string
+          example: Invalid or missing parameter.
+    MessageResponse:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+    CheckoutPage:
+      description: The checkout frontend HTML page.
+      type: string
+    CheckoutErrorPage:
+      description: An error page detailing the error that has occured.
+      type: string
+    CheckoutBaseWebhook:
+      description: The base model for webhooks.
+      readOnly: true
+      type: object
+      properties:
+        amount:
+          description: >-
+            The amount of the payment request. The period is used as the decimal
+            separator. M-PESA does not support decimal amounts, so Checkout
+            automatically rounds them up.
+          type: string
+          format: ^[0-9]{1,8}(\\.[0-9]{2})?$
+          example: 1010.22
+        checkoutId:
+          description: Checkout ID.
+          type: string
+          example: 948cc8dec52a11eb85290242ac130003
+          maxLength: 64
+        currency:
+          description: The currency code of the payment request amount.
+          type: string
+          enum:
+            - ZAR
+            - USD
+            - KES
+            - MUR
+            - GBP
+            - EUR
+          example: ZAR
+        merchantTransactionId:
+          description: Merchant-provided reference number unique for your transactions.
+          type: string
+          maxLength: 16
+          minLength: 8
+          format: 8-16
+          example: OrderNo453432
+        paymentType:
+          description: The payment type for the request.
+          type: string
+          enum:
+            - DB
+          example: DB
+        result.code:
+          description: A code representing the checkout state.
+          type: string
+        result.description:
+          description: A friendly message.
+          type: string
+        signature:
+          description: >-
+            Token to verify the integrity of the webhook, ensuring the request
+            is coming from Checkout.
+          type: string
+          maxLength: 64
+          example: a668342244a9c77b08a2f9090d033d6e2610b431a5c0ca975f32035ed06164f4
+        timestamp:
+          description: Date and time when the webhook was sent.
+          type: string
+          example: '2023-07-04T08:10:05Z'
+    CheckoutCreatedWebhook:
+      description: Webhook sent when a checkout instance is created.
+      allOf:
+        - $ref: '#/components/schemas/CheckoutBaseWebhook'
+        - type: object
+          properties:
+            result.code:
+              type: string
+              default: 000.200.100
+            result.description:
+              type: string
+              default: successfully created checkout
+    CheckoutCancelledWebhook:
+      description: Webhook sent when a checkout instance is cancelled.
+      allOf:
+        - $ref: '#/components/schemas/CheckoutBaseWebhook'
+        - type: object
+          properties:
+            result.code:
+              type: string
+              default: 100.396.101
+            result.description:
+              type: string
+              default: Cancelled by user
+    CheckoutUncertainWebhook:
+      description: >-
+        Webhook sent when a checkout instance is potentially cancelled by a
+        user.
+      allOf:
+        - $ref: '#/components/schemas/CheckoutBaseWebhook'
+        - type: object
+          properties:
+            result.code:
+              type: string
+              default: 100.396.104
+            result.description:
+              type: string
+              default: Uncertain status - probably cancelled by user
+    CheckoutPendingWebhook:
+      description: Webhook sent when a transaction is created on a checkout instance.
+      allOf:
+        - $ref: '#/components/schemas/CheckoutBaseWebhook'
+        - type: object
+          properties:
+            id:
+              description: The transaction ID.
+              type: string
+            paymentBrand:
+              description: The payment method which the customer is paying with.
+              type: string
+              enum:
+                - VISA
+                - MASTERCARD
+                - DINERS CLUB
+                - AMERICAN EXPRESS
+                - MASTERPASS
+                - MOBICRED
+                - EFTSECURE
+                - MPESA
+                - 1FORYOU
+                - APLUS
+                - PAYPAL
+                - ZEROPAY
+                - PAYFLEX
+                - FINCHOICEPAY
+                - BLINKBYEMTEL
+                - CAPITECPAY
+                - NEDBANKDIRECTEFT
+                - PAYBYBANK
+                - MCBJUICE
+              example: VISA
+            result.code:
+              type: string
+              default: 000.200.000
+            result.description:
+              type: string
+              default: transaction pending
+    CheckoutSuccessfulWebhook:
+      description: Webhook sent when a checkout instance is successfully completed.
+      allOf:
+        - $ref: '#/components/schemas/CheckoutPendingWebhook'
+        - type: object
+          properties:
+            merchant.name:
+              type: string
+            recon.authCode:
+              type: string
+            recon.resultCode:
+              type: string
+            recon.rrn:
+              type: string
+            result.code:
+              type: string
+              default: 000.000.000
+            result.description:
+              type: string
+              default: >-
+                Request successfully processed in 'Merchant in Integrator Test
+                Mode'
+            resultDetails.AcquirerResponse:
+              type: string
+            resultDetails.ConnectorTxID1:
+              type: string
+            resultDetails.ExtendedDescription:
+              type: string
+        - oneOf:
+            - type: object
+              properties:
+                card.bin:
+                  type: string
+                card.holder:
+                  type: string
+                card.last4Digits:
+                  type: string
+            - type: object
+              properties:
+                paymentBrand:
+                  type: string
+                  default: EFTSECURE
+    CheckoutV2:
+      type: object
+      properties:
+        authentication.entityId:
+          description: The entity for the request. By default, this is the channel ID.
+          type: string
+          maxLength: 32
+          example: 8ac7a4ca68c22c4d0168c2caab2e0025
+        merchantTransactionId:
+          description: Merchant-provided reference number unique for your transactions.
+          type: string
+          maxLength: 16
+          minLength: 8
+          format: 8-16
+          example: OrderNo453432
+        amount:
+          description: >
+            The amount of the payment request. The period is used as the decimal
+            separator.
+
+
+            M-PESA does not support decimal amounts, so Checkout automatically
+            rounds them up.
+          type: number
+          minimum: 0.01
+          maximum: 99999999.99
+          format: ^[0-9]{1,8}(\\.[0-9]{2})?$
+          example: 1010.22
+        currency:
+          description: The currency code of the payment request amount.
+          type: string
+          enum:
+            - ZAR
+            - USD
+            - KES
+            - MUR
+            - GBP
+            - EUR
+          example: ZAR
+        nonce:
+          description: Unique value to represent each request.
+          type: string
+          example: UNQ00012345678
+          maxLength: 64
+          minLength: 1
+          format: string (1-64)
+        shopperResultUrl:
+          description: >-
+            Checkout uses a POST request to redirect the customer to this URL
+            after the customer completes checkout. Must be a valid URL that can
+            be accessed through a browser.
+          type: string
+          format: string (6-2048)
+          example: https://mydemostore.com/OrderNo453432
+        defaultPaymentMethod:
+          description: >-
+            The preferred payment method which is active in the checkout page at
+            the point of redirecting.
+          type: string
+          enum:
+            - CARD
+            - MASTERPASS
+            - MOBICRED
+            - EFTSECURE
+            - MPESA
+            - 1FORYOU
+            - APLUS
+            - PAYPAL
+            - ZEROPAY
+            - PAYFLEX
+            - FINCHOICEPAY
+            - BLINKBYEMTEL
+            - CAPITECPAY
+            - NEDBANKDIRECTEFT
+            - PAYBYBANK
+            - MCBJUICE
+          example: CARD
+        forceDefaultMethod:
+          description: Force the default payment method to be the only payment method.
+          type: boolean
+          example: true
+          default: 'false'
+        merchantInvoiceId:
+          description: >-
+            Merchant-provided invoice number unique for your transactions. This
+            identifier is not sent onwards.
+          type: string
+          minLength: 8
+          maxLength: 255
+          format: string (8-255)
+          example: INV-00001
+        cancelUrl:
+          description: >-
+            The customer is redirected to this URL if they cancel checkout. It
+            must be a valid URL that can be reached through a browser.
+          type: string
+          format: string (6-2048)
+          example: https://mydemostore.com/OrderNo453432/cancelled
+        notificationUrl:
+          description: >-
+            Override the preconfigured webhook URL for this checkout instance,
+            any changes to checkout send a webhook to this URL.
+          type: string
+          format: string (6-2048)
+          example: https://mydemostore.com/OrderNo453432/webhook
+        customParameters:
+          description: A name value pair used for sending custom information.
+          type: object
+          additionalProperties:
+            type: string
+            minLength: 0
+            maxLength: 2048
+        customer:
+          type: object
+          properties:
+            merchantCustomerId:
+              description: >-
+                An identifier for this customer. Typically this is the ID that
+                identifies the shopper in the shop's system.
+              type: string
+              maxLength: 48
+              minLength: 0
+              format: '[\s\S]{0,48}'
+              example: 971020
+            givenName:
+              description: >
+                The customer's first name or given name. Required if you send in
+                any other customer parameters, also required for some risk
+                checks and payment providers. Truncated after 48 characters.
+
+
+                Peach Payments recommends including the name so that it displays
+                in the Peach Dashboard and is available for subsequent queries.
+              type: string
+              maxLength: 48
+              minLength: 0
+              format: '[\s\S]{0,48}'
+              example: John
+            surname:
+              description: >
+                The customer's last name or surname. Required if you send in any
+                other customer parameters, also required for some risk checks
+                and payment providers. Truncated after 48 characters.
+
+
+                Peach Payments recommends including the surname so that it
+                displays in the Peach Dashboard and is available for subsequent
+                queries.
+              type: string
+              maxLength: 48
+              minLength: 0
+              format: '[\s\S]{0,48}'
+              example: Smith
+            mobile:
+              description: The customer's mobile number.
+              type: string
+              maxLength: 24
+              minLength: 5
+              format: '[+0-9][0-9 \.()/-]{5,24}'
+              example: 27123456789
+            email:
+              description: The customer's email address.
+              type: string
+              maxLength: 128
+              minLength: 6
+              format: '[\s\S]{6,128}'
+              example: johnsmith@mail.com
+            idNumber:
+              description: >-
+                The customer's ID number, required for high-risk merchants
+                supporting Capitec Pay.
+              type: string
+              maxLength: 13
+              minLength: 13
+              format: '[\s\S]{13,13}'
+              example: 9001010000084
+        billing:
+          type: object
+          properties:
+            street1:
+              description: >-
+                The door number, floor, building number, building name, and/or
+                street name of the billing address.
+              type: string
+              maxLength: 100
+              minLength: 1
+              format: '[\s\S]{1,100}'
+              example: 1 Example Road
+            street2:
+              description: >-
+                The adjoining road or locality, if required, of the billing
+                address.
+              type: string
+              maxLength: 100
+              minLength: 1
+              format: '[\s\S]{1,100}'
+              example: LocalityA
+            city:
+              description: The town, district, or city of the billing address.
+              type: string
+              maxLength: 80
+              minLength: 1
+              format: '[\s\S]{1,80}'
+              example: Cape Town
+            company:
+              description: The company of the billing address.
+              type: string
+              maxLength: 64
+              minLength: 1
+              format: '[\s\S]{1,64}'
+              example: CompanyA
+            country:
+              description: The country of the billing address (ISO 3166-1).
+              type: string
+              maxLength: 2
+              minLength: 2
+              format: ISO 3166-1
+              example: ZA
+            state:
+              description: The county, state, or region of the billing address.
+              type: string
+              maxLength: 50
+              minLength: 1
+              format: '[\s\S]{1,50}'
+              example: Western Cape
+            postcode:
+              description: The postal code or ZIP code of the billing address.
+              type: string
+              maxLength: 30
+              minLength: 1
+              format: '[\s\S]{1,30}'
+              example: 1234
+        shipping:
+          type: object
+          properties:
+            street1:
+              description: >-
+                The door number, floor, building number, building name, and/or
+                street name of the shipping address.
+              type: string
+              maxLength: 100
+              minLength: 1
+              format: '[\s\S]{1,100}'
+              example: 1 Example Road
+            street2:
+              description: >-
+                The adjoining road or locality, if required, of the shipping
+                address.
+              type: string
+              maxLength: 100
+              minLength: 1
+              format: '[\s\S]{1,100}'
+              example: LocalityA
+            city:
+              description: The town, district, or city of the shipping address.
+              type: string
+              maxLength: 80
+              minLength: 1
+              format: '[\s\S]{1,80}'
+              example: Cape Town
+            company:
+              description: The company of the shipping address.
+              type: string
+              maxLength: 64
+              minLength: 1
+              format: '[\s\S]{1,64}'
+              example: CompanyA
+            postcode:
+              description: The postal code or ZIP code of the shipping address.
+              type: string
+              maxLength: 30
+              minLength: 1
+              format: '[\s\S]{1,30}'
+              example: 1234
+            country:
+              description: The country of the shipping address (ISO 3166-1).
+              type: string
+              maxLength: 2
+              minLength: 2
+              format: ISO 3166-1
+              example: ZA
+            state:
+              description: The county, state, or region of the shipping address.
+              type: string
+              maxLength: 50
+              minLength: 1
+              format: '[\s\S]{1,50}'
+              example: Western Cape
+        createRegistration:
+          description: Used to enable card tokenisation with COPYandPAY.
+          type: boolean
+          example: true
+        originator:
+          description: >-
+            Used to provide a name for the application that is creating the
+            checkout instance.
+          type: string
+          maxLength: 100
+          example: Webstore
+        returnTo:
+          description: Text to display on "Return to Store" button on completing checkout.
+          type: string
+          enum:
+            - STORE
+            - INVOICE
+          example: STORE
+      required:
+        - authentication.entityId
+        - merchantTransactionId
+        - amount
+        - currency
+        - nonce
+        - shopperResultUrl
+    Address:
+      description: Optional object that can be used for billing or shipping information.
+      type: object
+      properties:
+        street1:
+          description: >-
+            The door number, floor, building number, building name, and/or
+            street name of the billing or shipping address.
+          type: string
+          maxLength: 100
+          minLength: 1
+          example: Langtree Lane
+          pattern: ^[\s\S]{1,100}$
+        city:
+          description: The town, district, or city linked to billing or shipping.
+          type: string
+          maxLength: 48
+          minLength: 1
+          example: Cape Town
+          pattern: ^[\s\S]{1,48}$
+        state:
+          description: The county, state, or region of the billing address.
+          type: string
+          maxLength: 50
+          minLength: 1
+          example: Nasarawa
+          pattern: ^[a-zA-Z0-9\. ]{1,50}$
+        postalCode:
+          description: The postal code or ZIP code of the address.
+          type: string
+          maxLength: 16
+          minLength: 1
+          example: 7000
+        country:
+          description: >-
+            The country linked to billing or shipping as defined by ISO-3166-1
+            alpha-2.
+          type: string
+          maxLength: 2
+          minLength: 2
+          example: ZA
+          format: iso-3166-1 alpha-2
+          pattern: ^[A-Z]{2}$
+        company:
+          description: The customer's company name.
+          type: string
+          pattern: ^[\s\S]{1,60}$
+          example: Business Mosaics Ltd
+        houseNumber1:
+          description: Primary house number of the billing or shipping address.
+          type: string
+          pattern: ^[\s\S]{1,100}$
+          example: '25567'
+        postcode:
+          description: The postal code or zip code of the billing or shipping address.
+          type: string
+          pattern: ^[\s\S]{1,16}$
+          example: '8001'
+        street2:
+          description: >-
+            Secondary house number of the billing or shipping address. Used when
+            more addresses are bundled to the same primary house number. If
+            present, houseNumber1 is mandatory.
+          type: string
+          pattern: ^[\s\S]{1,100}$
+          example: Loe Street
+        customer:
+          $ref: '#/components/schemas/Customer'
+    Customer:
+      description: Optional object sent if customer data is required.
+      properties:
+        givenName:
+          description: >-
+            The customer's first name or given name. Peach Payments recommends
+            including the name so that it displays in the Peach Dashboard and is
+            available for subsequent queries.
+          type: string
+          example: Jane
+          maxLength: 50
+          minLength: 1
+          pattern: ^[\w'\-,.][^0-9_!¡?÷?¿/\\+=@#$%ˆ&*(){}|~<>;:[\]]{2,127}$
+        surname:
+          description: >-
+            The customer's last name or surname. Peach Payments recommends
+            including the surname so that it displays in the Peach Dashboard and
+            is available for subsequent queries.
+          type: string
+          example: Doe
+          maxLength: 50
+          minLength: 0
+          pattern: ^[\w'\-,.][^0-9_!¡?÷?¿/\\+=@#$%ˆ&*(){}|~<>;:[\]]{2,127}$
+        email:
+          description: The customer's email  address.
+          type: string
+          example: name@example.com
+          maxLength: 128
+          minLength: 6
+          format: email
+          pattern: ^[\s\S]{6,128}$
+        mobile:
+          description: The customer's mobile phone number.
+          type: string
+          example: '27610107822'
+          maxLength: 25
+          minLength: 5
+          pattern: ^[+0-9][0-9 \.()/-]{5,25}$
+        whatsapp:
+          description: >-
+            The customer's WhatsApp number. Required for communicating with
+            customers regarding payment. Format should be +27123456789. Required
+            if sendWhatsapp is true.
+          type: string
+          maxLength: 25
+          minLength: 5
+          example: '+27123456789'
+        billing:
+          $ref: '#/components/schemas/Address'
+        fax:
+          description: The customer's fax number, if provided.
+          type: string
+          pattern: ^[+0-9][0-9 \.()/-]{7,25}$
+          example: '2919392022'
+        phone:
+          description: The customer's phone number.
+          type: string
+          pattern: ^[+0-9][0-9 \.()/-]{7,25}$
+          example: '27210030000'
+        ip:
+          description: The customer's IP address.
+          type: string
+          pattern: ^[\s\S]{1,255}$
+          example: 0.0.0.0
+        merchantCustomerLanguage:
+          description: The language used for the customer on the merchant's site.
+          type: string
+          pattern: ^[\s\S]{1,128}$
+          example: EN
+        status:
+          description: Used to determine if this is a new or returning customer.
+          type: string
+          pattern: ^[\s\S]{1,255}$
+          example: NEW
+        merchantCustomerId:
+          description: The customer's ID on the merchant's site.
+          type: string
+          pattern: ^[\s\S]{1,255}$
+          example: sxxopjqy
+        taxId:
+          description: The customer's tax ID, if required.
+          type: string
+          pattern: ^[\s\S]{1,128}$
+          example: '4550045030303'
+        taxType:
+          description: The customer's tax type, if required.
+          type: string
+          pattern: ^[\s\S]{1,128}$
+          example: tax type
+        birthDate:
+          description: The customer's birth date.
+          type: string
+          pattern: ^(19|20)([0-9]{2})-(0[1-9]|1[0-2])-(0[1-9]|1[0-9]|2[0-9]|3[0-1])$
+          example: '1996-08-07'
+        browser:
+          description: The customer's browser details.
+          type: object
+          properties:
+            acceptHeader:
+              description: The value of the accept header sent from the customer's browser.
+              type: string
+              pattern: ^[\s\S]{1,2048}$
+              example: application/json
+            language:
+              description: >-
+                The value representing the browser language as defined in IETF
+                BCP47.
+              type: string
+              pattern: ^[\s\S]{1,8}$
+              example: EN
+            screenHeight:
+              description: The total height of the customer's screen in pixels.
+              type: string
+              pattern: ^[\s\S]{1,6}$
+              example: '1080'
+            screenWidth:
+              description: The total width of the customer's screen in pixels.
+              type: string
+              pattern: ^[\s\S]{1,6}$
+              example: '1920'
+            timezone:
+              description: >-
+                The time-zone offset in minutes between UTC and the local time
+                of the customer's browser.
+              type: string
+              pattern: ^[\s\S]{1,5}$
+              example: '30'
+            userAgent:
+              description: The exact content of the HTTP user-agent header.
+              type: string
+              pattern: ^[\s\S]{1,2048}$
+              example: >-
+                Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0
+                Firefox/41.0
+            javaEnabled:
+              description: >-
+                The boolean that represents the ability of the customer's
+                browser to execute Java.
+              type: string
+              pattern: ^(true|false)$
+              example: 'false'
+            javascriptEnabled:
+              description: >-
+                The boolean that represents the ability of the customer's
+                browser to execute JavaScript.
+              type: string
+              pattern: ^(true|false)$
+              example: 'true'
+            screenColorDepth:
+              description: >-
+                The value representing the bit depth of the colour palette for
+                displaying images in bits per pixel.
+              type: string
+              pattern: ^[0-9]{1,2}$
+              example: '24'
+            challengeWindow:
+              description: >-
+                The dimensions of the challenge window that has been displayed
+                to the customer.
+              type: string
+              pattern: ^[0-9]{1,2}$
+              example: '01'
+      required:
+        - givenName
+      type: object
+    PaymentOptions:
+      description: >-
+        The options object contains all the communication preferences for the
+        payment link.
+      type: object
+      properties:
+        sendEmail:
+          description: >-
+            Indicates whether to send an email to the customer after creating
+            the payment link.
+          type: boolean
+          default: false
+        sendSms:
+          description: >-
+            Indicates whether to send an SMS to the customer after creating the
+            payment link.
+          type: boolean
+          default: false
+        sendWhatsapp:
+          description: >-
+            Indicates whether to send a WhatsApp message to the customer after
+            creating the payment link.
+          type: boolean
+          example: false
+          default: false
+        emailCc:
+          description: List of comma-separated email addresses to CC.
+          type: string
+          maxLength: 128
+          example: ccexample@mail.com
+        emailBcc:
+          description: List of comma-separated email addresses to BCC.
+          type: string
+          maxLength: 128
+          example: bccexample@mail.com
+        expiryTime:
+          description: >-
+            Time in minutes until the link expires. By default, expiry time is
+            set to 30 days, which is also the maximum expiry time.
+          type: integer
+          example: 5
+          default: 43200
+          maxLength: 43200
+          minLength: 5
+        notificationUrl:
+          description: >-
+            Webhook notification URL for this payment. Overrides the default set
+            on the merchant.
+          type: string
+          example: https://webhook.site/
+    PaymentResponseOptions:
+      type: object
+      properties:
+        sendEmail:
+          description: >-
+            Indicates whether to send an email to the customer after creating
+            the payment link.
+          type: boolean
+          default: false
+        sendSms:
+          description: >-
+            Indicates whether to send an SMS to the customer after creating the
+            payment link.
+          type: boolean
+          default: false
+        sendWhatsapp:
+          description: >-
+            Indicates whether to send a WhatsApp message to the customer after
+            creating the payment link.
+          type: boolean
+          example: false
+          default: false
+        emailCc:
+          description: List of comma-separated email addresses to CC.
+          type: string
+          nullable: true
+          maxLength: 128
+          example: ccexample@mail.com
+        emailBcc:
+          description: List of comma-separated email addresses to BCC.
+          type: string
+          nullable: true
+          maxLength: 128
+          example: bccexample@mail.com
+        notificationUrl:
+          description: >-
+            Webhook notification URL for this payment. Overrides the default set
+            on the merchant.
+          type: string
+          example: https://webhook.site/
+    CheckoutOptions:
+      description: >-
+        The checkout object contains the default payment method and whether to
+        tokenise the card number.
+      type: object
+      properties:
+        defaultPaymentMethod:
+          description: The default payment method to show when Checkout loads.
+          type: string
+          nullable: true
+          maxLength: 20
+          example: CARD
+        forceDefaultMethod:
+          description: Force the default payment method to be the only payment method.
+          type: boolean
+          nullable: true
+          example: false
+          default: false
+        tokeniseCard:
+          description: Tokenise the card number to allow it to be stored.
+          type: boolean
+          example: false
+          default: false
+    CheckoutState:
+      allOf:
+        - $ref: '#/components/schemas/CheckoutOptions'
+        - type: object
+          properties:
+            registrationId:
+              description: Registration ID added if tokeniseCard is true on card payment.
+              type: string
+              example: 8ac7a4a180223d220180227b2cf649f0
+            checkoutId:
+              description: Checkout ID of payment.
+              type: string
+              example: d6a8014a622a442aad90c72320419b2b
+            transactionUniqueId:
+              description: Unique transaction ID of payment.
+              type: string
+              example: 450bf3b1-c479-4b30-99ca-5b598a889b8f
+            resultCode:
+              description: Result code returned for payment.
+              type: string
+              example: 000.100.110
+            paymentBrand:
+              description: Payment brand used for payment.
+              type: string
+              example: VISA
+    GenerateLinkPayment:
+      type: object
+      properties:
+        payment:
+          description: >-
+            The payment object contains the payment details, files, and notes
+            for the payment link.
+          type: object
+          properties:
+            merchantInvoiceId:
+              description: >-
+                Invoice ID that can be used to link the payment to an invoice on
+                the merchant's system. Must be less than 17 characters.
+              type: string
+              example: INV-9001
+              maxLength: 255
+              minLength: 8
+            amount:
+              description: Payment amount. Must be positive and less than 1000000.00.
+              type: number
+              example: 10
+            currency:
+              description: The currency code of the payment request amount (ISO 4217).
+              type: string
+              enum:
+                - ZAR
+                - KES
+                - USD
+              maxLength: 3
+              minLength: 3
+              example: ZAR
+            files:
+              description: Files to attach to the payment link.
+              type: array
+              items:
+                description: ID received from an upload attachment call.
+                type: string
+                format: uuid
+                example: 8DA36E1E-B5DB-45CC-871C-47BDDCD3C2CF
+            notes:
+              description: A note to include with the payment link.
+              type: string
+              maxLength: 140
+              example: Please pay this at your earliest convenience.
+          required:
+            - merchantInvoiceId
+            - amount
+            - currency
+        customer:
+          $ref: '#/components/schemas/Customer'
+        options:
+          $ref: '#/components/schemas/PaymentOptions'
+        checkout:
+          $ref: '#/components/schemas/CheckoutOptions'
+      required:
+        - payment
+        - customer
+        - options
+        - checkout
+    GenerateLinkResponse:
+      type: object
+      required:
+        - url
+        - id
+      properties:
+        url:
+          description: Payment link.
+          type: string
+          example: https://l.ppay.io/G56F5_ll
+        id:
+          description: ID of payment link.
+          type: string
+          example: HBgast80997asAU
+    GenerateLinkErrorResponse:
+      type: object
+      properties:
+        errors:
+          type: object
+          additionalProperties:
+            description: Each entry represents an error with the input data.
+            type: string
+          example:
+            payment.amount: Amount is invalid.
+            payment.notes: Notes field exceeds 140 characters.
+    QueryStatusResponse:
+      type: object
+      properties:
+        id:
+          description: Payment ID.
+          type: string
+          example: b95d6888-591b-4538-b508-6102cf1259c9
+        payment:
+          type: object
+          properties:
+            linkId:
+              description: Payment link ID.
+              type: string
+              example: G56F5_ll
+            linkUrl:
+              description: Payment link URL.
+              type: string
+              example: https://l.ppay.io/af6c33cce7fabefb
+            amount:
+              description: Payment amount.
+              type: number
+              example: 123.45
+            status:
+              description: Payment link status.
+              type: string
+              enum:
+                - initiated
+                - processing
+                - expired
+                - cancelled
+                - completed
+              example: completed
+            currency:
+              description: Currency code for the payment.
+              type: string
+              enum:
+                - ZAR
+                - KES
+                - USD
+              example: ZAR
+            merchantInvoiceId:
+              description: Payment order number provided by merchant.
+              type: string
+              example: INV-902
+            entityId:
+              description: Merchant channel ID that the payment link was created in.
+              type: string
+              example: 8ac7a4ca77a64c9c0177af52972c13bd
+            notes:
+              description: A note to include with the payment link.
+              type: string
+              maxLength: 140
+              example: Please pay this at your earliest convenience.
+            expiryTime:
+              description: Timestamp when the payment link expires.
+              type: string
+              example: '2021-10-27T12:45:27Z'
+            batchId:
+              description: Batch ID for the payment link.
+              type: string
+              example: 421e1e63-ddd5-46ec-8812-74eda861259b
+        source:
+          description: Source of the payment link.
+          type: string
+          enum:
+            - API
+            - Xero
+            - UI
+          example: API
+        createdAt:
+          description: Timestamp when the payment link was created.
+          type: string
+          example: '2021-10-27T12:35:27Z'
+        updatedAt:
+          description: Timestamp when the payment link was last modified.
+          type: string
+          example: '2021-10-27T12:45:43Z'
+        customer:
+          $ref: '#/components/schemas/Customer'
+        options:
+          $ref: '#/components/schemas/PaymentResponseOptions'
+        checkout:
+          $ref: '#/components/schemas/CheckoutState'
+        termsOfService:
+          type: object
+          properties:
+            id:
+              description: The id of the terms of service that was agreed to.
+              type: string
+            accepted:
+              description: Whether the user agreed to the terms of service.
+              type: boolean
+    BatchResponse:
+      type: object
+      properties:
+        id:
+          description: Unique identifier for the payment attempt.
+          type: string
+          maxLength: 64
+          example: c2bb1dd6-008b-448d-a496-c224de432356
+        createdAt:
+          description: Timestamp when the batch link was created.
+          type: string
+          example: '2022-10-25T09:03:22.832Z'
+        updatedAt:
+          description: Timestamp when the batch link was updated.
+          type: string
+          example: '2022-10-25T09:03:22.832Z'
+        entityId:
+          description: The entity for the request.
+          type: string
+          maxLength: 100
+          example: 8ac7a4ca694cec2601694cf5f9360026
+        filename:
+          description: The name of the file that was uploaded.
+          type: string
+          maxLength: 256
+          example: test.csv
+        status:
+          description: Payment link status.
+          type: string
+          maxLength: 50
+          enum:
+            - initiated
+            - processing
+            - completed
+            - error
+          example: initiated
+        successfulRows:
+          description: The amount of successfully created payment links.
+          type: number
+          example: 24
+        totalRows:
+          description: The total amount of rows parsed from file.
+          type: number
+          example: 25
+        errorCode:
+          description: The error code will only be returned if the file fails to upload.
+          type: string
+          example: 1000.100.00
+      required:
+        - id
+        - createdAt
+        - updatedAt
+        - entityId
+        - filename
+        - status
+        - successfulRows
+        - totalRows
+    PaymentLinkBaseWebhook:
+      description: Base webhook format for Payment Links.
+      type: object
+      properties:
+        paymentId:
+          description: Payment ID.
+          type: string
+          example: e795f5da-aedd-4ffa-a595-a135d202e3f0
+        status:
+          description: Type of webhook, reflecting the status of the payment link.
+          type: string
+          enum:
+            - initiated
+            - processing
+            - expired
+            - cancelled
+            - completed
+            - opened
+    PaymentLinkCreatedWebhook:
+      description: Payment link created.
+      allOf:
+        - $ref: '#/components/schemas/PaymentLinkBaseWebhook'
+        - type: object
+          properties:
+            status:
+              type: string
+              default: initiated
+              enum:
+                - initiated
+            url:
+              description: Payment link URL.
+              type: string
+              format: url
+              example: https://l.ppay.io/4c1a48e6dc3b7ebd
+    PaymentLinkOpenedWebhook:
+      description: Payment link opened.
+      allOf:
+        - $ref: '#/components/schemas/PaymentLinkBaseWebhook'
+        - type: object
+          properties:
+            status:
+              type: string
+              default: opened
+              enum:
+                - opened
+    PaymentLinkProcessingWebhook:
+      description: Payment link is being processed.
+      allOf:
+        - $ref: '#/components/schemas/PaymentLinkBaseWebhook'
+        - type: object
+          properties:
+            status:
+              type: string
+              default: processing
+              enum:
+                - processing
+    PaymentLinkExpiredWebhook:
+      description: Payment link expired.
+      allOf:
+        - $ref: '#/components/schemas/PaymentLinkBaseWebhook'
+        - type: object
+          properties:
+            status:
+              type: string
+              default: expired
+    PaymentLinkCompletedWebhook:
+      description: Payment link completed.
+      allOf:
+        - $ref: '#/components/schemas/PaymentLinkBaseWebhook'
+        - type: object
+          properties:
+            status:
+              type: string
+              default: completed
+            paymentBrand:
+              description: Payment brand used to complete the payment.
+              type: string
+              enum:
+                - VISA
+                - MASTERCARD
+                - DINERS CLUB
+                - AMERICAN EXPRESS
+                - MASTERPASS
+                - MOBICRED
+                - EFTSECURE
+                - MPESA
+                - 1FORYOU
+                - APLUS
+                - PAYPAL
+                - ZEROPAY
+                - PAYFLEX
+                - STITCHEFT
+                - FINCHOICEPAY
+                - BLINKBYEMTEL
+                - CAPITECPAY
+            registrationId:
+              description: >-
+                Card registration token, if tokeniseCard was set to true on
+                initial request and paymentBrand is a card type.
+              type: string
+              example: 8ac7a4a188e7cf090188f7112dbe389a
+    JSONMerchantWebhook:
+      description: >-
+        Encrypted webhook format as it is sent to merchant - content type
+        application/json.
+      type: object
+      required:
+        - encryptedBody
+      properties:
+        encryptedData:
+          description: Encrypted webhook data ciphertext.
+          type: string
+          example: >-
+            48d33e173781de4ebfe247593240fee492aad55bc140bd1157b62da5747d74bf349d1c5035ab40bb62ba7ee3eafa7e8f8cf5e3af2cdea0c915eed159d0efa12ccd3c6a4ded4182e26687180a73f1d1ed7ab6415be9f0100a3803d19f1cf90402211185c4fc764be11a1b8d7c5434150db5d74c70e309a701d670c3beef47ea53726c5b7d677e13a0ca4b05a1b4fd7ca4218a3922b45271904f17a8a5c4cbe2b4571928a089610ccf37d14c98ccc51085f0897d22cead18f13504fa2b9182389ed77323ed2c8cacb18f0b1fd8cf0599bfabaac27e0d926d60af3f41f47bf0607c6df031de8973da17fac8ca6eb04c2b6491fa5e73e29cd4f9c3c4fce1c397b729ed6132c7a5fc812dc4bb7173354e7f13f9e80407c9b3c6e5dc82edabbf160097b82438874eb79edd7540ed963c5eb268a74cbbefce1661b388c0e442b4a90a954932e19f49aef5c10c9ac2639085049a2fe3c903aaafed326a2b81e2dcd4e32ac16c72218067c623cd5d20f98ee2594c8557a704c1e7b2a7ac2c7bf8ce52d91e0816081dd88697b0c9ea1b07adaf9a39948f88d02aec37103e52675a394d324db7cab951284f08da17306a1b4107a2b6b5aeead6bdb087fbe927eaf03d9b8e0a4a9683a0966e8d1d8e8ea1069e3870275317d3bc676a697fe4d4b6c0bbabc806ae6ff0d7cec926bfce10eca2f07ac832d6a9984d19b121d99f2db4b33ed6b8ecbf25687c34d8e48ffc1f438a4524c3f9657140102cc55ec0c48d37cb42424e8e622da6fc3f60bd969791b21b6360e25a2bcf956f2cdc1bbf049f173ac0b0558c34f89964cb8aced7bf2b532910d98f83760d529a2e67af7f9a7cd2739b871e7f914a99061623990a64a854560a860c1b5eff565b2de2be64d68be5de3d3a061aabb3ead5039d49d976ea9b094752d1a55851d33be6c1eab4197f1f409150eae8e6fca14ad757bf9c7451a795ab04763b8f1c1d4b3416e055f074aa51c6c5477eb0c219dd9b4bb26926e6490061284e14fa8c6969aba4a8036d685be81de9ad8c834217e456ed0be40e0b2331db8f0240135ac4ae066fe7596c28e949f20af760e6d0836e7ab218ca1092c4d45b64856f286f69d8754622a5a45c1865454c78f6df271481b692f2b5481d09c1d2eba226f40ec1ce008186d286aab4d4e091623e78147b1cbbd4a2c671beca4402565b0d663fc11776085bb5288396cb770bf43281ca14212abc057206684e40181d3e0498eda17e9c5dce344b16dc2853fc6cb3d6e5e86891c8573fb537701a01431cb5d1fe74ef565de48286db8bf17912dc6a46e7413115091d1cb7535e0d08685d57f5a18990cabdd5c73cd193147703f2221c0c2adf1e0bb1d4a170bc38b7082490464cbffcab72ffad243401645e23df324d072bad90200bab1ae40a272bcbd0bf1ccc9595498f0416ec10eb73b7a9024cc9082693c97d98908bc2b34724865dc08f88fbf09ed984b4987c3abf01a30f1d91919f29eecf5849b337512591c1f110de3ea17e0048ff4521820f33adcbb11c1e70b6c7ae646a7e9d024356cf34a5e2ccdbf30c3825e41bdb000d04bd5bda835eb52fd301dece1b11c45d97d03d5048c1a154c0e84e21b066790261632e487ec3c35d877ba79590bac13ea679772d8b2e4821ae3204c34475a2871039835817d10c8db9f3ec241532099dc8d0b4891b23fb12ad173a7be287afe31f3e6e29266c213430b4a749b92bbcfe8ad7ef4281ca7b71502de99adf574f81c5605c70a76295ce51f1f0ce6e475c98c1dc4dfcb3492494cbda9038e8193d072be09f9cf8103d67f79effe972c710accd94a6c5ee0c3e1bf8facb7fee1499a4cbeb5f444de1f85f998698bacbd2b0a8f6f2010bff95d8e75800ff39ea75f18bd0f3729bd24408e464e44d2fb2e62ec6ef06c349b8f1f83cd43bbad21657bece4fb6e115ab12e7a28458b5c8e9ebf5a06dbdd6e459105cab7c69f2792fb21a8b8c05a6498f4b20f42975cedb784ed45898fe3be750af3a23769e5cb7407219044aa4736bffcf66d76459b0c9cb0d7fb91575949beb0b28add0b8f5bb88c63b23643f20954074a561db01dc1fd5fbe0efa0e6e09e0de5fddc84fa12fadf236b9160f7b9a3408919af1e27d81a80f87a65f7038a703f8526d7f85c916223306ee2ba38bba1d3ff01a3c97806ed78fabd5ec298a2716292b852e7d3f7e6575b77457e44b6d22f57f0ae756c2c1c71de0d5278bac29334467949b7fddf6cb4e7d3c5b5b841335a80f9e3c8ed86fe4d0e77d4804418273d6f580f781475ec43edbeb378c172
+    PlainTextMerchantWebhook:
+      description: >-
+        Encrypted webhook format as it is sent to merchant - content type
+        text/plain.
+      type: string
+      example: >-
+        48d33e173781de4ebfe247593240fee492aad55bc140bd1157b62da5747d74bf349d1c5035ab40bb62ba7ee3eafa7e8f8cf5e3af2cdea0c915eed159d0efa12ccd3c6a4ded4182e26687180a73f1d1ed7ab6415be9f0100a3803d19f1cf90402211185c4fc764be11a1b8d7c5434150db5d74c70e309a701d670c3beef47ea53726c5b7d677e13a0ca4b05a1b4fd7ca4218a3922b45271904f17a8a5c4cbe2b4571928a089610ccf37d14c98ccc51085f0897d22cead18f13504fa2b9182389ed77323ed2c8cacb18f0b1fd8cf0599bfabaac27e0d926d60af3f41f47bf0607c6df031de8973da17fac8ca6eb04c2b6491fa5e73e29cd4f9c3c4fce1c397b729ed6132c7a5fc812dc4bb7173354e7f13f9e80407c9b3c6e5dc82edabbf160097b82438874eb79edd7540ed963c5eb268a74cbbefce1661b388c0e442b4a90a954932e19f49aef5c10c9ac2639085049a2fe3c903aaafed326a2b81e2dcd4e32ac16c72218067c623cd5d20f98ee2594c8557a704c1e7b2a7ac2c7bf8ce52d91e0816081dd88697b0c9ea1b07adaf9a39948f88d02aec37103e52675a394d324db7cab951284f08da17306a1b4107a2b6b5aeead6bdb087fbe927eaf03d9b8e0a4a9683a0966e8d1d8e8ea1069e3870275317d3bc676a697fe4d4b6c0bbabc806ae6ff0d7cec926bfce10eca2f07ac832d6a9984d19b121d99f2db4b33ed6b8ecbf25687c34d8e48ffc1f438a4524c3f9657140102cc55ec0c48d37cb42424e8e622da6fc3f60bd969791b21b6360e25a2bcf956f2cdc1bbf049f173ac0b0558c34f89964cb8aced7bf2b532910d98f83760d529a2e67af7f9a7cd2739b871e7f914a99061623990a64a854560a860c1b5eff565b2de2be64d68be5de3d3a061aabb3ead5039d49d976ea9b094752d1a55851d33be6c1eab4197f1f409150eae8e6fca14ad757bf9c7451a795ab04763b8f1c1d4b3416e055f074aa51c6c5477eb0c219dd9b4bb26926e6490061284e14fa8c6969aba4a8036d685be81de9ad8c834217e456ed0be40e0b2331db8f0240135ac4ae066fe7596c28e949f20af760e6d0836e7ab218ca1092c4d45b64856f286f69d8754622a5a45c1865454c78f6df271481b692f2b5481d09c1d2eba226f40ec1ce008186d286aab4d4e091623e78147b1cbbd4a2c671beca4402565b0d663fc11776085bb5288396cb770bf43281ca14212abc057206684e40181d3e0498eda17e9c5dce344b16dc2853fc6cb3d6e5e86891c8573fb537701a01431cb5d1fe74ef565de48286db8bf17912dc6a46e7413115091d1cb7535e0d08685d57f5a18990cabdd5c73cd193147703f2221c0c2adf1e0bb1d4a170bc38b7082490464cbffcab72ffad243401645e23df324d072bad90200bab1ae40a272bcbd0bf1ccc9595498f0416ec10eb73b7a9024cc9082693c97d98908bc2b34724865dc08f88fbf09ed984b4987c3abf01a30f1d91919f29eecf5849b337512591c1f110de3ea17e0048ff4521820f33adcbb11c1e70b6c7ae646a7e9d024356cf34a5e2ccdbf30c3825e41bdb000d04bd5bda835eb52fd301dece1b11c45d97d03d5048c1a154c0e84e21b066790261632e487ec3c35d877ba79590bac13ea679772d8b2e4821ae3204c34475a2871039835817d10c8db9f3ec241532099dc8d0b4891b23fb12ad173a7be287afe31f3e6e29266c213430b4a749b92bbcfe8ad7ef4281ca7b71502de99adf574f81c5605c70a76295ce51f1f0ce6e475c98c1dc4dfcb3492494cbda9038e8193d072be09f9cf8103d67f79effe972c710accd94a6c5ee0c3e1bf8facb7fee1499a4cbeb5f444de1f85f998698bacbd2b0a8f6f2010bff95d8e75800ff39ea75f18bd0f3729bd24408e464e44d2fb2e62ec6ef06c349b8f1f83cd43bbad21657bece4fb6e115ab12e7a28458b5c8e9ebf5a06dbdd6e459105cab7c69f2792fb21a8b8c05a6498f4b20f42975cedb784ed45898fe3be750af3a23769e5cb7407219044aa4736bffcf66d76459b0c9cb0d7fb91575949beb0b28add0b8f5bb88c63b23643f20954074a561db01dc1fd5fbe0efa0e6e09e0de5fddc84fa12fadf236b9160f7b9a3408919af1e27d81a80f87a65f7038a703f8526d7f85c916223306ee2ba38bba1d3ff01a3c97806ed78fabd5ec298a2716292b852e7d3f7e6575b77457e44b6d22f57f0ae756c2c1c71de0d5278bac29334467949b7fddf6cb4e7d3c5b5b841335a80f9e3c8ed86fe4d0e77d4804418273d6f580f781475ec43edbeb378c172
+    UniqueId:
+      description: The unique transaction ID provided by Peach Payments.
+      type: string
+      pattern: ^[0-9a-f]{32}$
+      example: b4508276b8d146728dac871d6f68b45d
+    PaymentType:
+      description: Payment type of the transaction.
+      type: string
+      enum:
+        - DB
+        - RF
+      example: DB
+    Amount:
+      description: The payment request amount.
+      type: string
+      pattern: (?!0+$)(?!0+\.00)^\d{1,8}(\.\d{2})?$
+      example: '22.50'
+    MerchantInvoiceId:
+      description: The merchant's invoice ID.
+      type: string
+      pattern: ^[a-zA-Z0-9]{8,255}$
+      example: 20170630407200
+    MerchantAccountId:
+      description: Merchant account ID.
+      type: string
+      pattern: ^[0-9a-f]{32}$
+      example: 80d41ee71ee011e98e81067b75644abf
+    Currency:
+      description: The currency code of the payment request amount as defined by ISO-4217.
+      type: string
+      format: iso-4217
+      pattern: ^[A-Z]{3}$
+      example: ZAR
+    Code:
+      description: The unique code that indicates the result status of the request.
+      type: string
+      pattern: ^([0-9]{3}.[0-9]{3}.[0-9]{3})$
+      example: 800.100.152
+    Result:
+      description: The result object.
+      type: object
+      required:
+        - code
+        - description
+      properties:
+        description:
+          type: string
+          example: Request successfully processed.
+        code:
+          $ref: '#/components/schemas/Code'
+    ResultDetails:
+      description: >-
+        Additional details that can provide information about the status or
+        result of the transaction.
+      type: object
+      properties:
+        ExtendedDescription:
+          type: string
+          example: Purchase Approved OK
+        AcquirerResponse:
+          type: string
+          example: Approved
+        UserDisplayMessage:
+          type: string
+          example: Message 16 - Your session was created.
+    ConnectorTxID1:
+      description: >-
+        The unique transaction identifier provided by the payment service
+        provider.
+      type: string
+      pattern: ^[\S]{1,64}$
+      example: 8ac7a49f7921f2fd0179230196ec4bbe
+    EntityId:
+      description: Authentication entityId
+      type: string
+      pattern: ^[0-9a-f]{32}$
+      example: 80d41ee71ee011e98e81067b75644abf
+    Card:
+      description: Card details schema.
+      type: object
+      properties:
+        bin:
+          description: The first six digits of the card number.
+          type: string
+          pattern: ^[\d]{6}$
+          example: '455112'
+        last4Digits:
+          description: The last four digits of the card number.
+          type: string
+          pattern: ^[\d]{4}$
+          example: '2315'
+        holder:
+          description: The card account holder.
+          type: string
+          pattern: ^[\w'\-,.][^0-9_!¡?÷?¿/\\+=@#$%ˆ&*(){}|~<>;:[\]]{2,127}$
+          example: Jane Doe
+        expiryMonth:
+          description: The expiry month of the card.
+          type: string
+          pattern: ^(0[1-9]|1[0-2])$
+          example: '01'
+        expiryYear:
+          description: The expiry year of the card.
+          type: string
+          pattern: ^(20)([0-9]{2})$
+          example: '2030'
+        type:
+          description: The type of card.
+          type: string
+          pattern: ^[\s\S]{1,64}$
+          example: Visa
+    Timestamp:
+      description: The timestamp of the transaction.
+      type: string
+      format: date-time
+      example: '2021-04-23T07:41:25.519947Z'
+    Recon:
+      description: Transaction reconciliation data.
+      type: object
+      properties:
+        ciMerchantNumber:
+          description: The payment service provider merchant number.
+          type: string
+          example: '123456789012345'
+        rrn:
+          description: >-
+            The reconciliation reference number from the payment service
+            provider.
+          type: string
+          example: '123456789012'
+        authCode:
+          description: The authorisation code from the payment service provider.
+          type: string
+          example: '123456'
+        resultCode:
+          description: The result code from the payment service provider.
+          type: string
+        stan:
+          description: The STAN reference number from the payment service provider.
+          type: string
+          example: '123456'
+    CustomParameters:
+      description: >-
+        A JSON object depicting custom information sent by the merchant. Echoed
+        back in the response.
+      type: object
+    Shopify:
+      description: The Shopify object.
+      type: object
+      properties:
+        orderId:
+          description: The Shopify order ID.
+          type: string
+          pattern: ^[\s\S]{1,64}$
+          example: 1234567891234
+        accountId:
+          description: The Shopify account ID.
+          type: string
+          pattern: ^[\s\S]{1,64}$
+          example: 6370
+        signature:
+          description: The Shopify signature.
+          type: string
+          pattern: ^[\s\S]{1,64}$
+          example: 7292b834263177afa7fddbea3fa7a81f20818ee7cf05d1c4b4cac1677dc7a8f7
+        testMode:
+          description: Shopify test mode.
+          type: string
+          pattern: ^[\s\S]{1,64}$
+          example: 'false'
+    MerchantWebhookData:
+      description: Webhook data format after decryption.
+      type: object
+      required:
+        - type
+        - payload
+      properties:
+        type:
+          description: Type of notification.
+          type: string
+          enum:
+            - PAYMENT
+        payload:
+          description: The webhook data schema after decryption.
+          type: object
+          required:
+            - id
+            - paymentType
+            - paymentBrand
+            - amount
+            - merchantTransactionId
+            - merchantInvoiceId
+            - merchantAccountId
+            - currency
+            - presentationAmount
+            - presentationCurrency
+            - result
+            - resultDetails
+            - authentication
+            - timestamp
+            - referenceId
+            - connectorTxID1
+            - card
+            - shipping
+            - billing
+            - shopify
+            - bankAccount
+          properties:
+            id:
+              $ref: '#/components/schemas/UniqueId'
+            paymentType:
+              $ref: '#/components/schemas/PaymentType'
+            amount:
+              $ref: '#/components/schemas/Amount'
+            merchantInvoiceId:
+              $ref: '#/components/schemas/MerchantInvoiceId'
+            merchantAccountId:
+              $ref: '#/components/schemas/MerchantAccountId'
+            descriptor:
+              type: string
+            currency:
+              $ref: '#/components/schemas/Currency'
+            presentationAmount:
+              $ref: '#/components/schemas/Amount'
+            result:
+              $ref: '#/components/schemas/Result'
+            resultDetails:
+              $ref: '#/components/schemas/ResultDetails'
+            connectorTxID1:
+              $ref: '#/components/schemas/ConnectorTxID1'
+            authentication:
+              type: object
+              required:
+                - entityId
+              properties:
+                entityId:
+                  $ref: '#/components/schemas/EntityId'
+            card:
+              $ref: '#/components/schemas/Card'
+            timestamp:
+              $ref: '#/components/schemas/Timestamp'
+            customer:
+              $ref: '#/components/schemas/Customer'
+            shipping:
+              $ref: '#/components/schemas/Address'
+            billing:
+              $ref: '#/components/schemas/Address'
+            recon:
+              $ref: '#/components/schemas/Recon'
+            bankAccount:
+              description: Bank account data.
+              required:
+                - holder
+                - bankName
+                - bankCode
+              properties:
+                holder:
+                  description: Name of bank account holder.
+                  type: string
+                  pattern: ^[\s\S]{4,128}$
+                  example: Jane Doe
+                code:
+                  description: Code associated with bank account.
+                  type: string
+                  pattern: ^[\s\S]{1,12}$
+                  example: 10002003
+                bankName:
+                  description: Name of bank.
+                  type: string
+                  pattern: ^[\s\S]{1,255}$
+                  example: Bank A
+            customParameters:
+              $ref: '#/components/schemas/CustomParameters'
+            referenceId:
+              $ref: '#/components/schemas/UniqueId'
+            shopify:
+              $ref: '#/components/schemas/Shopify'
+            merchant:
+              description: Merchant object with data relevant to an EFTsecure transaction.
+              type: object
+              properties:
+                apiUsername:
+                  type: string
+                eftId:
+                  type: string
+    UserId:
+      description: Authentication userId.
+      type: string
+      pattern: ^[0-9a-f]{32}$
+      example: 80d41ee71ee011e98e81067b75644abf
+    Password:
+      description: Authentication password.
+      type: string
+      example: xDZWEIefSkyibutsU3
+    MerchantTransactionId:
+      description: Merchant-provided reference number, often used for reconciliation.
+      type: string
+      pattern: ^[a-zA-Z0-9]{8,16}$
+      example: test12345
+    PaymentBrand:
+      description: The payment brand specifies the method of payment for the request.
+      type: string
+      enum:
+        - EFTSECURE
+        - PAYFLEX
+        - ZEROPAY
+        - FINCHOICEPAY
+        - 1FORYOU
+        - MASTERPASS
+        - MPESA
+        - BLINKBYEMTEL
+        - MOBICRED
+        - CAPITECPAY
+        - NEDBANKDIRECTEFT
+        - MCBJUICE
+      example: EFTSECURE
+    ResponseCard:
+      description: >-
+        The card data structure holds information regarding a credit or debit
+        card account.
+      type: object
+      properties:
+        bin:
+          description: The first six digits of the card number.
+          type: string
+          pattern: ^[\d]{6}$
+          example: '455112'
+        last4Digits:
+          description: The last four digits of the card number.
+          type: string
+          pattern: ^[\d]{4}$
+          example: '2315'
+        holder:
+          description: The card account holder.
+          type: string
+          pattern: ^[\w'\-,.][^0-9_!¡?÷?¿/\\+=@#$%ˆ&*(){}|~<>;:[\]]{2,127}$
+          example: Jane Doe
+        expiryMonth:
+          description: The expiry month of the card.
+          type: string
+          pattern: ^(0[1-9]|1[0-2])$
+          example: '01'
+        expiryYear:
+          description: The expiry year of the card.
+          type: string
+          pattern: ^(20)([0-9]{2})$
+          example: '2030'
+    MerchantTransactionIdStatusResponse:
+      description: >-
+        The response for the status request using merchantTransactionId as the
+        query field.
+      type: object
+      required:
+        - result
+        - timestamp
+        - payments
+      properties:
+        result:
+          $ref: '#/components/schemas/Result'
+        timestamp:
+          $ref: '#/components/schemas/Timestamp'
+        payments:
+          type: array
+          items:
+            type: object
+            required:
+              - id
+              - paymentType
+              - paymentBrand
+              - amount
+              - currency
+              - merchantTransactionId
+              - result
+              - resultDetails
+              - connectorTxID1
+              - timestamp
+              - customParameters
+            properties:
+              id:
+                $ref: '#/components/schemas/UniqueId'
+              paymentType:
+                $ref: '#/components/schemas/PaymentType'
+              paymentBrand:
+                $ref: '#/components/schemas/PaymentBrand'
+              amount:
+                $ref: '#/components/schemas/Amount'
+              currency:
+                $ref: '#/components/schemas/Currency'
+              merchantTransactionId:
+                $ref: '#/components/schemas/MerchantTransactionId'
+              result:
+                $ref: '#/components/schemas/Result'
+              resultDetails:
+                $ref: '#/components/schemas/ResultDetails'
+              connectorTxID1:
+                $ref: '#/components/schemas/ConnectorTxID1'
+              timestamp:
+                $ref: '#/components/schemas/Timestamp'
+              customParameters:
+                $ref: '#/components/schemas/CustomParameters'
+              card:
+                $ref: '#/components/schemas/ResponseCard'
+              merchantInvoiceId:
+                $ref: '#/components/schemas/MerchantInvoiceId'
+              recon:
+                $ref: '#/components/schemas/Recon'
+    ParameterErrors:
+      description: Error details of the request parameters which failed validation.
+      type: array
+      items:
+        type: object
+        required:
+          - value
+          - name
+          - message
+        properties:
+          value:
+            description: >-
+              The value of the parameter which failed validation. Can be any
+              value - string, number, boolean, array, or object.
+            nullable: true
+          name:
+            description: The name of the parameter.
+            type: string
+          message:
+            description: A message describing the error.
+            type: string
+      example:
+        - value: 'null'
+          name: authenticationValue
+          message: Payments API requires authenticationValue.
+    Error400Result:
+      description: Error result object describing the error code and parameter errors.
+      type: object
+      required:
+        - code
+        - parameterErrors
+        - description
+      properties:
+        description:
+          type: string
+          example: Errors in the processed request.
+        code:
+          $ref: '#/components/schemas/Code'
+        parameterErrors:
+          $ref: '#/components/schemas/ParameterErrors'
+    Error400Response:
+      description: Error object describing the 400 status code error.
+      type: object
+      required:
+        - result
+        - timestamp
+      properties:
+        result:
+          $ref: '#/components/schemas/Error400Result'
+        resultDetails:
+          $ref: '#/components/schemas/ResultDetails'
+        timestamp:
+          $ref: '#/components/schemas/Timestamp'
+    ErrorResponse:
+      description: Error object describing the error.
+      type: object
+      required:
+        - result
+        - timestamp
+      properties:
+        result:
+          $ref: '#/components/schemas/Result'
+        resultDetails:
+          $ref: '#/components/schemas/ResultDetails'
+        timestamp:
+          $ref: '#/components/schemas/Timestamp'
+        id:
+          $ref: '#/components/schemas/UniqueId'
+        paymentType:
+          $ref: '#/components/schemas/PaymentType'
+        paymentBrand:
+          $ref: '#/components/schemas/PaymentBrand'
+        customParameters:
+          $ref: '#/components/schemas/CustomParameters'
+        amount:
+          $ref: '#/components/schemas/Amount'
+        currency:
+          $ref: '#/components/schemas/Currency'
+    Authentication:
+      description: Authenticate requests using the userId, password, and entityId.
+      type: object
+      required:
+        - userId
+        - password
+        - entityId
+      properties:
+        userId:
+          $ref: '#/components/schemas/UserId'
+        password:
+          $ref: '#/components/schemas/Password'
+        entityId:
+          $ref: '#/components/schemas/EntityId'
+    VirtualAccount:
+      description: The virtual account object.
+      type: object
+      properties:
+        accountId:
+          description: The account ID.
+          type: string
+          pattern: ^[\w .\-'"?,~!@#$%^&*()=+\/\\]{1,64}$
+          example: 80d41ee71ee011e98e81067b75644abf
+        password:
+          description: The virtual account password.
+          type: string
+          example: xDZWEIefSkyibutsU3
+        token:
+          description: The virtual account token.
+          type: string
+          example: fd81f6ccabec11eba6e102d14de18c00
+        type:
+          description: The virtual account type.
+          type: string
+          enum:
+            - CELLPHONE
+            - IDNUMBER
+            - ACCOUNTNUMBER
+    Cart:
+      description: Customer cart data.
+      type: object
+      properties:
+        cartItems:
+          description: List of details of the items in the cart.
+          type: array
+          items:
+            type: object
+            properties:
+              description:
+                description: The description of the item in the shopping cart.
+                type: string
+                pattern: ^[\s\S]{1,2048}$
+                example: Gaming laptop
+              name:
+                description: The name of the item in the shopping cart.
+                type: string
+                pattern: ^[\s\S]{1,255}$
+                example: Laptop
+              merchantItemId:
+                description: The unique identifier of the item in the shopping cart.
+                type: string
+                pattern: ^[\s\S]{1,255}$
+                example: item123
+              quantity:
+                description: The number of items in the shopping cart.
+                type: integer
+                minimum: 1
+                maximum: 999999
+                example: 125
+              price:
+                description: The price of the item in the shopping cart.
+                type: string
+                pattern: ^[0-9]{1,10}\.[0-9]{2}$
+                example: '05.25'
+              weightInKg:
+                description: The weight (in kg) of the item in the shopping cart.
+                type: number
+                minimum: 0.01
+                maximum: 999999.99
+                example: 5.25
+              category:
+                description: The category of the item in the shopping cart.
+                type: string
+                pattern: ^[\s\S]{1,256}$
+                example: electronics
+        tax:
+          description: >-
+            The tax percentage or amount applied to the price of the items in
+            the shopping cart.
+          type: string
+          pattern: ^[0-9]{1,8}(\.[0-9]{2})?$
+          example: '15.00'
+        shippingAmount:
+          description: The shipping amount applied to the items in the shopping cart.
+          $ref: '#/components/schemas/Amount'
+        discount:
+          description: >-
+            The discount percentage applied to the price of the items in the
+            shopping cart.
+          type: string
+          pattern: ^0(\.00?)?$|^100$|^100.00$|^100.0$|^\d{1,2}(\.\d{1,2})?$
+          example: '02.25'
+    ShopperResultUrl:
+      description: >-
+        The Payments API redirects the user to this URL after processing the
+        payment request.
+      type: string
+      format: uri
+      example: https://example.com/redirect
+    PaymentRequest:
+      description: Initiate a debit transaction.
+      type: object
+      required:
+        - authentication
+        - merchantTransactionId
+        - amount
+        - currency
+        - paymentBrand
+        - paymentType
+      properties:
+        authentication:
+          $ref: '#/components/schemas/Authentication'
+        merchantTransactionId:
+          $ref: '#/components/schemas/MerchantTransactionId'
+        amount:
+          $ref: '#/components/schemas/Amount'
+        currency:
+          $ref: '#/components/schemas/Currency'
+        paymentBrand:
+          $ref: '#/components/schemas/PaymentBrand'
+        paymentType:
+          $ref: '#/components/schemas/PaymentType'
+        virtualAccount:
+          $ref: '#/components/schemas/VirtualAccount'
+        shipping:
+          $ref: '#/components/schemas/Address'
+        billing:
+          $ref: '#/components/schemas/Address'
+        shopify:
+          $ref: '#/components/schemas/Shopify'
+        customer:
+          $ref: '#/components/schemas/Customer'
+        cart:
+          $ref: '#/components/schemas/Cart'
+        merchantInvoiceId:
+          $ref: '#/components/schemas/MerchantInvoiceId'
+        shopperResultUrl:
+          $ref: '#/components/schemas/ShopperResultUrl'
+    Redirect:
+      description: >-
+        The URL that the merchant must redirect the user to after the
+        transaction has been created and is in a pending state. When the user is
+        redirected, they can complete any actions required for that specific
+        payment method.
+      type: object
+      required:
+        - url
+        - method
+        - parameters
+      properties:
+        parameters:
+          description: Array of parameter names and values for the redirect URL.
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              value:
+                type: string
+          example:
+            - name: MD
+              value: 8ac7a49f7921f2fd0179230196ec4bbe
+            - name: TermUrl
+              value: >-
+                https://test.yourdomain.com/connectors/asyncresponse_simulator;jsessionid=021942B282D8.uat01-vm-con01?asyncsource=THREEDSECURE
+        url:
+          description: The URL that the shopper must be redirected to in order to proceed.
+          type: string
+          format: uri
+          example: https://test.yourdomain.com/link?
+        method:
+          description: REST method used for redirection.
+          type: string
+          enum:
+            - GET
+            - POST
+          example: POST
+    ConnectorTxID2:
+      description: >-
+        Another unique transaction identifier provided by the payment service
+        provider.
+      type: string
+      pattern: ^[\s\S]{1,64}$
+      example: ws_CO_21072022171719580123456790
+    TransactionExpiryTimestamp:
+      description: The expiry timestamp of the transaction.
+      type: string
+      format: date-time
+      example: '2021-04-23T07:41:25.519947Z'
+    PaymentResponse:
+      type: object
+      required:
+        - id
+        - amount
+        - currency
+        - customParameters
+        - paymentBrand
+        - paymentType
+        - result
+        - timestamp
+      properties:
+        amount:
+          $ref: '#/components/schemas/Amount'
+        currency:
+          $ref: '#/components/schemas/Currency'
+        paymentBrand:
+          $ref: '#/components/schemas/PaymentBrand'
+        paymentType:
+          $ref: '#/components/schemas/PaymentType'
+        result:
+          $ref: '#/components/schemas/Result'
+        resultDetails:
+          $ref: '#/components/schemas/ResultDetails'
+        redirect:
+          $ref: '#/components/schemas/Redirect'
+        connectorTxID1:
+          $ref: '#/components/schemas/ConnectorTxID1'
+        connectorTxID2:
+          $ref: '#/components/schemas/ConnectorTxID2'
+        customParameters:
+          $ref: '#/components/schemas/CustomParameters'
+        timestamp:
+          $ref: '#/components/schemas/Timestamp'
+        id:
+          $ref: '#/components/schemas/UniqueId'
+        merchantTransactionId:
+          $ref: '#/components/schemas/MerchantTransactionId'
+        merchantInvoiceId:
+          $ref: '#/components/schemas/MerchantInvoiceId'
+        shopperResultUrl:
+          $ref: '#/components/schemas/ShopperResultUrl'
+        virtualAccount:
+          $ref: '#/components/schemas/VirtualAccount'
+        transactionExpiryTimestamp:
+          $ref: '#/components/schemas/TransactionExpiryTimestamp'
+    Mandate:
+      description: Customer mandate to bank.
+      type: object
+      properties:
+        dateOfSignature:
+          description: The date the direct debit mandate was signed.
+          type: string
+          pattern: ^(19|20)([0-9]{2})-(0[1-9]|1[0-2])-(0[1-9]|1[0-9]|2[0-9]|3[0-1])$
+          example: '2016-08-07'
+        id:
+          description: The ID of the direct debit mandate.
+          type: string
+          pattern: ^[a-zA-Z0-9]{35}$
+          example: idreference123456789012345678901234
+        reference:
+          description: >-
+            The mandate reference for direct debit as a contractual agreement
+            between the creditor and the debtor.
+          type: string
+          pattern: ^[a-zA-Z0-9]{32}$
+          example: idreference123456789012345678901
+    Bank:
+      description: Customer bank account details.
+      type: object
+      properties:
+        holder:
+          description: The bank account holder.
+          type: string
+          pattern: ^[\s\S]{4,128}$
+          example: Jane Doe
+        bankName:
+          description: The name of the bank which holds the account.
+          type: string
+          pattern: ^[\s\S]{1,255}$
+          example: Bank A
+        number:
+          description: The bank account number.
+          type: string
+          pattern: ^[a-zA-Z0-9]{3,64}$
+          example: 12345678901
+        iban:
+          description: >-
+            The IBAN (International Bank Account Number) associated with the
+            bank account.
+          type: string
+          pattern: ^[a-zA-Z]{2}[0-9]{2}[a-zA-Z0-9]{11,27}$
+          example: MU43BOMM0101123456789101000MUR
+        bic:
+          description: The BIC (Bank Identifier Code (SWIFT)) of the bank account.
+          type: string
+          pattern: ^[a-zA-Z0-9]{8}|[a-zA-Z0-9]{11}$
+          example: WFBIUS6SELP
+        bankCode:
+          description: The code associated with the bank account.
+          type: string
+          pattern: ^[a-zA-Z0-9]{1,12}$
+          example: 10002003
+        country:
+          description: The country code of the bank account (ISO 3166-1).
+          type: string
+          pattern: ^[a-zA-Z]{2}$
+          example: ZA
+        mandate:
+          $ref: '#/components/schemas/Mandate'
+        transactionDueDate:
+          description: The due date of the transaction of the direct debit.
+          type: string
+          pattern: ^(19|20)([0-9]{2})-(0[1-9]|1[0-2])-(0[1-9]|1[0-9]|2[0-9]|3[0-1])$
+          example: '2022-11-11'
+    TransactionIdStatusResponse:
+      description: >-
+        The response for the status request using transactionId as the query
+        field.
+      type: object
+      required:
+        - id
+        - merchantTransactionId
+        - amount
+        - currency
+        - paymentBrand
+        - paymentType
+        - result
+        - connectorTxID1
+        - timestamp
+        - customParameters
+      properties:
+        id:
+          $ref: '#/components/schemas/UniqueId'
+        merchantTransactionId:
+          $ref: '#/components/schemas/MerchantTransactionId'
+        amount:
+          $ref: '#/components/schemas/Amount'
+        currency:
+          $ref: '#/components/schemas/Currency'
+        paymentBrand:
+          $ref: '#/components/schemas/PaymentBrand'
+        paymentType:
+          $ref: '#/components/schemas/PaymentType'
+        result:
+          $ref: '#/components/schemas/Result'
+        resultDetails:
+          $ref: '#/components/schemas/ResultDetails'
+        connectorTxID1:
+          $ref: '#/components/schemas/ConnectorTxID1'
+        timestamp:
+          $ref: '#/components/schemas/Timestamp'
+        customParameters:
+          $ref: '#/components/schemas/CustomParameters'
+        merchantInvoiceId:
+          $ref: '#/components/schemas/MerchantInvoiceId'
+        bank:
+          $ref: '#/components/schemas/Bank'
+        card:
+          $ref: '#/components/schemas/ResponseCard'
+        recon:
+          $ref: '#/components/schemas/Recon'
+    RefundPaymentType:
+      description: Refund type of the transaction.
+      type: string
+      enum:
+        - RF
+      example: RF
+    RefundRequest:
+      description: Refund a successful debit transaction.
+      type: object
+      required:
+        - authentication
+        - amount
+        - currency
+        - paymentType
+      properties:
+        authentication:
+          $ref: '#/components/schemas/Authentication'
+        amount:
+          $ref: '#/components/schemas/Amount'
+        currency:
+          $ref: '#/components/schemas/Currency'
+        paymentType:
+          $ref: '#/components/schemas/RefundPaymentType'
+    RefundResponse:
+      type: object
+      required:
+        - id
+        - amount
+        - currency
+        - paymentType
+        - result
+        - timestamp
+      properties:
+        id:
+          $ref: '#/components/schemas/UniqueId'
+        amount:
+          $ref: '#/components/schemas/Amount'
+        currency:
+          $ref: '#/components/schemas/Currency'
+        paymentBrand:
+          $ref: '#/components/schemas/PaymentBrand'
+        paymentType:
+          $ref: '#/components/schemas/RefundPaymentType'
+        result:
+          $ref: '#/components/schemas/Result'
+        resultDetails:
+          $ref: '#/components/schemas/ResultDetails'
+        connectorTxID1:
+          $ref: '#/components/schemas/ConnectorTxID1'
+        timestamp:
+          $ref: '#/components/schemas/Timestamp'
+        customParameters:
+          $ref: '#/components/schemas/CustomParameters'
+    Refund200ErrorResponse:
+      description: Error 200 response.
+      type: object
+      required:
+        - id
+        - amount
+        - currency
+        - paymentType
+        - result
+        - timestamp
+      properties:
+        id:
+          $ref: '#/components/schemas/UniqueId'
+        amount:
+          $ref: '#/components/schemas/Amount'
+        currency:
+          $ref: '#/components/schemas/Currency'
+        paymentType:
+          $ref: '#/components/schemas/RefundPaymentType'
+        result:
+          $ref: '#/components/schemas/Result'
+        timestamp:
+          $ref: '#/components/schemas/Timestamp'
+    HelpersGetPaymentMethodsRequest:
+      type: object
+      properties:
+        authentication.entityId:
+          type: string
+          maxLength: 32
+          minLength: 32
+          example: 8ac7a4ca68c22c4d0168c2caab2e0025
+        signature:
+          description: >-
+            Token to verify the integrity of the request, ensuring that only the
+            merchant sending the request is accepted.
+          type: string
+          maxLength: 64
+          example: a668342244a9c77b08a2f9090d033d6e2610b431a5c0ca975f32035ed06164f4
+        currency:
+          description: Three-letter ISO 4217 currency code.
+          type: string
+          maxLength: 3
+          example: ZAR
+      required:
+        - authentication.entityId
+        - signature
+        - currency
+    FilesUploadFileRequest:
+      type: object
+      properties:
+        file:
+          description: File content to be uploaded.
+          type: string
+          format: binary
+    BatchGenerateLinkRequest:
+      type: object
+      properties:
+        filename:
+          description: The name of the CSV to be uploaded.
+          type: string
+          maxLength: 256
+          example: test.csv
+        notificationUrl:
+          description: >-
+            Webhooks are sent to this URL. It overrides the generic merchant
+            webhook URL.
+          type: string
+          maxLength: 128
+          nullable: true
+          example: https://webhook.site/
+      required:
+        - filename
+    CheckoutGenerationInitiateRedirectCheckoutResponse:
+      type: object
+      properties:
+        redirectUrl:
+          description: Redirect the user to this URL to complete their payment.
+          type: string
+          format: url
+    CheckoutGenerationValidateRequestResponse:
+      oneOf:
+        - $ref: '#/components/schemas/MessageResponse'
+        - type: object
+          properties:
+            validation_errors:
+              type: object
+              additionalProperties: true
+          required:
+            - validation_errors
+    CheckoutV2GenerationInitiateCheckoutInstanceResponse:
+      type: object
+      properties:
+        checkoutId:
+          description: Checkout ID for use by subsequent calls.
+          type: string
+          example: 948cc8dec52a11eb85290242ac130003
+      required:
+        - checkoutId
+    PaymentGetAllPaymentLinksResponse:
+      type: object
+      properties:
+        payments:
+          type: array
+          items:
+            $ref: '#/components/schemas/QueryStatusResponse'
+        meta:
+          type: object
+          properties:
+            perPage:
+              description: The amount of items to retrieve.
+              type: number
+            offset:
+              description: The offset from which to read data.
+              type: number
+            nextOffset:
+              description: The offset from which to read data on a subsequent request.
+              type: number
+            total:
+              description: >-
+                The total number of payment links returned by the filter
+                criteria.
+              type: number
+    PaymentGetAllPaymentLinks200Response:
+      description: >-
+        Export a filtered list of payment links. `offset` and `perPage` will be
+        ignored. Requires that merchant filter is specified.
+      type: object
+      properties:
+        file:
+          description: A URL to download the exported file.
+          type: string
+          format: url
+          example: >-
+            https://files.example.com/exported/20230130150530-PeachPayments-PaymentLinks.csv
+    StatusQueryPaymentStatusResponse:
+      type: object
+      properties:
+        payment:
+          $ref: '#/components/schemas/QueryStatusResponse'
+        audit:
+          type: array
+          items:
+            type: object
+            properties:
+              oldStatus:
+                description: The previous status of the payment link.
+                type: string
+                enum:
+                  - none
+                  - initiated
+                  - processing
+                  - expired
+                  - cancelled
+                  - completed
+                example: initiated
+              newStatus:
+                description: The new status of the payment link.
+                type: string
+                enum:
+                  - initiated
+                  - processing
+                  - expired
+                  - cancelled
+                  - completed
+                example: processing
+              timestamp:
+                description: The UTC time that the status changed.
+                type: string
+                format: yyyy-MM-ddTHH:mm:ssZ
+                example: '2021-10-27T12:45:43Z'
+    FilesUploadFileResponse:
+      type: object
+      properties:
+        fileId:
+          description: >-
+            A file ID that should be used in the files property on a create link
+            call.
+          type: string
+          format: uuid
+    BatchGetBatchStatusesResponse:
+      type: object
+      properties:
+        batches:
+          type: array
+          items:
+            type: object
+            $ref: '#/components/schemas/BatchResponse'
+        meta:
+          type: object
+          properties:
+            perPage:
+              description: The amount of items to retrieve.
+              type: number
+            offset:
+              description: The offset from which to read data.
+              type: number
+            nextOffset:
+              description: The offset from which to read data on a subsequent request.
+              type: number
+            total:
+              description: >-
+                The total number of payment links returned by the filter
+                criteria.
+              type: number
+    BatchGenerateLinkResponse:
+      type: object
+      properties:
+        id:
+          description: The created batch ID for the upload.
+          type: string
+          maxLength: 256
+          example: 421e1e63-ddd5-46ec-8812-74eda861259b
+        url:
+          description: The created batch upload URL.
+          type: string
+    BatchGetErrorFilesResponse:
+      type: object
+      properties:
+        errorFileUrl:
+          type: string
+          format: url
+        errorDetailsFileUrl:
+          type: string
+          format: url
+    PaymentsApiInboundInitiateDebitTransactionResponse:
+      anyOf:
+        - $ref: '#/components/schemas/ErrorResponse'
+        - $ref: '#/components/schemas/PaymentResponse'
+    PaymentsApiInboundRefundTransactionResponse:
+      anyOf:
+        - $ref: '#/components/schemas/RefundResponse'
+        - $ref: '#/components/schemas/Refund200ErrorResponse'
+    PaymentsApiInboundRefundTransaction502Response:
+      type: object
+      required:
+        - id
+        - amount
+        - currency
+        - paymentType
+        - result
+        - timestamp
+      properties:
+        id:
+          $ref: '#/components/schemas/UniqueId'
+        amount:
+          $ref: '#/components/schemas/Amount'
+        currency:
+          $ref: '#/components/schemas/Currency'
+        paymentType:
+          $ref: '#/components/schemas/RefundPaymentType'
+        result:
+          $ref: '#/components/schemas/Result'
+        timestamp:
+          $ref: '#/components/schemas/Timestamp'
+  securitySchemes:
+    BearerAuth:
+      description: >-
+        Merchant-level authentication
+        (https://developer.peachpayments.com/docs/checkout-js-authentication).
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+security:
+  - BearerAuth: []
+x-readme:
+  explorer-enabled: true
+  proxy-enabled: true
+  samples-enabled: true
+_id: 63493bbf46ee03001cae835f
