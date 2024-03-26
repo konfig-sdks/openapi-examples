@@ -1,0 +1,2612 @@
+openapi: 3.0.0
+info:
+  title: OneLogin API
+  description: This is an administrative API for OneLogin customers
+  version: 1.0.0-oas3
+  x-api-status-urls: false
+  x-konfig-ignore:
+    object-with-no-properties: true
+    potential-incorrect-type: true
+servers:
+  - url: https://api.{region}.onelogin.com/api/1
+    variables:
+      region:
+        description: The location of the OneLogin instance
+        enum:
+          - us
+          - eu
+        default: us
+        type: string
+tags:
+  - name: users
+  - name: privileges
+  - name: mfa
+  - name: events
+  - name: login
+  - name: saml
+  - name: roles
+  - name: groups
+  - name: invites
+paths:
+  /users:
+    get:
+      tags:
+        - users
+      summary: Get Users
+      operationId: Users_getList
+      description: Returns a list of users. Supports filtering and paging.
+      parameters:
+        - in: query
+          name: directory_id
+          schema:
+            type: integer
+        - in: query
+          name: email
+          schema:
+            type: string
+        - in: query
+          name: external_id
+          schema:
+            type: string
+        - in: query
+          name: firstname
+          schema:
+            type: string
+        - in: query
+          name: id
+          schema:
+            type: integer
+        - in: query
+          name: manager_ad_id
+          schema:
+            type: integer
+        - in: query
+          name: role_id
+          schema:
+            type: integer
+        - in: query
+          name: samaccountname
+          schema:
+            type: string
+        - in: query
+          name: since
+          schema:
+            type: string
+            format: date-time
+        - in: query
+          name: until
+          schema:
+            type: string
+            format: date-time
+        - in: query
+          name: username
+          schema:
+            type: string
+        - in: query
+          name: userprincipalname
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsersGetListResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags:
+        - users
+      summary: Create a User
+      operationId: Users_createAccount
+      description: Creates a new user account in OneLogin
+      requestBody:
+        description: The user to create
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsersCreateAccountResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /users/{id}:
+    get:
+      tags:
+        - users
+      summary: Get a User
+      operationId: Users_getUser
+      description: Returns a single user
+      parameters:
+        - description: User ID
+          name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsersGetUserResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags:
+        - users
+      summary: Update a User
+      operationId: Users_updateById
+      description: Use to update a user by ID
+      parameters:
+        - description: User ID
+          name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        description: The user to update
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsersUpdateByIdResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags:
+        - users
+      summary: Delete a user account
+      operationId: Users_deleteUserById
+      description: Use this call to delete a user by ID.
+      parameters:
+        - description: User ID
+          name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /users/{id}/apps:
+    get:
+      tags:
+        - users
+      summary: Get User Apps
+      operationId: Users_listUserApps
+      description: Get a list of apps accessible by a user, not including personal apps.
+      parameters:
+        - description: User ID
+          name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsersListUserAppsResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /users/{id}/roles:
+    get:
+      tags:
+        - users
+      summary: Get User Roles
+      operationId: Users_getUserRoles
+      description: Get a list of role IDs that have been assigned to a user.
+      parameters:
+        - description: User ID
+          name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsersGetUserRolesResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /users/{id}/add_roles:
+    put:
+      tags:
+        - users
+      summary: Assign Role to User
+      operationId: Users_assignRoles
+      description: Assign one or more existing roles to a user.
+      parameters:
+        - description: User ID
+          name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        description: The roles to assign
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UsersAssignRolesRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /users/{id}/remove_roles:
+    put:
+      tags:
+        - users
+      summary: Remove Roles from User
+      operationId: Users_removeUserRoles
+      description: Remove one or more existing roles to a user.
+      parameters:
+        - description: User ID
+          name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        description: The roles to remove
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UsersRemoveUserRolesRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /users/{id}/set_state:
+    put:
+      tags:
+        - users
+      summary: Set the State for a user.
+      operationId: Users_setState
+      description: >-
+        States describe a stage in a process (such as user account approval).
+        User state determines the possible statuses a user account can be in.
+      parameters:
+        - description: User ID
+          name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UsersSetStateRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /users/{id}/logout:
+    put:
+      tags:
+        - users
+      summary: Log a user out of any and all sessions
+      operationId: Users_logoutUserById
+      description: Log a user out of any and all sessions.
+      parameters:
+        - description: User ID
+          name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /users/{id}/lock_user:
+    put:
+      tags:
+        - users
+      summary: Lock a user account
+      operationId: Users_lockUserAccount
+      description: >-
+        Use this call to lock a user’s account based on the policy assigned to
+        the user, for a specific time you define in the request, or until you
+        unlock it.
+      parameters:
+        - description: User ID
+          name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UsersLockUserAccountRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /users/{id}/set_custom_attributes:
+    put:
+      tags:
+        - users
+      summary: Set a custom attribute
+      operationId: Users_setCustomAttributes
+      description: >-
+        Set a custom attribute field (also known as a custom user field) value
+        for a user.
+      parameters:
+        - description: User ID
+          name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UsersSetCustomAttributesRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /users/{id}/mfa_token:
+    post:
+      tags:
+        - users
+      summary: Generate Temp MFA Token
+      operationId: Users_generateTempMfaToken
+      description: >-
+        Use to generate a temporary MFA token that can be used in place of other
+        MFA tokens for a set time period. For example, use this token for
+        account recovery.
+      parameters:
+        - description: User ID
+          name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UsersGenerateTempMfaTokenRequest'
+      responses:
+        '201':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsersGenerateTempMfaTokenResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /users/custom_attributes:
+    get:
+      tags:
+        - users
+      summary: Get Custom Attributes
+      operationId: Users_getCustomAttributes
+      description: >-
+        Returns a list of all custom attribute fields (also known as custom user
+        fields) that have been defined for your account.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsersGetCustomAttributesResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /users/set_password_clear_text/{id}:
+    put:
+      tags:
+        - users
+      summary: Set a the password for a user
+      operationId: Users_setPasswordClearTextById
+      description: Set a the password for a user
+      parameters:
+        - description: User ID
+          name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UsersSetPasswordClearTextByIdRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /users/set_password_using_salt/{id}:
+    put:
+      tags:
+        - users
+      summary: Set a pre salted password for a user
+      operationId: Users_setPreSaltedPassword
+      description: Set a pre salted password for a user
+      parameters:
+        - description: User ID
+          name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UsersSetPreSaltedPasswordRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /login/auth:
+    post:
+      tags:
+        - login
+      summary: Authenticate a user
+      operationId: Login_userAuthentication
+      description: >-
+        Use this API to generate a session login token in scenarios in which MFA
+        may or may not be required. Both scenarios are supported. A session
+        login token expires two minutes after creation.
+      parameters:
+        - description: >-
+            Required for CORS requests only. Set to the Origin URI from which
+            you are allowed to send a request using CORS.
+          in: header
+          name: Custom-Allowed-Origin-Header-1
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginUserAuthenticationRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginUserAuthenticationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /login/verify_factor:
+    post:
+      tags:
+        - login
+      summary: Verify an MFA token
+      operationId: Login_verifyFactor
+      description: >-
+        Verify a one-time password (OTP) value, provided for a second factor,
+        when multi-factor authentication (MFA) is required.
+      parameters:
+        - description: >-
+            Required for CORS requests only. Set to the Origin URI from which
+            you are allowed to send a request using CORS.
+          in: header
+          name: Custom-Allowed-Origin-Header-1
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginVerifyFactorRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginVerifyFactorResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /saml_assertion:
+    post:
+      tags:
+        - saml
+      summary: Generate SAML assertion
+      operationId: Saml_generateAssertion
+      description: Use this API to generate a SAML assertion.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SamlGenerateAssertionRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SamlGenerateAssertionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /saml_assertion/verify_factor:
+    post:
+      tags:
+        - saml
+      summary: Verify an MFA token
+      operationId: Saml_verifyFactor
+      description: >-
+        Verify a one-time password (OTP) value, provided for a second factor,
+        when multi-factor authentication (MFA) is required for SAML
+        authentication.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SamlVerifyFactorRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SamlVerifyFactorResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /users/{id}/auth_factors:
+    get:
+      tags:
+        - mfa
+      summary: Get a list of MFA factors available to user
+      operationId: Mfa_getUserFactorsList
+      description: >-
+        Use this API to return a list of authentication factors that are
+        available for user enrollment via API
+      parameters:
+        - description: User ID
+          name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MfaGetUserFactorsListResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /users/{id}/otp_devices:
+    post:
+      tags:
+        - mfa
+      summary: Enroll a user with a given authentication factor.
+      operationId: Mfa_enrollUserWithFactor
+      description: >-
+        If the authentication factor requires confirmation to complete, then the
+        device will have an active state of false otherwise it will have an
+        active state of true (corresponding to devices that are either pending
+        confirmation or not)
+      parameters:
+        - description: User ID
+          name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MfaEnrollUserWithFactorRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MfaEnrollUserWithFactorResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    get:
+      tags:
+        - mfa
+      summary: Get enrolled authentication factors
+      operationId: Mfa_getUserFactors
+      description: >-
+        Use this API to return a list of authentication factors registered to a
+        particular user for multifactor authentication (MFA).
+      parameters:
+        - description: User ID
+          name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MfaGetUserFactorsResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /users/{id}/otp_devices/{device_id}/trigger:
+    post:
+      tags:
+        - mfa
+      summary: Activate an authentication factor
+      operationId: Mfa_triggerOtp
+      description: >-
+        Use this API to trigger an SMS or Push notification containing a
+        One-Time Password (OTP) that can be used to authenticate a user with the
+        Verify Factor call.
+      parameters:
+        - description: User ID
+          name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - description: Device ID
+          name: device_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MfaTriggerOtpResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /users/{id}/otp_devices/{device_id}/verify:
+    post:
+      tags:
+        - mfa
+      summary: Verify an authentication factor
+      operationId: Mfa_authenticateOtp
+      description: >-
+        Use this API to authenticate a one-time password (OTP) code provided by
+        a multifactor authentication (MFA) device.
+      parameters:
+        - description: User ID
+          name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - description: Device ID
+          name: device_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MfaAuthenticateOtpRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /users/{id}/otp_devices/{device_id}:
+    delete:
+      tags:
+        - mfa
+      summary: Remove an authentication factor
+      operationId: Mfa_removeFactor
+      description: Use this API to remove an enrolled factor from a user.
+      parameters:
+        - description: User ID
+          name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - description: Device ID
+          name: device_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MfaRemoveFactorResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /roles:
+    get:
+      tags:
+        - roles
+      summary: Get Roles
+      operationId: Roles_listRoles
+      description: Returns a list of roles. Supports filtering and paging.
+      parameters:
+        - in: query
+          name: id
+          schema:
+            type: string
+        - in: query
+          name: name
+          schema:
+            type: string
+        - in: query
+          name: limit
+          schema:
+            type: integer
+        - in: query
+          name: sort
+          schema:
+            type: string
+        - in: query
+          name: fields
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RolesListRolesResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /roles/{id}:
+    get:
+      tags:
+        - roles
+      summary: Get Role by ID
+      operationId: Roles_getRoleById
+      description: Use this call to get a role by ID.
+      parameters:
+        - description: Role ID
+          name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RolesGetRoleByIdResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /events:
+    get:
+      tags:
+        - events
+      summary: Get Events
+      operationId: Events_listFilteredEvents
+      description: Returns a list of events. Supports filtering and paging.
+      parameters:
+        - in: query
+          name: client_id
+          schema:
+            type: string
+        - in: query
+          name: created_at
+          schema:
+            type: string
+            format: date-time
+        - in: query
+          name: directory_id
+          schema:
+            type: integer
+        - in: query
+          name: event_type_id
+          schema:
+            type: integer
+        - in: query
+          name: id
+          schema:
+            type: integer
+        - in: query
+          name: resolution
+          schema:
+            type: string
+        - in: query
+          name: since
+          schema:
+            type: string
+            format: date-time
+        - in: query
+          name: until
+          schema:
+            type: string
+            format: date-time
+        - in: query
+          name: user_id
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventsListFilteredEventsResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /events/{id}:
+    get:
+      tags:
+        - events
+      summary: Get Event by ID
+      operationId: Events_getById
+      description: Returns a single event
+      parameters:
+        - description: Event ID
+          name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventsGetByIdResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /events/types:
+    get:
+      tags:
+        - events
+      summary: Get Event Types
+      operationId: Events_listEventTypes
+      description: Returns a list of event types
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventsListEventTypesResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /groups:
+    get:
+      tags:
+        - groups
+      summary: Get Groups
+      operationId: Groups_getList
+      description: >-
+        Use to get a list of groups that are available in your account. The call
+        returns up to 50 groups per page.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupsGetListResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /groups/{id}:
+    get:
+      tags:
+        - groups
+      summary: Get Group by ID
+      operationId: Groups_getById
+      description: Use this call to get a group by ID.
+      parameters:
+        - description: Group ID
+          name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupsGetByIdResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /privileges:
+    get:
+      tags:
+        - privileges
+      summary: Get Privileges
+      operationId: Privileges_listPrivileges
+      description: Use this API to list the Privileges created in an account.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PrivilegesListPrivilegesResponse'
+        '401':
+          $ref: '#/components/responses/Error'
+    post:
+      tags:
+        - privileges
+      summary: Creates privilege
+      operationId: Privileges_createPrivilege
+      description: 'Creates a privilege    '
+      requestBody:
+        $ref: '#/components/requestBodies/Privilege'
+      responses:
+        '201':
+          description: UUID
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/PrivilegesCreatePrivilegeResponse'
+        '400':
+          $ref: '#/components/responses/Error'
+        '401':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+        '500':
+          description: internal server error
+  /privileges/{id}:
+    get:
+      tags:
+        - privileges
+      summary: Get privilege
+      operationId: Privileges_getPrivilegeById
+      description: 'Get a privilege    '
+      parameters:
+        - description: Privilege ID
+          name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          $ref: '#/components/schemas/Privilege'
+        '401':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+    put:
+      tags:
+        - privileges
+      summary: Update privilege
+      operationId: Privileges_updatePrivilegeById
+      description: 'Update a privilege    '
+      parameters:
+        - description: Privilege ID
+          name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        $ref: '#/components/requestBodies/Privilege'
+      responses:
+        '200':
+          description: UUID
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/PrivilegesUpdatePrivilegeByIdResponse'
+        '400':
+          $ref: '#/components/responses/Error'
+        '401':
+          $ref: '#/components/responses/Error'
+        '422':
+          $ref: '#/components/responses/Error'
+        '500':
+          description: internal server error
+    delete:
+      tags:
+        - privileges
+      summary: Delete privilege
+      operationId: Privileges_deletePrivilege
+      description: 'Delete a privilege    '
+      parameters:
+        - description: Privilege ID
+          name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: The privilege was successfully deleted.
+        '401':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+  /privileges/{id}/roles:
+    get:
+      tags:
+        - privileges
+      summary: Get roles
+      operationId: Privileges_getRoles
+      description: 'Get roles assigned to a privilege  '
+      parameters:
+        - description: Privilege ID
+          name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/PrivilegesGetRolesResponse'
+        '401':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+    post:
+      tags:
+        - privileges
+      summary: Assign roles
+      operationId: Privileges_assignRoles
+      description: Use this API to assign a privilege to one or more roles.
+      parameters:
+        - description: Privilege ID
+          name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: Roles
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PrivilegesAssignRolesRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/PrivilegesAssignRolesResponse'
+        '401':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+  /privileges/{id}/roles/{role_id}:
+    delete:
+      tags:
+        - privileges
+      summary: Remove a role
+      operationId: Privileges_removeRole
+      description: Use this API to remove a single role from a privilege.
+      parameters:
+        - description: Privilege ID
+          name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - description: Role ID
+          name: role_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: The role was removed from the privilege.
+        '401':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+  /privileges/{id}/users:
+    get:
+      tags:
+        - privileges
+      summary: Get privilege users
+      operationId: Privileges_getAssignedUsers
+      description: 'Get users assigned to a privilege  '
+      parameters:
+        - description: Privilege ID
+          name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/PrivilegesGetAssignedUsersResponse'
+        '401':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+    post:
+      tags:
+        - privileges
+      summary: Assign users
+      operationId: Privileges_assignUsers
+      description: Use this API to assign a privilege to one or more users.
+      parameters:
+        - description: Privilege ID
+          name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: Users
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PrivilegesAssignUsersRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/PrivilegesAssignUsersResponse'
+        '401':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+  /privileges/{id}/users/{user_id}:
+    delete:
+      tags:
+        - privileges
+      summary: Remove a user
+      operationId: Privileges_removeUser
+      description: Use this API to remove a single user from a privilege.
+      parameters:
+        - description: Privilege ID
+          name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - description: User ID
+          name: user_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: The user was removed from the privilege.
+        '401':
+          $ref: '#/components/responses/Error'
+        '404':
+          $ref: '#/components/responses/Error'
+  /invites/get_invite_link:
+    post:
+      tags:
+        - invites
+      summary: Generate Invite Link
+      operationId: Invites_generateLink
+      description: >-
+        Generate an invite link for a user already created in your OneLogin
+        account.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InvitesGenerateLinkRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvitesGenerateLinkResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /invites/send_invite_link:
+    post:
+      tags:
+        - invites
+      summary: Send Invite Link
+      operationId: Invites_sendInviteLink
+      description: Send an invite link to an existing user in your OneLogin account.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InvitesSendInviteLinkRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/Ok'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+components:
+  responses:
+    Ok:
+      description: Ok
+      content:
+        '*/*':
+          schema:
+            $ref: '#/components/schemas/Status'
+    BadRequest:
+      description: Bad Request
+      content:
+        '*/*':
+          schema:
+            $ref: '#/components/schemas/Status'
+    Unauthorized:
+      description: Not Authorized
+      content:
+        '*/*':
+          schema:
+            $ref: '#/components/schemas/Status'
+    NotFound:
+      description: Not Found
+      content:
+        '*/*':
+          schema:
+            $ref: '#/components/schemas/Status'
+    Forbidden:
+      description: Forbidden
+      content:
+        '*/*':
+          schema:
+            $ref: '#/components/schemas/Status'
+    Error:
+      description: Error
+      content:
+        '*/*':
+          schema:
+            $ref: '#/components/schemas/PrivilegesListPrivileges401Response'
+  requestBodies:
+    Privilege:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Privilege'
+  securitySchemes:
+    application:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: https://api.{region}.onelogin.com/auth/oauth2/v2/token
+          scopes: {}
+  schemas:
+    Status:
+      title: Status
+      description: Status object returned in the body of most responses
+      type: object
+      properties:
+        error:
+          type: boolean
+          example: true
+        code:
+          type: integer
+          example: 401
+        type:
+          type: string
+          example: Unauthorized
+        message:
+          type: string
+          example: Authentication Failure
+    Pagination:
+      title: Pagination
+      description: Contains useful links for paging through result sets
+      type: object
+      properties:
+        before_cursor:
+          type: string
+        after_cursor:
+          type: string
+        previous_link:
+          type: string
+        next_link:
+          type: string
+    User:
+      title: User
+      type: object
+      properties:
+        id:
+          description: User’s unique ID in OneLogin
+          type: integer
+        email:
+          description: User’s email address, which he also uses to log in to OneLogin
+          type: string
+        username:
+          description: >-
+            If the user’s directory is set to authenticate using a user name
+            value, this is the value used to sign in
+          type: string
+        firstname:
+          description: User’s first name
+          type: string
+        lastname:
+          description: User’s last name
+          type: string
+        group_id:
+          description: Group to which the user belongs
+          type: integer
+        invalid_login_attempts:
+          description: >-
+            Number of sequential invalid login attempts the user has made that
+            is less than or equal to the Maximum invalid login attempts value
+            defined on the Session page in OneLogin.
+
+            When this number reaches this value, the user account will be locked
+            for the amount of time defined by the Lock effective period field on
+            the Session page and this value will be reset to 0.
+          type: integer
+        activated_at:
+          description: 'Date and time at which the user’s status was set to 1 (active)      '
+          type: string
+          format: date-time
+        created_at:
+          description: 'Date and time at which the user was created '
+          type: string
+          format: date-time
+        updated_at:
+          description: Date and time at which the user’s information was last updated
+          type: string
+          format: date-time
+        invitation_sent_at:
+          description: >-
+            Date and time at which an invitation to OneLogin was sent to the
+            user 
+          type: string
+          format: date-time
+        password_changed_at:
+          description: Date and time at which the user’s password was last changed
+          type: string
+          format: date-time
+        last_login:
+          description: 'Date and time of the user’s last login '
+          type: string
+          format: date-time
+        locked_until:
+          description: 'Date and time at which the user’s account will be unlocked '
+          type: string
+          format: date-time
+        notes:
+          type: string
+        openid_name:
+          description: >-
+            OpenID URL that can be configured in other applications that accept
+            OpenID for sign-in
+          type: string
+        locale_code:
+          description: >-
+            Represents a geographical, political, or cultural region. Some
+            features may use the locale value to tailor the display of
+            information, such as numbers, for the user based on locale-specific
+            customs and conventions
+          type: string
+        phone:
+          description: User’s phone number
+          type: string
+        status:
+          description: |-
+            Determines the user’s ability to log in to OneLogin
+
+              Possible values
+              
+              0 - Unactivated
+              1 - Active Only users assigned this status can log in to OneLogin.
+              2 - Suspended
+              3 - Locked
+              4 - Password expired
+              5 - Awaiting password reset
+          type: integer
+        state:
+          description: >-
+            Represents the user’s stage in a process (such as user account
+            approval). User state determines the possible statuses a user
+            account can be in.
+
+            States include
+
+            0 - Unapproved 1 - Approved 2 - Rejected 3 - Unlicensed
+          type: integer
+        distinguished_name:
+          description: Synchronized from Active Directory
+          type: string
+        external_id:
+          description: >-
+            External ID that can be used to uniquely identify the user in
+            another system
+          type: string
+        directory_id:
+          description: >-
+            ID of the directory (Active Directory, LDAP, for example) from which
+            the user was created
+          type: integer
+        member_of:
+          description: Synchronized from Active Directory
+          type: string
+        samaccountname:
+          description: Synchronized from Active Directory
+          type: string
+        userprincipalname:
+          description: Synchronized from Active Directory
+          type: string
+        manager_ad_id:
+          description: ID of the user’s manager in Active Directory
+          type: string
+        role_id:
+          description: Role IDs to which the user is assigned
+          type: array
+          items:
+            type: integer
+        custom_attributes:
+          description: >-
+            Provides a list of custom attribute fields (also known as custom
+            user fields) that are available for your account.
+
+            The values returned correspond to the values you provided in the
+            Shortname field when you defined the custom user field
+          type: object
+          additionalProperties:
+            type: string
+      required:
+        - firstname
+        - lastname
+        - email
+        - username
+    MfaDevice:
+      title: MfaDevice
+      type: object
+      properties:
+        active:
+          type: boolean
+        default:
+          type: boolean
+        state_token:
+          type: string
+        auth_factor_name:
+          type: string
+        phone_number:
+          type: string
+        type_display_name:
+          type: string
+        needs_trigger:
+          type: boolean
+        user_display_name:
+          type: string
+        id:
+          type: integer
+    Role:
+      title: Role
+      type: object
+      properties:
+        id:
+          description: The roles unique ID in OneLogin.
+          type: integer
+        name:
+          description: The role name
+          type: string
+    Group:
+      title: Group
+      type: object
+      properties:
+        id:
+          description: The groups unique ID in OneLogin.
+          type: integer
+        name:
+          description: The group name
+          type: string
+    EventType:
+      title: EventType
+      type: object
+      properties:
+        description:
+          description: Template for the Event description
+          type: string
+        id:
+          type: integer
+        name:
+          description: Constant name for the Event Type
+          type: string
+    Event:
+      title: Event
+      type: object
+      properties:
+        account_id:
+          type: integer
+        event_type_id:
+          type: integer
+        id:
+          description: The Event ID
+          type: integer
+        created_at:
+          description: The date/time the Event was created
+          type: string
+          format: date-time
+        user_id:
+          type: integer
+        notes:
+          type: string
+        ipaddr:
+          type: string
+        actor_user_id:
+          type: integer
+        assuming_acting_user_id:
+          type: integer
+        role_id:
+          type: integer
+        app_id:
+          type: integer
+        group_id:
+          type: integer
+        otp_device_id:
+          type: integer
+        policy_id:
+          type: integer
+        actor_system:
+          type: string
+        custom_message:
+          type: string
+        role_name:
+          type: string
+        app_name:
+          type: string
+        group_name:
+          type: string
+        actor_user_name:
+          type: string
+        user_name:
+          type: string
+        policy_name:
+          type: string
+        otp_device_name:
+          type: string
+        operation_name:
+          type: string
+        directory_sync_run_id:
+          type: integer
+        directory_id:
+          type: integer
+        resolution:
+          type: string
+        client_id:
+          type: string
+        resourcse_type_id:
+          type: integer
+        error_description:
+          type: string
+      required:
+        - event_type_id
+        - account_id
+    UserApp:
+      title: UserApp
+      type: object
+      properties:
+        id:
+          description: ID of the app that can be accessed by the user.
+          type: integer
+        name:
+          description: Constant name for the Event Type
+          type: string
+        icon:
+          description: 'Template for the Event description '
+          type: string
+        provisioned:
+          description: >-
+            Indicates whether a username and password has been stored on the
+            login for the app and user.
+
+            Valid values are:
+
+            - 0 (no) - 1 (yes)
+          type: integer
+        extension:
+          description: >-
+            Indicates whether the app requires the OneLogin browser extension to
+            login.
+
+            Valid values are:
+
+            - true: The app requires the OneLogin browser extension. - false:
+            The app does not require the OneLogin browser extension.
+          type: boolean
+        login_id:
+          description: 'Template for the Event description '
+          type: string
+        personal:
+          description: >-
+            Indicates whether the app is a user’s personal app.
+
+            Valid values are:
+
+            - true: The app is a user’s personal app. - false: The app is not a
+            user’s personal app.        
+          type: boolean
+    Privilege:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: cc87dc41-1974-4af4-8493-7d135c981f42
+        name:
+          type: string
+          example: User Administrator
+        privilege:
+          type: object
+          properties:
+            Version:
+              description: Version can be anything. Recommended to be Date/Time format
+              type: string
+              example: 2018-10-30 18:56:22 -0600
+            Statement:
+              type: array
+              items:
+                $ref: '#/components/schemas/Statement'
+          required:
+            - Version
+            - Statement
+      required:
+        - id
+        - name
+        - privilege
+    Statement:
+      type: object
+      properties:
+        Effect:
+          type: string
+          enum:
+            - Allow
+            - Deny
+        Action:
+          type: array
+          items:
+            $ref: '#/components/schemas/Action'
+        Scope:
+          type: array
+          items:
+            $ref: '#/components/schemas/Scope'
+      required:
+        - Effect
+        - Action
+        - Scope
+    Scope:
+      type: string
+      example: '*'
+      pattern: >-
+        ^(\*|(privileges|roles|directories|trustedidp|policies|users|apps|reports|events)\/(\*|\d+))$
+    Action:
+      type: string
+      enum:
+        - '*'
+        - privileges:List
+        - privileges:Get
+        - privileges:Create
+        - privileges:Update
+        - privileges:Delete
+        - privileges:ListUsers
+        - privileges:ListRoles
+        - privileges:AddUser
+        - privileges:RemoveUser
+        - privileges:AddRole
+        - privileges:RemoveRole
+        - roles:List
+        - roles:Get
+        - roles:Create
+        - roles:Update
+        - roles:Delete
+        - roles:AddUser
+        - roles:AddApp
+        - roles:RemoveApp
+        - directories:List
+        - directories:Get
+        - directories:Create
+        - directories:Update
+        - directories:Delete
+        - directories:SyncUsers
+        - directories:RefreshSchema
+        - trustedidp:List
+        - trustedidp:Get
+        - trustedidp:Create
+        - trustedidp:Update
+        - trustedidp:Delete
+        - policies:List
+        - policies:user:Get
+        - policies:user:Create
+        - policies:user:Update
+        - policies:user:Delete
+        - policies:app:Get
+        - policies:app:Create
+        - policies:app:Update
+        - policies:app:Delete
+        - users:List
+        - users:Get
+        - users:Create
+        - users:Update
+        - users:Delete
+        - users:Unlock
+        - users:ResetPassword
+        - users:ForceLogout
+        - users:Invite
+        - users:ReapplyMappings
+        - users:AddRole
+        - users:RemoveRole
+        - users:GenerateTempMfaToken
+        - users:AddApp
+        - users:RemoveApp
+        - apps:List
+        - apps:Get
+        - apps:Create
+        - apps:UpdateConfiguration
+        - apps:UpdateSSO
+        - apps:UpdateParameters
+        - apps:Delete
+        - apps:AddUser
+        - apps:RemoveUser
+        - reports:List
+        - reports:Get
+        - reports:Create
+        - reports:Run
+        - mappings:reapplyAll
+        - events:List
+        - events:Get
+    UsersAssignRolesRequest:
+      type: array
+      items:
+        type: integer
+    UsersRemoveUserRolesRequest:
+      type: array
+      items:
+        type: integer
+    UsersSetStateRequest:
+      type: object
+      required:
+        - state
+      properties:
+        state:
+          description: 'Unapproved: 0 Approved (licensed): 1 Rejected: 2 Unlicensed: 3'
+          type: integer
+    UsersLockUserAccountRequest:
+      type: object
+      required:
+        - locked_until
+      properties:
+        locked_until:
+          description: >-
+            Set to the number of minutes for which you want to lock the user
+            account.
+          type: integer
+    UsersSetCustomAttributesRequest:
+      type: object
+      required:
+        - custom_attributes
+      properties:
+        custom_attributes:
+          description: The attributes to set
+          type: object
+          additionalProperties:
+            type: string
+    UsersGenerateTempMfaTokenRequest:
+      type: object
+      properties:
+        expires_in:
+          description: Set the duration of the token in seconds.
+          type: integer
+        reusable:
+          description: >-
+            Defines if the token is reusable multiple times within the expiry
+            window.
+          type: boolean
+    UsersSetPasswordClearTextByIdRequest:
+      type: object
+      required:
+        - password
+        - password_confirmation
+      properties:
+        password:
+          description: 'The new password '
+          type: string
+        password_confirmation:
+          description: The new password repeated
+          type: string
+        validate_policy:
+          description: >-
+            Defaults to false. This will validate the password against the users
+            OneLogin password policy.
+          type: string
+    UsersSetPreSaltedPasswordRequest:
+      type: object
+      required:
+        - password
+        - password_confirmation
+        - password_algorithm
+      properties:
+        password:
+          description: 'The new password '
+          type: string
+        password_confirmation:
+          description: The new password repeated
+          type: string
+        password_algorithm:
+          description: Set to salt+sha256.
+          type: string
+        password_salt:
+          description: >-
+            If your password hash has been salted then you can provide the salt
+            used in this param.
+          type: string
+    LoginUserAuthenticationRequest:
+      type: object
+      required:
+        - username_or_email
+        - password
+        - subdomain
+      properties:
+        username_or_email:
+          description: Set to the username or email of the user that you want to log in.
+          type: string
+        password:
+          description: Set to the password of the user that you want to log in.
+          type: string
+        subdomain:
+          description: Set to the subdomain of the user that you want to log in.
+          type: string
+        return_to_url:
+          description: >-
+            Leave this value blank for now. Intended for future use with
+            multi-factor authentication functionality.
+          type: string
+        ip_address:
+          description: >-
+            Leave this value blank for now. Intended for future use with
+            multi-factor authentication functionality. It will be used to set to
+            the IP address of the user accessing your login page.
+          type: string
+        browser_id:
+          description: >-
+            Leave this value blank for now. Intended for future use with
+            multi-factor authentication functionality. It will be used to set to
+            the ID of the browser being used by the user to access your login
+            page.
+          type: string
+    LoginVerifyFactorRequest:
+      type: object
+      required:
+        - device_id
+        - state_token
+      properties:
+        device_id:
+          description: Provide the MFA device_id you are submitting for verification.
+          type: integer
+        state_token:
+          description: >-
+            Provide the state_token associated with the MFA device_id you are
+            submitting for verification.
+          type: string
+        otp_token:
+          description: >-
+            Provide the OTP value for the MFA factor you are submitting for
+            verification.
+          type: string
+        do_not_notify:
+          description: >-
+            When verifying MFA via Protect Push, set this to true to stop
+            additional push notifications being sent to the OneLogin Protect
+            device.
+          default: false
+          type: boolean
+    SamlGenerateAssertionRequest:
+      type: object
+      required:
+        - username_or_email
+        - password
+        - subdomain
+        - app_id
+      properties:
+        username_or_email:
+          description: Set to the username or email of the user that you want to log in.
+          type: string
+        password:
+          description: Set to the password of the user that you want to log in.
+          type: string
+        subdomain:
+          description: Set to the subdomain of the user that you want to log in.
+          type: string
+        app_id:
+          description: >-
+            App ID of the app for which you want to generate a SAML token. This
+            is the app ID in OneLogin.
+          type: integer
+        ip_address:
+          description: >-
+            If you are using this API in a scenario in which MFA is required and
+            you’ll need to be able to honor IP address whitelisting defined in
+            MFA policies, provide this parameter and set its value to the
+            whitelisted IP address that needs to be bypassed.
+          type: string
+    SamlVerifyFactorRequest:
+      type: object
+      required:
+        - app_id
+        - device_id
+        - state_token
+      properties:
+        app_id:
+          description: Provide the MFA device_id you are submitting for verification.
+          type: integer
+        device_id:
+          description: Provide the MFA device_id you are submitting for verification.
+          type: integer
+        state_token:
+          description: >-
+            Provide the state_token associated with the MFA device_id you are
+            submitting for verification.
+          type: string
+        otp_token:
+          description: >-
+            Provide the OTP value for the MFA factor you are submitting for
+            verification.
+          type: string
+        do_not_notify:
+          description: >-
+            When verifying MFA via Protect Push, set this to true to stop
+            additional push notifications being sent to the OneLogin Protect
+            device.
+          default: false
+          type: boolean
+    MfaEnrollUserWithFactorRequest:
+      type: object
+      required:
+        - factor_id
+        - display_name
+        - number
+      properties:
+        factor_id:
+          description: The identifier of the factor to enroll the user with
+          type: integer
+        display_name:
+          description: A name for the users device
+          type: string
+        number:
+          description: The phone number of the user in E.164 format.
+          type: string
+    MfaAuthenticateOtpRequest:
+      type: object
+      properties:
+        otp_token:
+          description: OTP code provided by the device or SMS message sent to user.
+          type: integer
+        state_token:
+          description: >-
+            The state_token is returned after a successful request to Enroll a
+            Factor or Activate a Factor. The state_token MUST be provided if the
+            needs_trigger attribute from the proceeding calls is set to true.
+          type: string
+    PrivilegesAssignRolesRequest:
+      type: object
+      properties:
+        roles:
+          type: array
+          items:
+            type: integer
+    PrivilegesAssignUsersRequest:
+      type: object
+      properties:
+        users:
+          type: array
+          items:
+            type: integer
+    InvitesGenerateLinkRequest:
+      type: object
+      required:
+        - email
+      properties:
+        email:
+          description: Set to the user email address to generate an invite link.
+          type: string
+    InvitesSendInviteLinkRequest:
+      type: object
+      required:
+        - email
+      properties:
+        email:
+          description: Set to the user email address to generate an invite link.
+          type: string
+        personal_email:
+          description: >-
+            To send an invite email to a different address than the one provided
+            in email, provide it here. The invite link is sent to this address
+            instead.
+          type: string
+    UsersGetListResponse:
+      title: UsersResponse
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/Status'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+    UsersCreateAccountResponse:
+      title: CreateUserResponse
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/Status'
+        data:
+          $ref: '#/components/schemas/User'
+    UsersGetUserResponse:
+      title: UserResponse
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/Status'
+        data:
+          $ref: '#/components/schemas/User'
+    UsersUpdateByIdResponse:
+      title: UpdateUserResponse
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/Status'
+        data:
+          $ref: '#/components/schemas/User'
+    UsersListUserAppsResponse:
+      title: UserAppsResponse
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/Status'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+        data:
+          title: UserApps
+          type: array
+          items:
+            $ref: '#/components/schemas/UserApp'
+    UsersGetUserRolesResponse:
+      title: UserRolesResponse
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/Status'
+        data:
+          type: array
+          items:
+            type: integer
+    UsersGenerateTempMfaTokenResponse:
+      title: GenerateMfaTokenResponse
+      type: object
+      properties:
+        reusable:
+          type: boolean
+        mfa_token:
+          type: string
+          example: '82974462'
+        expires_at:
+          type: string
+          format: date-time
+    UsersGetCustomAttributesResponse:
+      title: CustomAttributesResponse
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/Status'
+        data:
+          type: array
+          items:
+            type: string
+    LoginUserAuthenticationResponse:
+      title: UserLoginResponse
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/Status'
+        data:
+          title: Response
+          type: object
+          properties:
+            status:
+              type: string
+            user:
+              type: object
+              properties:
+                id:
+                  type: integer
+                firstname:
+                  type: string
+                lastname:
+                  type: string
+                username:
+                  type: string
+                email:
+                  type: string
+            return_to_url:
+              type: string
+            expires_at:
+              type: string
+            session_token:
+              type: string
+            state_token:
+              type: string
+            callback_url:
+              type: string
+            devices:
+              type: array
+              items:
+                type: object
+                properties:
+                  device_id:
+                    type: integer
+                  device_type:
+                    type: string
+    LoginVerifyFactorResponse:
+      title: LoginVerifyMfaResponse
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/Status'
+        data:
+          type: object
+          properties:
+            status:
+              type: string
+            user:
+              type: object
+              properties:
+                id:
+                  type: integer
+                firstname:
+                  type: string
+                lastname:
+                  type: string
+                username:
+                  type: string
+                email:
+                  type: string
+            return_to_url:
+              type: string
+            expires_at:
+              type: string
+            session_token:
+              type: string
+    SamlGenerateAssertionResponse:
+      title: SamlAssertionResponse
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/Status'
+        data:
+          type: string
+    SamlVerifyFactorResponse:
+      title: SamlVerifyMfaResponse
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/Status'
+        data:
+          type: string
+    MfaGetUserFactorsListResponse:
+      title: UserMfaFactorsResponse
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/Status'
+        data:
+          type: object
+          properties:
+            auth_factors:
+              type: array
+              items:
+                type: object
+                properties:
+                  factor_id:
+                    type: integer
+                  name:
+                    type: string
+    MfaGetUserFactorsResponse:
+      title: EnrolledMfaFactorsResponse
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/Status'
+        data:
+          type: object
+          properties:
+            otp_devices:
+              type: array
+              items:
+                $ref: '#/components/schemas/MfaDevice'
+    MfaEnrollUserWithFactorResponse:
+      title: EnrollMfaFactorResponse
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/Status'
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/MfaDevice'
+    MfaTriggerOtpResponse:
+      title: ActivateMfaResponse
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/Status'
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/MfaDevice'
+    MfaRemoveFactorResponse:
+      title: RemoveMfaResponse
+      type: object
+    RolesListRolesResponse:
+      title: RolesResponse
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/Status'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Role'
+    RolesGetRoleByIdResponse:
+      title: RoleReponse
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/Status'
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Role'
+    EventsListFilteredEventsResponse:
+      title: EventsResponse
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/Status'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Event'
+    EventsGetByIdResponse:
+      title: EventResponse
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/Status'
+        data:
+          $ref: '#/components/schemas/Event'
+    EventsListEventTypesResponse:
+      title: EventTypesResponse
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/Status'
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventType'
+    GroupsGetListResponse:
+      title: GroupsResponse
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/Status'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Group'
+    GroupsGetByIdResponse:
+      title: GroupResponse
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/Status'
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Group'
+    PrivilegesListPrivilegesResponse:
+      title: PrivilegesResponse
+      type: array
+      items:
+        $ref: '#/components/schemas/Privilege'
+    PrivilegesListPrivileges401Response:
+      type: object
+      properties:
+        statusCode:
+          type: integer
+          example: 401
+        name:
+          type: string
+          example: UnauthorizedError
+        message:
+          type: string
+          example: The request requires user authentication.
+    PrivilegesCreatePrivilegeResponse:
+      title: CreatePrivilegeResponse
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: d290f1ee-6c54-4b01-90e6-d701748f0851
+    PrivilegesUpdatePrivilegeByIdResponse:
+      title: UpdatePrivilegeResponse
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: d290f1ee-6c54-4b01-90e6-d701748f0851
+    PrivilegesGetRolesResponse:
+      title: PrivilegeRolesResponse
+      type: object
+      properties:
+        total:
+          type: integer
+        roles:
+          type: array
+          items:
+            type: integer
+        beforeCursor:
+          type: string
+        previousLink:
+          type: string
+        afterCursor:
+          type: string
+        nextLink:
+          type: string
+    PrivilegesAssignRolesResponse:
+      title: AssignPrivilegeRolesResponse
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+    PrivilegesGetAssignedUsersResponse:
+      title: PrivilegeUsersResponse
+      type: object
+      properties:
+        total:
+          type: integer
+        users:
+          type: array
+          items:
+            type: integer
+        beforeCursor:
+          type: string
+        previousLink:
+          type: string
+        afterCursor:
+          type: string
+        nextLink:
+          type: string
+    PrivilegesAssignUsersResponse:
+      title: AssignPrivilegeUsersResponse
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+    InvitesGenerateLinkResponse:
+      title: GenerateInviteLinkResponse
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/Status'
+        data:
+          type: array
+          items:
+            type: string
+security:
+  - application: []
