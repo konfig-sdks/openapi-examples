@@ -1,0 +1,790 @@
+openapi: 3.0.3
+info:
+  title: The Jina Embedding Serving API
+  description: This is the UniversalAPI to access all the Jina embedding models
+  version: 0.0.86
+  x-konfig-ignore:
+    object-with-no-properties: true
+servers:
+  - url: https://api.jina.ai
+tags:
+  - name: bulk-embeddings
+  - name: embeddings
+  - name: rerank
+  - name: multi-embeddings
+  - name: health
+paths:
+  /v1/embeddings:
+    post:
+      tags:
+        - embeddings
+      summary: Create Embedding
+      operationId: Embeddings_createRepresentation
+      security:
+        - HTTPBearer: []
+      description: Create embedding representations of the given input texts.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmbeddingsCreateRepresentationRequest'
+        required: true
+      responses:
+        '200':
+          description: Create embeddings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModelEmbeddingOutput'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /v1/bulk-embeddings:
+    post:
+      tags:
+        - bulk-embeddings
+      summary: Start Bulk Embedding
+      operationId: Bulkembeddings_uploadFileAndGetEmbeddings
+      security:
+        - HTTPBearer: []
+      description: Upload a file and get embeddings for each row
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: >-
+                #/components/schemas/Body_start_bulk_embedding_v1_bulk_embeddings_post
+        required: true
+      responses:
+        '200':
+          description: Start a bulk embedding job
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BulkEmbeddingJobResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /v1/bulk-embeddings/{job_id}:
+    get:
+      tags:
+        - bulk-embeddings
+      summary: Retrieve Job
+      operationId: Bulkembeddings_getJob
+      parameters:
+        - required: true
+          schema:
+            title: Job Id
+            type: string
+          name: job_id
+          in: path
+      responses:
+        '200':
+          description: Get information about a bulk embedding job
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BulkEmbeddingJobResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /v1/bulk-embeddings/{job_id}/download-result:
+    post:
+      tags:
+        - bulk-embeddings
+      summary: Download Result
+      operationId: Bulkembeddings_downloadResultPost
+      parameters:
+        - required: true
+          schema:
+            title: Job Id
+            type: string
+          name: job_id
+          in: path
+      responses:
+        '200':
+          description: Download the result of a bulk embedding job
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DownloadResultResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /v1/rerank:
+    post:
+      tags:
+        - rerank
+      summary: Rank
+      operationId: Rerank_pairRanking
+      security:
+        - HTTPBearer: []
+      description: Rank pairs.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TextRankInput'
+        required: true
+      responses:
+        '200':
+          description: Rank output
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RankingOutput'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /v1/multi-embeddings:
+    post:
+      tags:
+        - multi-embeddings
+      summary: Create Multi Embeddings
+      operationId: Multiembeddings_generateEmbeddings
+      security:
+        - HTTPBearer: []
+      description: Create embedding representations of the given input texts.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: >-
+                #/components/schemas/api_schemas__multi_embeddings__TextEmbeddingInput
+        required: true
+      responses:
+        '200':
+          description: Create embeddings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ColbertModelEmbeddingsOutput'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /:
+    get:
+      tags:
+        - health
+      summary: Get the health of Universal API service
+      operationId: Health_checkStatus
+      description: |-
+        Get the health of this Gateway service.
+        .. # noqa: DAR201
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthModel'
+components:
+  schemas:
+    Body_start_bulk_embedding_v1_bulk_embeddings_post:
+      title: Body_start_bulk_embedding_v1_bulk_embeddings_post
+      properties:
+        file:
+          title: File
+          type: string
+          format: binary
+        email:
+          title: Email
+          type: string
+          format: email
+        model:
+          title: Model
+          type: string
+      type: object
+      required:
+        - file
+        - model
+    BulkEmbeddingJobResponse:
+      title: BulkEmbeddingJobResponse
+      properties:
+        user_id:
+          title: User Id
+          description: The user ID of the user who created the job
+          type: string
+        model_name:
+          title: Model Name
+          description: The name of the model to use
+          type: string
+        model_package_arn:
+          title: Model Package Arn
+          description: The model package ARN
+          type: string
+        status:
+          $ref: '#/components/schemas/BulkEmbeddingJobStatus'
+        file_name:
+          title: File Name
+          description: The name of the input file
+          type: string
+        user_email:
+          title: User Email
+          description: The email of the user who created the job
+          type: string
+          format: email
+        created_at:
+          title: Created At
+          description: Time of creation of the job.
+          type: string
+          format: date-time
+          nullable: false
+        completed_at:
+          title: Completed At
+          description: Time of completion of the job.
+          type: string
+          format: date-time
+        error:
+          title: Error
+          description: The error message of the job
+          type: string
+        _id:
+          title: ' Id'
+          description: The ID of the job
+          type: string
+        used_token_count:
+          title: Used Token Count
+          description: The number of tokens used for the job
+          type: integer
+      type: object
+      required:
+        - user_id
+        - model_name
+        - status
+        - file_name
+        - _id
+      example:
+        id: '000000000000000000000000'
+        model_name: model_1
+        status: in-progress
+        file_name: input.csv
+        used_token_count: 1000
+      x-konfig-properties:
+        status:
+          description: The status of the job
+    BulkEmbeddingJobStatus:
+      title: BulkEmbeddingJobStatus
+      description: An enumeration.
+      type: string
+      enum:
+        - waiting
+        - in-progress
+        - failed
+        - completed
+    ColbertModelEmbeddingsOutput:
+      title: ColbertModelEmbeddingsOutput
+      description: Output of the embedding service
+      properties:
+        model:
+          title: Model
+          description: "The identifier of the model.\n\nAvailable models and corresponding param size and dimension:\n- `jina-embedding-t-en-v1`,\t14m,\t312\n- `jina-embedding-s-en-v1`,\t35m,\t512 (default)\n- `jina-embedding-b-en-v1`,\t110m,\t768\n- `jina-embedding-l-en-v1`,\t330,\t1024\n\nFor more information, please checkout our [technical blog](https://arxiv.org/abs/2307.11224).\n"
+          type: string
+        object:
+          title: Object
+          type: string
+          default: list
+        data:
+          title: Data
+          description: A list of Embedding Objects returned by the embedding service
+          items: {}
+          type: array
+        usage:
+          $ref: '#/components/schemas/api_schemas__embedding__Usage'
+      type: object
+      required:
+        - model
+        - data
+        - usage
+      example:
+        data:
+          - index: 0
+            embeddings:
+              - - 0.1
+                - 0.2
+                - 0.3
+              - - 0.4
+                - 0.5
+                - 0.6
+            object: embeddings
+          - index: 1
+            embeddings:
+              - - 0.6
+                - 0.5
+                - 0.4
+              - - 0.3
+                - 0.2
+                - 0.1
+            object: embeddings
+        usage:
+          total_tokens: 15
+          prompt_tokens: 15
+      x-konfig-properties:
+        usage:
+          title: Usage
+          description: >-
+            Total usage of the request. Sums up the usage from each individual
+            input
+    DownloadResultResponse:
+      title: DownloadResultResponse
+      properties:
+        id:
+          title: Id
+          description: The ID of the job
+          type: string
+        download_url:
+          title: Download Url
+          description: The URL to download the result file
+          type: string
+      type: object
+      required:
+        - id
+        - download_url
+      example:
+        id: 000000000000000000000000X
+        download_url: https://example.com
+    HTTPValidationError:
+      title: HTTPValidationError
+      properties:
+        detail:
+          title: Detail
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+      type: object
+    HealthModel:
+      title: HealthModel
+      description: >-
+        Pydantic BaseModel for Jina health check, used as the response model in
+        REST app.
+      properties: {}
+      type: object
+    ImageDoc:
+      title: ImageDoc
+      description: >-
+        BaseDoc is the base class for all Documents. This class should be
+        subclassed
+
+        to create new Document types with a specific schema.
+
+
+        The schema of a Document is defined by the fields of the class.
+
+
+        Example:
+
+        ```python
+
+        from docarray import BaseDoc
+
+        from docarray.typing import NdArray, ImageUrl
+
+        import numpy as np
+
+
+
+        class MyDoc(BaseDoc):
+            embedding: NdArray[512]
+            image: ImageUrl
+
+
+        doc = MyDoc(embedding=np.zeros(512),
+        image='https://example.com/image.jpg')
+
+        ```
+
+
+
+        BaseDoc is a subclass of
+        [pydantic.BaseModel](https://docs.pydantic.dev/usage/models/) and can be
+        used in a similar way.
+      properties:
+        id:
+          title: Id
+          description: >-
+            The ID of the BaseDoc. This is useful for indexing in vector stores.
+            If not set by user, it will automatically be assigned a random value
+          type: string
+          example: c801ec96945569130923f081d9dd5e8e
+        url:
+          title: Url
+          description: URL of an image file
+          type: string
+          maxLength: 65536
+          minLength: 1
+          format: uri
+        bytes:
+          title: Bytes
+          description: Bytes representation of the Image.
+          type: string
+          format: binary
+      type: object
+    ImageEmbeddingInput:
+      title: ImageEmbeddingInput
+      description: The input to the API for text embedding. OpenAI compatible
+      properties:
+        model:
+          title: Model
+          description: "The identifier of the model.\n\nAvailable models and corresponding param size and dimension:\n- `jina-embedding-t-en-v1`,\t14m,\t312\n- `jina-embedding-s-en-v1`,\t35m,\t512 (default)\n- `jina-embedding-b-en-v1`,\t110m,\t768\n- `jina-embedding-l-en-v1`,\t330,\t1024\n\nFor more information, please checkout our [technical blog](https://arxiv.org/abs/2307.11224).\n"
+          type: string
+        input:
+          title: Input
+          description: List of images to embed
+          anyOf:
+            - items:
+                $ref: '#/components/schemas/ImageDoc'
+              type: array
+            - $ref: '#/components/schemas/ImageDoc'
+        encoding_format:
+          title: Encoding Format
+          description: >-
+            The format in which you want the embeddings to be returned.Possible
+            value are `float` and `base64`. Defaults to `float`
+          type: string
+          enum:
+            - float
+            - base64
+      type: object
+      required:
+        - model
+        - input
+      example:
+        model: clip
+        input:
+          - bytes or URL
+    ModelEmbeddingOutput:
+      title: ModelEmbeddingOutput
+      description: Output of the embedding service
+      properties:
+        model:
+          title: Model
+          description: "The identifier of the model.\n\nAvailable models and corresponding param size and dimension:\n- `jina-embedding-t-en-v1`,\t14m,\t312\n- `jina-embedding-s-en-v1`,\t35m,\t512 (default)\n- `jina-embedding-b-en-v1`,\t110m,\t768\n- `jina-embedding-l-en-v1`,\t330,\t1024\n\nFor more information, please checkout our [technical blog](https://arxiv.org/abs/2307.11224).\n"
+          type: string
+        object:
+          title: Object
+          type: string
+          default: list
+        data:
+          title: Data
+          description: A list of Embedding Objects returned by the embedding service
+          items: {}
+          type: array
+        usage:
+          $ref: '#/components/schemas/api_schemas__embedding__Usage'
+      type: object
+      required:
+        - model
+        - data
+        - usage
+      example:
+        data:
+          - index: 0
+            embedding:
+              - 0.1
+              - 0.2
+              - 0.3
+            object: embedding
+          - index: 1
+            embedding:
+              - 0.3
+              - 0.2
+              - 0.1
+            object: embedding
+        usage:
+          total_tokens: 15
+          prompt_tokens: 15
+      x-konfig-properties:
+        usage:
+          title: Usage
+          description: >-
+            Total usage of the request. Sums up the usage from each individual
+            input
+    RankingOutput:
+      title: RankingOutput
+      description: Output of the embedding service
+      properties:
+        model:
+          title: Model
+          description: "The identifier of the model.\n\nAvailable models and corresponding param size and dimension:\n- `jina-embedding-t-en-v1`,\t14m,\t312\n- `jina-embedding-s-en-v1`,\t35m,\t512 (default)\n- `jina-embedding-b-en-v1`,\t110m,\t768\n- `jina-embedding-l-en-v1`,\t330,\t1024\n\nFor more information, please checkout our [technical blog](https://arxiv.org/abs/2307.11224).\n"
+          type: string
+        results:
+          title: Results
+          description: An ordered list of ranked documents
+          items: {}
+          type: array
+        usage:
+          $ref: '#/components/schemas/api_schemas__rank__Usage'
+      type: object
+      required:
+        - model
+        - results
+        - usage
+      example:
+        results:
+          - index: 0
+            document:
+              text: Document to rank 1
+            relevance_score: 0.9
+          - index: 1
+            document:
+              text: Document to rank 2
+            relevance_score: 0.8
+        usage:
+          total_tokens: 15
+          prompt_tokens: 15
+      x-konfig-properties:
+        usage:
+          title: Usage
+          description: Total usage of the request.
+    TextRankInput:
+      title: TextRankInput
+      description: The input to the API for text embedding. OpenAI compatible
+      properties:
+        model:
+          title: Model
+          description: "The identifier of the model.\n\nAvailable models and corresponding param size and dimension:\n- `jina-embedding-t-en-v1`,\t14m,\t312\n- `jina-embedding-s-en-v1`,\t35m,\t512 (default)\n- `jina-embedding-b-en-v1`,\t110m,\t768\n- `jina-embedding-l-en-v1`,\t330,\t1024\n\nFor more information, please checkout our [technical blog](https://arxiv.org/abs/2307.11224).\n"
+          type: string
+        query:
+          title: Query
+          description: The search query
+          anyOf:
+            - type: string
+            - $ref: '#/components/schemas/api_schemas__rank__TextDoc'
+        documents:
+          title: Documents
+          description: >-
+            A list of text documents or strings to rerank. If a document is
+            provided the text fields is required and all other fields will be
+            preserved in the response.
+          anyOf:
+            - items:
+                type: string
+              type: array
+            - items:
+                $ref: '#/components/schemas/api_schemas__rank__TextDoc'
+              type: array
+        top_n:
+          title: Top N
+          description: >-
+            The number of most relevant documents or indices to return, defaults
+            to the length of `documents`
+          type: integer
+        return_documents:
+          title: Return Documents
+          description: >-
+            If false, returns results without the doc text - the api will return
+            a list of {index, relevance score} where index is inferred from the
+            list passed into the request. If true, returns results with the doc
+            text passed in - the api will return an ordered list of {index,
+            text, relevance score} where index + text refers to the list passed
+            into the request. Defaults to true
+          type: boolean
+          default: true
+      type: object
+      required:
+        - model
+        - query
+        - documents
+      example:
+        model: jina-reranker-v1-base-en
+        query: Search query
+        documents:
+          - Document to rank 1
+          - Document to rank 2
+    ValidationError:
+      title: ValidationError
+      properties:
+        loc:
+          title: Location
+          items:
+            anyOf:
+              - type: string
+              - type: integer
+          type: array
+        msg:
+          title: Message
+          type: string
+        type:
+          title: Error Type
+          type: string
+      type: object
+      required:
+        - loc
+        - msg
+        - type
+    api_schemas__embedding__TextDoc:
+      title: TextDoc
+      description: Document containing a text field
+      properties:
+        id:
+          title: Id
+          description: >-
+            The ID of the BaseDoc. This is useful for indexing in vector stores.
+            If not set by user, it will automatically be assigned a random value
+          type: string
+          example: c801ec96945569130923f081d9dd5e8e
+        text:
+          title: Text
+          type: string
+      type: object
+      required:
+        - text
+    api_schemas__embedding__TextEmbeddingInput:
+      title: TextEmbeddingInput
+      description: The input to the API for text embedding. OpenAI compatible
+      properties:
+        model:
+          title: Model
+          description: "The identifier of the model.\n\nAvailable models and corresponding param size and dimension:\n- `jina-embedding-t-en-v1`,\t14m,\t312\n- `jina-embedding-s-en-v1`,\t35m,\t512 (default)\n- `jina-embedding-b-en-v1`,\t110m,\t768\n- `jina-embedding-l-en-v1`,\t330,\t1024\n\nFor more information, please checkout our [technical blog](https://arxiv.org/abs/2307.11224).\n"
+          type: string
+        input:
+          title: Input
+          description: List of texts to embed
+          anyOf:
+            - items:
+                type: string
+              type: array
+            - type: string
+            - items:
+                $ref: '#/components/schemas/api_schemas__embedding__TextDoc'
+              type: array
+            - $ref: '#/components/schemas/api_schemas__embedding__TextDoc'
+        encoding_format:
+          title: Encoding Format
+          description: >-
+            The format in which you want the embeddings to be returned.Possible
+            value are `float` and `base64`. Defaults to `float`
+          type: string
+          enum:
+            - float
+            - base64
+      type: object
+      required:
+        - model
+        - input
+      example:
+        model: jina-embeddings-v2-base-en
+        input:
+          - Hello, world!
+    api_schemas__embedding__Usage:
+      title: Usage
+      properties:
+        total_tokens:
+          title: Total Tokens
+          description: The number of tokens used by all the texts in the input
+          type: integer
+        prompt_tokens:
+          title: Prompt Tokens
+          description: Same as total_tokens
+          type: integer
+      type: object
+      required:
+        - total_tokens
+        - prompt_tokens
+    api_schemas__multi_embeddings__TextEmbeddingInput:
+      title: TextEmbeddingInput
+      description: The input to the API for text embedding. OpenAI compatible
+      properties:
+        model:
+          title: Model
+          description: "The identifier of the model.\n\nAvailable models and corresponding param size and dimension:\n- `jina-embedding-t-en-v1`,\t14m,\t312\n- `jina-embedding-s-en-v1`,\t35m,\t512 (default)\n- `jina-embedding-b-en-v1`,\t110m,\t768\n- `jina-embedding-l-en-v1`,\t330,\t1024\n\nFor more information, please checkout our [technical blog](https://arxiv.org/abs/2307.11224).\n"
+          type: string
+        input:
+          title: Input
+          description: List of texts to embed
+          anyOf:
+            - items:
+                type: string
+              type: array
+            - type: string
+            - items:
+                $ref: '#/components/schemas/api_schemas__embedding__TextDoc'
+              type: array
+            - $ref: '#/components/schemas/api_schemas__embedding__TextDoc'
+        input_type:
+          title: Input Type
+          description: Type of the embedding to compute, query or document
+          type: string
+          enum:
+            - query
+            - document
+          default: document
+        encoding_format:
+          title: Encoding Format
+          description: >-
+            The format in which you want the embeddings to be returned.Possible
+            value are `float` and `base64`. Defaults to `float`
+          type: string
+          enum:
+            - float
+            - base64
+      type: object
+      required:
+        - model
+        - input
+      example:
+        model: jina-colbert-v1-en
+        input:
+          - Hello, world!
+    api_schemas__rank__TextDoc:
+      title: TextDoc
+      description: Document containing a text field
+      properties:
+        id:
+          title: Id
+          description: >-
+            The ID of the BaseDoc. This is useful for indexing in vector stores.
+            If not set by user, it will automatically be assigned a random value
+          type: string
+          example: c801ec96945569130923f081d9dd5e8e
+        text:
+          title: Text
+          type: string
+      type: object
+      required:
+        - text
+    api_schemas__rank__Usage:
+      title: Usage
+      properties:
+        total_tokens:
+          title: Total Tokens
+          description: The number of tokens used by all the texts in the input
+          type: integer
+        prompt_tokens:
+          title: Prompt Tokens
+          description: Same as total_tokens
+          type: integer
+      type: object
+      required:
+        - total_tokens
+        - prompt_tokens
+      example:
+        total_tokens: 15
+        prompt_tokens: 15
+    EmbeddingsCreateRepresentationRequest:
+      title: Body
+      anyOf:
+        - $ref: '#/components/schemas/api_schemas__embedding__TextEmbeddingInput'
+        - $ref: '#/components/schemas/ImageEmbeddingInput'
+  securitySchemes:
+    HTTPBearer:
+      type: http
+      scheme: bearer
