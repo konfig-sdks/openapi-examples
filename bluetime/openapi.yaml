@@ -1,0 +1,3123 @@
+openapi: 3.0.1
+info:
+  title: Orchestra API
+  description: Code Version 1.0.7.15
+  version: Prod
+servers:
+  - url: https://api.epaytools.com
+tags:
+  - description: Card operations controller
+    name: CardOperations
+  - description: Universal Payment Gateway
+    name: PaymentGateway
+  - name: ThreeDsSessions
+  - description: Token management
+    name: StringTokens
+  - description: Tools
+    name: Tools
+  - description: Payment Gateway Accounts
+    name: PaymentGatewayAccounts
+  - name: ThreeDsMerchants
+  - name: CustomForms
+  - name: CvvOperations
+  - name: NetworkToken
+  - description: Utils
+    name: Utils
+paths:
+  /CustomForms:
+    get:
+      tags:
+        - CustomForms
+      summary: List Custom Forms
+      operationId: CustomForms_getList
+      security:
+        - ApiKeyAuth: []
+      description: >-
+        This method allows you to retrieve the list of custom forms stored in
+        PCI Booking
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PayTools_Api.Models.CustomFormMetaModel'
+        '401':
+          description: Not authenticated
+  /CustomForms/{name}:
+    put:
+      tags:
+        - CustomForms
+      summary: Upload a custom form folder (add or replace)
+      operationId: CustomForms_uploadFormFolder
+      security:
+        - ApiKeyAuth: []
+      description: "This method allows you to upload a custom form into PCI Booking. You can design your custom form copletely on your own and upload any and all related content (JavaScript, stylesheet, images, etc) to PCI Booking. All content should be stored in one ZIP file that you will provide in this request.\r\nThe uploaded data should be a zip file, properly encoded as a part named 'zipFile' in the body."
+      parameters:
+        - description: >-
+            The unique name to identify this form in PCI Booking. You will use
+            this value whenever referencing this custom form.
+          name: name
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomFormsUploadFormFolderRequest1'
+            encoding:
+              ContentType:
+                style: form
+              ContentDisposition:
+                style: form
+              Headers:
+                style: form
+              Length:
+                style: form
+              Name:
+                style: form
+              FileName:
+                style: form
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CustomFormsUploadFormFolderRequest'
+            encoding:
+              ContentType:
+                style: form
+              ContentDisposition:
+                style: form
+              Headers:
+                style: form
+              Length:
+                style: form
+              Name:
+                style: form
+              FileName:
+                style: form
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PayTools_Api.Models.CustomFormUploadModel'
+        '401':
+          description: Not authenticated
+    delete:
+      tags:
+        - CustomForms
+      summary: Delete a Custom Forms
+      operationId: CustomForms_removeForm
+      security:
+        - ApiKeyAuth: []
+      description: >-
+        This method allows you to delete a custom form that was previously
+        stored in PCI Booking.
+      parameters:
+        - description: >-
+            The unique identifier provided to this custom form when originally
+            uploaded
+          name: name
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: Not authenticated
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomFormsRemoveFormResponse'
+  /ThreeDsMerchants:
+    get:
+      tags:
+        - ThreeDsMerchants
+      summary: List Merchants
+      operationId: ThreeDsMerchants_listMerchants
+      security:
+        - ApiKeyAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ThreeDsMerchantsListMerchantsResponse'
+        '401':
+          description: Not authenticated
+  /ThreeDsMerchants/{name}:
+    get:
+      tags:
+        - ThreeDsMerchants
+      summary: Get a Merchant
+      operationId: ThreeDsMerchants_getMerchantInfo
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - description: Name of merchant
+          name: name
+          in: path
+          required: true
+          schema:
+            pattern: ^[A-Za-z0-9]{3,64}$
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/PayTools_Api.Models.ThreeDsMerchantOutputModel
+        '401':
+          description: Not authenticated
+    put:
+      tags:
+        - ThreeDsMerchants
+      summary: Set a merchant
+      operationId: ThreeDsMerchants_updateMerchantInfo
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - description: Name of merchant
+          name: name
+          in: path
+          required: true
+          schema:
+            pattern: ^[A-Za-z0-9]{3,64}$
+            type: string
+      requestBody:
+        description: 3DS Merchant
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PayTools_Dal.Entities.ThreeDsMerchant'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PayTools_Dal.Entities.ThreeDsMerchant'
+        '401':
+          description: Not authenticated
+    delete:
+      tags:
+        - ThreeDsMerchants
+      summary: Delete a Merchant
+      operationId: ThreeDsMerchants_removeMerchant
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - description: Name of merchant
+          name: name
+          in: path
+          required: true
+          schema:
+            pattern: ^[A-Za-z0-9]{3,64}$
+            type: string
+      responses:
+        '200':
+          description: Success
+        '401':
+          description: Not authenticated
+  /CardOperations:
+    post:
+      tags:
+        - CardOperations
+      summary: Get a token to start a card operation
+      operationId: CardOperations_getTokenStartOperation
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - description: Time to live for the returned token
+          name: ttl
+          in: query
+          required: true
+          schema:
+            maximum: 3600
+            minimum: 60
+            type: integer
+            format: int32
+      requestBody:
+        description: The data to be validated in further requests
+        content:
+          application/json:
+            schema:
+              $ref: >-
+                #/components/schemas/PayTools_Bl.Authentication.PreSignedDataModel
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/PayTools_Api.Models.JwsMultipleOutputModel
+        '401':
+          description: Not authenticated
+  /CardOperations/validate:
+    post:
+      tags:
+        - CardOperations
+      summary: Perform card validation
+      operationId: CardOperations_performValidation
+      security:
+        - JwsAuth: []
+      parameters:
+        - description: Card prefix
+          name: iin
+          in: query
+          required: true
+          schema:
+            pattern: \d{6,11}
+            type: string
+      requestBody:
+        description: Payer details
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PayTools_Api.Models.PayerBase'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/PayTools_Api.Models.JwsOutputModel1pciBooking.IINLookup.Library.CardValidationResultpciBooking.IINLookup.LibraryVersion1.0.4.0CultureneutralPublicKeyTokennull
+        '401':
+          description: Not authenticated
+  /CardOperations/charge:
+    post:
+      tags:
+        - CardOperations
+      summary: Perform Univesal payment gateway charge operation
+      operationId: CardOperations_performUniversalPaymentGatewayCharge
+      security:
+        - JwsAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PayTools_Api.Models.CardOpsChargeRequest'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/PayTools_Api.Models.JwsOutputModel1Payments.OperationResultPaymentsVersion0.0.0.0CultureneutralPublicKeyTokennull
+        '401':
+          description: Not authenticated
+  /CardOperations/store:
+    post:
+      tags:
+        - CardOperations
+      summary: Tokenize and store card number
+      operationId: CardOperations_tokenizeAndStore
+      security:
+        - JwsAuth: []
+      requestBody:
+        description: Model with card number to be tokenized
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PayTools_Api.Models.StringTokenIntputModel'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/PayTools_Api.Models.JwsOutputModel1PayTools_Api.Models.StringTokenMetaDataOutputModelPayToolsApiVersion1.0.7.15CultureneutralPublicKeyTokennull
+        '401':
+          description: Not authenticated
+  /CardOperations/opValidate:
+    get:
+      tags:
+        - CardOperations
+      summary: Perform validation of the operation using to signed data
+      operationId: CardOperations_performValidation
+      security:
+        - JwsAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PayTools_Bl.Authentication.SignedData'
+        '401':
+          description: Not authenticated
+  /CardOperations/topBrands:
+    get:
+      tags:
+        - CardOperations
+      summary: >-
+        Return top credit card brands for lookup of up to 5 first digits. It
+        covers 90% of the cases
+      operationId: CardOperations_getTopBrandsLookup
+      security:
+        - JwsAuth: []
+      description: "The result is an array of 5 elements, where each element represents iin prefixes for a givel size as well as the list of logo Url's for all brands.\r\nEach element in the top-level array is an object where members are prefixes and data is the brand.\r\nFor a quick lookup:\r\n1. get the element by the size of your prefix.\r\n2. try to obtain the prefix as a member name; The member value is the brand\r\n\r\nFor logo lookup finf thr brand name as the key to the logos member.\r\nIf not found, you can try using 'DEFAULT'."
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PayTools_Api.Models.TopBrands'
+        '401':
+          description: Not authenticated
+  /CardOperations/brand:
+    get:
+      tags:
+        - CardOperations
+      summary: Return brand of card prefix.
+      operationId: CardOperations_getBrandPrefix
+      security:
+        - JwsAuth: []
+      parameters:
+        - description: Card prefix
+          name: iin
+          in: query
+          required: true
+          schema:
+            pattern: \d{6,11}
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PayTools_Api.Models.BrandLookupResult'
+        '401':
+          description: Not authenticated
+  /CvvOperations:
+    post:
+      tags:
+        - CvvOperations
+      summary: Get a token to start a CVV operation
+      operationId: CvvOperations_getTokenCvvOperation
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - description: Time to live for the returned token
+          name: ttl
+          in: query
+          required: true
+          schema:
+            maximum: 3600
+            minimum: 60
+            type: integer
+            format: int32
+      requestBody:
+        description: The data to be validated in further requests
+        content:
+          application/json:
+            schema:
+              $ref: >-
+                #/components/schemas/PayTools_Bl.Authentication.CvvSignedDataModel
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PayTools_Api.Models.JwsOutputModel'
+        '401':
+          description: Not authenticated
+  /CvvOperations/charge:
+    post:
+      tags:
+        - CvvOperations
+      summary: Perform Univesal payment gateway charge operation
+      operationId: CvvOperations_performUniversalPaymentGatewayCharge
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PayTools_Api.Models.CvvOpsChargeRequest'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/PayTools_Api.Models.JwsOutputModel1PayTools_Bl.Authentication.ChargeCardSignedModelPayToolsBlVersion1.0.0.0CultureneutralPublicKeyTokennull
+  /CvvOperations/opValidate:
+    get:
+      tags:
+        - CvvOperations
+      summary: >-
+        Perform validation of the operation using signed data from charge
+        operation
+      operationId: CvvOperations_validateOperation
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/PayTools_Bl.Authentication.CvvSignedDataModel
+  /NetworkToken:
+    post:
+      tags:
+        - NetworkToken
+      summary: Network-tokenize a card
+      operationId: NetworkToken_cardTokenize
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        description: Tokenization Request
+        content:
+          application/json:
+            schema:
+              $ref: >-
+                #/components/schemas/PayTools_Api.Models.NetworkTokenizationTokenizeRequest
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NetworkToken.TokenizationResult'
+        '401':
+          description: Not authenticated
+    delete:
+      tags:
+        - NetworkToken
+      summary: Delete a Network-token
+      operationId: NetworkToken_delete
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        description: Delete Request
+        content:
+          application/json:
+            schema:
+              $ref: >-
+                #/components/schemas/PayTools_Api.Models.NetworkTokenizationDeleteTokenRequest
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NetworkTokenDeleteResponse'
+        '401':
+          description: Not authenticated
+  /PaymentGatewayAccounts/{name}:
+    get:
+      tags:
+        - PaymentGatewayAccounts
+      summary: Retrieve Payment Gateway Account
+      operationId: PaymentGatewayAccounts_getInfo
+      security:
+        - ApiKeyAuth: []
+      description: "A Payment Gateway Account is the set of information necessary for connecting to a specific payment gateway through our system.\r\nThis method allows you to retrieve the information set on a particular payment gateway account. You can then update it using the `[PUT] PaymentGatewayAccounts/{name}` method"
+      parameters:
+        - description: A unique name of this Payment Gateway Account
+          name: name
+          in: path
+          required: true
+          schema:
+            pattern: ^[A-Za-z0-9]{3,64}$
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/PayTools_Api.Models.PaymentGatewayAccountFullOutputModel
+        '401':
+          description: Not authenticated
+        '404':
+          description: Not found
+    put:
+      tags:
+        - PaymentGatewayAccounts
+      summary: Add or Replace a Payment Gateway Account
+      operationId: PaymentGatewayAccounts_addOrReplace
+      security:
+        - ApiKeyAuth: []
+      description: "A Payment Gateway Account is the set of information necessary for connecting to a specific payment gateway through our system.\r\nThis method allows you to add a new stored Payment Gateway Account in the system or to replace an existing one."
+      parameters:
+        - description: A unique name of this Payment Gateway Account
+          name: name
+          in: path
+          required: true
+          schema:
+            pattern: ^[A-Za-z0-9]{3,64}$
+            type: string
+      requestBody:
+        description: Payment gateway account data
+        content:
+          application/json:
+            schema:
+              $ref: >-
+                #/components/schemas/PayTools_Api.Models.PaymentGatewayAccountInputModel
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/PayTools_Api.Models.PaymentGatewayAccountFullOutputModel
+        '401':
+          description: Not authenticated
+    delete:
+      tags:
+        - PaymentGatewayAccounts
+      summary: Delete a Payment Gateway Account
+      operationId: PaymentGatewayAccounts_removeAccount
+      security:
+        - ApiKeyAuth: []
+      description: >-
+        This method allows you to delete a stored Payment Gateway Account in the
+        system.
+      parameters:
+        - description: A unique name of this Payment Gateway Account
+          name: name
+          in: path
+          required: true
+          schema:
+            pattern: ^[A-Za-z0-9]{3,64}$
+            type: string
+      responses:
+        '200':
+          description: Success
+        '401':
+          description: Not authenticated
+  /PaymentGatewayAccounts:
+    get:
+      tags:
+        - PaymentGatewayAccounts
+      summary: List Payment Gateway Accounts
+      operationId: PaymentGatewayAccounts_getAll
+      security:
+        - ApiKeyAuth: []
+      description: >-
+        This method allows you to list all stored Payment Gateway Accounts in
+        the system
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentGatewayAccountsGetAllResponse'
+        '401':
+          description: Not authenticated
+  /PaymentGateway:
+    get:
+      tags:
+        - PaymentGateway
+      summary: List all payment gateways
+      operationId: PaymentGateway_listGateways
+      security:
+        - ApiKeyAuth: []
+      description: "To provide you with full payment orchestration capabilities, we have integrated with many different payment gateways and processors around the world. This method allows you to retrieve the list of all integrated payment gateways in our system and provide you with the relevant connection settings required for each of them.\r\nTo see a graphical list of the supported payment gateways, please visit our website.\r\nIf you would like us to support a new payment gateway not on the list, please contact our support."
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentGatewayListGatewaysResponse'
+        '401':
+          description: Not authenticated
+  /PaymentGateway/charge:
+    post:
+      tags:
+        - PaymentGateway
+      summary: Perform a payment gateway charge operation
+      operationId: PaymentGateway_performChargeOperation
+      security:
+        - ApiKeyAuth: []
+      description: "This method allows you to perform a \"charge\" operation through your payment gateway. A \"charge\" operation will request immediate payment from the card and the card owner will see this listed as a transaction in their card statement.\r\nIf needed, you can void this \"charge\" operation by using the `[DELETE] /PaymentGateway/void` method."
+      requestBody:
+        description: Card charge model
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PayTools_Api.Models.AuthRequestModel'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payments.OperationResult'
+        '202':
+          description: Accepted (for future processing by payment gateway)
+        '400':
+          description: Bad data
+        '401':
+          description: Not authenticated
+        '409':
+          description: Conflict - rejected by payment gateway
+        '500':
+          description: Error with payment gateway
+        '503':
+          description: Temporary failure with payment gateway
+  /PaymentGateway/authorize:
+    post:
+      tags:
+        - PaymentGateway
+      summary: Perform a payment gateway authorize operation
+      operationId: PaymentGateway_performAuthorizeOperation
+      security:
+        - ApiKeyAuth: []
+      description: "This method allows you to perform an \"authorize\" operation (also called \"preauthorization\" or \"authorization\") through your payment gateway. When you perform the \"authorize\" operation, the bank that issued the credit card will place an authorization of the total amount of the funds. This is how the bank determines if the funds are available to make the purchase. The card will not actually be “charged” until you perform the \"capture\" operation (using our `[PUT] /PaymentGateway/capture` method).\r\n**Please note**, different card brands and different banks allow for different time frames on the lifespan of a payment authorization. You will need to check with your payment processor on how long you would have between performing an \"authorize\" operation and a \"charge\" operation\".\r\nIf needed, you can void this \"authorize\" operation by using the `[DELETE] /PaymentGateway/void` method"
+      requestBody:
+        description: Card charge model
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PayTools_Api.Models.AuthRequestModel'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payments.OperationResult'
+        '202':
+          description: Accepted (for future processing by payment gateway)
+        '400':
+          description: Bad data
+        '401':
+          description: Not authenticated
+        '409':
+          description: Conflict - rejected by payment gateway
+        '500':
+          description: Error with payment gateway
+        '503':
+          description: Temporary failure with payment gateway
+  /PaymentGateway/capture:
+    put:
+      tags:
+        - PaymentGateway
+      summary: Perform a payment gateway capture operation
+      operationId: PaymentGateway_performCaptureOperation
+      security:
+        - ApiKeyAuth: []
+      description: "This method allows you to perform a \"capture\" operation on a previously created \"authorize\" operation (see our `[POST] /PaymentGateway/authorize` method for additional information).\r\nWhen you perform the \"authorize\" operation, the bank that issued the credit card will place an authorization of the total amount of the funds. This is how the bank determines if the funds are available to make the purchase. The card will not actually be “charged” until you perform the \"capture\" operation.\r\n**Please note**, different card brands and different banks allow for different time frames on the lifespan of a payment authorization. You will need to check with your payment processor on how long you would have between performing an \"authorize\" operation and a \"charge\" operation\"."
+      requestBody:
+        description: Capture or Void Request Model
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PayTools_Api.Models.CaptureVoidRequestModel'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payments.OperationResult'
+        '202':
+          description: Accepted (for future processing by payment gateway)
+        '400':
+          description: Bad data
+        '401':
+          description: Not authenticated
+        '409':
+          description: Conflict - rejected by payment gateway
+        '500':
+          description: Error with payment gateway
+        '503':
+          description: Temporary failure with payment gateway
+  /PaymentGateway/refund:
+    put:
+      tags:
+        - PaymentGateway
+      summary: Perform a payment gateway refund operation
+      operationId: PaymentGateway_performRefundOperation
+      security:
+        - ApiKeyAuth: []
+      description: >-
+        This method allows you to submit a "refund" operation against a
+        previously created "charge" (using `[POST] /PaymentGateway/charge`) or
+        "capture" (using `[POST] /PaymentGateway/capture`) operations.
+      requestBody:
+        description: Capture or Void Request Model
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PayTools_Api.Models.RefundRequestModel'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payments.OperationResult'
+        '202':
+          description: Accepted (for future processing by payment gateway)
+        '400':
+          description: Bad data
+        '401':
+          description: Not authenticated
+        '409':
+          description: Conflict - rejected by payment gateway
+        '500':
+          description: Error with payment gateway
+        '503':
+          description: Temporary failure with payment gateway
+  /PaymentGateway/void:
+    delete:
+      tags:
+        - PaymentGateway
+      summary: Perform a payment gateway Void operation
+      operationId: PaymentGateway_voidOperation
+      security:
+        - ApiKeyAuth: []
+      description: >-
+        This method allows you to submit a "void" operation against a previously
+        created "charge" (using `[POST] /PaymentGateway/charge`) or "authorize"
+        (using `[POST] /PaymentGateway/authorize`) operations.
+      requestBody:
+        description: Capture or Void Request Model
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PayTools_Api.Models.CaptureVoidRequestModel'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payments.OperationResult'
+        '202':
+          description: Accepted (for future processing by payment gateway)
+        '400':
+          description: Bad data
+        '401':
+          description: Not authenticated
+        '409':
+          description: Conflict - rejected by payment gateway
+        '500':
+          description: Error with payment gateway
+        '503':
+          description: Temporary failure with payment gateway
+  /ThreeDsSessions:
+    post:
+      tags:
+        - ThreeDsSessions
+      summary: Get a token to start a card operation
+      operationId: ThreeDsSessions_getTokenStartOperation
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - description: Time to live for the returned token
+          name: ttl
+          in: query
+          required: true
+          schema:
+            maximum: 3600
+            minimum: 60
+            type: integer
+            format: int32
+      requestBody:
+        description: The data to be validated in further requests
+        content:
+          application/json:
+            schema:
+              $ref: >-
+                #/components/schemas/PayTools_Bl.Authentication.ThreeDsSessionModel
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PayTools_Api.Models.JwsOutputModel'
+        '401':
+          description: Not authenticated
+  /ThreeDsSessions/opValidate:
+    get:
+      tags:
+        - ThreeDsSessions
+      summary: Perform validation of the operation using to signed data
+      operationId: ThreeDsSessions_performValidationOperation
+      security:
+        - JwsAuth: []
+      responses:
+        '200':
+          description: Success
+        '401':
+          description: Not authenticated
+  /ThreeDsSessions/challengeStatus:
+    get:
+      tags:
+        - ThreeDsSessions
+      summary: Get challenge ststus, as stored on server
+      operationId: ThreeDsSessions_getChallengeStatus
+      security:
+        - JwsAuth: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/PayTools_Shared.Models.ThreeDsClientMessage
+        '401':
+          description: Not authenticated
+  /ThreeDsSessions/mpiChallengeCallback/{sessionId}:
+    get:
+      tags:
+        - ThreeDsSessions
+      summary: Handle a callback (redirect from challenge)
+      operationId: ThreeDsSessions_handleMpiChallengeCallback
+      parameters:
+        - description: The value containing data to designate the client
+          name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+  /ThreeDsSessions/fingerprintCallback/{sessionId}:
+    post:
+      tags:
+        - ThreeDsSessions
+      summary: Handle a callback (redirect from device fingerprint)
+      operationId: ThreeDsSessions_handleFingerprintCallback
+      parameters:
+        - description: The value containing data to designate the client
+          name: sessionId
+          in: path
+          required: true
+          schema:
+            pattern: '[A-Za-z0-9]{32}'
+            type: string
+      responses:
+        '200':
+          description: Success
+  /Utils/apiKey:
+    get:
+      tags:
+        - Utils
+      summary: Validate Apikey
+      operationId: Utils_validateApiKey
+      security:
+        - ApiKeyAuth: []
+      description: >-
+        This operation allows you to validate your API key and make sure that it
+        is operational. Additionally, this method will allow you to test and
+        check that the API is functioning properly
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PayTools_Api.Models.AuthenticationResult'
+        '401':
+          description: Not authenticated
+  /Tools/brand:
+    get:
+      tags:
+        - Tools
+      summary: Brand Lookup
+      operationId: Tools_getBrandLookup
+      security:
+        - ApiKeyAuth: []
+      description: "This method allows you to lookup the brand of the card provided. \r\n            By providing the card's BIN / IIN (the first 6 to 11 digits of the card number), we lookup and return the brand of the card (Visa, Mastercard, Amex, etc.).\r\n            In addition, we will also provide the URL to the logo of the card brand - you can then reference this image in your card capture form."
+      parameters:
+        - description: Card's BIN / IIN (the first 6 to 11 digits of the card number)
+          name: iin
+          in: query
+          required: true
+          schema:
+            pattern: \d{6,11}
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PayTools_Api.Models.BrandLookupResult'
+        '401':
+          description: Not authenticated
+  /StringTokens:
+    post:
+      tags:
+        - StringTokens
+      summary: Store and tokenize a string
+      operationId: StringTokens_storeAndTokenize
+      security:
+        - ApiKeyAuth: []
+      description: "This method allows you to submit a string to be stored and tokenized in our system.\r\nOnce tokenized, the token ID will be returned in the body of the response and the full token URI will be returned in the `Location` header."
+      requestBody:
+        description: StringToken input model
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PayTools_Api.Models.StringTokenIntputModel'
+        required: true
+      responses:
+        '201':
+          description: Created
+          headers:
+            Location:
+              description: Token URI representing the stringToken
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/PayTools_Api.Models.StringTokenMetaDataOutputModel
+        '400':
+          description: Bad data
+        '401':
+          description: Not authenticated
+  /Tools/iin:
+    get:
+      tags:
+        - Tools
+      summary: Metadata Lookup
+      operationId: Tools_lookupMetadata
+      security:
+        - ApiKeyAuth: []
+      description: "This method allows you to lookup the metadata of the card provided. \r\nBy providing the card's BIN / IIN (the first 6 to 11 digits of the card number), we lookup and return the full metadata available for this card./r/nI\r\nIn addition, we will also provide the URL to the logo of the card brand - you can then reference this image in your card capture form."
+      parameters:
+        - description: Card's BIN / IIN (the first 6 to 11 digits of the card number)
+          name: iin
+          in: query
+          required: true
+          schema:
+            pattern: \d{6,11}
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PayTools_Api.Models.IinData'
+        '401':
+          description: Not authenticated
+  /StringTokens/{token}:
+    get:
+      tags:
+        - StringTokens
+      summary: Retrieve content of StringToken
+      operationId: StringTokens_getContent
+      security:
+        - ApiKeyAuth: []
+      description: >-
+        This method allows you to retrieve the stored content of the
+        StringToken.
+      parameters:
+        - description: >-
+            The token ID of the StringToken you would like to retrieve the
+            content for
+          name: token
+          in: path
+          required: true
+          schema:
+            pattern: '[A-Za-z0-9]{32}'
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/PayTools_Api.Models.StringTokenOutputModel
+        '401':
+          description: Not authenticated
+        '404':
+          description: Not found
+    delete:
+      tags:
+        - StringTokens
+      summary: Delete an existing string by token
+      operationId: StringTokens_deleteByToken
+      security:
+        - ApiKeyAuth: []
+      description: This method allows you to delete a stringToken by its token
+      parameters:
+        - description: The token ID representing the string to be deleted
+          name: token
+          in: path
+          required: true
+          schema:
+            pattern: '[A-Za-z0-9]{32}'
+            type: string
+      responses:
+        '200':
+          description: Success
+        '401':
+          description: Not authenticated
+        '404':
+          description: Not found
+  /StringTokens/{token}/meta:
+    get:
+      tags:
+        - StringTokens
+      summary: Retrieve meta data of a StringToken
+      operationId: StringTokens_getMetaData
+      security:
+        - ApiKeyAuth: []
+      description: "This method allows you to retrieve the meta data of a StringToken.\r\nThe response to this method will **not** retrieve the content of the StringToken (you can do that by using `GET /StringTokens/{token}`)"
+      parameters:
+        - description: Token representing the string to be retrieved
+          name: token
+          in: path
+          required: true
+          schema:
+            pattern: '[A-Za-z0-9]{32}'
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/PayTools_Api.Models.StringTokenMetaDataOutputModel
+        '401':
+          description: Not authenticated
+        '404':
+          description: Not found
+  /Tools/validate:
+    post:
+      tags:
+        - Tools
+      summary: Card Validation
+      operationId: Tools_validateCardDetails
+      security:
+        - ApiKeyAuth: []
+      description: "This method allows you to validate the card details against the card's meta data. By providing the billing address and IP address of the card owner, we validate those against the metadata of the card and provide a risk assessment for this transaction.\r\nAll you would need is the card's BIN / IIN (the first 6 to 11 digits of the card number), the billing address and IP address.\r\nThe response of this method will include the full metadata information for this BIN including the risk assessment."
+      parameters:
+        - description: Card's BIN / IIN (the first 6 to 11 digits of the card number)
+          name: iin
+          in: query
+          required: true
+          schema:
+            pattern: \d{6,11}
+            type: string
+      requestBody:
+        description: payer details
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PayTools_Api.Models.PayerBaseWithClientIp'
+        required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PayTools_Api.Models.CardValidationResults'
+        '400':
+          description: Bad data
+        '401':
+          description: Not authenticated
+  /Tools/luhn:
+    get:
+      tags:
+        - Tools
+      summary: Luhn Algorithm Validation
+      operationId: Tools_validateLuhnCard
+      security:
+        - ApiKeyAuth: []
+      description: >-
+        This method allows you to provide the card number and validate it
+        against the<a href="https://en.wikipedia.org/wiki/Luhn_algorithm"
+        target="_blank"> Luhn algorithm</a>.In addition, you can choose to
+        receive the card's metadata in the response.
+      parameters:
+        - description: The full card number to be validated.
+          name: number
+          in: query
+          required: true
+          schema:
+            type: string
+        - description: >-
+            An optional indicator to specify whether the card metadata should be
+            included in the response.
+          name: metaData
+          in: query
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/PayTools_Api.Models.LuhnCheckResultsWithIinData
+        '400':
+          description: Bad data
+        '401':
+          description: Not authenticated
+components:
+  schemas:
+    NetworkToken.CardSource:
+      enum:
+        - OnFile
+        - UserInput
+      type: string
+    NetworkToken.RequestSource:
+      enum:
+        - Merchant
+        - CardHolder
+        - Issuer
+      type: string
+    NetworkToken.TokenizationResult:
+      type: object
+      properties:
+        resultCode:
+          $ref: '#/components/schemas/NetworkToken.TokenizationResultCode'
+        brand:
+          $ref: '#/components/schemas/Payments.NetworkTokenSchemes'
+        tokenId:
+          type: string
+          nullable: true
+        tokenizedCard:
+          $ref: '#/components/schemas/Payments.BankCardBase'
+    NetworkToken.TokenizationResultCode:
+      enum:
+        - Success
+        - Failure
+        - NotSupported
+      type: string
+    PayTools_Api.Models.AuthRequestModel:
+      description: >-
+        Model for a Charge/Pre-authorize request for card processing via a
+        payment gateway
+      required:
+        - amount
+        - card
+        - currency
+      type: object
+      properties:
+        currency:
+          description: >-
+            The currency of the transaction. Based on the <a
+            href="https://en.wikipedia.org/wiki/ISO_4217#Active_codes"
+            target="_blank">ISO 4217</a> standard.
+          minLength: 1
+          type: string
+        isDigital:
+          description: >-
+            This field is an additional optional parameter used by some of our
+            payment processors. Please read our additional guidance section for
+            payment processors that use this and other parameters
+          type: boolean
+        orderDesc:
+          description: >-
+            This field is an additional optional parameter used by some of our
+            payment processors. Please read our additional guidance section for
+            payment processors that use this and other parameters
+          type: string
+          nullable: true
+        payerDetails:
+          $ref: '#/components/schemas/PayTools_Api.Models.PayerDetails'
+        card:
+          $ref: '#/components/schemas/PayTools_Api.Models.CardInputModel'
+        amount:
+          description: >-
+            The amount to be charged (the amount should be in major units - for
+            example, 10.23)
+          type: number
+          format: double
+        myRef:
+          description: Your custom reference for this transaction
+          type: string
+          nullable: true
+        paymentGatewayAccountName:
+          description: "The reference name provided to the stored Payment Gateway Account as set in `PUT /PaymentGatewayAccounts/{name}`.\r\n**Please note**, if you provide us with both this parameter and the raw credentials in the `paymentGatewayAccount` object, this parameter will be ignored and the raw credentials will take precedence."
+          type: string
+          nullable: true
+        certificateName:
+          description: >-
+            Optional parameter if the payment gateway requires authentication
+            using a client certificate. The name of the certificate that was
+            stored in our system via our <a href="https://portal.epaytools.com"
+            target="_blank">users portal</a>
+          maxLength: 128
+          type: string
+          nullable: true
+        paymentGatewayAccount:
+          $ref: '#/components/schemas/PayTools_Api.Models.PaymentGatewayAccount'
+        networkTokenBrand:
+          $ref: '#/components/schemas/Payments.NetworkTokenSchemes'
+    PayTools_Api.Models.AuthenticationResult:
+      description: Model for display authentication results
+      type: object
+      properties:
+        status:
+          description: Status
+          type: string
+          nullable: true
+        userName:
+          description: Username
+          type: string
+          nullable: true
+        accountId:
+          description: Account Id
+          type: integer
+          format: int64
+        isSandbox:
+          description: Is this a sandbox user
+          type: boolean
+    PayTools_Api.Models.BrandLookupResult:
+      description: Output model for Brand lookup
+      type: object
+      properties:
+        brand:
+          description: The card's brand that was identified
+          type: string
+          nullable: true
+        brandLogoUrl:
+          description: The url to the brand logo
+          type: string
+          nullable: true
+    PayTools_Api.Models.CaptureVoidRequestModel:
+      description: >-
+        Model for a Capturing or voiding a previously Pre-authorize request via
+        a payment gateway
+      required:
+        - amount
+        - card
+        - currency
+        - refTransId
+      type: object
+      properties:
+        currency:
+          description: >-
+            The currency of the transaction. Based on the <a
+            href="https://en.wikipedia.org/wiki/ISO_4217#Active_codes"
+            target="_blank">ISO 4217</a> standard.
+          minLength: 1
+          type: string
+        refTransId:
+          description: The transaction ID that this operation is referring to.
+          minLength: 1
+          type: string
+        card:
+          $ref: '#/components/schemas/PayTools_Api.Models.CardInputModel'
+        amount:
+          description: >-
+            The amount to be charged (the amount should be in major units - for
+            example, 10.23)
+          type: number
+          format: double
+        myRef:
+          description: Your custom reference for this transaction
+          type: string
+          nullable: true
+        paymentGatewayAccountName:
+          description: "The reference name provided to the stored Payment Gateway Account as set in `PUT /PaymentGatewayAccounts/{name}`.\r\n**Please note**, if you provide us with both this parameter and the raw credentials in the `paymentGatewayAccount` object, this parameter will be ignored and the raw credentials will take precedence."
+          type: string
+          nullable: true
+        certificateName:
+          description: >-
+            Optional parameter if the payment gateway requires authentication
+            using a client certificate. The name of the certificate that was
+            stored in our system via our <a href="https://portal.epaytools.com"
+            target="_blank">users portal</a>
+          maxLength: 128
+          type: string
+          nullable: true
+        paymentGatewayAccount:
+          $ref: '#/components/schemas/PayTools_Api.Models.PaymentGatewayAccount'
+        networkTokenBrand:
+          $ref: '#/components/schemas/Payments.NetworkTokenSchemes'
+    PayTools_Api.Models.CardBaseWithSecurityCode:
+      description: Base model for card with Security code
+      required:
+        - cardNumber
+        - expirationMonth
+        - expirationYear
+      type: object
+      properties:
+        cvv:
+          description: Card security code (digits on back of card)
+          pattern: ^\d{3,4}$
+          type: string
+          nullable: true
+        cardNumber:
+          description: >-
+            Card number (PAN) or a Reference to a Tokenized string. A Token
+            should be referenced in the format @TOKEN, e.g
+            "@nQGywsQE9gbURtrXEjTZwtWqeMdK9nsO"
+          minLength: 1
+          pattern: ^(\d{12,20}|@[A-Za-z0-9]{32})$
+          type: string
+        expirationYear:
+          description: Expiration year
+          type: integer
+          format: int32
+        expirationMonth:
+          description: Expiration month
+          maximum: 12
+          minimum: 1
+          type: integer
+          format: int32
+    PayTools_Api.Models.CardInputModel:
+      description: >-
+        The card details that should be charged. You can either provide us with
+        the raw card details or provide a reference to the stored card details
+        in a token.
+      required:
+        - cardHolderName
+        - cardNumber
+        - expirationMonth
+        - expirationYear
+      type: object
+      properties:
+        ownerID:
+          description: Card owner Id
+          type: string
+          nullable: true
+        issueNumber:
+          description: Card Issue Number
+          type: string
+          nullable: true
+        cvv:
+          description: Card security code (digits on back of card)
+          pattern: ^\d{3,4}$
+          type: string
+          nullable: true
+        threeDSAuthentication:
+          $ref: >-
+            #/components/schemas/PayTools_Api.Models.ThreeDSAuthenticationInputModel
+        cardType:
+          $ref: '#/components/schemas/Payments.CardTypes'
+        cardHolderName:
+          description: Cardholder name (as apears on card)
+          maxLength: 30
+          minLength: 3
+          type: string
+        cardNumber:
+          description: >-
+            Card number (PAN) or a Reference to a Tokenized string. A Token
+            should be referenced in the format @TOKEN, e.g
+            "@nQGywsQE9gbURtrXEjTZwtWqeMdK9nsO"
+          minLength: 1
+          pattern: ^(\d{12,20}|@[A-Za-z0-9]{32})$
+          type: string
+        expirationYear:
+          description: Expiration year
+          type: integer
+          format: int32
+        expirationMonth:
+          description: Expiration month
+          maximum: 12
+          minimum: 1
+          type: integer
+          format: int32
+    PayTools_Api.Models.CardOpsChargeRequest:
+      description: >-
+        Model for a Charge request for card processing via a payment gateway
+        using Card operations
+      required:
+        - card
+      type: object
+      properties:
+        payerDetails:
+          $ref: '#/components/schemas/PayTools_Api.Models.PayerDetailsNoIpAddress'
+        card:
+          $ref: '#/components/schemas/PayTools_Api.Models.CardInputModel'
+        myRef:
+          description: Your custom reference for this transaction
+          type: string
+          nullable: true
+    PayTools_Api.Models.CardValidationResults:
+      description: Results for a card validation request
+      type: object
+      properties:
+        description:
+          description: A description of the risk that was identified for this transaction.
+          type: string
+          nullable: true
+        riskLevel:
+          description: >-
+            The risk level associated with this transaction (possible values are
+            `VeryLow`, `Low`, `High` and `VeryHigh`)
+          type: string
+          nullable: true
+        cardBrand:
+          description: The card brand (AMERICAN EXPRESS, VISA, MASTERCARD, JCB etc)
+          type: string
+          nullable: true
+        cardType:
+          description: Type of card (e.g 'CREDIT', 'DEBIT', etc.)
+          type: string
+          nullable: true
+        cardCategory:
+          description: Card category (e.g 'GIFT', 'PROPRIETARY' etc.)
+          type: string
+          nullable: true
+        issuerName:
+          description: Name of Card issuer (e.g 'Bank of America')
+          type: string
+          nullable: true
+        issuerCountry:
+          description: >-
+            2 letter country code (<a
+            href="https://en.wikipedia.org/wiki/ISO_3166-2#Current_codes"
+            target="_blank">ISO 3166-2 <img
+            src="https://files.readme.io/b676144-openNewWindow.png" width="10"
+            /></a>) of the card issuer's country
+          type: string
+          nullable: true
+        countryByIP:
+          description: >-
+            2 letter country code (<a
+            href="https://en.wikipedia.org/wiki/ISO_3166-2#Current_codes"
+            target="_blank">ISO 3166-2 <img
+            src="https://files.readme.io/b676144-openNewWindow.png" width="10"
+            /></a>) of the country detected by the Payer's IP address
+          type: string
+          nullable: true
+        countryFromBillingAddress:
+          description: >-
+            2 letter country code (<a
+            href="https://en.wikipedia.org/wiki/ISO_3166-2#Current_codes"
+            target="_blank">ISO 3166-2 <img
+            src="https://files.readme.io/b676144-openNewWindow.png" width="10"
+            /></a>) from the Payer's billing address
+          type: string
+          nullable: true
+        anonymousProxyUsed:
+          description: Is the Payer's IP address coming from an Anonymous Proxy
+          type: boolean
+    PayTools_Api.Models.CustomFormMetaModel:
+      description: Model for Custom Form meta-data retrieval
+      type: object
+      properties:
+        creationTime:
+          description: Time the Custom Form was initially created
+          type: string
+          format: date-time
+        updateTime:
+          description: Time the Custom Form was lastly updated
+          type: string
+          format: date-time
+          nullable: true
+        name:
+          description: >-
+            The Custom Form name. It should be used for referencing the form for
+            management and for usage
+          type: string
+          nullable: true
+    PayTools_Api.Models.CustomFormUploadModel:
+      description: Model for returning the url to an uploaded custom form
+      type: object
+      properties:
+        formBaseUrl:
+          description: The base url to an uploaded custom form
+          type: string
+          nullable: true
+    PayTools_Api.Models.CvvOpsChargeRequest:
+      description: >-
+        Model for a Charge request of an existing card after capturing security
+        code (CVV) for card processing via a payment gateway using Card
+        operations
+      required:
+        - cvv
+      type: object
+      properties:
+        cvv:
+          description: >-
+            The card details that should be charged. You can either provide us
+            with the raw card details or provide a reference to the stored card
+            details in a token.
+          minLength: 1
+          pattern: ^\d{3,4}$
+          type: string
+    PayTools_Api.Models.IinData:
+      description: IIN data
+      type: object
+      properties:
+        bin:
+          description: >-
+            The longest match of the first 6 to 11 digits of the card number
+            that we were able to match
+          type: string
+          nullable: true
+        cardBrand:
+          description: The card brand (AMERICAN EXPRESS, VISA, MASTERCARD, JCB etc)
+          type: string
+          nullable: true
+        cardType:
+          description: The type of card (DEBIT, CREDIT, 'DEBIT OR CREDIT', CHARGE CARD)
+          type: string
+          nullable: true
+        category:
+          description: >-
+            The category of the card (CLASSIC, BUSINESS, STANDARD, PERSONAL,
+            etc)
+          type: string
+          nullable: true
+        issuingOrganization:
+          description: The name of the entity (usually bank) that issued the card
+          type: string
+          nullable: true
+        countryCode:
+          description: >-
+            The 2 letter country code (<a
+            href="https://en.wikipedia.org/wiki/ISO_3166-2#Current_codes"
+            target="_blank">ISO 3166-2 <img
+            src="https://files.readme.io/b676144-openNewWindow.png" width="10"
+            /></a>) where the card was issued
+          type: string
+          nullable: true
+        brandLogoUrl:
+          description: The url to the brand logo
+          type: string
+          nullable: true
+    PayTools_Api.Models.JwsMultipleOutputModel:
+      description: The model used to return a valid Jws with multiple tokens
+      type: object
+      properties:
+        threeDsAuthToken:
+          description: The jws (token) value to be used for 3DS
+          type: string
+          nullable: true
+        authToken:
+          description: >-
+            The jws (token) value to be used in subsequent card operation
+            methods
+          type: string
+          nullable: true
+    PayTools_Api.Models.JwsOutputModel:
+      description: The model used to return a valid Jws with a single Token
+      type: object
+      properties:
+        authToken:
+          description: >-
+            The jws (token) value to be used in subsequent card operation
+            methods
+          type: string
+          nullable: true
+    PayTools_Api.Models.JwsOutputModel1PayTools_Api.Models.StringTokenMetaDataOutputModelPayToolsApiVersion1.0.7.15CultureneutralPublicKeyTokennull:
+      description: The model used to return a valid Jws with payload
+      type: object
+      properties:
+        payload:
+          $ref: >-
+            #/components/schemas/PayTools_Api.Models.StringTokenMetaDataOutputModel
+        authToken:
+          description: >-
+            The jws (token) value to be used in subsequent card operation
+            methods
+          type: string
+          nullable: true
+    PayTools_Api.Models.JwsOutputModel1PayTools_Bl.Authentication.ChargeCardSignedModelPayToolsBlVersion1.0.0.0CultureneutralPublicKeyTokennull:
+      description: The model used to return a valid Jws with payload
+      type: object
+      properties:
+        payload:
+          $ref: >-
+            #/components/schemas/PayTools_Bl.Authentication.ChargeCardSignedModel
+        authToken:
+          description: >-
+            The jws (token) value to be used in subsequent card operation
+            methods
+          type: string
+          nullable: true
+    PayTools_Api.Models.JwsOutputModel1Payments.OperationResultPaymentsVersion0.0.0.0CultureneutralPublicKeyTokennull:
+      description: The model used to return a valid Jws with payload
+      type: object
+      properties:
+        payload:
+          $ref: '#/components/schemas/Payments.OperationResult'
+        authToken:
+          description: >-
+            The jws (token) value to be used in subsequent card operation
+            methods
+          type: string
+          nullable: true
+    PayTools_Api.Models.JwsOutputModel1pciBooking.IINLookup.Library.CardValidationResultpciBooking.IINLookup.LibraryVersion1.0.4.0CultureneutralPublicKeyTokennull:
+      description: The model used to return a valid Jws with payload
+      type: object
+      properties:
+        payload:
+          $ref: >-
+            #/components/schemas/pciBooking.IINLookup.Library.CardValidationResult
+        authToken:
+          description: >-
+            The jws (token) value to be used in subsequent card operation
+            methods
+          type: string
+          nullable: true
+    PayTools_Api.Models.LuhnCheckResultsWithIinData:
+      description: Luhn Check Results with IIn Data
+      type: object
+      properties:
+        iinData:
+          $ref: '#/components/schemas/PayTools_Api.Models.IinData'
+        luhnValid:
+          description: Indicates a successful luhn check
+          type: boolean
+        error:
+          description: Error description
+          type: string
+          nullable: true
+    PayTools_Api.Models.NetworkTokenizationDeleteTokenRequest:
+      description: Network Tokenization Request
+      required:
+        - source
+        - tokenId
+      type: object
+      properties:
+        source:
+          $ref: '#/components/schemas/NetworkToken.RequestSource'
+        brand:
+          $ref: '#/components/schemas/Payments.NetworkTokenSchemes'
+        tokenId:
+          description: Token Id within the Brand
+          maxLength: 255
+          minLength: 1
+          type: string
+        reason:
+          description: Reason for deletion
+          maxLength: 255
+          type: string
+          nullable: true
+    PayTools_Api.Models.NetworkTokenizationPayer:
+      description: Model for accepting payer details for Network Tokenization
+      required:
+        - clientIPAddress
+        - countryCode
+        - firstName
+        - lastName
+      type: object
+      properties:
+        email:
+          description: Email address
+          type: string
+          format: email
+          nullable: true
+        firstName:
+          description: First Name
+          minLength: 1
+          type: string
+        lastName:
+          description: Lasst Name
+          minLength: 1
+          type: string
+        phone:
+          description: Phone number
+          type: string
+          format: tel
+          nullable: true
+        address1:
+          description: 1st address line
+          type: string
+          nullable: true
+        address2:
+          description: 2nd address line
+          type: string
+          nullable: true
+        address3:
+          description: 3rd address line
+          type: string
+          nullable: true
+        postCode:
+          description: Postal code or Zip code
+          type: string
+          nullable: true
+        clientIPAddress:
+          description: Client IP address
+          minLength: 1
+          type: string
+        city:
+          description: City
+          type: string
+          nullable: true
+        stateProvince:
+          description: State or Province
+          type: string
+          nullable: true
+        countryCode:
+          description: >-
+            2 letter country code (<a
+            href="https://en.wikipedia.org/wiki/ISO_3166-2#Current_codes"
+            target="_blank">ISO 3166-2 <img
+            src="https://files.readme.io/b676144-openNewWindow.png" width="10"
+            /></a>)
+          minLength: 1
+          pattern: '[A-Z]{2}'
+          type: string
+    PayTools_Api.Models.NetworkTokenizationTokenizeRequest:
+      description: Network Tokenization Request
+      type: object
+      properties:
+        tokenizationRequest:
+          $ref: '#/components/schemas/PayTools_Api.Models.TokenizationRequest'
+        card:
+          $ref: '#/components/schemas/PayTools_Api.Models.CardBaseWithSecurityCode'
+    PayTools_Api.Models.PayerBase:
+      description: The billing information of the card owner to be used for validation
+      required:
+        - countryCode
+      type: object
+      properties:
+        city:
+          description: City
+          type: string
+          nullable: true
+        stateProvince:
+          description: State or Province
+          type: string
+          nullable: true
+        countryCode:
+          description: >-
+            2 letter country code (<a
+            href="https://en.wikipedia.org/wiki/ISO_3166-2#Current_codes"
+            target="_blank">ISO 3166-2 <img
+            src="https://files.readme.io/b676144-openNewWindow.png" width="10"
+            /></a>)
+          minLength: 1
+          pattern: '[A-Z]{2}'
+          type: string
+    PayTools_Api.Models.PayerBaseWithClientIp:
+      description: >-
+        The billing information of the card owner to be used for validation,
+        incl. Client Ip address
+      required:
+        - clientIPAddress
+        - countryCode
+      type: object
+      properties:
+        clientIPAddress:
+          description: Client IP address
+          minLength: 1
+          type: string
+        city:
+          description: City
+          type: string
+          nullable: true
+        stateProvince:
+          description: State or Province
+          type: string
+          nullable: true
+        countryCode:
+          description: >-
+            2 letter country code (<a
+            href="https://en.wikipedia.org/wiki/ISO_3166-2#Current_codes"
+            target="_blank">ISO 3166-2 <img
+            src="https://files.readme.io/b676144-openNewWindow.png" width="10"
+            /></a>)
+          minLength: 1
+          pattern: '[A-Z]{2}'
+          type: string
+    PayTools_Api.Models.PayerDetails:
+      description: The billing information of the card owner
+      required:
+        - clientIPAddress
+        - countryCode
+      type: object
+      properties:
+        address1:
+          description: 1st address line
+          type: string
+          nullable: true
+        address2:
+          description: 2nd address line
+          type: string
+          nullable: true
+        address3:
+          description: 3rd address line
+          type: string
+          nullable: true
+        postCode:
+          description: Postal code or Zip code
+          type: string
+          nullable: true
+        clientIPAddress:
+          description: Client IP address
+          minLength: 1
+          type: string
+        city:
+          description: City
+          type: string
+          nullable: true
+        stateProvince:
+          description: State or Province
+          type: string
+          nullable: true
+        countryCode:
+          description: >-
+            2 letter country code (<a
+            href="https://en.wikipedia.org/wiki/ISO_3166-2#Current_codes"
+            target="_blank">ISO 3166-2 <img
+            src="https://files.readme.io/b676144-openNewWindow.png" width="10"
+            /></a>)
+          minLength: 1
+          pattern: '[A-Z]{2}'
+          type: string
+    PayTools_Api.Models.PayerDetailsNoIpAddress:
+      description: The billing information of the card owner, without Ip Address
+      required:
+        - countryCode
+      type: object
+      properties:
+        address1:
+          description: 1st address line
+          type: string
+          nullable: true
+        address2:
+          description: 2nd address line
+          type: string
+          nullable: true
+        address3:
+          description: 3rd address line
+          type: string
+          nullable: true
+        postCode:
+          description: Postal code or Zip code
+          type: string
+          nullable: true
+        city:
+          description: City
+          type: string
+          nullable: true
+        stateProvince:
+          description: State or Province
+          type: string
+          nullable: true
+        countryCode:
+          description: >-
+            2 letter country code (<a
+            href="https://en.wikipedia.org/wiki/ISO_3166-2#Current_codes"
+            target="_blank">ISO 3166-2 <img
+            src="https://files.readme.io/b676144-openNewWindow.png" width="10"
+            /></a>)
+          minLength: 1
+          pattern: '[A-Z]{2}'
+          type: string
+    PayTools_Api.Models.PaymentGatewayAccount:
+      description: "The raw credentials necessary to connect to the chosen payment gateway as defined in `GET /PaymentGateway`.\r\n**Please note**, if you provide us with both the raw details here and a stored Payment Gateway Account in the `paymentGatewayAccountName` parameter, these credentials will take precedence."
+      type: object
+      properties:
+        paymentGatewayName:
+          description: >-
+            Unique name of the Payment Gateway the account information relates
+            to.
+          type: string
+          nullable: true
+        credentials:
+          description: "A list of key-value pairs that represents your credentials within the Payment gateway. \r\nEach key should represent a parameter listed in the \"CredentialsNames\" element of the response from the list all payment gateways method at `[GET] /paymentGateway`\r\nExample:\r\n\"Credentials\": [\r\n   {\r\n       \"Key\": \"PrivateKey\",\r\n       \"Value\": \"VBtt666M/G098098vgdewvk0Mc-GH\"\r\n   }\r\n]"
+          type: array
+          items:
+            $ref: >-
+              #/components/schemas/System.Collections.Generic.KeyValuePair2System.StringSystem.Private.CoreLibVersion6.0.0.0CultureneutralPublicKeyToken7cec85d7bea7798eSystem.StringSystem.Private.CoreLibVersion6.0.0.0CultureneutralPublicKeyToken7cec85d7bea7798e
+          nullable: true
+    PayTools_Api.Models.PaymentGatewayAccountBriefOutputModel:
+      description: >-
+        Output Model for designating a payment gateway account with a client
+        certificate
+      type: object
+      properties:
+        name:
+          description: Name of account
+          type: string
+          nullable: true
+        paymentGatewayName:
+          description: >-
+            Unique name of the Payment Gateway the account information relates
+            to.
+          type: string
+          nullable: true
+        creationTime:
+          description: Date and time the credentials were stored
+          type: string
+          format: date-time
+    PayTools_Api.Models.PaymentGatewayAccountFullOutputModel:
+      description: Output Model for designating a payment gateway account
+      type: object
+      properties:
+        name:
+          description: Name of account
+          type: string
+          nullable: true
+        creationTime:
+          description: Date and time the credentials were stored
+          type: string
+          format: date-time
+        paymentGatewayName:
+          description: >-
+            Unique name of the Payment Gateway the account information relates
+            to.
+          type: string
+          nullable: true
+        credentials:
+          description: "A list of key-value pairs that represents your credentials within the Payment gateway. \r\nEach key should represent a parameter listed in the \"CredentialsNames\" element of the response from the list all payment gateways method at `[GET] /paymentGateway`\r\nExample:\r\n\"Credentials\": [\r\n   {\r\n       \"Key\": \"PrivateKey\",\r\n       \"Value\": \"VBtt666M/G098098vgdewvk0Mc-GH\"\r\n   }\r\n]"
+          type: array
+          items:
+            $ref: >-
+              #/components/schemas/System.Collections.Generic.KeyValuePair2System.StringSystem.Private.CoreLibVersion6.0.0.0CultureneutralPublicKeyToken7cec85d7bea7798eSystem.StringSystem.Private.CoreLibVersion6.0.0.0CultureneutralPublicKeyToken7cec85d7bea7798e
+          nullable: true
+    PayTools_Api.Models.PaymentGatewayAccountInputModel:
+      description: Input Model for designating a payment gateway account
+      type: object
+      properties:
+        paymentGatewayName:
+          description: >-
+            Unique name of the Payment Gateway the account information relates
+            to.
+          type: string
+          nullable: true
+        credentials:
+          description: "A list of key-value pairs that represents your credentials within the Payment gateway. \r\nEach key should represent a parameter listed in the \"CredentialsNames\" element of the response from the list all payment gateways method at `[GET] /paymentGateway`\r\nExample:\r\n\"Credentials\": [\r\n   {\r\n       \"Key\": \"PrivateKey\",\r\n       \"Value\": \"VBtt666M/G098098vgdewvk0Mc-GH\"\r\n   }\r\n]"
+          type: array
+          items:
+            $ref: >-
+              #/components/schemas/System.Collections.Generic.KeyValuePair2System.StringSystem.Private.CoreLibVersion6.0.0.0CultureneutralPublicKeyToken7cec85d7bea7798eSystem.StringSystem.Private.CoreLibVersion6.0.0.0CultureneutralPublicKeyToken7cec85d7bea7798e
+          nullable: true
+    PayTools_Api.Models.PaymentGatewayDescriptionModel:
+      description: Model for Payment Gateway Description
+      type: object
+      properties:
+        description:
+          description: Payment Gateway Description (informational)
+          type: string
+          nullable: true
+        name:
+          description: The ePayTools internal identifier for this Payment Gateway
+          type: string
+          nullable: true
+        displayName:
+          description: The name of the Payment Gateway in friendly format
+          type: string
+          nullable: true
+        paymentGatewayUrl:
+          description: Url to Payment Gateway site (informational)
+          type: string
+          nullable: true
+        credentialsNames:
+          description: >-
+            A list of all credential parameters needed to provide for this
+            Payment Gateway
+          type: array
+          items:
+            type: string
+          nullable: true
+        supportsNetworkToken:
+          description: >-
+            Indicates whether the Payment gateway supports Network Token (from
+            Card schemes)
+          type: boolean
+    PayTools_Api.Models.RefundRequestModel:
+      description: Model for UPG refund operation
+      required:
+        - amount
+        - card
+        - currency
+        - refTransId
+      type: object
+      properties:
+        currency:
+          description: >-
+            The currency of the transaction. Based on the <a
+            href="https://en.wikipedia.org/wiki/ISO_4217#Active_codes"
+            target="_blank">ISO 4217</a> standard.
+          minLength: 1
+          type: string
+        refTransId:
+          description: The transaction ID that this operation is referring to.
+          minLength: 1
+          type: string
+        payerDetails:
+          $ref: '#/components/schemas/PayTools_Api.Models.PayerDetails'
+        card:
+          $ref: '#/components/schemas/PayTools_Api.Models.CardInputModel'
+        amount:
+          description: >-
+            The amount to be charged (the amount should be in major units - for
+            example, 10.23)
+          type: number
+          format: double
+        myRef:
+          description: Your custom reference for this transaction
+          type: string
+          nullable: true
+        paymentGatewayAccountName:
+          description: "The reference name provided to the stored Payment Gateway Account as set in `PUT /PaymentGatewayAccounts/{name}`.\r\n**Please note**, if you provide us with both this parameter and the raw credentials in the `paymentGatewayAccount` object, this parameter will be ignored and the raw credentials will take precedence."
+          type: string
+          nullable: true
+        certificateName:
+          description: >-
+            Optional parameter if the payment gateway requires authentication
+            using a client certificate. The name of the certificate that was
+            stored in our system via our <a href="https://portal.epaytools.com"
+            target="_blank">users portal</a>
+          maxLength: 128
+          type: string
+          nullable: true
+        paymentGatewayAccount:
+          $ref: '#/components/schemas/PayTools_Api.Models.PaymentGatewayAccount'
+        networkTokenBrand:
+          $ref: '#/components/schemas/Payments.NetworkTokenSchemes'
+    PayTools_Api.Models.StringTokenIntputModel:
+      description: Model for providing a string to be tokenized
+      required:
+        - payload
+      type: object
+      properties:
+        payload:
+          description: The content of the string you would like to tokenize
+          maxLength: 16384
+          minLength: 1
+          type: string
+    PayTools_Api.Models.StringTokenMetaDataOutputModel:
+      description: Model for display a string token meta-data
+      type: object
+      properties:
+        token:
+          description: Token ID representing the stringToken
+          type: string
+          nullable: true
+        createTime:
+          description: Date and time the string was stored
+          type: string
+          format: date-time
+    PayTools_Api.Models.StringTokenOutputModel:
+      description: Model for display a string token, including the clear text
+      type: object
+      properties:
+        clearPayload:
+          description: The content of the StringToken that was stored in our system
+          type: string
+          nullable: true
+        token:
+          description: Token ID representing the stringToken
+          type: string
+          nullable: true
+        createTime:
+          description: Date and time the string was stored
+          type: string
+          format: date-time
+    PayTools_Api.Models.ThreeDSAuthenticationInputModel:
+      description: Model for 3DS authentication data
+      required:
+        - authenticationValue
+        - eci
+        - merchantName
+        - version
+        - xid
+      type: object
+      properties:
+        version:
+          description: 3ds Version
+          maxLength: 5
+          minLength: 1
+          type: string
+        authenticationValue:
+          description: Authentication value
+          minLength: 1
+          type: string
+        eci:
+          description: Electronic Commerce Indicator
+          maxLength: 2
+          minLength: 1
+          type: string
+        xid:
+          description: transaction ID from the 3D Secure provider
+          maxLength: 40
+          minLength: 1
+          type: string
+        merchantName:
+          description: Merchant name
+          maxLength: 40
+          minLength: 1
+          type: string
+    PayTools_Api.Models.ThreeDsMerchantOutputModel:
+      description: Model for response of 3DS Merchant
+      type: object
+      properties:
+        name:
+          description: Account name (Name on system)
+          type: string
+          nullable: true
+        threeDsMerchant:
+          $ref: '#/components/schemas/PayTools_Dal.Entities.ThreeDsMerchant'
+    PayTools_Api.Models.TokenizationRequest:
+      description: Model for sending Network Tokenization Request
+      type: object
+      properties:
+        consumerLanguage:
+          description: Iso-369-1 2-letter language code
+          maxLength: 2
+          minLength: 2
+          type: string
+          nullable: true
+        cardHolder:
+          $ref: '#/components/schemas/PayTools_Api.Models.NetworkTokenizationPayer'
+        deviceScore:
+          description: Device score
+          maximum: 5
+          minimum: 1
+          type: integer
+          format: int32
+        accountScore:
+          description: Account score
+          maximum: 5
+          minimum: 1
+          type: integer
+          format: int32
+        deviceLocationLat:
+          description: Device latitude -90 to 90
+          maximum: 90
+          minimum: -90
+          type: number
+          format: double
+          nullable: true
+        deviceLocationLon:
+          description: Device longitude -90 to 90
+          maximum: 180
+          minimum: -180
+          type: number
+          format: double
+          nullable: true
+        deviceIpAddress:
+          description: Ip address of device
+          type: string
+          nullable: true
+        cardSource:
+          $ref: '#/components/schemas/NetworkToken.CardSource'
+    PayTools_Api.Models.TopBrands:
+      description: List of to brands and logos
+      type: object
+      properties:
+        prefixes:
+          description: >-
+            Top credit card brands for lookup of up to 5 first digits. It covers
+            90% of the cases
+          type: array
+          items:
+            type: object
+            additionalProperties:
+              type: string
+          nullable: true
+          readOnly: true
+        logos:
+          description: Dictionary of Brand name => brand logo Url
+          type: object
+          additionalProperties:
+            type: string
+            nullable: true
+          nullable: true
+          readOnly: true
+    PayTools_Bl.Authentication.ChargeCardSignedModel:
+      description: Model for charge operation result after providing Cvv
+      type: object
+      properties:
+        crg_rs:
+          $ref: '#/components/schemas/Payments.OperationResult'
+        card:
+          $ref: '#/components/schemas/PayTools_Shared.Models.Card.StoredCard'
+        crg_d:
+          $ref: '#/components/schemas/PayTools_Bl.Authentication.ChargePresetData'
+    PayTools_Bl.Authentication.ChargePresetData:
+      description: Data to be used in Charge request
+      type: object
+      properties:
+        dsc:
+          description: Order description
+          type: string
+          nullable: true
+        ref:
+          description: Creator reference
+          type: string
+          nullable: true
+        dig:
+          description: Is it digital goods
+          type: boolean
+        amt:
+          $ref: '#/components/schemas/PayTools_Shared.Models.MoneyModel'
+        uan:
+          description: The Upg Account name
+          type: string
+          nullable: true
+        ucc:
+          description: The Upg Client Certificate name
+          type: string
+          nullable: true
+    PayTools_Bl.Authentication.CvvSignedDataModel:
+      description: Model for signing a Cvv Operation
+      type: object
+      properties:
+        card:
+          $ref: '#/components/schemas/PayTools_Shared.Models.Card.StoredCard'
+        crg_d:
+          $ref: '#/components/schemas/PayTools_Bl.Authentication.ChargePresetData'
+    PayTools_Bl.Authentication.PreSignedDataModel:
+      description: Model for initial request for a Card operation session
+      type: object
+      properties:
+        threeDsSessionModel:
+          $ref: '#/components/schemas/PayTools_Bl.Authentication.ThreeDsSessionModel'
+        vld:
+          $ref: '#/components/schemas/pciBooking.IINLookup.Library.RiskLevel'
+        3ds:
+          $ref: '#/components/schemas/PayTools_Shared.Enums.Perform3ds'
+        crg:
+          description: Is Card charge required for this session
+          type: boolean
+        tkn:
+          $ref: '#/components/schemas/PayTools_Bl.Authentication.TokenizationAction'
+        crg_d:
+          $ref: '#/components/schemas/PayTools_Bl.Authentication.ChargePresetData'
+    PayTools_Bl.Authentication.SignedData:
+      description: Class to represent signed data
+      type: object
+      properties:
+        vld_rq:
+          $ref: >-
+            #/components/schemas/pciBooking.IINLookup.Library.CardValidationRequest
+        vld_rs:
+          $ref: >-
+            #/components/schemas/pciBooking.IINLookup.Library.CardValidationResult
+        crg_rq:
+          $ref: '#/components/schemas/Payments.ChargeRequest'
+        crg_rs:
+          $ref: '#/components/schemas/Payments.OperationResult'
+        tkn_rs:
+          description: Result from tokenization
+          type: string
+          nullable: true
+        3ds_d:
+          $ref: '#/components/schemas/PayTools_Bl.Authentication.ThreeDsPresetData'
+        vld:
+          $ref: '#/components/schemas/pciBooking.IINLookup.Library.RiskLevel'
+        3ds:
+          $ref: '#/components/schemas/PayTools_Shared.Enums.Perform3ds'
+        crg:
+          description: Is Card charge required for this session
+          type: boolean
+        tkn:
+          $ref: '#/components/schemas/PayTools_Bl.Authentication.TokenizationAction'
+        crg_d:
+          $ref: '#/components/schemas/PayTools_Bl.Authentication.ChargePresetData'
+    PayTools_Bl.Authentication.ThreeDMerchant:
+      description: The 3DS Merchant data to be signed
+      required:
+        - brds
+        - cnt
+        - mds
+        - mnm
+        - msf
+        - url
+      type: object
+      properties:
+        mnm:
+          description: Merchant name
+          minLength: 1
+          type: string
+        mds:
+          description: Merchant's display name
+          minLength: 1
+          type: string
+        msf:
+          description: Merchant's Requestor Id suffix
+          minLength: 1
+          type: string
+        cnt:
+          description: Merchant's Country (3-digit ISO 3166-1 numeric)
+          minLength: 1
+          type: string
+        url:
+          description: Merchant's Url
+          minLength: 1
+          type: string
+          format: uri
+        brds:
+          description: List of supported brands
+          type: array
+          items:
+            $ref: '#/components/schemas/PayTools_Bl.Authentication.ThreeDsBrand'
+    PayTools_Bl.Authentication.ThreeDsBrand:
+      description: A brand for 3DS authentication
+      required:
+        - bin
+        - mcc
+        - mid
+      type: object
+      properties:
+        brd:
+          $ref: '#/components/schemas/Payments.CardTypes'
+        bin:
+          description: Brand's Bin
+          minLength: 1
+          type: string
+        mid:
+          description: Merchant Id
+          minLength: 1
+          type: string
+        mcc:
+          description: Brand's MCC
+          minLength: 1
+          type: string
+    PayTools_Bl.Authentication.ThreeDsPresetData:
+      description: Data to be used in 3DS authentication request
+      type: object
+      properties:
+        sid:
+          description: Session Id with MPI
+          type: string
+          nullable: true
+        mrc:
+          $ref: '#/components/schemas/PayTools_Bl.Authentication.ThreeDMerchant'
+        amt:
+          $ref: '#/components/schemas/PayTools_Shared.Models.MoneyModel'
+    PayTools_Bl.Authentication.ThreeDsSessionModel:
+      description: Data to be used in 3DS authentication request
+      required:
+        - amt
+        - merchantAccountName
+      type: object
+      properties:
+        merchantAccountName:
+          description: The name of the stored merchant account
+          minLength: 1
+          type: string
+        amt:
+          $ref: '#/components/schemas/PayTools_Shared.Models.MoneyModel'
+    PayTools_Bl.Authentication.TokenizationAction:
+      description: Tokenization Action
+      enum:
+        - Always
+        - IfChargeSuccessful
+        - Never
+      type: string
+    PayTools_Dal.Entities.ThreeDsBrand:
+      required:
+        - bin
+        - mcc
+        - merchantId
+      type: object
+      properties:
+        brand:
+          $ref: '#/components/schemas/Payments.CardTypes'
+        bin:
+          minLength: 1
+          type: string
+        merchantId:
+          minLength: 1
+          type: string
+        mcc:
+          minLength: 1
+          type: string
+    PayTools_Dal.Entities.ThreeDsMerchant:
+      required:
+        - acquirerName
+        - merchantCountry
+        - merchantDisplayName
+        - merchantName
+        - merchantRequestorIdSuffix
+        - merchantUrl
+      type: object
+      properties:
+        merchantName:
+          minLength: 1
+          type: string
+        merchantDisplayName:
+          minLength: 1
+          type: string
+        merchantRequestorIdSuffix:
+          minLength: 1
+          type: string
+        merchantCountry:
+          minLength: 1
+          type: string
+        merchantUrl:
+          minLength: 1
+          type: string
+          format: uri
+        acquirerName:
+          minLength: 1
+          type: string
+        brands:
+          type: array
+          items:
+            $ref: '#/components/schemas/PayTools_Dal.Entities.ThreeDsBrand'
+          nullable: true
+    PayTools_Shared.Enums.Perform3ds:
+      description: 'Options for performing #DS'
+      enum:
+        - Mandatory
+        - Skip
+        - Optional
+      type: string
+    PayTools_Shared.Models.Card.StoredCard:
+      description: Base model for card with Card holder name and Card Type
+      required:
+        - cardHolderName
+        - cardToken
+        - expirationMonth
+        - expirationYear
+      type: object
+      properties:
+        cardToken:
+          description: >-
+            a Reference to a Tokenized string. A Token should be referenced in
+            the format @TOKEN, e.g "@nQGywsQE9gbURtrXEjTZwtWqeMdK9nsO"
+          minLength: 1
+          pattern: ^@[A-Za-z0-9]{32}$
+          type: string
+        expirationYear:
+          description: Expiration year
+          maximum: 2050
+          minimum: 2023
+          type: integer
+          format: int32
+        expirationMonth:
+          description: Expiration year
+          maximum: 12
+          minimum: 1
+          type: integer
+          format: int32
+        cardType:
+          $ref: '#/components/schemas/Payments.CardTypes'
+        cardHolderName:
+          description: Cardholder name (as apears on card)
+          maxLength: 30
+          minLength: 3
+          type: string
+    PayTools_Shared.Models.MessageType:
+      description: Client message type enumeration
+      enum:
+        - NeverUsed
+        - Authenticated
+        - Rejected
+        - FingerPrintRequired
+        - FingerPrintCompleted
+        - ChallengeRequired
+        - TechnicalProblem
+        - CardNotEnrolled
+        - NoResponse
+      type: string
+    PayTools_Shared.Models.MoneyModel:
+      description: Represents an amount in a given currency
+      required:
+        - amt
+        - cur
+      type: object
+      properties:
+        cur:
+          $ref: '#/components/schemas/Payments.CurrencyCode'
+        amt:
+          description: Amount
+          type: number
+          format: double
+    PayTools_Shared.Models.ThreeDsClientMessage:
+      description: base class for message to client (Http response or over WebSocket)
+      type: object
+      properties:
+        messageType:
+          $ref: '#/components/schemas/PayTools_Shared.Models.MessageType'
+    Payments.BankCard:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/Payments.CardTypes'
+        nameOnCard:
+          type: string
+          nullable: true
+        issueNumber:
+          maxLength: 2
+          type: string
+          nullable: true
+        ownerId:
+          type: string
+          nullable: true
+        securityCode:
+          type: string
+          nullable: true
+        number:
+          type: string
+          nullable: true
+        expirationMonth:
+          type: integer
+          format: int32
+        expirationYear:
+          type: integer
+          format: int32
+    Payments.BankCardBase:
+      type: object
+      properties:
+        number:
+          type: string
+          nullable: true
+        expirationMonth:
+          type: integer
+          format: int32
+        expirationYear:
+          type: integer
+          format: int32
+    Payments.CardTypes:
+      enum:
+        - Visa
+        - AMEX
+        - BC
+        - MasterCard
+        - MC_Alaska
+        - MC_Canada
+        - CarteBlanche
+        - UnionPay
+        - Discover
+        - DinersClub
+        - CartaSi
+        - CarteBleue
+        - Dankort
+        - Delta
+        - Electron
+        - JCB
+        - Maestro
+        - Switch
+        - Solo
+        - Lazer
+        - Elo
+        - Hipercard
+        - enRoute
+        - UATP
+      type: string
+    Payments.ChargeRequest:
+      type: object
+      properties:
+        bankCard:
+          $ref: '#/components/schemas/Payments.BankCard'
+        payer:
+          $ref: '#/components/schemas/Payments.Payer'
+        threeDS:
+          $ref: '#/components/schemas/Payments.ThreeDS'
+        userToken:
+          type: string
+          nullable: true
+        amount:
+          $ref: '#/components/schemas/Payments.Money'
+        myReference:
+          type: string
+          nullable: true
+        isDigitalGoods:
+          type: boolean
+        orderDesc:
+          type: string
+          nullable: true
+        generateToken:
+          type: boolean
+    Payments.CurrencyCode:
+      enum:
+        - AFN
+        - EUR
+        - ALL
+        - DZD
+        - USD
+        - AOA
+        - XCD
+        - ARS
+        - AMD
+        - AWG
+        - AUD
+        - AZN
+        - BSD
+        - BHD
+        - BDT
+        - BBD
+        - BYR
+        - BZD
+        - XOF
+        - BMD
+        - BTN
+        - INR
+        - BOB
+        - BOV
+        - BAM
+        - BWP
+        - NOK
+        - BRL
+        - BND
+        - BGN
+        - BIF
+        - KHR
+        - XAF
+        - CAD
+        - CVE
+        - KYD
+        - CLF
+        - CLP
+        - CNY
+        - COP
+        - COU
+        - KMF
+        - CDF
+        - NZD
+        - CRC
+        - HRK
+        - CUC
+        - CUP
+        - ANG
+        - CZK
+        - DKK
+        - DJF
+        - DOP
+        - EGP
+        - SVC
+        - ERN
+        - ETB
+        - FKP
+        - FJD
+        - XPF
+        - GMD
+        - GEL
+        - GHS
+        - GIP
+        - GTQ
+        - GBP
+        - GNF
+        - GYD
+        - HTG
+        - HNL
+        - HKD
+        - HUF
+        - ISK
+        - IDR
+        - XDR
+        - IRR
+        - IQD
+        - ILS
+        - JMD
+        - JPY
+        - JOD
+        - KZT
+        - KES
+        - KPW
+        - KRW
+        - KWD
+        - KGS
+        - LAK
+        - LBP
+        - LSL
+        - ZAR
+        - LRD
+        - LYD
+        - CHF
+        - LTL
+        - MOP
+        - MKD
+        - MGA
+        - MWK
+        - MYR
+        - MVR
+        - MRO
+        - MUR
+        - XUA
+        - MXN
+        - MXV
+        - MDL
+        - MNT
+        - MAD
+        - MZN
+        - MMK
+        - NAD
+        - NPR
+        - NIO
+        - NGN
+        - OMR
+        - PKR
+        - PAB
+        - PGK
+        - PYG
+        - PEN
+        - PHP
+        - PLN
+        - QAR
+        - RON
+        - RUB
+        - RWF
+        - SHP
+        - WST
+        - STD
+        - SAR
+        - RSD
+        - SCR
+        - SLL
+        - SGD
+        - XSU
+        - SBD
+        - SOS
+        - SSP
+        - LKR
+        - SDG
+        - SRD
+        - SZL
+        - SEK
+        - CHE
+        - CHW
+        - SYP
+        - TWD
+        - TJS
+        - TZS
+        - THB
+        - TOP
+        - TTD
+        - TND
+        - TRY
+        - TMT
+        - UGX
+        - UAH
+        - AED
+        - USN
+        - UYI
+        - UYU
+        - UZS
+        - VUV
+        - VEF
+        - VND
+        - YER
+        - ZMW
+        - ZWL
+        - XBA
+        - XBB
+        - XBC
+        - XBD
+        - XTS
+        - XXX
+        - XAU
+        - XPD
+        - XPT
+        - XAG
+      type: string
+    Payments.Money:
+      type: object
+      properties:
+        amount:
+          type: number
+          format: double
+        currencyCode:
+          $ref: '#/components/schemas/Payments.CurrencyCode'
+        iso4217CurrencyNumber:
+          type: string
+          nullable: true
+          readOnly: true
+        amountInLargestUnits:
+          type: number
+          format: double
+          readOnly: true
+        formattedAmount:
+          type: string
+          nullable: true
+          readOnly: true
+    Payments.NetworkTokenSchemes:
+      enum:
+        - Visa
+        - MasterCard
+        - Amex
+      type: string
+    Payments.Operation:
+      enum:
+        - Charge
+        - PreAuth
+        - Capture
+        - Void
+        - Refund
+        - Tokenize
+      type: string
+    Payments.OperationResult:
+      type: object
+      properties:
+        authorizationCode:
+          type: string
+          nullable: true
+        operationType:
+          $ref: '#/components/schemas/Payments.Operation'
+        currency:
+          $ref: '#/components/schemas/Payments.CurrencyCode'
+        amount:
+          type: number
+          format: double
+        operationResultCode:
+          $ref: '#/components/schemas/Payments.Result'
+        operationResultDescription:
+          type: string
+          nullable: true
+        customGatewayResponse:
+          nullable: true
+        gatewayName:
+          type: string
+          nullable: true
+        gatewayReference:
+          type: string
+          nullable: true
+        gatewayResultCode:
+          type: string
+          nullable: true
+        gatewayResultDescription:
+          type: string
+          nullable: true
+        gatewayResultSubCode:
+          type: string
+          nullable: true
+        gatewayResultSubDescription:
+          type: string
+          nullable: true
+        gatewayToken:
+          nullable: true
+    Payments.Payer:
+      type: object
+      properties:
+        firstName:
+          type: string
+          nullable: true
+        lastName:
+          type: string
+          nullable: true
+        email:
+          type: string
+          nullable: true
+        phone:
+          type: string
+          format: tel
+          nullable: true
+        cardOwnerId:
+          type: string
+          nullable: true
+        address1:
+          type: string
+          nullable: true
+        address2:
+          type: string
+          nullable: true
+        address3:
+          type: string
+          nullable: true
+        city:
+          type: string
+          nullable: true
+        stateProvince:
+          type: string
+          nullable: true
+        countryCode:
+          type: string
+          nullable: true
+        postCode:
+          type: string
+          nullable: true
+        clientIPAddress:
+          type: string
+          nullable: true
+        address:
+          type: string
+          nullable: true
+          readOnly: true
+        fullName:
+          type: string
+          nullable: true
+          readOnly: true
+        validIpAddress:
+          type: string
+          nullable: true
+          readOnly: true
+    Payments.Result:
+      enum:
+        - Success
+        - Accepted
+        - Rejected
+        - TemporaryFailure
+        - FatalFailure
+        - NotImplemented
+      type: string
+    Payments.ThreeDS:
+      type: object
+      properties:
+        version:
+          type: string
+          nullable: true
+        authenticationValue:
+          type: string
+          nullable: true
+        eci:
+          type: string
+          nullable: true
+        xid:
+          type: string
+          nullable: true
+    System.Collections.Generic.KeyValuePair2System.StringSystem.Private.CoreLibVersion6.0.0.0CultureneutralPublicKeyToken7cec85d7bea7798eSystem.StringSystem.Private.CoreLibVersion6.0.0.0CultureneutralPublicKeyToken7cec85d7bea7798e:
+      type: object
+      properties:
+        key:
+          type: string
+          nullable: true
+        value:
+          type: string
+          nullable: true
+    pciBooking.IINLookup.Library.CardValidationRequest:
+      type: object
+      properties:
+        iin:
+          pattern: ^\d{6,11}$
+          type: string
+          nullable: true
+        city:
+          type: string
+          nullable: true
+        stateProvince:
+          type: string
+          nullable: true
+        countryCode:
+          type: string
+          nullable: true
+        clientIPAddress:
+          type: string
+          nullable: true
+    pciBooking.IINLookup.Library.CardValidationResult:
+      type: object
+      properties:
+        description:
+          type: string
+          nullable: true
+        riskLevel:
+          $ref: '#/components/schemas/pciBooking.IINLookup.Library.RiskLevel'
+        cardBrand:
+          type: string
+          nullable: true
+        cardType:
+          type: string
+          nullable: true
+        cardCategory:
+          type: string
+          nullable: true
+        issuerName:
+          type: string
+          nullable: true
+        issuerCountry:
+          type: string
+          nullable: true
+        countryByIP:
+          type: string
+          nullable: true
+        countryFromBillingAddress:
+          type: string
+          nullable: true
+        anonymousProxyUsed:
+          type: boolean
+    pciBooking.IINLookup.Library.RiskLevel:
+      enum:
+        - VeryHigh
+        - High
+        - Low
+        - VeryLow
+      type: string
+    CustomFormsUploadFormFolderRequest:
+      type: object
+      properties:
+        ContentType:
+          type: string
+        ContentDisposition:
+          type: string
+        Headers:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+        Length:
+          type: integer
+          format: int64
+        Name:
+          type: string
+        FileName:
+          type: string
+    CustomFormsUploadFormFolderRequest1:
+      type: object
+      properties:
+        ContentType:
+          type: string
+        ContentDisposition:
+          type: string
+        Headers:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+        Length:
+          type: integer
+          format: int64
+        Name:
+          type: string
+        FileName:
+          type: string
+    CustomFormsRemoveFormResponse:
+      type: string
+    ThreeDsMerchantsListMerchantsResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/PayTools_Api.Models.ThreeDsMerchantOutputModel'
+    NetworkTokenDeleteResponse:
+      type: boolean
+    PaymentGatewayAccountsGetAllResponse:
+      type: array
+      items:
+        $ref: >-
+          #/components/schemas/PayTools_Api.Models.PaymentGatewayAccountBriefOutputModel
+    PaymentGatewayListGatewaysResponse:
+      type: array
+      items:
+        $ref: >-
+          #/components/schemas/PayTools_Api.Models.PaymentGatewayDescriptionModel
+  securitySchemes:
+    ApiKeyAuth:
+      description: Please enter ApiKey into field
+      type: apiKey
+      name: X-Api-Key
+      in: header
+    JwsAuth:
+      description: Please enter JWS token into field
+      type: http
+      scheme: bearer
+      bearerFormat: Jwt
+x-readme:
+  explorer-enabled: true
+  proxy-enabled: true
+  samples-enabled: true
+_id: 6261b17bf938a8020f9cee2e
