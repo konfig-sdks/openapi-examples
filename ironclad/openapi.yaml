@@ -1,0 +1,4840 @@
+openapi: 3.0.3
+info:
+  title: Ironclad Public API
+  description: Documentation for Ironclad's REST API.
+  version: '1'
+  contact:
+    name: Ironclad Support
+    email: support@ironcladapp.com
+  x-konfig-ignore:
+    object-with-no-properties: true
+servers:
+  - description: Production server
+    url: https://ironcladapp.com/public/api/v1
+  - description: EU Production server
+    url: https://eu1.ironcladapp.com/public/api/v1
+  - description: Demo server
+    url: https://demo.ironcladapp.com/public/api/v1
+  - description: Preview Server
+    url: https://preview.ironcladapp.com/public/api/v1
+tags:
+  - description: Documentation on Ironclad Workflows.
+    name: Workflows
+  - description: Documentation on Ironclad Records.
+    name: Records
+  - description: Documentation on Ironclad Webhooks.
+    name: Webhooks
+paths:
+  /workflows:
+    post:
+      tags:
+        - Workflows
+      summary: Create a Workflow Synchronously
+      operationId: Workflows_createSyncWorkflow
+      description: Launch a new Workflow synchronously.
+      requestBody:
+        $ref: '#/components/requestBodies/WorkflowLaunch'
+      responses:
+        '200':
+          $ref: '#/components/responses/WorkflowLaunchResponse200'
+        '400':
+          $ref: '#/components/responses/WorkflowLaunchResponse400'
+    get:
+      tags:
+        - Workflows
+      summary: List All Workflows
+      operationId: Workflows_listAll
+      description: List all workflows in your Ironclad account.
+      parameters:
+        - $ref: '#/components/parameters/QueryPageNumber'
+        - $ref: '#/components/parameters/QueryPageSize'
+        - description: >-
+            Filter the workflows that are listed based on their status. If this
+            parameter is omitted, `active` workflows will be returned. Active
+            workflows include workflows in the Create, Review, Sign, and Archive
+            stages.
+          name: status
+          in: query
+          schema:
+            type: string
+            enum:
+              - active
+              - paused
+              - completed
+              - cancelled
+        - description: Filter workflows to a specific Template ID.
+          name: template
+          in: query
+          schema:
+            type: string
+        - description: Retrieve workflows that have been updated since a UTC date.
+          name: lastUpdated
+          in: query
+          schema:
+            type: string
+        - description: >-
+            Filter workflows using a formula. The workflow attribute ID should
+            be enclosed in brackets `[ ]` and the value should be enclosed in
+            single quotes `' '`.
+
+
+            Workflow attributes for a specific workflow design can be identified
+            using the [List All Workflow
+            Schemas](https://developer.ironcladapp.com/reference/list-all-workflow-schemas)
+            endpoint.
+
+
+            Supported formula operations include:
+
+
+            <ul>
+              <li><code>Equals</code></li>
+              <li><code>Contains</code></li>
+              <li><code>And</code></li>
+              <li><code>Or</code></li>
+            </ul>
+
+            For more information on writing formulas, please refer to
+
+            <a
+            href="https://ironcladapp.com/formulas/#company%20display%20name">this
+            article</a>.
+          name: filter
+          in: query
+          schema:
+            type: string
+          example: Equals([counterpartyName], 'Harley Quinn')
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowsListAllResponse'
+  /workflows/async:
+    post:
+      tags:
+        - Workflows
+      summary: Create a Workflow Asynchronously
+      operationId: Workflows_launchAsynchronously
+      description: >-
+        Launch a new Workflow asynchronously for non-blocking performance, which
+        is helpful when/if you provide files to the Workflow.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkflowRequestModel'
+      responses:
+        '200':
+          $ref: '#/components/responses/AsyncWorkflowLaunchResponse200'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowsLaunchAsynchronously400Response'
+  /workflows/async/{asyncJobId}:
+    get:
+      tags:
+        - Workflows
+      summary: Retrieve the Status of an Async Workflow Create Job
+      operationId: Workflows_getAsyncJobStatus
+      description: >-
+        Check the status of a Workflow you created while using the [Create a
+        Workflow
+        Async](https://developer.ironcladapp.com/reference/create-a-workflow-sync-vs-async#create-a-new-workflow-async)
+        route.
+      parameters:
+        - description: >-
+            The identifier provided in the response of creating a Workflow
+            asynchronously.
+          name: asyncJobId
+          in: path
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          $ref: '#/components/responses/AsyncWorkflowStatusResponse200'
+        '404':
+          description: '404'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowsGetAsyncJobStatus404Response'
+  /workflows/{id}:
+    get:
+      tags:
+        - Workflows
+      summary: Retrieve a Workflow
+      operationId: Workflows_getWorkflow
+      description: View the data associated with a specific workflow
+      parameters:
+        - description: The unique identifier or Ironclad ID of a workflow.
+          name: id
+          in: path
+          schema:
+            type: string
+            example: abcd1234
+          required: true
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowResponseModel'
+        '400':
+          description: '400'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowsGetWorkflowResponse'
+  /workflows/{id}/approvals:
+    get:
+      tags:
+        - Workflows
+      summary: List All Workflow Approvals
+      operationId: Workflows_listApprovals
+      description: >-
+        Returns a list of approvals for the workflow. The `approvalGroups`
+        property will display only triggered approvals (i.e. conditional
+        approvals that have not been triggered will not appear).
+      parameters:
+        - description: The unique identifier or Ironclad ID of a workflow.
+          name: id
+          in: path
+          schema:
+            type: string
+            example: abcd1234
+          required: true
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowsListApprovalsResponse'
+        '400':
+          description: '400'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowsListApprovals400Response'
+  /workflows/{id}/approval-requests:
+    get:
+      tags:
+        - Workflows
+      summary: Retrieve the Approval Requests on a Workflow
+      operationId: Workflows_getApprovalRequests
+      description: >-
+        Returns a list of approval requests that have taken place on the
+        workflow.
+      parameters:
+        - description: The unique identifier or Ironclad ID of a workflow.
+          name: id
+          in: path
+          schema:
+            type: string
+          required: true
+        - $ref: '#/components/parameters/QueryPageNumber'
+        - $ref: '#/components/parameters/QueryPageSize'
+        - description: >-
+            An optional boolean parameter that adds additional information about
+            the actor to each item in the response. Defaults to false.
+          name: actorDetails
+          in: query
+          schema:
+            type: boolean
+            example: false
+            default: false
+          required: false
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowsGetApprovalRequestsResponse'
+        '403':
+          description: '403'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowsGetApprovalRequests403Response'
+        '404':
+          description: '404'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowsGetApprovalRequests404Response'
+  /workflows/{id}/approvals/{roleId}:
+    patch:
+      tags:
+        - Workflows
+      summary: Update Approval on a Workflow
+      operationId: Workflows_updateApprovalStatus
+      description: >-
+        Updates an approval to the specified status. Approvals can only be
+        updated during the Review step.
+      parameters:
+        - description: The unique identifier or Ironclad ID of a workflow.
+          name: id
+          in: path
+          schema:
+            type: string
+            example: abcd1234
+          required: true
+        - description: >-
+            The unique identifier of the approver role whose status should be
+            changed. This identifier can be retrieved using the `GET
+            /workflows/{id}/approvals` endpoint.
+          name: roleId
+          in: path
+          schema:
+            type: string
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkflowsUpdateApprovalStatusRequest'
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowsUpdateApprovalStatusResponse'
+        '400':
+          description: '400'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowsUpdateApprovalStatus400Response'
+  /workflows/{id}/turn-history:
+    get:
+      tags:
+        - Workflows
+      summary: Retrieve the Turn History on a Workflow
+      operationId: Workflows_getTurnHistory
+      description: An array of objects for each turn on a workflow.
+      parameters:
+        - description: The unique identifier or Ironclad ID of a workflow.
+          name: id
+          in: path
+          schema:
+            type: string
+          required: true
+        - $ref: '#/components/parameters/QueryPageNumber'
+        - $ref: '#/components/parameters/QueryPageSize'
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowsGetTurnHistoryResponse'
+        '403':
+          description: '403'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowsGetTurnHistory403Response'
+        '404':
+          description: '404'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowsGetTurnHistory404Response'
+  /workflows/{id}/signatures:
+    get:
+      tags:
+        - Workflows
+      summary: List All Workflow Signers
+      operationId: Workflows_listSignatures
+      description: Returns a list of workflow signers and the status of their signature.
+      parameters:
+        - description: The unique identifier or Ironclad ID of a workflow.
+          name: id
+          in: path
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowsListSignaturesResponse'
+        '400':
+          description: '400'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowsListSignatures400Response'
+        '403':
+          description: '403'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowsListSignatures403Response'
+  /workflows/{id}/participants:
+    get:
+      tags:
+        - Workflows
+      summary: List All Workflow Participants
+      operationId: Workflows_listAllParticipants
+      description: Returns a list of workflow participants.
+      parameters:
+        - description: The unique identifier or Ironclad ID of a workflow.
+          name: id
+          in: path
+          schema:
+            type: string
+          required: true
+        - $ref: '#/components/parameters/QueryPageNumber'
+        - $ref: '#/components/parameters/QueryPageSize'
+        - description: The Ironclad user's email address.
+          name: email
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowsListAllParticipantsResponse'
+        '403':
+          description: '403'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowsListAllParticipants403Response'
+        '404':
+          $ref: '#/components/responses/WorkflowNotFoundResponse404'
+  /workflows/{id}/revert-to-review:
+    patch:
+      tags:
+        - Workflows
+      summary: Revert a Workflow to the Review Step
+      operationId: Workflows_revertToReview
+      description: >-
+        Reverts a workflow to the Review step. Only workflows sourced from
+        Workflow Designer and in the Sign step can be reverted.
+      parameters:
+        - description: The unique identifier or Ironclad ID of a workflow.
+          name: id
+          in: path
+          schema:
+            type: string
+          required: true
+        - $ref: '#/components/parameters/XAsUserEmail'
+        - $ref: '#/components/parameters/XAsUserId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkflowsRevertToReviewRequest'
+      responses:
+        '204':
+          description: '204'
+        '400':
+          description: '400'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowsRevertToReviewResponse'
+        '403':
+          description: '403'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowsRevertToReview403Response'
+        '404':
+          description: '404'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowsRevertToReview404Response'
+  /workflows/{id}/comment:
+    post:
+      tags:
+        - Workflows
+      summary: Create a Comment on a Workflow
+      operationId: Workflows_createComment
+      description: Creates a comment in the specified workflow's activity feed.
+      parameters:
+        - description: The unique identifier or Ironclad ID of a workflow.
+          name: id
+          in: path
+          schema:
+            type: string
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkflowsCreateCommentRequest'
+      responses:
+        '204':
+          description: '204'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowsCreateCommentResponse'
+        '400':
+          description: '400'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowsCreateComment400Response'
+      deprecated: true
+  /workflows/{id}/comments:
+    post:
+      tags:
+        - Workflows
+      summary: Create a Comment on a Workflow
+      operationId: Workflows_createComment
+      description: Creates a comment in the specified workflow's activity feed.
+      parameters:
+        - description: The unique identifier or Ironclad ID of a workflow.
+          name: id
+          in: path
+          schema:
+            type: string
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkflowsCreateCommentRequest1'
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseActivityFeedItemModel'
+        '400':
+          description: '400'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowsCreateComment400Response'
+  /workflows/{id}/attributes:
+    patch:
+      tags:
+        - Workflows
+      summary: Update Workflow Metadata
+      operationId: Workflows_updateMetadata
+      description: >-
+        The workflow must be in the Review step in order for its data to be
+        updated. Use the `remove` action to clear field values and the `set`
+        action to add or modify values. Form validation is enforced; required
+        fields cannot be removed and any required fields triggered by conditions
+        must be populated.
+      parameters:
+        - description: The unique identifier or Ironclad ID of a workflow.
+          name: id
+          in: path
+          schema:
+            type: string
+          required: true
+        - $ref: '#/components/parameters/XAsUserEmail'
+        - $ref: '#/components/parameters/XAsUserId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkflowsUpdateMetadataRequest'
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowsUpdateMetadataResponse'
+        '400':
+          description: '400'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowsUpdateMetadata400Response'
+              examples:
+                noInformationChanged:
+                  summary: No information changed
+                  value:
+                    code: INVALID_PARAM
+                    message: >-
+                      No information changed. The updates provided did not
+                      introduce any new values
+                    param: attributes
+                invalidParamNonExistentAttribute:
+                  summary: Non-existent attribute specified
+                  value:
+                    code: INVALID_PARAM
+                    message: 'non-existent attribute(s) specified: someRandomAttribute'
+                    param: attributes
+                invalidParamFormValidationFailed:
+                  summary: Form validation failed
+                  description: >-
+                    Form validation may fail if (1) a required conditional field
+                    is triggered but not populated by your request (2) the value
+                    does not conform to the expected field type (e.g., sending
+                    strings to number fields).
+                  value:
+                    code: INVALID_PARAM
+                    message: form validation failed, please check schema
+                    param: attributes
+                invalidParamReadOnlyField:
+                  summary: Read-only attribute
+                  description: Cannot patch read-only attribute someRandomFunctionAttribute
+                  value:
+                    code: INVALID_PARAM
+                    message: >-
+                      Cannot patch read-only attribute
+                      someRandomFunctionAttribute
+                    param: attributes
+        '403':
+          description: '403'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowsUpdateMetadata403Response'
+        '404':
+          description: '404'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowsUpdateMetadata404Response'
+  /workflows/{id}/document/{key}/download:
+    get:
+      tags:
+        - Workflows
+      summary: Retrieve a Workflow Document
+      operationId: Workflows_getDocumentByKey
+      description: >-
+        Download a document associated with a specific workflow via a reference
+        to its document key
+      parameters:
+        - description: The unique identifier or Ironclad ID of a workflow.
+          name: id
+          in: path
+          schema:
+            type: string
+          required: true
+        - description: >-
+            The unique identifier for the attachment. This key can be located
+            using the [Retrieve a
+            Workflow](https://developer.ironcladapp.com/reference/retrieve-a-workflow)
+            endpoint. In the response, locate the file attribute (e.g., `draft`)
+            and look at its `download` parameter. The download parameter
+            includes the key at the end of the URL
+            `.../document/{ATTACHMENT_KEY}/download`
+          name: key
+          in: path
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowsGetDocumentByKeyResponse'
+        '400':
+          description: '400'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowsGetDocumentByKey400Response'
+  /workflows/{id}/emails:
+    get:
+      tags:
+        - Workflows
+      summary: Retrieve Email Threads from A Workflow
+      operationId: Workflows_getEmailThreads
+      description: List all email threads in the specified workflow
+      parameters:
+        - $ref: '#/components/parameters/WorkflowId'
+        - $ref: '#/components/parameters/QueryPageNumber'
+        - $ref: '#/components/parameters/QueryPageSize'
+      responses:
+        '200':
+          $ref: '#/components/responses/EmailsResponse200'
+        '404':
+          $ref: '#/components/responses/WorkflowNotFoundResponse404'
+  /workflows/{id}/emails/{emailThreadId}:
+    get:
+      tags:
+        - Workflows
+      summary: Retrieve an Email Thread from a Specified Workflow
+      operationId: Workflows_getEmailThread
+      description: List a single email thread for a specified workflow
+      parameters:
+        - $ref: '#/components/parameters/WorkflowId'
+        - $ref: '#/components/parameters/EmailThreadId'
+      responses:
+        '200':
+          $ref: '#/components/responses/EmailResponse200'
+        '404':
+          $ref: '#/components/responses/WorkflowOrEmailNotFoundResponse404'
+  /workflows/{id}/emails/{emailThreadId}/attachments/{attachmentId}:
+    get:
+      tags:
+        - Workflows
+      summary: Retrieve an Attachment from an Email Thread
+      operationId: Workflows_getAttachmentFromEmailThread
+      description: Retrieve an attachment from the specified email thread
+      parameters:
+        - $ref: '#/components/parameters/WorkflowId'
+        - $ref: '#/components/parameters/EmailThreadId'
+        - description: >-
+            The unique identifier for the attachment. This key can be located
+            using the [Retrieve email threads from
+            workflow](https://developer.ironcladapp.com/reference/retrieve-emails)
+            endpoint. In the response, locate the file attribute (e.g.,
+            `attachments`) and look at its `download` parameter. The download
+            parameter includes the key at the end of the URL
+            `...emails/{emailThreadId}/attachment/{ATTACHMENT_ID}`
+          name: attachmentId
+          in: path
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/WorkflowsGetAttachmentFromEmailThreadResponse
+        '404':
+          $ref: '#/components/responses/ObjectNotFoundResponse404'
+  /workflow-schemas:
+    get:
+      tags:
+        - Workflows
+      summary: List All Workflow Schemas
+      operationId: Workflows_listAllWorkflowSchemas
+      description: >-
+        Returns a list of workflow schemas. Each schema specifies the fields
+        used in the workflow's launch form.
+      parameters:
+        - description: The launch form is the only form supported at this time.
+          name: form
+          in: query
+          required: true
+          schema:
+            type: string
+            default: launch
+        - $ref: '#/components/parameters/XAsUserEmail'
+        - $ref: '#/components/parameters/XAsUserId'
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowsListAllWorkflowSchemasResponse'
+        '400':
+          description: '400'
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/WorkflowsListAllWorkflowSchemas400Response
+  /workflow-schemas/{id}:
+    get:
+      tags:
+        - Workflows
+      summary: Retrieve a Workflow Schema
+      operationId: Workflows_getWorkflowSchema
+      description: Returns the fields used in the workflow's launch form.
+      parameters:
+        - description: >-
+            The unique identifier of a schema (see explanation of [Template
+            ID](https://developer.ironcladapp.com/reference/getting-started-api)).
+            A list of identifiers can be retrieved using the `GET
+            /workflow-schemas` endpoint. Only published workflows will have an
+            identifier. 
+          name: id
+          in: path
+          schema:
+            type: string
+          required: true
+        - name: form
+          in: query
+          schema:
+            type: string
+            default: launch
+        - $ref: '#/components/parameters/XAsUserEmail'
+        - $ref: '#/components/parameters/XAsUserId'
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowsGetWorkflowSchemaResponse'
+        '400':
+          description: '400'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowsGetWorkflowSchema400Response'
+              examples:
+                notFound:
+                  summary: Non-existent template id.
+                  value:
+                    code: NOT_FOUND
+                    message: workflow  template schema not found
+                    param: templateId
+                invalidParam:
+                  summary: Invalid query parameter.
+                  value:
+                    code: INVALID_PARAM
+                    message: >-
+                      invalid query value 'randomRequest'; value must be one of
+                      [launch]
+                    param: /?form
+  /records:
+    get:
+      tags:
+        - Records
+      summary: List All Records
+      operationId: Records_listAll
+      description: >-
+        View all records in the company, with filtering available via query
+        parameters
+      parameters:
+        - $ref: '#/components/parameters/QueryPageNumber'
+        - $ref: '#/components/parameters/QueryPageSize'
+        - $ref: '#/components/parameters/RecordType'
+        - $ref: '#/components/parameters/RecordLastUpdated'
+        - $ref: '#/components/parameters/RecordFilter'
+        - description: >-
+            The field to sort Records. Only one field is supported in the sort
+            operation.
+          name: sortField
+          in: query
+          schema:
+            type: string
+            enum:
+              - agreementDate
+              - name
+              - lastUpdated
+            default: agreementDate
+        - description: >-
+            The direction the records are sorted by in correlation with the
+            `sortField`.
+          name: sortDirection
+          in: query
+          schema:
+            type: string
+            enum:
+              - ASC
+              - DESC
+            default: DESC
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecordsListAllResponse'
+        '400':
+          description: '400'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecordsListAll400Response'
+    post:
+      tags:
+        - Records
+      summary: Create a Record
+      operationId: Records_createRecord
+      description: Create a contract record by specifying its intended metadata properties
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecordsCreateRecordRequest'
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecordModel'
+        '400':
+          description: '400'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecordsCreateRecordResponse'
+              examples:
+                invalidRecordType:
+                  summary: Unknown record type.
+                  value:
+                    code: INVALID_PARAM
+                    message: unknown record type my_nonexistent_record_type
+                    param: type
+                invalidRecordProperty:
+                  summary: Unknown record property.
+                  value:
+                    code: INVALID_PARAM
+                    message: unknown property my_nonexistent_record_property
+                    param: properties.my_non_existent_record_property
+  /records/smart-import:
+    get:
+      tags:
+        - Records
+      summary: Retrieve Predictions
+      operationId: Records_getPredictions
+      description: >-
+        Retrieve status of predictions of specific smart import record or all
+        records in an import, one of Record Id or Import Id is required.
+      parameters:
+        - description: The ID of the Record for prediction status.
+          name: recordId
+          in: query
+          schema:
+            type: string
+          required: false
+        - description: The ID of the Import for prediction statuses.
+          name: importId
+          in: query
+          schema:
+            type: string
+          required: false
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecordsGetPredictionsResponse'
+        '400':
+          description: '400'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecordsGetPredictions400Response'
+              examples:
+                invalidRecordType:
+                  summary: Missing Record Id or Import Id from query.
+                  value:
+                    code: INVALID_PARAM
+                    message: missing required form-data part 'recordId' or 'importId
+        '403':
+          description: '403'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecordsGetPredictions403Response'
+              examples:
+                outOfSmartImportCredits:
+                  summary: Smart Imports not enabled for company.
+                  value:
+                    code: FORBIDDEN
+                    message: >-
+                      Reading smart import records not allowed for company with
+                      id invalid-company-id 
+        '404':
+          description: '404'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecordsGetPredictions404Response'
+              examples:
+                invalidImportId:
+                  summary: Record Id is invalid or does not exist
+                  value:
+                    code: NOT_FOUND
+                    message: >-
+                      couldn't find predictions for the record:
+                      invalid-record-id
+    post:
+      tags:
+        - Records
+      summary: Create a Smart Import Record
+      operationId: Records_uploadSmartImportRecord
+      description: >-
+        Upload a file to create a record with smart import and predictions. 
+        Provide none of recordType, newRecordTypeId, or newRecordTypeDisplayName
+        to default to Imported type.
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RecordsUploadSmartImportRecordRequest'
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecordsUploadSmartImportRecordResponse'
+        '400':
+          description: '400'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecordsUploadSmartImportRecord400Response'
+              examples:
+                invalidRecordType:
+                  summary: Invalid record type.
+                  value:
+                    code: INVALID_PARAM
+                    message: unknown record type invalid_record_type
+                    param: type
+                invalidAttachment:
+                  summary: Document size is too large.
+                  value:
+                    code: INVALID_PARAM
+                    message: >-
+                      parameter 'attachment' too large, please limit upload
+                      files less than 100MB
+                    param: attachment
+                invalidFileType:
+                  summary: Document size is too large.
+                  value:
+                    code: INVALID_PARAM
+                    message: >-
+                      filename invalidFile.xyz does not have an accepted
+                      extension. Only the following extensions are allowed:
+                      .pdf, .docx, .doc, .xls, .xlsx, .eml, .tif, .jpg, .png,
+                      .jpeg, .txt, .ppt, .pptx.
+                    param: metadata.filename
+        '403':
+          description: '403'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecordsUploadSmartImportRecord403Response'
+              examples:
+                outOfSmartImportCredits:
+                  summary: No more Smart Import Credits are available
+                  value:
+                    code: FORBIDDEN
+                    message: No more smart import credits available
+        '404':
+          description: '404'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecordsUploadSmartImportRecord404Response'
+              examples:
+                invalidImportId:
+                  summary: Import Id is invalid or does not exist
+                  value:
+                    code: NOT_FOUND
+                    message: couldn't find a record matching the id invalid-import-id
+  /records/smart-import/{importId}:
+    post:
+      tags:
+        - Records
+      summary: Upload a Smart Import Record to an existing Import
+      operationId: Records_uploadSmartImportRecordWithPredictions
+      description: >-
+        Upload a file to an existing import and create a record with smart
+        import and predictions.  Provide none of recordType, newRecordTypeId, or
+        newRecordTypeDisplayName to default to Imported type.
+      parameters:
+        - description: >-
+            The Import Id. You can upload a record to an existing import in the
+            repository. 
+          name: importId
+          in: path
+          schema:
+            type: string
+          required: true
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: >-
+                #/components/schemas/RecordsUploadSmartImportRecordWithPredictionsRequest
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/RecordsUploadSmartImportRecordWithPredictionsResponse
+        '400':
+          description: '400'
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/RecordsUploadSmartImportRecordWithPredictions400Response
+              examples:
+                invalidRecordType:
+                  summary: Invalid record type.
+                  value:
+                    code: INVALID_PARAM
+                    message: unknown record type invalid_record_type
+                    param: recordType
+                invalidAttachment:
+                  summary: Document size is too large.
+                  value:
+                    code: INVALID_PARAM
+                    message: >-
+                      parameter 'attachment' too large, please limit upload
+                      files less than 100MB
+                    param: attachment
+                invalidFileType:
+                  summary: Document size is too large.
+                  value:
+                    code: INVALID_PARAM
+                    message: >-
+                      filename invalidFile.xyz does not have an accepted
+                      extension. Only the following extensions are allowed:
+                      .pdf, .docx, .doc, .xls, .xlsx, .eml, .tif, .jpg, .png,
+                      .jpeg, .txt, .ppt, .pptx.
+                    param: metadata.filename
+        '403':
+          description: '403'
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/RecordsUploadSmartImportRecordWithPredictions403Response
+              examples:
+                outOfSmartImportCredits:
+                  summary: No more Smart Import Credits are available
+                  value:
+                    code: FORBIDDEN
+                    message: No more smart import credits available
+        '404':
+          description: '404'
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/RecordsUploadSmartImportRecordWithPredictions404Response
+              examples:
+                invalidImportId:
+                  summary: Import Id is invalid or does not exist
+                  value:
+                    code: NOT_FOUND
+                    message: couldn't find a record matching the id invalid-import-id
+  /records/{id}:
+    get:
+      tags:
+        - Records
+      summary: Retrieve a Record
+      operationId: Records_getRecordData
+      description: View a specific record and its associated data
+      parameters:
+        - description: The ID or Ironclad ID of the Record.
+          name: id
+          in: path
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecordModel'
+        '400':
+          description: '400'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecordsGetRecordDataResponse'
+    put:
+      tags:
+        - Records
+      summary: Replace a Record
+      operationId: Records_replaceMetadata
+      description: Update an existing record with a new set of metadata
+      parameters:
+        - description: The ID or Ironclad ID of the Record.
+          name: id
+          in: path
+          schema:
+            type: string
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecordsReplaceMetadataRequest'
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecordModel'
+        '400':
+          description: '400'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecordsReplaceMetadataResponse'
+    delete:
+      tags:
+        - Records
+      summary: Delete a Record
+      operationId: Records_deleteRecord
+      description: Delete an existing record
+      parameters:
+        - description: The ID or Ironclad ID of the Record.
+          name: id
+          in: path
+          schema:
+            type: string
+          required: true
+      responses:
+        '204':
+          description: '204'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecordsDeleteRecordResponse'
+        '400':
+          description: '404'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecordsDeleteRecord400Response'
+    patch:
+      tags:
+        - Records
+      summary: Update Record Metadata
+      operationId: Records_updateMetadata
+      description: Update specific fields on a record
+      parameters:
+        - description: The ID or Ironclad ID of the Record.
+          name: id
+          in: path
+          schema:
+            type: string
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecordsUpdateMetadataRequest'
+            examples:
+              Request Example:
+                value:
+                  type: consultingAgreement
+                  name: Consulting Agreement with Jane Doe
+                  addProperties:
+                    agreementDate:
+                      type: date
+                      value: '2018-05-08T00:00:00-07:00'
+                    counterpartyName:
+                      type: string
+                      value: Jane Doe
+                  removeProperties:
+                    - counterpartySigner
+                  addLinks:
+                    - recordId: df1c2805-f5a3-4a14-9386-c28d950dff49
+                  removeLinks:
+                    - recordId: df1c2805-f5a3-4a14-9386-c28d950dff49
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecordModel'
+        '400':
+          description: '400'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecordsUpdateMetadataResponse'
+        '404':
+          description: '404'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecordsUpdateMetadata404Response'
+  /records/metadata:
+    get:
+      tags:
+        - Records
+      summary: Retrieve Records Schema
+      operationId: Records_getSchema
+      description: >-
+        View the schema associated with contract records, including available
+        record types and metadata properties.
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecordsGetSchemaResponse'
+        '400':
+          description: '400'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecordsGetSchema400Response'
+  /records/{id}/attachments/{key}:
+    post:
+      tags:
+        - Records
+      summary: Create an Attachment on a Record
+      operationId: Records_createAttachment
+      description: >-
+        Create an attachment on a specified record at the specified attachment
+        key.
+      parameters:
+        - description: >-
+            The ID or Ironclad ID of the Record. For an explanation of Record
+            IDs or Ironclad IDs and how to find them, see [Getting
+            Started](https://developer.ironcladapp.com/reference/getting-started-api).
+          name: id
+          in: path
+          schema:
+            type: string
+          required: true
+        - description: >-
+            The attachment key. You can retrieve a list of available attachment
+            keys with the [Retrieve Records
+            Schema](https://developer.ironcladapp.com/reference/list-all-records-metadata)
+            endpoint.
+          name: key
+          in: path
+          schema:
+            type: string
+            default: signedCopy
+          required: true
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RecordsCreateAttachmentRequest'
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecordsCreateAttachmentResponse'
+        '400':
+          $ref: '#/components/responses/RecordAttachmentResponse400'
+    get:
+      tags:
+        - Records
+      summary: Retrieve an Attachment on a Record
+      operationId: Records_getAttachment
+      description: View an attachment associated with a specific record
+      parameters:
+        - description: The ID or Ironclad ID of the Record.
+          name: id
+          in: path
+          schema:
+            type: string
+          required: true
+        - description: The attachment key.
+          name: key
+          in: path
+          schema:
+            type: string
+            default: signedCopy
+          required: true
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecordsGetAttachmentResponse'
+        '400':
+          description: '400'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecordsGetAttachment400Response'
+    delete:
+      tags:
+        - Records
+      summary: Delete an Attachment on a Record
+      operationId: Records_removeAttachment
+      description: Remove an attachment associated with a specific record
+      parameters:
+        - description: The ID or Ironclad ID of the Record.
+          name: id
+          in: path
+          schema:
+            type: string
+          required: true
+        - description: The attachment key.
+          name: key
+          in: path
+          schema:
+            type: string
+            default: signedCopy
+          required: true
+      responses:
+        '204':
+          description: '204'
+        '404':
+          $ref: '#/components/responses/AttachmentDeleteResponse404'
+  /records/export:
+    get:
+      tags:
+        - Records
+      summary: Retrieve XLSX Export File of Records
+      operationId: Records_getXlsxExportFile
+      description: Export a records report with filtering available via query parameters
+      parameters:
+        - description: >-
+            Comma separated list of record types to export. Example:
+            `mutualNDA,NDA`
+          name: types
+          in: query
+          schema:
+            type: string
+        - description: >-
+            IDs of properties to export, comma separated. Example:
+            `counterpartyName,agreementDate`
+          name: properties
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecordsGetXlsxExportFileResponse'
+        '400':
+          description: '400'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecordsGetXlsxExportFile400Response'
+  /webhooks:
+    post:
+      tags:
+        - Webhooks
+      summary: Create a Webhook
+      operationId: Webhooks_createNew
+      description: >-
+        Creates a webhook for the specified events. Send separate requests if
+        you need to create webhooks for multiple target URLs. Each target URL
+        may only have one active registration.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhooksCreateNewRequest'
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhooksCreateNewResponse'
+        '400':
+          $ref: '#/components/responses/webhookCreateResponse400'
+    get:
+      tags:
+        - Webhooks
+      summary: List All Webhooks
+      operationId: Webhooks_listAll
+      description: >-
+        View all webhooks associated with a specific company with filtering
+        available via query parameters
+      parameters:
+        - $ref: '#/components/parameters/QueryPageNumber'
+        - $ref: '#/components/parameters/QueryPageSize'
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhooksListAllResponse'
+        '400':
+          description: '400'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhooksListAll400Response'
+  /webhooks/{id}:
+    get:
+      tags:
+        - Webhooks
+      summary: Retrieve a Webhook
+      operationId: Webhooks_getData
+      description: View the data associated with a specific webhook
+      parameters:
+        - description: The ID of the webhook.
+          name: id
+          in: path
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhooksGetDataResponse'
+        '400':
+          description: '400'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhooksGetData400Response'
+    patch:
+      tags:
+        - Webhooks
+      summary: Update a Webhook
+      operationId: Webhooks_updateWebhookData
+      description: Update the data associated with a specific webhook
+      parameters:
+        - description: The ID of the webhook.
+          name: id
+          in: path
+          schema:
+            type: string
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhooksUpdateWebhookDataRequest'
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhooksUpdateWebhookDataResponse'
+        '400':
+          description: '400'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhooksUpdateWebhookData400Response'
+    delete:
+      tags:
+        - Webhooks
+      summary: Delete a Webhook
+      operationId: Webhooks_deleteSpecific
+      description: Delete a specific webhook
+      parameters:
+        - description: The ID of the webhook.
+          name: id
+          in: path
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhooksDeleteSpecificResponse'
+        '400':
+          description: '400'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhooksDeleteSpecific400Response'
+  /webhooks/verification-key:
+    get:
+      tags:
+        - Webhooks
+      summary: Retrieve Webhook Verification Key
+      operationId: Webhooks_getVerificationKey
+      description: View the verification key for webhook security implementations
+      responses:
+        '200':
+          description: '200'
+          content:
+            text/plain:
+              examples:
+                Result:
+                  value: PEM-FILE
+        '400':
+          description: '400'
+          content:
+            application/json:
+              examples:
+                Result:
+                  value: {}
+              schema:
+                $ref: '#/components/schemas/WebhooksGetVerificationKeyResponse'
+components:
+  parameters:
+    WorkflowId:
+      description: The unique identifier of a workflow
+      name: id
+      in: path
+      schema:
+        type: string
+      required: true
+    QueryPageNumber:
+      description: The page number used when paginating through a list of results.
+      name: page
+      in: query
+      schema:
+        type: integer
+        format: int32
+        default: 0
+    QueryPageSize:
+      description: A limit of the number of results to return.
+      name: pageSize
+      in: query
+      schema:
+        type: integer
+        format: int32
+        minimum: 1
+        maximum: 100
+        default: 20
+    RecordFilter:
+      description: >-
+        Filter records for those that contain (1) the specified property with
+        (2) the specified value. The record property ID should be enclosed in
+        brackets `[ ]` and the value should be enclosed in single quotes `' '`.
+      name: filter
+      in: query
+      schema:
+        type: string
+        example: Equals([counterpartyName], 'Test LLC')
+    RecordType:
+      description: >-
+        Comma separated (no spaces) record types to export. Use the [Retrieve
+        Records
+        Schema](https://developer.ironcladapp.com/reference/list-all-records-metadata)
+        endpoint to retrieve a list of types.
+      name: types
+      in: query
+      example: mutualNDA,consultingAgreement
+      schema:
+        type: string
+    RecordLastUpdated:
+      description: Get records updated since (UTC)
+      name: lastUpdated
+      in: query
+      example: '2018-03-10T00:00:00.000Z'
+      schema:
+        type: string
+    XAsUserEmail:
+      description: >-
+        Filters the list of workflow schemas based on the permissions of a user
+        associated with the specified user email. Permissions can be launch,
+        view, or both. Corresponds to the permissions here:
+        https://support.ironcladapp.com/s/article/Understanding-and-Managing-Permissions
+      name: x-as-user-email
+      in: header
+      required: false
+      schema:
+        type: string
+        example: jane.doe@test.com
+    XAsUserId:
+      description: >-
+        Filters the list of workflow schemas based on the permissions of a user
+        associated with the specified user id. Permissions can be launch, view,
+        or both. Corresponds to the permissions here:
+        https://support.ironcladapp.com/s/article/Understanding-and-Managing-Permissions
+      name: x-as-user-id
+      in: header
+      required: false
+      schema:
+        type: string
+        example: 5f0375c4cdc1927a3c5edcd3
+    EmailThreadId:
+      description: The unique identifier of an email thread
+      name: emailThreadId
+      in: path
+      schema:
+        type: string
+      required: true
+  responses:
+    webhookCreateResponse400:
+      description: Bad request error when creating webhook.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/WebhooksCreateNew400Response'
+    AttachmentDeleteResponse404:
+      description: Bad request error when deleting attachment.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/RecordsRemoveAttachmentResponse'
+    WorkflowLaunchResponse200:
+      description: Launched Workflow Response.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/LaunchedWorkflowModel'
+    WorkflowLaunchResponse400:
+      description: Error Launching Workflow.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/BadRequestErrorWorkflowLaunch'
+    AsyncWorkflowLaunchResponse200:
+      description: The response of the initiated async workflow launch.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/WorkflowsLaunchAsynchronouslyResponse'
+    AsyncWorkflowStatusResponse200:
+      description: The status of the workflow launch.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/WorkflowsGetAsyncJobStatusResponse'
+    EmailsResponse200:
+      description: GET Emails Response.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/WorkflowsGetEmailThreadsResponse'
+    EmailResponse200:
+      description: GET Email Response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/EmailResponseModel'
+    RecordAttachmentResponse400:
+      description: Bad request error for creating record attachment.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/RecordsCreateAttachment400Response'
+    WorkflowNotFoundResponse404:
+      description: 404 not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/WorkflowsListAllParticipants404Response'
+    WorkflowOrEmailNotFoundResponse404:
+      description: 404 not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/WorkflowsGetEmailThreadResponse'
+    ObjectNotFoundResponse404:
+      description: 404 not found
+      content:
+        application/json:
+          schema:
+            $ref: >-
+              #/components/schemas/WorkflowsGetAttachmentFromEmailThread404Response
+  schemas:
+    LaunchedWorkflowModel:
+      description: The response from a successful workflow launch.
+      type: object
+      properties:
+        title:
+          description: The name used for the launched workflow.
+          type: string
+          example: Consulting Agreement with Jane Doe
+          readOnly: true
+        id:
+          description: The ID of the launched workflow.
+          type: string
+          example: 6013609108b8f070cee94fc1
+          readOnly: true
+        ironcladId:
+          description: The Ironclad ID of the launched workflow.
+          type: string
+          example: IC-1
+          readOnly: true
+        template:
+          $ref: '#/components/schemas/WorkflowTemplateIdModel'
+        step:
+          description: The step the workflow is currently on.
+          type: string
+          example: Review
+          enum:
+            - Review
+            - Sign
+            - Archive
+            - Complete
+          readOnly: true
+        schema:
+          $ref: '#/components/schemas/AttributesModel'
+        isCancelled:
+          description: Displays if the launched workflow has been cancelled.
+          type: boolean
+          example: false
+          readOnly: true
+          deprecated: true
+        isComplete:
+          description: Displays if the launched workflow has been completed.
+          type: boolean
+          example: false
+          readOnly: true
+          deprecated: true
+        status:
+          description: The current status of the launched workflow.
+          type: string
+          example: active
+          enum:
+            - active
+            - paused
+            - cancelled
+            - completed
+          readOnly: true
+        creator:
+          title: ''
+          description: ''
+          type: object
+          properties:
+            id:
+              description: ''
+              type: string
+              example: 63d415e0dd0d828c3a878548
+              readOnly: true
+            email:
+              description: ''
+              type: string
+              example: fett@intergalactic.com
+              readOnly: true
+            displayName:
+              description: ''
+              type: string
+              example: Boba Fett
+              readOnly: true
+          readOnly: true
+        created:
+          description: The date (ISO8601 format) the workflow was launched
+          type: string
+          example: '2016-11-17T00:37:22.318Z'
+          readOnly: true
+        lastUpdated:
+          description: The date (ISO8601 format) the workflow was last updated
+          type: string
+          example: '2016-11-17T00:37:42.318Z'
+          readOnly: true
+        roles:
+          type: array
+          readOnly: true
+          items:
+            $ref: '#/components/schemas/WorkflowRoleModel'
+        approvals:
+          type: object
+          properties:
+            state:
+              description: The state of the approvals.
+              type: string
+              example: in_progress
+              enum:
+                - not_started
+                - in_progress
+                - completed
+                - not_applicable
+              readOnly: true
+        signatures:
+          type: object
+          properties:
+            state:
+              description: The state of the signatures.
+              type: string
+              example: in_progress
+              enum:
+                - not_started
+                - in_progress
+                - complete
+                - not_applicable
+              readOnly: true
+            url:
+              description: The url where signature information is located if it exists.
+              type: string
+              example: >-
+                https://ironcladapp.com/public/api/v1/workflows/6dac47a10b1242d1f7df688d/signatures
+              readOnly: true
+        recordIds:
+          type: array
+          items:
+            description: Ids of records created by the workflow.
+            type: string
+            example: 715f1e37-292f-4e6c-8b48-c07e1b68bccd
+          readOnly: true
+        isRevertibleToReview:
+          description: >-
+            Displays if the launched workflow can be reverted back to the review
+            step.
+          type: boolean
+          example: false
+          readOnly: true
+      required:
+        - id
+        - title
+        - template
+        - step
+        - attributes
+        - schema
+        - isCancelled
+        - isComplete
+        - status
+        - created
+        - lastUpdated
+        - roles
+        - approvals
+        - signatures
+        - isRevertibleToReview
+    WorkflowRequestModel:
+      type: object
+      properties:
+        template:
+          $ref: '#/components/schemas/WorkflowTemplateIdModel'
+        creator:
+          $ref: '#/components/schemas/CreatorEmailModel'
+        attributes:
+          $ref: '#/components/schemas/AttributesModel'
+      required:
+        - attributes
+        - creator
+        - template
+    WorkflowResponseModel:
+      description: The response from a successful workflow retrieval.
+      type: object
+      properties:
+        title:
+          type: string
+          example: Consulting Agreement with Jane Doe
+        id:
+          type: string
+          example: 6013609108b8f070cee94fc1
+        ironcladId:
+          type: string
+          example: IC-1
+        template:
+          type: string
+          example: 600b296c3e15a234ab88f884
+        step:
+          type: string
+          example: Review
+        schema:
+          type: object
+          properties:
+            counterpartyName:
+              type: object
+              properties:
+                type:
+                  type: string
+                  example: string
+                displayName:
+                  type: string
+                  example: Example String Attribute
+            amount:
+              type: object
+              properties:
+                type:
+                  type: string
+                  example: number
+                displayName:
+                  type: string
+                  example: Example Number Attribute
+            fee:
+              type: object
+              properties:
+                type:
+                  type: string
+                  example: monetaryAmount
+                displayName:
+                  type: string
+                  example: Example Monetary Amount Attribute
+            draft:
+              type: object
+              properties:
+                type:
+                  type: string
+                  example: array
+                elementType:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                      example: document
+                    displayName:
+                      type: string
+                      example: Example Document Attribute
+            lineItems:
+              type: object
+              properties:
+                type:
+                  type: string
+                  example: array
+                elementType:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                      example: object
+                    displayName:
+                      type: string
+                      example: Example Object Attribute
+                    schema:
+                      type: object
+                      properties:
+                        childAttribute:
+                          type: object
+                          properties:
+                            type:
+                              type: string
+                              example: string
+                            displayName:
+                              type: string
+                              example: Example String Attribute
+                        anotherChildAttribute:
+                          type: object
+                          properties:
+                            type:
+                              type: string
+                              example: string
+                            displayName:
+                              type: string
+                              example: Example String Attribute
+        attributes:
+          type: object
+          properties:
+            counterpartyName:
+              type: string
+              example: Boba Fett
+            amount:
+              type: integer
+              example: 123
+              default: 0
+            fee:
+              type: object
+              properties:
+                currency:
+                  type: string
+                  example: USD
+                amount:
+                  type: integer
+                  example: 50000
+                  default: 0
+            draft:
+              type: array
+              items:
+                type: object
+                properties:
+                  version:
+                    type: string
+                    example: B1QePArXb
+                  versionNumber:
+                    type: number
+                    example: 2
+                  filename:
+                    type: string
+                    example: file.pdf
+                  download:
+                    type: string
+                    example: >-
+                      /public/api/v1/workflows/594356b9fbcd7f74006fdf8a/document/rJklwCHQ/download
+                  lastModified:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        example: '2016-11-17T00:37:22.318Z'
+                      author:
+                        $ref: '#/components/schemas/WorkflowLastModifiedAuthorModel'
+        isCancelled:
+          type: boolean
+          example: false
+          default: true
+        isComplete:
+          type: boolean
+          example: false
+          default: true
+        status:
+          type: string
+          enum:
+            - active
+            - completed
+            - cancelled
+            - paused
+          example: active
+        creator:
+          type: object
+          properties:
+            title:
+              type: string
+              example: Director
+            id:
+              type: string
+              example: 63d415e0dd0d828c3a878548
+            displayName:
+              type: string
+              example: Boba Fett
+            email:
+              type: string
+              example: fett@intergalactic.com
+            username:
+              type: string
+              example: fett@intergalactic.com
+            metadata:
+              type: object
+              example: {}
+          required:
+            - id
+            - displayName
+            - email
+            - title
+            - username
+            - metadata
+        created:
+          type: string
+          example: '2016-11-17T00:37:22.318Z'
+        lastUpdated:
+          type: string
+          example: '2016-11-17T00:37:22.318Z'
+        roles:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                example: legal
+              displayName:
+                type: string
+                example: Legal
+              assignees:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    userName:
+                      type: string
+                      example: Boba Fett
+                    userId:
+                      type: string
+                      example: 63d415e0dd0d828c3a878548
+                    email:
+                      type: string
+                      example: bobafett@gmail.com
+                  required:
+                    - userName
+                    - userId
+                    - email
+            required:
+              - id
+              - displayName
+              - assignees
+        approvals:
+          $ref: '#/components/schemas/WorkflowStateModel'
+        signatures:
+          $ref: '#/components/schemas/WorkflowStateModel'
+        recordIds:
+          type: array
+          items:
+            type: string
+            example: 715f1e37-292f-4e6c-8b48-c07e1b68bccd
+        isRevertibleToReview:
+          type: boolean
+          example: false
+      required:
+        - id
+        - title
+        - template
+        - step
+        - attributes
+        - schema
+        - isCancelled
+        - isComplete
+        - status
+        - created
+        - lastUpdated
+        - roles
+        - approvals
+        - signatures
+        - isRevertibleToReview
+    WorkflowTemplateIdModel:
+      description: The identifier of the workflow template
+      type: string
+      example: 600b296c3e15a234ab88f884
+    AttributeStringModel:
+      type: string
+      example: Example Value
+    AttributeNumberModel:
+      type: number
+      example: 5
+    AttributesModel:
+      description: >-
+        The data that will be used to populate the workflow's fields. Learn more
+        about the various attributes and their associated types by viewing the
+        [Launch a
+        Workflow](https://developer.ironcladapp.com/docs/launch-a-workflow)
+        guide. Your attributes will differ and include more than this simple
+        example.
+      type: object
+      properties:
+        counterpartyName:
+          type: string
+          example: Example Company
+        draft:
+          description: >-
+            Provide a URL for a file representing the first uploaded version of
+            a counterparty paper. This field is required when the template
+            source is set to third party paper
+          type: array
+          items:
+            type: object
+            properties:
+              url:
+                description: URL of the file to be uploaded
+                type: string
+                example: >-
+                  https://www.law.berkeley.edu/wp-content/uploads/2018/12/Resume-Samples-1.pdf
+        paperSource:
+          description: >-
+            Indicate the type of paper source used on a contract that supports
+            both templatized and third party paper functionality. This field is
+            required when there exists a question for selecting paper source on
+            the template
+          type: string
+          enum:
+            - Counterparty paper
+            - Our paper
+      required:
+        - counterpartyName
+    InboundAttachmentModel:
+      type: object
+      properties:
+        filename:
+          type: string
+          example: file.docx
+        content-type:
+          type: string
+          example: >-
+            application/vnd.openxmlformats-officedocument.wordprocessingml.document
+        download:
+          type: string
+          example: >-
+            /public/api/v1/workflows/6013609108b8f070cee94fc1/emails/z_1zgjgjq/attachments/attachmentIdc85d7e3be5d84bf28cebe4591e39c894
+    OutboundAttachmentModel:
+      type: object
+      properties:
+        filename:
+          type: string
+          example: attachment.pdf
+        content-type:
+          type: string
+          example: application/pdf
+        download:
+          type: string
+          example: >-
+            /public/api/v1/workflows/6013609108b8f070cee94fc1/document/XZ9j0cHGA/download
+    CreatorModel:
+      title: creator
+      description: >-
+        The Ironclad user (must be a user in your Ironclad account) to be used
+        for launching the workflow.
+      type: object
+      oneOf:
+        - $ref: '#/components/schemas/CreatorEmailModel'
+        - $ref: '#/components/schemas/CreatorIdModel'
+    CreatorEmailModel:
+      description: >-
+        The Ironclad user (must be a user in your Ironclad account) used to
+        launch the workflow by using the user's email address.
+      type: object
+      properties:
+        type:
+          description: The type of value used to identify the user.
+          type: string
+          default: email
+        email:
+          description: The email address of the Ironclad user.
+          type: string
+          example: example@example.com
+    CreatorIdModel:
+      description: >-
+        The Ironclad user (must be a user in your Ironclad account) used to
+        launch the workflow by using the user's ID.
+      type: object
+      properties:
+        type:
+          description: The type of value used to identify the user.
+          type: string
+          default: id
+        id:
+          description: The user ID of the Ironclad user.
+          type: string
+          example: abcd1234
+    WorkflowLastModifiedAuthorModel:
+      title: author
+      type: object
+      oneOf:
+        - $ref: '#/components/schemas/InternalUserModel'
+        - $ref: '#/components/schemas/ExternalUserModel'
+        - type: object
+          properties:
+            type:
+              type: string
+              enum:
+                - counterparty
+              example: counterparty
+            displayName:
+              type: string
+              example: Boba Fett
+          required:
+            - type
+            - displayName
+    EmailResponseModel:
+      type: object
+      oneOf:
+        - $ref: '#/components/schemas/InboundEmailResponse'
+        - $ref: '#/components/schemas/OutboundEmailResponse'
+    InboundEmailResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 6372b491abd2adf22f6e13ff
+        emailThreadId:
+          type: string
+          example: emailThread16ca903a0ec44ae09fc0b3fb3339ffa0
+        type:
+          type: string
+          enum:
+            - inboundEmail
+        author:
+          $ref: '#/components/schemas/ActivityAuthorModel'
+        timestamp:
+          type: string
+          example: '2022-09-28T19:21:05.034Z'
+        subject:
+          type: string
+          example: This is the subject of an email
+        body:
+          type: string
+          example: This is a body of an email.\n
+        attachments:
+          type: array
+          items:
+            $ref: '#/components/schemas/InboundAttachmentModel'
+    OutboundEmailResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 6372b491abd2adf22f6e13ff
+        type:
+          type: string
+          enum:
+            - outboundEmail
+        author:
+          $ref: '#/components/schemas/ActivityAuthorModel'
+        timestamp:
+          type: string
+          example: '2022-09-28T19:21:05.034Z'
+        subject:
+          type: string
+          example: This is the subject of an email
+        body:
+          type: string
+          example: This is a body of an email.\n
+        recipients:
+          type: array
+          items:
+            type: string
+            example: dopstop@ironclad.boba
+        cc:
+          type: array
+          items:
+            type: string
+            example: admiral@ironclad.boba
+        attachments:
+          type: array
+          items:
+            $ref: '#/components/schemas/OutboundAttachmentModel'
+        emailOpenedTimestamps:
+          type: array
+          items:
+            type: object
+            properties:
+              email:
+                type: string
+                example: david@boba.com
+              opened:
+                type: boolean
+    WorkflowRoleModel:
+      description: ''
+      type: object
+      properties:
+        id:
+          type: string
+          example: legal
+        displayName:
+          type: string
+          example: Legal
+        assignees:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkflowRoleAssigneeModel'
+    WorkflowRoleAssigneeModel:
+      description: ''
+      type: object
+      properties:
+        userName:
+          type: string
+          example: Boba Fett
+        userId:
+          type: string
+          example: 63d415e0dd0d828c3a878548
+        email:
+          type: string
+          example: bobafett@gmail.com
+    RecordModel:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 22e2ff72-56a1-4711-a4ca-41328d311e9f
+        ironcladId:
+          type: string
+          example: IC-1
+        type:
+          type: string
+          example: consultingAgreement
+        name:
+          type: string
+          example: Consulting Agreement with Jane Doe
+        lastUpdated:
+          type: string
+          example: '2018-05-08T17:28:10Z'
+        properties:
+          type: object
+          properties:
+            agreementDate:
+              type: object
+              properties:
+                type:
+                  type: string
+                  example: date
+                value:
+                  type: string
+                  example: '2018-05-08T00:00:00-07:00'
+            counterpartyName:
+              type: object
+              properties:
+                type:
+                  type: string
+                  example: string
+                value:
+                  type: string
+                  example: Jane Doe
+            counterpartyEmail:
+              type: object
+              properties:
+                type:
+                  type: string
+                  example: email
+                value:
+                  type: string
+                  example: jane.doe@test.com
+            hourlyRate:
+              type: object
+              properties:
+                type:
+                  type: string
+                  example: monetaryAmount
+                value:
+                  type: object
+                  properties:
+                    amount:
+                      type: integer
+                      example: 100
+                      default: 0
+                    currency:
+                      type: string
+                      example: USD
+        attachments:
+          type: object
+          properties:
+            signedCopy:
+              type: object
+              properties:
+                filename:
+                  type: string
+                  example: 2018-05-08 - Doe, Jane - Consulting Agreement.pdf
+                contentType:
+                  type: string
+                  example: application/json
+                href:
+                  type: string
+                  example: >-
+                    https://ironcladapp.com/public/api/v1/records/22e2ff72-56a1-4711-a4ca-41328d311e9f/attachments/signedCopy
+        links:
+          type: array
+          items:
+            type: object
+            properties:
+              recordId:
+                type: string
+                example: df1c2805-f5a3-4a14-9386-c28d950dff49
+        parentId:
+          type: string
+          example: d10b8c01-5c54-4a59-82cb-51e3825182e9
+        childIds:
+          type: array
+          items:
+            type: string
+            example: 4a785686-d3d5-47bc-960e-3df0df871ea9
+        source:
+          type: object
+          properties:
+            type:
+              type: string
+              example: workflow
+            workflowId:
+              type: string
+              example: abcd1234
+    RecordPropertyLinkModel:
+      type: object
+      properties:
+        recordId:
+          type: string
+          example: 17009e0d-z2e9-425d-a85b-1cf152773e49
+    UserModel:
+      type: object
+      properties:
+        id:
+          type: string
+        displayName:
+          type: string
+    BaseActivityFeedItemModel:
+      type: object
+      required:
+        - id
+        - type
+        - metadata
+        - author
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum:
+            - comment
+        metadata:
+          $ref: '#/components/schemas/ActivityMetadataModel'
+        author:
+          $ref: '#/components/schemas/ActivityAuthorModel'
+        isExternal:
+          type: boolean
+        reactions:
+          $ref: '#/components/schemas/ActivityReactionModel'
+    ActivityMetadataModel:
+      type: object
+      oneOf:
+        - $ref: '#/components/schemas/CommentMetadataModel'
+      discriminator:
+        propertyName: objectType
+        mapping:
+          comment: '#/components/schemas/CommentMetadataModel'
+    ActivityAuthorModel:
+      type: object
+      oneOf:
+        - $ref: '#/components/schemas/InternalUserModel'
+        - $ref: '#/components/schemas/ExternalUserModel'
+        - type: object
+          properties:
+            type:
+              type: string
+              enum:
+                - integration
+              example: integration
+            displayName:
+              type: string
+              example: Salesforce
+        - type: object
+          properties:
+            type:
+              type: string
+              enum:
+                - system
+              example: system
+            displayName:
+              type: string
+              example: Ironclad
+    InternalUserModel:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - internalUser
+          example: internalUser
+        displayName:
+          type: string
+          example: Boba Fett
+        email:
+          type: string
+          example: boba@ironclad.boba
+        userId:
+          type: string
+          example: 63d415e0dd0d828c3a878548
+        companyName:
+          type: string
+          example: Ironclad
+      required:
+        - type
+        - displayName
+        - email
+        - userId
+        - companyName
+    ExternalUserModel:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - externalUser
+          example: externalUser
+        displayName:
+          type: string
+          example: Boba Fett
+        email:
+          type: string
+          example: boba@ironclad.boba
+        companyName:
+          type: string
+          example: ironclad
+      required:
+        - type
+        - email
+        - companyName
+    ActivityReactionModel:
+      type: object
+      properties:
+        emojiId:
+          type: string
+          example: smile
+        reactors:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserModel'
+    CommentMetadataModel:
+      type: object
+      properties:
+        message:
+          type: string
+          example: This is a comment Jon Snow
+        markedUpMessage:
+          type: string
+          example: This is a comment @[Jon Snow](630d28059893be00e1ccc9e7)
+        addedParticipants:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserModel'
+        repliedTo:
+          type: object
+          properties:
+            activityItem:
+              type: string
+              example: 'TODO: unsure this is the right place'
+            author:
+              $ref: '#/components/schemas/ActivityAuthorModel'
+    WorkflowStateModel:
+      type: object
+      oneOf:
+        - properties:
+            state:
+              type: string
+              enum:
+                - not_started
+              example: not_started
+          required:
+            - state
+        - properties:
+            state:
+              type: string
+              enum:
+                - completed
+              example: completed
+          required:
+            - state
+        - properties:
+            state:
+              type: string
+              enum:
+                - in_progress
+              example: in_progress
+            url:
+              type: string
+              example: >-
+                https://ironcladapp.com/public/api/v1/workflows/22e2ff72-56a1-4711-a4ca-41328d311e9f/approvals
+          required:
+            - state
+            - url
+        - properties:
+            state:
+              type: string
+              enum:
+                - not_applicable
+              example: not_applicable
+            message:
+              type: string
+              example: This workflow has been cancelled
+          required:
+            - state
+            - message
+    webhookEventTypeValue:
+      type: string
+      example: workflow_launched
+      enum:
+        - '*'
+        - workflow_launched
+        - workflow_updated
+        - workflow_cancelled
+        - workflow_completed
+        - workflow_approval_status_changed
+        - workflow_attribute_updated
+        - workflow_comment_added
+        - workflow_comment_removed
+        - workflow_comment_updated
+        - workflow_comment_reaction_added
+        - workflow_comment_reaction_removed
+        - workflow_counterparty_invite_sent
+        - workflow_counterparty_invite_revoked
+        - workflow_documents_added
+        - workflow_documents_removed
+        - workflow_documents_updated
+        - workflow_documents_renamed
+        - workflow_document_edited
+        - workflow_changed_turn
+        - workflow_paused
+        - workflow_resumed
+        - workflow_signature_packet_sent
+        - workflow_signature_packet_uploaded
+        - workflow_signature_packet_cancelled
+        - workflow_signer_added
+        - workflow_signer_removed
+        - workflow_signer_reassigned
+        - workflow_step_updated
+    webhookInvalidEventTypeBadRequestResponse:
+      type: object
+      properties:
+        code:
+          type: string
+          example: INVALID_PARAM
+        message:
+          type: string
+          example: >-
+            invalid event type; *, workflow_launched, workflow_updated,
+            workflow_cancelled, workflow_completed,
+            workflow_approval_status_changed, workflow_attribute_updated,
+            workflow_changed_turn, workflow_comment_reaction_added,
+            workflow_comment_reaction_removed, workflow_comment_added,
+            workflow_comment_removed, workflow_comment_updated,
+            workflow_counterparty_invite_sent,
+            workflow_counterparty_invite_revoked, workflow_documents_added,
+            workflow_documents_removed, workflow_documents_updated,
+            workflow_documents_renamed, workflow_document_edited,
+            workflow_paused, workflow_resumed, workflow_signature_packet_sent,
+            workflow_signature_packet_uploaded, or
+            workflow_signature_packet_cancelled, workflow_signer_added,
+            workflow_signer_removed, workflow_signer_reassigned are acceptable
+            event types
+        param:
+          type: string
+          example: events
+    webhookTargetURLExistsBadRequestResponse:
+      type: object
+      properties:
+        code:
+          type: string
+          example: INVALID_PARAM
+        message:
+          type: string
+          example: >-
+            webhook already exists for event workflow_completed and target
+            [SOME_EXISTING_TARGET_URL]
+        param:
+          type: string
+          example: tagetURL
+    WorkflowAsyncLaunchSuccessResponse:
+      description: Response for a successfully asynchronously launched workflow.
+      type: object
+      properties:
+        status:
+          title: ''
+          description: ''
+          type: string
+          default: success
+          readOnly: true
+        requestPayload:
+          $ref: '#/components/schemas/WorkflowRequestModel'
+        workflowUrls:
+          title: ''
+          description: ''
+          type: object
+          properties:
+            browserUrl:
+              title: ''
+              description: The URL for accessing the workflow in a browser.
+              type: string
+              example: http://ironcladapp.com/workflows/6013609108b8f070cee94fc1
+              readOnly: true
+            apiUrl:
+              title: ''
+              description: The URL for accessing workflow data via the REST API.
+              type: string
+              example: >-
+                http://ironcladapp.com/public/api/v1/workflows/6013609108b8f070cee94fc1
+              readOnly: true
+          readOnly: true
+        workflow:
+          $ref: '#/components/schemas/LaunchedWorkflowModel'
+      required:
+        - status
+        - requestPayload
+        - workflowUrls
+        - workflow
+      readOnly: true
+    WorkflowAsyncLaunchFailedResponse:
+      title: Workflow Launch Failed
+      description: ''
+      type: object
+      properties:
+        status:
+          title: ''
+          description: ''
+          type: string
+          default: failed
+          readOnly: true
+        requestPayload:
+          $ref: '#/components/schemas/WorkflowRequestModel'
+        error:
+          title: ''
+          description: An error message indicating why the workflow failed to launch.
+          type: string
+          readOnly: true
+      required:
+        - status
+        - requestPayload
+        - error
+      readOnly: true
+    WorkflowAsyncInProgressResponse:
+      title: Workflow Launch In Progress
+      description: ''
+      type: object
+      properties:
+        status:
+          title: ''
+          description: ''
+          type: string
+          default: in_progress
+          readOnly: true
+        requestPayload:
+          $ref: '#/components/schemas/WorkflowRequestModel'
+      required:
+        - status
+        - requestPayload
+      readOnly: true
+    BadRequestErrorWorkflowLaunch:
+      title: Bad Request Error - Workflow Launch
+      description: ''
+      type: object
+      properties:
+        code:
+          title: ''
+          description: A unique code to identify why the workflow cannot be launched.
+          type: string
+          enum:
+            - MISSING_PARAM
+            - INVALID_PARAM
+            - INVALID_STATE
+          example: MISSING_PARAM
+          readOnly: true
+        message:
+          title: ''
+          description: A message indicating why the workflow cannot be launched.
+          type: string
+          example: missing required attribute
+          readOnly: true
+        param:
+          title: ''
+          description: >-
+            The required or expected parameter(s) that may be missing in order
+            to launch the workflow.
+          type: string
+          example: counterpartySignerTitle
+          readOnly: true
+      required:
+        - code
+        - message
+        - param
+      readOnly: true
+    BadRequestErrorRecordNotFound:
+      title: Bad Request Error - Record Does not Exist
+      description: Bad request error. The specified record does not exist.
+      type: object
+      properties:
+        code:
+          type: string
+          example: NOT_FOUND
+        message:
+          type: string
+          example: >-
+            couldn't find a record matching the id
+            workflow:6346f76fb8fc01d2b43e7c15a
+    BadRequestErrorRecordAttachmentExtension:
+      title: Bad Request Error - Record Attachment Extension Not Supported
+      description: >-
+        Bad request error. The specified filename does not include a supported
+        extension.
+      type: object
+      properties:
+        code:
+          type: string
+          example: INVALID_PARAM
+        message:
+          type: string
+          example: >-
+            filename "NDA - Acme LLC" does not have an accepted extension. Only
+            the following extensions are allowed: .adoc, .asice, .bdoc, .csv,
+            .ddoc, .doc, .docx, .edoc, .eml, .gif, .htm, .jpeg, .jpg, .msg,
+            .pdf, .png, .ppt, .pptx, .rtf, .tif, .tif, .txt, .xls, .xlsx, .xml
+        param:
+          type: string
+          example: metadata.filename
+    BadRequestErrorRecordAttachmentAlreadyExists:
+      title: Bad Request Error - Record Attachment Already Exists.
+      description: Bad request error. The specified attachment key has an existing file.
+      type: object
+      properties:
+        code:
+          type: string
+          example: INVALID_PARAM
+        message:
+          type: string
+          example: record attachment key 'signedCopy' already exists for record
+        param:
+          type: string
+          example: attachmentKey
+    BadRequestErrorRecordAttachmentUnknownAttachmentKey:
+      title: Bad Request Error - Unknown Record Attachment Key
+      description: Bad request error. Unknown record attachment key.
+      type: object
+      properties:
+        code:
+          type: string
+          example: INVALID_PARAM
+        message:
+          type: string
+          example: unknown record attachment key 'someRandomKey'
+        param:
+          type: string
+          example: attachmentKey
+    BadRequestErrorRecordAttachmentUnknownContentType:
+      title: Bad Request Error - Unknown Content Type
+      description: Bad request error. Unknown content type.
+      type: object
+      properties:
+        code:
+          type: string
+          example: INVALID_PARAM
+        message:
+          type: string
+          example: unknown content type 'filename or extension'
+        param:
+          type: string
+          example: metadata.filename
+    BadRequestErrorRecordAttachmentMissingFormDataPart:
+      title: Bad Request Error - Missing Form-Data Part
+      description: Bad request error. Missing form-data part.
+      type: object
+      properties:
+        code:
+          type: string
+          example: INVALID_PARAM
+        message:
+          type: string
+          example: missing required form-data part 'metadata'
+        param:
+          type: string
+          example: metadata
+    BadRequestErrorRecordIDNotFound:
+      title: Bad Request Error - Record ID Not Found
+      description: Record ID Not Found Request Error
+      type: object
+      properties:
+        code:
+          type: string
+          example: NOT_FOUND
+        message:
+          type: string
+          example: couldn't find a record matching the id [SOME_NONEXISTENT_RECORD_ID]
+    BadRequestErrorRecordAttachmentIDNotFound:
+      title: Bad Request Error - Record Attachment ID Not Found
+      description: Record Attachment ID Not Found Request Error
+      type: object
+      properties:
+        code:
+          type: string
+          example: NOT_FOUND
+        message:
+          type: string
+          example: >-
+            couldn't find an attachment matching the key
+            [SOME_NONEXISTENT_ATTACHMENT_KEY] for record with id [RECORD_ID]
+    WorkflowNotFound:
+      title: Bad Request Error - Workflow ID Not Found
+      description: Workflow ID Not Found Request Error
+      type: object
+      properties:
+        code:
+          type: string
+          example: NOT_FOUND
+        message:
+          type: string
+          example: workflow does not exist
+        param:
+          type: string
+          example: workflowId
+    EmailNotFound:
+      title: Bad Request Error - Email ID Not Found
+      description: Email ID Not Found Request Error
+      type: object
+      properties:
+        code:
+          type: string
+          example: NOT_FOUND
+        message:
+          type: string
+          example: emailThreadId does not exist
+        param:
+          type: string
+          example: emailThreadId
+    AttachmentNotFound:
+      title: Bad Request Error - attachmentId Not Found
+      description: attachmentId Not Found Request Error
+      type: object
+      properties:
+        code:
+          type: string
+          example: NOT_FOUND
+        message:
+          type: string
+          example: attachmentId does not exist
+        param:
+          type: string
+          example: attachmentId
+    WorkflowsUpdateApprovalStatusRequest:
+      type: object
+      required:
+        - user
+        - status
+      properties:
+        user:
+          description: >-
+            The Ironclad user approving the workflow. The user must be currently
+            assigned as the approver.
+          type: object
+          properties:
+            email:
+              description: The Ironclad user's email address.
+              type: string
+              example: fett@intergalactic.com
+            type:
+              description: The mechanism of identifying the Ironclad user's account.
+              type: string
+              default: email
+        status:
+          description: The new approval status.
+          type: string
+          enum:
+            - approved
+            - pending
+    WorkflowsRevertToReviewRequest:
+      type: object
+      required:
+        - user
+        - status
+      properties:
+        user:
+          description: >-
+            The Ironclad user reverting the workflow to the Review step. The
+            user must be a participant on the workflow.
+          type: object
+          properties:
+            email:
+              description: The Ironclad user's email address.
+              type: string
+              example: jango@intergalactic.com
+            type:
+              description: The mechanism of identifying the Ironclad user's account.
+              type: string
+              default: email
+    WorkflowsCreateCommentRequest:
+      type: object
+      required:
+        - creator
+        - comment
+      properties:
+        creator:
+          $ref: '#/components/schemas/CreatorEmailModel'
+        comment:
+          description: >-
+            The comment text to add, accepts user mentions in the form of
+            <@user_id_or_email>.
+          type: string
+        addUsersToWorkflow:
+          description: >-
+            Must be set to true if mentioning users who are not participants on
+            the workflow.
+          type: boolean
+        repliedToActivityFeedMessageId:
+          description: Use to specify the comment to reply to
+          type: string
+    WorkflowsCreateCommentRequest1:
+      type: object
+      required:
+        - creator
+        - comment
+      properties:
+        creator:
+          $ref: '#/components/schemas/CreatorEmailModel'
+        comment:
+          description: >-
+            The comment text to add, accepts user mentions in the form of
+            <@user_id_or_email>.
+          type: string
+        addUsersToWorkflow:
+          description: >-
+            Must be set to true if mentioning users who are not participants on
+            the workflow.
+          type: boolean
+        repliedToActivityFeedMessageId:
+          description: Use to specify the comment to reply to
+          type: string
+    WorkflowsUpdateMetadataRequest:
+      type: object
+      properties:
+        updates:
+          type: array
+          items:
+            type: object
+            properties:
+              action:
+                description: >-
+                  The type of action you'd like to take on an existing attribute
+                  (read-only fields cannot be updated). Use the remove action to
+                  clear values. If using the remove action, the attribute cannot
+                  be required by the workflow.
+                type: string
+                enum:
+                  - set
+                  - remove
+                default: set
+              path:
+                description: >-
+                  The workflow attribute id that you'd like to make a change to.
+                  Workflow attribute IDs and values can be retrieved using the
+                  [Retrieve a
+                  Workflow](https://developer.ironcladapp.com/reference/retrieve-a-workflow)
+                  endpoint.
+                type: string
+                example: counterpartyName
+              value:
+                description: >-
+                  The value to change the attribute to. Only required when the
+                  `action` property is `set` and not `remove`. The value's
+                  format must conform to the field type (e.g., `"someString"`
+                  for strings, `true` or `false` for booleans, etc.
+                type: string
+                example: Example Company
+            required:
+              - action
+              - path
+        comment:
+          description: A comment that explains the updates you are making to the workflow.
+          type: string
+          example: Changing attribute on a Workflow.
+      required:
+        - updates
+    RecordsCreateRecordRequest:
+      type: object
+      required:
+        - type
+        - name
+        - properties
+      properties:
+        type:
+          description: >-
+            The type of record to be created. You can view available record
+            types by retrieving records metadata.
+          type: string
+        name:
+          description: The name of the record.
+          type: string
+        properties:
+          description: >-
+            Object containing key/value pairs of metadata attached to the
+            record. The key you specify must have a value with a supported type
+            as outlined in the Supported Property Types section.
+          type: object
+          properties:
+            agreementDate:
+              description: The date of the agreement.
+              type: object
+              properties:
+                type:
+                  type: string
+                  default: date
+                value:
+                  description: UTC date (e.g. `2018-05-08T00:00:00-07:00`)
+                  type: string
+            counterpartyName:
+              description: The name of the counterparty.
+              type: object
+              properties:
+                type:
+                  type: string
+                  default: string
+                value:
+                  description: The name of the counterparty.
+                  type: string
+        links:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecordPropertyLinkModel'
+        parent:
+          description: >-
+            Object containing Record IDs or Ironclad IDs to be set as the parent
+            of the current record.
+          type: object
+          properties:
+            recordId:
+              type: string
+              example: 17009e0d-z2e9-425d-a85b-1cf152773efg
+        children:
+          description: >-
+            List of objects containing the Record IDs or Ironclad IDs of the
+            records to be set as child records of the current record.
+          type: array
+          items:
+            $ref: '#/components/schemas/RecordPropertyLinkModel'
+    RecordsUploadSmartImportRecordRequest:
+      type: object
+      required:
+        - attachment
+      properties:
+        attachment:
+          description: Must be a binary. Base64 is not accepted at this time.
+          type: string
+          format: binary
+        recordType:
+          description: >-
+            Upload a smart import record as an existing record type.  Cannot
+            provide alongside newRecordTypeId and newRecordTypeDisplayName.
+            Defaults to Imported.
+          type: string
+          format: string
+          default: imported
+        newRecordTypeId:
+          description: >-
+            The record type ID for a not-yet-existing record type.  Must be
+            provided along with a newRecordTypeDisplayName
+          type: string
+        newRecordTypeDisplayName:
+          description: The display name of the new record type to create.
+          type: string
+          format: string
+    RecordsUploadSmartImportRecordWithPredictionsRequest:
+      required:
+        - attachment
+        - recordType
+      type: object
+      properties:
+        attachment:
+          description: Must be a binary. Base64 is not accepted at this time.
+          type: string
+          format: binary
+        recordType:
+          description: >-
+            Upload a smart import record as an existing record type.  Cannot
+            provide alongside newRecordTypeId and newRecordTypeDisplayName.
+            Defaults to Imported.
+          type: string
+          format: string
+          default: imported
+        newRecordTypeId:
+          description: >-
+            The record type ID for a not-yet-existing record type.  Must be
+            provided along with a newRecordTypeDisplayName
+          type: string
+        newRecordTypeDisplayName:
+          description: The display name of the new record type to create.
+          type: string
+          format: string
+    RecordsUpdateMetadataRequest:
+      type: object
+      properties:
+        type:
+          description: The type of Record.
+          type: string
+        name:
+          description: The name of the Record.
+          type: string
+        addProperties:
+          description: A key:value map of properties to add. The two below are examples.
+          type: object
+          properties:
+            counterpartyName:
+              type: object
+              properties:
+                type:
+                  type: string
+                  default: string
+                value:
+                  type: string
+                  example: Jane Doe
+            agreementDate:
+              type: object
+              properties:
+                type:
+                  type: string
+                  default: date
+                  example: date
+                value:
+                  type: string
+                  example: '2018-05-08T00:00:00-07:00'
+        removeProperties:
+          description: >-
+            List of record property ids to be removed (e.g.,
+            ['counterpartyAddress', 'agreementExpirationDate'])
+          type: array
+          items:
+            type: string
+        addLinks:
+          description: >-
+            List of objects containing the Record IDs or Ironclad IDs of the
+            records to link. For an explanation of Record IDs or Ironclad IDs
+            and how to find them, see [Getting
+            Started](https://developer.ironcladapp.com/reference/getting-started-api).
+          type: array
+          items:
+            $ref: '#/components/schemas/RecordPropertyLinkModel'
+        removeLinks:
+          description: >-
+            List of objects containing the Record IDs or Ironclad IDs of the
+            record links to remove. For an explanation of Record IDs or Ironclad
+            IDs and how to find them, see [Getting
+            Started](https://developer.ironcladapp.com/reference/getting-started-api).
+          type: array
+          items:
+            $ref: '#/components/schemas/RecordPropertyLinkModel'
+        setParent:
+          description: >-
+            Object containing Record IDs or Ironclad IDs to be set as the parent
+            of the current record.
+          type: object
+          properties:
+            recordId:
+              type: string
+              example: 17009e0d-z2e9-425d-a85b-1cf152773efg
+        addChildren:
+          description: >-
+            List of objects containing the Record IDs or Ironclad IDs of the
+            records to be set as child records of the current record.
+          type: array
+          items:
+            $ref: '#/components/schemas/RecordPropertyLinkModel'
+        removeParent:
+          description: >-
+            Boolean flag to indicate if the parent id should be removed for the
+            current record.
+          type: boolean
+          example: false
+        removeChildren:
+          description: >-
+            List of objects containing the Record IDs or Ironclad IDs of the
+            child records to be removed from the current record.
+          type: array
+          items:
+            $ref: '#/components/schemas/RecordPropertyLinkModel'
+    RecordsReplaceMetadataRequest:
+      type: object
+      required:
+        - type
+        - name
+        - properties
+      properties:
+        type:
+          description: >-
+            The type of record to be created. You can view available record
+            types by retrieving records metadata.
+          type: string
+        name:
+          description: The name of the record.
+          type: string
+        properties:
+          description: >-
+            Object containing key/value pairs of metadata attached to the
+            record. The key you specify must have a value with a supported type
+            as outlined in the Supported Property Types section.
+          type: object
+          properties:
+            agreementDate:
+              description: The date of the agreement.
+              type: object
+              properties:
+                type:
+                  type: string
+                  default: date
+                value:
+                  description: UTC date (e.g. `2018-05-08T00:00:00-07:00`)
+                  type: string
+            counterpartyName:
+              description: The name of the counterparty.
+              type: object
+              properties:
+                type:
+                  type: string
+                  default: string
+                value:
+                  description: The name of the counterparty.
+                  type: string
+        parent:
+          description: >-
+            Object containing Record IDs or Ironclad IDs to be set as the parent
+            of the current record.
+          type: object
+          properties:
+            recordId:
+              type: string
+              example: 17009e0d-z2e9-425d-a85b-1cf152773efg
+        children:
+          description: >-
+            List of objects containing the Record IDs or Ironclad IDs of the
+            records to be set as child records of the current record.
+          type: array
+          items:
+            $ref: '#/components/schemas/RecordPropertyLinkModel'
+    RecordsCreateAttachmentRequest:
+      type: object
+      properties:
+        attachment:
+          description: Must be a binary. Base64 is not accepted at this time.
+          type: string
+          format: binary
+        metadata:
+          description: >-
+            The `metadata` property's value must be `{"filename":
+            "[YOUR_FILE_NAME]"}`
+          type: object
+          properties:
+            filename:
+              description: >-
+                The name of the file. Must have a supported file extension
+                (.adoc, .asice, .bdoc, .csv, .ddoc, .doc, .docx, .edoc, .eml,
+                .gif, .htm, .jpeg, .jpg, .msg, .pdf, .png, .ppt, .pptx,
+                .rtf,.tif, .txt, .xls, .xlsx, .xml).
+              type: string
+              example: NDA - Acme LLC.pdf
+    WebhooksCreateNewRequest:
+      type: object
+      properties:
+        events:
+          description: >-
+            The event type(s) to trigger the webhook. Note: you can use `*` to
+            receive events for all events, although we don't recommend this
+            path, especially for environments with higher volume.
+          type: array
+          items:
+            $ref: '#/components/schemas/webhookEventTypeValue'
+          minItems: 1
+        targetURL:
+          description: The URL to send the webhook event payload to.
+          type: string
+      required:
+        - events
+        - targetURL
+    WebhooksUpdateWebhookDataRequest:
+      type: object
+      properties:
+        events:
+          description: >-
+            The type of events that will trigger a notification to the target
+            URL.
+          type: array
+          items:
+            type: string
+        targetURL:
+          description: The URL of where the notification gets sent.
+          type: string
+    WorkflowsListAllResponse:
+      type: object
+      properties:
+        page:
+          type: integer
+          example: 0
+          default: 0
+        pageSize:
+          type: integer
+          example: 20
+          default: 0
+        count:
+          type: integer
+          example: 1234
+          default: 0
+        list:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkflowResponseModel'
+    WorkflowsLaunchAsynchronouslyResponse:
+      title: ''
+      description: ''
+      type: object
+      properties:
+        asyncJobId:
+          title: ''
+          description: ''
+          type: string
+          example: jobIda89474a8ba364f79bb510517d7bd3fea
+          readOnly: true
+        asyncJobStatusUrl:
+          title: ''
+          description: ''
+          type: string
+          example: >-
+            http://ironcladapp.com/public/api/v1/workflows/async/jobIda89474a8ba364f79bb510517d7bd3fea
+          readOnly: true
+      required:
+        - asyncJobId
+        - asyncJobStatusUrl
+    WorkflowsLaunchAsynchronously400Response:
+      type: object
+      properties: {}
+    WorkflowsGetAsyncJobStatusResponse:
+      title: Workflow Launch Status
+      description: The current status of the launch workflow job.
+      type: object
+      oneOf:
+        - $ref: '#/components/schemas/WorkflowAsyncLaunchSuccessResponse'
+        - $ref: '#/components/schemas/WorkflowAsyncLaunchFailedResponse'
+        - $ref: '#/components/schemas/WorkflowAsyncInProgressResponse'
+      readOnly: true
+    WorkflowsGetAsyncJobStatus404Response:
+      type: object
+      properties:
+        code:
+          type: string
+          example: NOT_FOUND
+        message:
+          type: string
+          example: not found
+        param:
+          type: string
+          example: parameter identifier
+    WorkflowsGetWorkflowResponse:
+      type: object
+      properties: {}
+    WorkflowsListApprovalsResponse:
+      type: object
+      properties:
+        title:
+          type: string
+          example: Consulting Agreement with Michael Scott Paper Company
+        workflowId:
+          type: string
+          example: 5f595f76c4fc9b3571413c3ac
+        approvalGroups:
+          type: array
+          items:
+            type: object
+            properties:
+              reviewers:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    role:
+                      type: string
+                      example: finance
+                    displayName:
+                      type: string
+                      example: Finance
+                    reviewerType:
+                      type: string
+                      example: role
+                    status:
+                      type: string
+                      example: pending
+        roles:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                example: legal
+              displayName:
+                type: string
+                example: Legal
+              assignees:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    userName:
+                      type: string
+                      example: Boba Fett
+                    userId:
+                      type: string
+                      example: 63d415e0dd0d828c3a878548
+                    email:
+                      type: string
+                      example: bobafett@gmail.com
+    WorkflowsListApprovals400Response:
+      type: object
+      properties: {}
+    WorkflowsGetApprovalRequestsResponse:
+      type: object
+      properties:
+        page:
+          type: integer
+          example: 0
+          default: 0
+        pageSize:
+          type: integer
+          example: 20
+          default: 20
+        count:
+          type: integer
+          example: 42
+        list:
+          type: array
+          items:
+            type: object
+            properties:
+              startTime:
+                type: string
+                example: '2022-09-20T15:51:54.156Z'
+              endTime:
+                type: string
+                example: '2022-09-28T19:21:05.034Z'
+              status:
+                type: string
+                example: approved
+              actorId:
+                type: string
+                example: 6334b636b9fb1eb6e76ada97
+              actorType:
+                type: string
+                example: User
+              actorDetails:
+                type: object
+                example:
+                  userName:
+                    type: string
+                    example: Cave Johnson
+                  userEmail:
+                    type: string
+                    example: cave@aperturescience.com
+              role:
+                type: string
+                example: approver58348a760b354ab3a986f56a74656c86
+              roleName:
+                type: string
+                example: CEO
+              approvalType:
+                type: string
+                example: Workflow
+    WorkflowsGetApprovalRequests403Response:
+      type: object
+      properties:
+        code:
+          type: string
+          example: FORBIDDEN
+        message:
+          type: string
+          example: access forbidden
+    WorkflowsGetApprovalRequests404Response:
+      type: object
+      properties:
+        code:
+          type: string
+          example: NOT_FOUND
+        message:
+          type: string
+          example: workflow does not exist
+        param:
+          type: string
+          example: workflowId
+    WorkflowsUpdateApprovalStatusResponse:
+      type: boolean
+      example: true
+    WorkflowsUpdateApprovalStatus400Response:
+      type: object
+      properties:
+        code:
+          type: string
+          example: INVALID_PARAM
+        message:
+          type: string
+          enum:
+            - This role does not exist in this workflow
+            - invalid user for user attribute
+            - >-
+              This approval either was not requested or this user was not
+              assigned to this approval
+          example: This role does not exist in this workflow
+        param:
+          type: string
+          example: approval
+    WorkflowsGetTurnHistoryResponse:
+      type: object
+      properties:
+        page:
+          type: integer
+          example: 0
+          default: 0
+        pageSize:
+          type: integer
+          example: 20
+          default: 20
+        count:
+          type: integer
+          example: 42
+        list:
+          type: array
+          items:
+            type: object
+            properties:
+              turnParty:
+                type: string
+                example: internal
+              turnStartTime:
+                type: string
+                example: '2022-09-20T15:51:54.156Z'
+              turnLocation:
+                type: string
+                example: manual change
+              turnUserId:
+                type: string
+                example: 5f89b6a5eed2cc6e0b2735d4
+              turnEndTime:
+                type: string
+                example: '2022-09-28T19:21:05.034Z'
+              turnNumber:
+                type: integer
+                example: 1
+              turnUserEmail:
+                type: string
+                example: baldwin@ironcladhq.com
+    WorkflowsGetTurnHistory403Response:
+      type: object
+      properties:
+        code:
+          type: string
+          example: FORBIDDEN
+        message:
+          type: string
+          example: access forbidden
+    WorkflowsGetTurnHistory404Response:
+      type: object
+      properties:
+        code:
+          type: string
+          example: NOT_FOUND
+        message:
+          type: string
+          example: workflow does not exist
+        param:
+          type: string
+          example: workflowId
+    WorkflowsListSignaturesResponse:
+      type: object
+      properties:
+        title:
+          type: string
+          example: Goldendoodle Adoption Contract
+        workflowId:
+          type: string
+          example: 6dac47a10b1242d1f7df688d
+        signers:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+                example: Jimothy Kim
+              email:
+                type: string
+                example: jimothykim@gmail.com
+              roleName:
+                type: string
+                example: Counterparty Signer
+              signatureStatus:
+                type: string
+                example: sent
+              delegates:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                      example: Kim Lam
+                    email:
+                      type: string
+                      example: kimlam@gmail.com
+    WorkflowsListSignatures400Response:
+      type: object
+      properties:
+        code:
+          type: string
+          example: INVALID_STATE
+        message:
+          type: string
+          example: >-
+            This workflow is not at the Sign step, and is currently at the
+            Review step
+    WorkflowsListSignatures403Response:
+      type: object
+      properties:
+        code:
+          type: string
+          example: FORBIDDEN
+        message:
+          type: string
+          example: access forbidden
+    WorkflowsListAllParticipantsResponse:
+      type: object
+      properties:
+        page:
+          type: integer
+          example: 0
+          default: 0
+        pageSize:
+          type: integer
+          example: 20
+          default: 20
+        count:
+          type: integer
+          example: 1
+        list:
+          type: array
+          items:
+            type: object
+            properties:
+              userId:
+                type: string
+                example: 61968ae4945dcecf4a78cc83
+              email:
+                type: string
+                example: boba@intergalactic.com
+    WorkflowsListAllParticipants403Response:
+      type: object
+      properties:
+        code:
+          type: string
+          example: FORBIDDEN
+        message:
+          type: string
+          example: access forbidden
+    WorkflowsListAllParticipants404Response:
+      oneOf:
+        - $ref: '#/components/schemas/WorkflowNotFound'
+    WorkflowsRevertToReviewResponse:
+      type: object
+      properties:
+        code:
+          type: string
+          enum:
+            - INVALID_PARAM
+            - INVALID_STATE
+          example: INVALID_STATE
+        message:
+          type: string
+          enum:
+            - invalid user for user attribute
+            - >-
+              workflow was not built in workflow designer and cannot be reverted
+              to review via the API
+            - >-
+              workflow cannot be reverted to review as it is not in the sign
+              stage
+            - various malformed user payload messages
+          example: workflow cannot be reverted to review as it is not in the sign stage
+        param:
+          type: string
+          example: user
+    WorkflowsRevertToReview403Response:
+      type: object
+      properties:
+        code:
+          type: string
+          example: FORBIDDEN
+        message:
+          type: string
+          example: user is not a participant on the workflow
+        param:
+          type: string
+          example: user
+    WorkflowsRevertToReview404Response:
+      type: object
+      properties:
+        code:
+          type: string
+          example: NOT_FOUND
+        message:
+          type: string
+          example: workflow does not exist
+        param:
+          type: string
+          example: workflowId
+    WorkflowsCreateCommentResponse:
+      type: object
+      properties: {}
+    WorkflowsCreateComment400Response:
+      type: object
+      properties: {}
+    WorkflowsUpdateMetadataResponse:
+      type: object
+      properties:
+        title:
+          type: string
+          example: Consulting Agreement with Jane Doe
+        id:
+          type: string
+          example: 6013609108b8f070cee94fc1
+        ironcladId:
+          type: string
+          example: IC-1
+        template:
+          type: string
+          example: 600b296c3e15a234ab88f884
+        step:
+          type: string
+          example: Review
+        schema:
+          type: object
+          properties:
+            counterpartyName:
+              type: object
+              properties:
+                type:
+                  type: string
+                  example: string
+                displayName:
+                  type: string
+                  example: Example String Attribute
+            amount:
+              type: object
+              properties:
+                type:
+                  type: string
+                  example: number
+                displayName:
+                  type: string
+                  example: Example Number Attribute
+            fee:
+              type: object
+              properties:
+                type:
+                  type: string
+                  example: monetaryAmount
+                displayName:
+                  type: string
+                  example: Example Monetary Amount Attribute
+            draft:
+              type: object
+              properties:
+                type:
+                  type: string
+                  example: array
+                elementType:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                      example: document
+                    displayName:
+                      type: string
+                      example: Example Document Attribute
+            lineItems:
+              type: object
+              properties:
+                type:
+                  type: string
+                  example: array
+                elementType:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                      example: object
+                    displayName:
+                      type: string
+                      example: Example Object Attribute
+                    schema:
+                      type: object
+                      properties:
+                        childAttribute:
+                          type: object
+                          properties:
+                            type:
+                              type: string
+                              example: string
+                            displayName:
+                              type: string
+                              example: Example String Attribute
+                        anotherChildAttribute:
+                          type: object
+                          properties:
+                            type:
+                              type: string
+                              example: string
+                            displayName:
+                              type: string
+                              example: Example String Attribute
+        attributes:
+          type: object
+          properties:
+            counterpartyName:
+              type: string
+              example: Boba Fett
+            amount:
+              type: integer
+              example: 123
+              default: 0
+            fee:
+              type: object
+              properties:
+                currency:
+                  type: string
+                  example: USD
+                amount:
+                  type: integer
+                  example: 50000
+                  default: 0
+            draft:
+              type: array
+              items:
+                type: object
+                properties:
+                  version:
+                    type: string
+                    example: B1QePArXb
+                  filename:
+                    type: string
+                    example: file.pdf
+                  download:
+                    type: string
+                    example: >-
+                      /public/api/v1/workflows/594356b9fbcd7f74006fdf8a/document/rJklwCHQ/download
+        isCancelled:
+          type: boolean
+          example: false
+          default: true
+        isComplete:
+          type: boolean
+          example: false
+          default: true
+        status:
+          type: string
+          example: active
+        creator:
+          type: object
+          properties:
+            displayName:
+              type: string
+              example: Boba Fett
+            email:
+              type: string
+              example: fett@intergalactic.com
+            id:
+              type: string
+              example: 63d415e0dd0d828c3a878548
+        created:
+          type: string
+          example: '2016-11-17T00:37:22.318Z'
+        lastUpdated:
+          type: string
+          example: '2016-11-17T00:37:22.318Z'
+        roles:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                example: legal
+              displayName:
+                type: string
+                example: Legal
+              assignees:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    userName:
+                      type: string
+                      example: Boba Fett
+                    userId:
+                      type: string
+                      example: 63d415e0dd0d828c3a878548
+                    email:
+                      type: string
+                      example: bobafett@gmail.com
+        approvals:
+          type: object
+          properties:
+            state:
+              type: string
+              example: in_progess
+            url:
+              type: string
+              example: >-
+                https://ironcladapp.com/public/api/v1/workflows/22e2ff72-56a1-4711-a4ca-41328d311e9f/approvals
+        signatures:
+          type: object
+          properties:
+            state:
+              type: string
+              example: in_progess
+            url:
+              type: string
+              example: >-
+                https://ironcladapp.com/public/api/v1/workflows/6dac47a10b1242d1f7df688d/signatures
+        recordIds:
+          type: array
+          items:
+            type: string
+            example: 715f1e37-292f-4e6c-8b48-c07e1b68bccd
+        isRevertibleToReview:
+          type: boolean
+          example: false
+    WorkflowsUpdateMetadata400Response:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        param:
+          type: string
+    WorkflowsUpdateMetadata403Response:
+      type: object
+      properties:
+        code:
+          type: string
+          example: FORBIDDEN
+        message:
+          type: string
+          example: access forbidden
+    WorkflowsUpdateMetadata404Response:
+      type: object
+      properties:
+        code:
+          type: string
+          example: NOT_FOUND
+        message:
+          type: string
+          example: not found
+        param:
+          type: string
+          example: parameter identifier
+    WorkflowsGetDocumentByKeyResponse:
+      type: object
+      properties: {}
+    WorkflowsGetDocumentByKey400Response:
+      type: object
+      properties: {}
+    WorkflowsGetEmailThreadsResponse:
+      type: object
+      properties:
+        page:
+          type: integer
+          example: 0
+          default: 0
+        pageSize:
+          type: integer
+          example: 20
+          default: 20
+        count:
+          type: integer
+          example: 1
+        list:
+          type: array
+          items:
+            $ref: '#/components/schemas/EmailResponseModel'
+    WorkflowsGetEmailThreadResponse:
+      oneOf:
+        - $ref: '#/components/schemas/WorkflowNotFound'
+        - $ref: '#/components/schemas/EmailNotFound'
+    WorkflowsGetAttachmentFromEmailThreadResponse:
+      type: object
+      properties: {}
+    WorkflowsGetAttachmentFromEmailThread404Response:
+      oneOf:
+        - $ref: '#/components/schemas/WorkflowNotFound'
+        - $ref: '#/components/schemas/EmailNotFound'
+        - $ref: '#/components/schemas/AttachmentNotFound'
+    WorkflowsListAllWorkflowSchemasResponse:
+      type: object
+      properties:
+        list:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                example: a1b2c3d4
+              name:
+                type: string
+                example: MNDA
+              schema:
+                type: object
+                properties:
+                  counterpartyName:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                        example: string
+                      displayName:
+                        type: string
+                        example: Example String Attribute
+                  amount:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                        example: number
+                      displayName:
+                        type: string
+                        example: Example Number Attribute
+                  fee:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                        example: monetaryAmount
+                      displayName:
+                        type: string
+                        example: Example Monetary Amount Attribute
+                  draft:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                        example: array
+                      elementType:
+                        type: object
+                        properties:
+                          type:
+                            type: string
+                            example: document
+                          displayName:
+                            type: string
+                            example: Example Document Attribute
+                  lineItems:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                        example: array
+                      elementType:
+                        type: object
+                        properties:
+                          type:
+                            type: string
+                            example: object
+                          displayName:
+                            type: string
+                            example: Example Object Attribute
+                          schema:
+                            type: object
+                            properties:
+                              childAttribute:
+                                type: object
+                                properties:
+                                  type:
+                                    type: string
+                                    example: string
+                                  displayName:
+                                    type: string
+                                    example: Example String Attribute
+                              anotherChildAttribute:
+                                type: object
+                                properties:
+                                  type:
+                                    type: string
+                                    example: string
+                                  displayName:
+                                    type: string
+                                    example: Example String Attribute
+              permissions:
+                type: array
+                example:
+                  - launch
+                  - view
+                items:
+                  type: string
+    WorkflowsListAllWorkflowSchemas400Response:
+      type: object
+      properties:
+        code:
+          type: string
+          example: MISSING_PARAM
+        message:
+          type: string
+          example: reason why something has gone wrong
+        param:
+          type: string
+          example: parameter identifier
+    WorkflowsGetWorkflowSchemaResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 6013609108b8f070cee94fc1
+        name:
+          type: string
+          example: MNDA
+        schema:
+          type: object
+          properties:
+            counterpartyName:
+              type: object
+              properties:
+                type:
+                  type: string
+                  example: string
+                displayName:
+                  type: string
+                  example: Example String Attribute
+            amount:
+              type: object
+              properties:
+                type:
+                  type: string
+                  example: number
+                displayName:
+                  type: string
+                  example: Example Number Attribute
+            fee:
+              type: object
+              properties:
+                type:
+                  type: string
+                  example: monetaryAmount
+                displayName:
+                  type: string
+                  example: Example Monetary Amount Attribute
+            draft:
+              type: object
+              properties:
+                type:
+                  type: string
+                  example: array
+                elementType:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                      example: document
+                    displayName:
+                      type: string
+                      example: Example Document Attribute
+            lineItems:
+              type: object
+              properties:
+                type:
+                  type: string
+                  example: array
+                elementType:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                      example: object
+                    displayName:
+                      type: string
+                      example: Example Object Attribute
+                    schema:
+                      type: object
+                      properties:
+                        childAttribute:
+                          type: object
+                          properties:
+                            type:
+                              type: string
+                              example: string
+                            displayName:
+                              type: string
+                              example: Example String Attribute
+                        anotherChildAttribute:
+                          type: object
+                          properties:
+                            type:
+                              type: string
+                              example: string
+                            displayName:
+                              type: string
+                              example: Example String Attribute
+        permissions:
+          type: array
+          example:
+            - launch
+            - view
+          items:
+            type: string
+    WorkflowsGetWorkflowSchema400Response:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        param:
+          type: string
+    RecordsListAllResponse:
+      type: object
+      properties:
+        page:
+          type: integer
+          example: 0
+          default: 0
+        pageSize:
+          type: integer
+          example: 20
+          default: 0
+        count:
+          type: integer
+          example: 1234
+          default: 0
+        list:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecordModel'
+    RecordsListAll400Response:
+      type: object
+      properties: {}
+    RecordsCreateRecordResponse:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        param:
+          type: string
+    RecordsGetPredictionsResponse:
+      oneOf:
+        - type: object
+          items:
+            type: object
+            properties:
+              recordId:
+                type: string
+                example: df1c2805-f5a3-4a14-9386-c28d950dff49
+              status:
+                type: string
+                enum:
+                  - ready
+                  - pending
+                  - errored
+          example:
+            recordId: 461aa9a3-5984-4553-b8ab-56a1786c2f44
+            status: ready
+        - type: array
+          items:
+            type: object
+            properties:
+              recordId:
+                type: string
+                example: df1c2805-f5a3-4a14-9386-c28d950dff49
+              status:
+                type: string
+                enum:
+                  - ready
+                  - pending
+                  - errored
+          example:
+            - recordId: 461aa9a3-5984-4553-b8ab-56a1786c2f44
+              status: ready
+            - recordId: 6392dd09-814d-4def-97d9-8fe8badcf6ce
+              status: pending
+    RecordsGetPredictions400Response:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+    RecordsGetPredictions403Response:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+    RecordsGetPredictions404Response:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+    RecordsUploadSmartImportRecordResponse:
+      type: object
+      properties:
+        recordId:
+          description: Record ID of the new created record
+          type: string
+          example: 17fe582d-e1e0-4000-bf65-3d2ec2c500a4
+        importId:
+          type: string
+          example: 55ez635d-f2g9-5419-gs34-8h1jx4s733q9
+        remainingCredits:
+          type: number
+          example: 50
+    RecordsUploadSmartImportRecord400Response:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        param:
+          type: string
+    RecordsUploadSmartImportRecord403Response:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+    RecordsUploadSmartImportRecord404Response:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+    RecordsUploadSmartImportRecordWithPredictionsResponse:
+      type: object
+      properties:
+        recordId:
+          description: Record ID of the new created record
+          type: string
+          example: 17fe582d-e1e0-4000-bf65-3d2ec2c500a4
+        importId:
+          type: string
+          example: 55ez635d-f2g9-5419-gs34-8h1jx4s733q9
+        remainingCredits:
+          type: number
+          example: 50
+    RecordsUploadSmartImportRecordWithPredictions400Response:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        param:
+          type: string
+    RecordsUploadSmartImportRecordWithPredictions403Response:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+    RecordsUploadSmartImportRecordWithPredictions404Response:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+    RecordsDeleteRecordResponse:
+      type: object
+      properties: {}
+    RecordsDeleteRecord400Response:
+      type: object
+      properties: {}
+    RecordsGetRecordDataResponse:
+      type: object
+      properties: {}
+    RecordsUpdateMetadataResponse:
+      type: object
+      properties:
+        code:
+          type: string
+          example: MISSING_PARAM
+        message:
+          type: string
+          example: reason why something has gone wrong
+        param:
+          type: string
+          example: parameter identifier
+    RecordsUpdateMetadata404Response:
+      type: object
+      properties:
+        code:
+          type: string
+          example: NOT_FOUND
+        message:
+          type: string
+          example: not found
+        param:
+          type: string
+          example: parameter identifier
+    RecordsReplaceMetadataResponse:
+      type: object
+      properties: {}
+    RecordsGetSchemaResponse:
+      type: object
+      properties:
+        recordTypes:
+          type: object
+          properties:
+            contract:
+              type: object
+              properties:
+                displayName:
+                  type: string
+                  example: Contract
+        properties:
+          type: object
+          properties:
+            additionalNotes:
+              type: object
+              properties:
+                displayName:
+                  type: string
+                  example: Additional Notes
+                type:
+                  type: string
+                  example: string
+                visible:
+                  type: boolean
+                  example: true
+                  default: true
+            agreementDate:
+              type: object
+              properties:
+                displayName:
+                  type: string
+                  example: Agreement Date
+                type:
+                  type: string
+                  example: date
+                visible:
+                  type: boolean
+                  example: true
+                  default: true
+            workflowId:
+              type: object
+              properties:
+                displayName:
+                  type: string
+                  example: Workflow ID
+                type:
+                  type: string
+                  example: string
+                visible:
+                  type: boolean
+                  example: true
+                  default: true
+        attachments:
+          type: object
+          properties:
+            signedCopy:
+              type: object
+              properties:
+                displayName:
+                  type: string
+                  example: Signed PDF
+        links:
+          type: object
+          properties: {}
+    RecordsGetSchema400Response:
+      type: object
+      properties: {}
+    RecordsRemoveAttachmentResponse:
+      oneOf:
+        - $ref: '#/components/schemas/BadRequestErrorRecordIDNotFound'
+        - $ref: '#/components/schemas/BadRequestErrorRecordAttachmentIDNotFound'
+    RecordsGetAttachmentResponse:
+      type: object
+      properties: {}
+    RecordsGetAttachment400Response:
+      type: object
+      properties: {}
+    RecordsCreateAttachmentResponse:
+      type: object
+      properties: {}
+    RecordsCreateAttachment400Response:
+      oneOf:
+        - $ref: '#/components/schemas/BadRequestErrorRecordNotFound'
+        - $ref: '#/components/schemas/BadRequestErrorRecordAttachmentExtension'
+        - $ref: '#/components/schemas/BadRequestErrorRecordAttachmentAlreadyExists'
+        - $ref: >-
+            #/components/schemas/BadRequestErrorRecordAttachmentUnknownAttachmentKey
+        - $ref: >-
+            #/components/schemas/BadRequestErrorRecordAttachmentUnknownContentType
+        - $ref: >-
+            #/components/schemas/BadRequestErrorRecordAttachmentMissingFormDataPart
+    RecordsGetXlsxExportFileResponse:
+      type: object
+      properties: {}
+    RecordsGetXlsxExportFile400Response:
+      type: object
+      properties: {}
+    WebhooksListAllResponse:
+      type: object
+      properties:
+        page:
+          type: integer
+          example: 0
+          default: 0
+        pageSize:
+          type: integer
+          example: 20
+          default: 0
+        list:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                example: 5928719b30182d3700364a74
+              events:
+                type: array
+                items:
+                  type: string
+                  example: workflow_launched
+              targetURL:
+                type: string
+                example: https://requestb.in/18m34bs1
+              company:
+                type: string
+                example: 5928719b30182d3700364a74
+    WebhooksListAll400Response:
+      type: object
+      properties: {}
+    WebhooksCreateNewResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 5928719b30182d3700364a74
+        events:
+          type: array
+          items:
+            type: string
+            example: workflow_launched
+        targetURL:
+          type: string
+          example: https://requestb.in/18m34b
+        company:
+          type: string
+          example: 5928719b30182d3700364a74
+    WebhooksCreateNew400Response:
+      oneOf:
+        - $ref: '#/components/schemas/webhookInvalidEventTypeBadRequestResponse'
+        - $ref: '#/components/schemas/webhookTargetURLExistsBadRequestResponse'
+    WebhooksDeleteSpecificResponse:
+      type: object
+      properties: {}
+    WebhooksDeleteSpecific400Response:
+      type: object
+      properties: {}
+    WebhooksGetDataResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 5928719b30182d3700364a74
+        events:
+          type: array
+          items:
+            type: string
+            example: workflow_launched
+        targetURL:
+          type: string
+          example: https://requestb.in/18m34b
+        company:
+          type: string
+          example: 5928719b30182d3700364a74
+    WebhooksGetData400Response:
+      type: object
+      properties: {}
+    WebhooksUpdateWebhookDataResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 5928719b30182d3700364a74
+        events:
+          type: array
+          items:
+            type: string
+            example: workflow_launched
+        targetURL:
+          type: string
+          example: https://requestb.in/18m34b
+        company:
+          type: string
+          example: 5928719b30182d3700364a74
+    WebhooksUpdateWebhookData400Response:
+      type: object
+      properties: {}
+    WebhooksGetVerificationKeyResponse:
+      type: object
+      properties: {}
+  requestBodies:
+    WorkflowLaunch:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/WorkflowRequestModel'
+  securitySchemes:
+    sec0:
+      type: apiKey
+      in: header
+      name: Authorization
+      x-bearer-format: bearer
+security:
+  - sec0: []
+x-readme:
+  headers: []
+  explorer-enabled: true
+  proxy-enabled: true
+  samples-languages:
+    - curl
+    - node
+    - ruby
+    - javascript
+    - python
