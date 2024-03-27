@@ -1,0 +1,2077 @@
+openapi: 3.0.1
+info:
+  title: Endpoints
+  description: >-
+    Oyster uses OAuth2 to enable customers to grant access to their data to
+    third party applications. Customers also need to use this API to
+    authenticate themselves when making API requests.
+  version: v1
+  license:
+    name: MIT
+servers:
+  - url: https://api.oysterhr.com
+tags:
+  - description: >-
+      With the Time Off API, you can manage your team's time off requests.
+
+      You can approve or decline specific time off requests, access information
+      about a particular request, and get updates on all time off requests.
+
+      It also provides details on time off entitlements for each engagement
+      within the company
+    name: Time Off
+  - description: >-
+      Expenses API allows you to remotely manage expenses of your team. 
+
+      Approve or decline a specific expense, get info about a specific expense
+      or receive real-time information about all expenses.
+    name: Expenses
+  - name: Engagements
+  - name: Payroll
+  - name: Authentication
+  - name: Company
+  - name: Departments
+  - name: Operations
+paths:
+  /oauth2/token:
+    post:
+      tags:
+        - Authentication
+      summary: Create an access token
+      operationId: Authentication_createAccessToken
+      description: >
+        Oyster grants access to API resources based on OAuth. This means that
+        individual customers grant API access to Developer Apps that you create.
+        This applies to both customers and partners. Follow these simple steps:
+        <br><br> 1. [Create an Oyster account](https://app.oysterhr.com/sign_up)
+        or [log in](https://app.oysterhr.com/users/sign_in) to your existing
+        account. <br> <br> 2. Create an Oyster Developer App in the [Developer
+        Tab](https://app.oysterhr.com/developer) (If you can't see the developer
+        tab please contact us to enable it for your account). <br> Hint: If you
+        are a customer doing this as a one time action you don't need to specify
+        a functioning URL as step 3 will explain. <br> <br> 3. If you are a
+        customer you can simply click on the "Authorization URL" and grant
+        access to your own app. You will be redirected to the URL you specified
+        when creating the Developer App. In the URL you will see that
+        `?code=xxx` has been added to the URL. This is the `code` you need to
+        create an access token. <br> If you are a partner add "Authorization URL
+        to your application. The redirect_url should be a URL that goes back to
+        your app and you're able to programmatically retrieve the URL query
+        param of `?code=xxx` to then create an access token. <br> <br> 4. You
+        need to first request an `authorization_code` with the API request
+        detailed below. This will provide an `access_token` that is used as the
+        Bearer Token for making API requests to Oyster. Ensure that you store
+        the `refresh_token` for making future API requests. <br> <br> 5. If your
+        `access_token` has expired then request a new one using your
+        `refresh_token` that you have stored earlier. Ensure you store the new
+        `refresh_token` each time as the previous ones will expire.
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AuthenticationCreateAccessTokenRequest'
+      responses:
+        '201':
+          description: Create an access token to make an API request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Token'
+  /v1/expenses/{id}/approve:
+    post:
+      tags:
+        - Expenses
+      summary: Approve expense
+      operationId: Expenses_approveExpense
+      security:
+        - bearer_auth:
+            - manage
+      description: Approves an expense.
+      parameters:
+        - description: Expense ID
+          name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful
+        '403':
+          description: an invalid OAuth scope
+          content:
+            application/json:
+              examples:
+                an invalid OAuth scope:
+                  value:
+                    error:
+                      message: Access to this resource requires scope "manage".
+              schema:
+                $ref: '#/components/schemas/error'
+        '404':
+          description: Resource does not exist, or no permission to access resource
+        '422':
+          description: Operation cannot be performed
+          content:
+            application/json:
+              examples:
+                Operation cannot be performed:
+                  value:
+                    errors:
+                      - message: Expense has been approved already
+              schema:
+                $ref: '#/components/schemas/errors'
+  /v1/expenses/{id}/decline:
+    post:
+      tags:
+        - Expenses
+      summary: Decline expense
+      operationId: Expenses_declineExpense
+      security:
+        - bearer_auth:
+            - manage
+      description: Declines an expense.
+      parameters:
+        - description: Expense ID
+          name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExpensesDeclineExpenseRequest'
+            examples:
+              Successful:
+                summary: Successful
+                value:
+                  reason: exceeds budget for this period
+      responses:
+        '200':
+          description: Successful
+        '403':
+          description: an invalid OAuth scope
+          content:
+            application/json:
+              examples:
+                an invalid OAuth scope:
+                  value:
+                    error:
+                      message: Access to this resource requires scope "manage".
+              schema:
+                $ref: '#/components/schemas/error'
+        '404':
+          description: Resource does not exist, or no permission to access resource
+        '422':
+          description: Operation cannot be performed
+          content:
+            application/json:
+              examples:
+                Operation cannot be performed:
+                  value:
+                    errors:
+                      - message: Expense has been declined already
+              schema:
+                $ref: '#/components/schemas/errors'
+  /v1/expenses/{id}:
+    get:
+      tags:
+        - Expenses
+      summary: Retrieve an individual expense
+      operationId: Expenses_getById
+      security:
+        - bearer_auth:
+            - read
+      description: Returns details for an expense with a given expense ID.
+      parameters:
+        - description: Expense ID
+          name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful
+          content:
+            application/json:
+              examples:
+                Successful:
+                  value:
+                    data:
+                      description: >-
+                        Quia amet incidunt. Deleniti odit et. Repellendus id
+                        harum.
+                      expenseId: zxbhh9d8
+                      name: Thanksgiving Volcano coffee
+                      amount:
+                        decimal: '631.87'
+                        currencyCode: EUR
+                      category: CAR
+                      incurredOn: '2022-10-15'
+                      submittedAt: '2022-10-15T12:34:56Z'
+                      reviewState: UNREVIEWED
+                      reviewedAt: null
+                      receiptAmount:
+                        decimal: '631.87'
+                        currencyCode: USD
+                      receiptUrl: null
+                      engagement:
+                        engagementId: SsvwPW9p
+                        name: null
+                        engagementType: EMPLOYMENT
+                      source: OYSTER
+              schema:
+                $ref: '#/components/schemas/ExpensesGetByIdResponse'
+        '404':
+          description: Resource does not exist, or no permission to access resource
+  /v1/expenses:
+    post:
+      tags:
+        - Expenses
+      summary: Create expense
+      operationId: Expenses_createOperationKey
+      security:
+        - bearer_auth:
+            - manage
+      description: >-
+        Creates a new expense for an engagement. This is an asynchronous
+        operation. Returns operationKey that can be used to retrieve the
+        operation to know if it's successfully completed
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExpensesCreateOperationKeyRequest'
+            examples:
+              Successfully created async operation:
+                summary: Successfully created async operation
+                value:
+                  description: ''
+                  engagementId: Xse7pSwV
+                  name: An expense
+                  category: HOME_OFFICE
+                  incurredOn: '2022-10-15'
+                  receiptAmount:
+                    decimal: '1.23'
+                    currencyCode: GBP
+                  receiptUrl: https://www.example.com/receipts/test.pdf
+      responses:
+        '202':
+          description: Successfully created async operation
+          content:
+            application/json:
+              examples:
+                Successfully created async operation:
+                  value:
+                    meta:
+                      operationKey: 5702f2db-6f1c-4da3-9b16-414dad0271ee
+              schema:
+                $ref: '#/components/schemas/asyncResponse'
+        '400':
+          description: improperly structured JSON
+          content:
+            application/json:
+              examples:
+                improperly structured JSON:
+                  value:
+                    errors:
+                      - field: engagementId
+                        message: Engagement id is in invalid format
+                      - field: name
+                        message: Name must be filled
+                      - field: incurredOn
+                        message: Incurred on must be a date
+                      - field: category
+                        message: Category is in invalid format
+                      - field: receiptUrl
+                        message: Receipt url is in invalid format
+                      - field: receiptAmount.decimal
+                        message: Receipt amount decimal must be a string
+                      - field: receiptAmount.currencyCode
+                        message: Receipt amount currency code is in invalid format
+              schema:
+                $ref: '#/components/schemas/fieldErrors'
+        '403':
+          description: an invalid OAuth scope
+          content:
+            application/json:
+              examples:
+                an invalid OAuth scope:
+                  value:
+                    error:
+                      message: Access to this resource requires scope "manage".
+              schema:
+                $ref: '#/components/schemas/error'
+        '422':
+          description: Unprocessable entity
+          content:
+            application/json:
+              examples:
+                Unprocessable entity:
+                  value:
+                    errors:
+                      - message: Category must have a valid category
+              schema:
+                $ref: '#/components/schemas/fieldErrors'
+  /v1/company:
+    get:
+      tags:
+        - Company
+      summary: Retrieve company details
+      operationId: Company_detailsRetrieve
+      security:
+        - bearer_auth:
+            - read
+      description: Returns details about the connected company
+      responses:
+        '200':
+          description: Successful
+          content:
+            application/json:
+              examples:
+                Successful:
+                  value:
+                    data:
+                      companyId: uPeGkqOp
+                      name: company 00035 name
+                      registrationNumber: S4866459C
+                      addresses:
+                        corporateAddress:
+                          addressId: KgmrAgaO
+                          addressLine1: 448 Bernita Locks
+                          addressLine2: Autumn Crossing
+                          city: New Leshastad
+                          region: OK
+                          countryCode: CA
+                          postalCode: '64367'
+                        billingAddress:
+                          addressId: RvXZpmBP
+                          addressLine1: 317 Isiah Passage
+                          addressLine2: Eagle Place
+                          city: Kerlukehaven
+                          region: UT
+                          countryCode: AU
+                          postalCode: 91386-6007
+              schema:
+                $ref: '#/components/schemas/CompanyDetailsRetrieveResponse'
+        '401':
+          description: an invalid access token
+          content:
+            application/json:
+              examples:
+                an invalid access token:
+                  value:
+                    error:
+                      message: The access token is invalid
+              schema:
+                $ref: '#/components/schemas/error'
+  /v1/departments:
+    get:
+      tags:
+        - Departments
+      summary: Retrieve all departments
+      operationId: Departments_getAll
+      security:
+        - bearer_auth:
+            - read
+      description: Returns a list of departments
+      parameters:
+        - name: per_page
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful
+          content:
+            application/json:
+              examples:
+                No departments:
+                  value:
+                    data: []
+                    meta:
+                      items: 100
+                      count: 0
+                      page: 1
+                      pages: 1
+                      firstUrl: /v1/departments?perPage=100&page=1
+                      lastUrl: /v1/departments?perPage=100&page=1
+                      pageUrl: /v1/departments?perPage=100&page=1
+                      nextUrl: /v1/departments?perPage=100&page=
+                      prevUrl: /v1/departments?perPage=100&page=
+                Successful:
+                  value:
+                    data:
+                      - description: >-
+                          Listicle authentic fingerstache paleo kombucha
+                          shoreditch yr.
+                        departmentId: V5PNwnEh
+                        name: Health & Beauty
+                        engagementsCount: 0
+                      - description: >-
+                          Kale chips slow-carb tote bag tofu portland 3 wolf
+                          moon bespoke letterpress.
+                        departmentId: MK0nqu2W
+                        name: Toys
+                        engagementsCount: 0
+                      - description: Taxidermy meh try-hard yr echo waistcoat ramps ennui.
+                        departmentId: f2I3ilRT
+                        name: Outdoors & Grocery
+                        engagementsCount: 0
+                      - description: >-
+                          Yolo vhs xoxo park blue bottle artisan sustainable
+                          polaroid.
+                        departmentId: NyEkcAoV
+                        name: Toys & Sports
+                        engagementsCount: 0
+                      - description: >-
+                          Post-ironic typewriter irony church-key food truck
+                          cardigan.
+                        departmentId: dTOzpd6Y
+                        name: Outdoors
+                        engagementsCount: 0
+                    meta:
+                      items: 100
+                      count: 5
+                      page: 1
+                      pages: 1
+                      firstUrl: /v1/departments?perPage=100&page=1
+                      lastUrl: /v1/departments?perPage=100&page=1
+                      pageUrl: /v1/departments?perPage=100&page=1
+                      nextUrl: /v1/departments?perPage=100&page=
+                      prevUrl: /v1/departments?perPage=100&page=
+              schema:
+                $ref: '#/components/schemas/DepartmentsGetAllResponse'
+        '401':
+          description: an invalid access token
+          content:
+            application/json:
+              examples:
+                an invalid access token:
+                  value:
+                    error:
+                      message: The access token is invalid
+              schema:
+                $ref: '#/components/schemas/error'
+  /v1/engagements/{id}:
+    get:
+      tags:
+        - Engagements
+      summary: Retrieve an individual engagement
+      operationId: Engagements_getById
+      security:
+        - bearer_auth:
+            - read
+      description: Returns details for an engagement with a given engagement ID.
+      parameters:
+        - description: Engagement ID
+          name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful
+          content:
+            application/json:
+              examples:
+                Successful:
+                  value:
+                    data:
+                      engagementId: uxiFbbaK
+                      modifiedAt: '2022-10-15T12:34:56Z'
+                      startDate: '2022-10-15'
+                      engagementType: EMPLOYMENT
+                      state: DRAFT
+                      role: Principal Technology Planner
+                      countryCode: CW
+                      personalDetails:
+                        name: Laurette Anderson
+                        addresses:
+                          livingAddress: null
+                          mailingAddress: null
+                      employment:
+                        employmentId: uxiFbbaK
+                        fullLegalName: null
+                        email: null
+                        employmentType: null
+                        lastDayOn: null
+                        salary:
+                          decimal: '12345.00'
+                          currencyCode: EUR
+                      contract: null
+                      benefitEnrollments: []
+                      terminations: []
+                      department: null
+              schema:
+                $ref: '#/components/schemas/EngagementsGetByIdResponse'
+        '404':
+          description: Resource does not exist, or no permission to access resource
+  /v1/engagements:
+    get:
+      tags:
+        - Engagements
+      summary: Retrieve all engagements
+      operationId: Engagements_getAll
+      security:
+        - bearer_auth:
+            - read
+      description: Returns a list of engagements
+      parameters:
+        - name: per_page
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful
+          content:
+            application/json:
+              examples:
+                No engagements:
+                  value:
+                    data: []
+                    meta:
+                      items: 100
+                      count: 0
+                      page: 1
+                      pages: 1
+                      firstUrl: /v1/engagements?perPage=100&page=1
+                      lastUrl: /v1/engagements?perPage=100&page=1
+                      pageUrl: /v1/engagements?perPage=100&page=1
+                      nextUrl: /v1/engagements?perPage=100&page=
+                      prevUrl: /v1/engagements?perPage=100&page=
+                Successful:
+                  value:
+                    data:
+                      - engagementId: 2ug3WBT0
+                        modifiedAt: '2022-10-15T12:34:56Z'
+                        startDate: '2022-10-15'
+                        engagementType: EMPLOYMENT
+                        state: DRAFT
+                        role: Banking Supervisor Consultant
+                        countryCode: MF
+                        personalDetails:
+                          name: null
+                          addresses:
+                            livingAddress: null
+                            mailingAddress: null
+                        livingAddress: null
+                        mailingAddress: null
+                        employment:
+                          employmentId: 2ug3WBT0
+                          name: Rep Melda Stark
+                          fullLegalName: Rep Melda Stark
+                          email: james.treutel@mayer.test
+                          employmentType: null
+                          lastDayOn: null
+                          salarySubunit: 1234500
+                          salaryCurrencyCode: EUR
+                          salary:
+                            decimal: '12345.00'
+                            currencyCode: EUR
+                        contract: null
+                        benefitEnrollments: []
+                        terminations: []
+                        department: null
+                        usefulInfo: null
+                      - engagementId: AVT7lRbj
+                        modifiedAt: '2022-10-15T12:34:56Z'
+                        startDate: '2022-10-15'
+                        engagementType: EMPLOYMENT
+                        state: DRAFT
+                        role: Corporate Manufacturing Liaison Consultant
+                        countryCode: NZ
+                        personalDetails:
+                          name: null
+                          addresses:
+                            livingAddress: null
+                            mailingAddress: null
+                        livingAddress: null
+                        mailingAddress: null
+                        employment:
+                          employmentId: AVT7lRbj
+                          name: Winston Breitenberg
+                          fullLegalName: Winston Breitenberg
+                          email: estrella.tromp@green-greenfelder.test
+                          employmentType: null
+                          lastDayOn: null
+                          salarySubunit: 1234500
+                          salaryCurrencyCode: EUR
+                          salary:
+                            decimal: '12345.00'
+                            currencyCode: EUR
+                        contract: null
+                        benefitEnrollments: []
+                        terminations: []
+                        department: null
+                        usefulInfo: null
+                      - engagementId: yBY8ab5n
+                        modifiedAt: '2022-10-15T12:34:56Z'
+                        startDate: '2022-10-15'
+                        engagementType: EMPLOYMENT
+                        state: DRAFT
+                        role: Education Manager Consultant
+                        countryCode: UG
+                        personalDetails:
+                          name: null
+                          addresses:
+                            livingAddress: null
+                            mailingAddress: null
+                        livingAddress: null
+                        mailingAddress: null
+                        employment:
+                          employmentId: yBY8ab5n
+                          name: Delia Ward
+                          fullLegalName: Delia Ward
+                          email: shawn.bauch@kerluke.test
+                          employmentType: null
+                          lastDayOn: null
+                          salarySubunit: 1234500
+                          salaryCurrencyCode: EUR
+                          salary:
+                            decimal: '12345.00'
+                            currencyCode: EUR
+                        contract: null
+                        benefitEnrollments: []
+                        terminations: []
+                        department: null
+                        usefulInfo: null
+                      - engagementId: VVlXNYcy
+                        modifiedAt: '2022-10-15T12:34:56Z'
+                        startDate: '2022-10-15'
+                        engagementType: CONTRACT
+                        state: IN_PROGRESS
+                        role: Future Specialist Consultant
+                        countryCode: MG
+                        personalDetails:
+                          name: Henry Reichert
+                          addresses:
+                            livingAddress: null
+                            mailingAddress: null
+                        livingAddress: null
+                        mailingAddress: null
+                        employment: null
+                        contract:
+                          contractId: VVlXNYcy
+                          name: Bethanie Turcotte
+                          email: song@wiegand-ledner.test
+                          billingType: FIXED
+                          taxIdNumber: null
+                        benefitEnrollments: []
+                        terminations: []
+                        department: null
+                        usefulInfo: null
+                      - engagementId: kUhg4dS4
+                        modifiedAt: '2022-10-15T12:34:56Z'
+                        startDate: '2022-10-15'
+                        engagementType: CONTRACT
+                        state: IN_PROGRESS
+                        role: Customer Banking Strategist Consultant
+                        countryCode: HK
+                        personalDetails:
+                          name: Anibal Bins
+                          addresses:
+                            livingAddress: null
+                            mailingAddress: null
+                        livingAddress: null
+                        mailingAddress: null
+                        employment: null
+                        contract:
+                          contractId: kUhg4dS4
+                          name: Mr. Ronnie Klocko
+                          email: irvin.medhurst@mohr.example
+                          billingType: FIXED
+                          taxIdNumber: null
+                        benefitEnrollments: []
+                        terminations: []
+                        department: null
+                    meta:
+                      items: 100
+                      count: 5
+                      page: 1
+                      pages: 1
+                      firstUrl: /v1/engagements?perPage=100&page=1
+                      lastUrl: /v1/engagements?perPage=100&page=1
+                      pageUrl: /v1/engagements?perPage=100&page=1
+                      nextUrl: /v1/engagements?perPage=100&page=
+                      prevUrl: /v1/engagements?perPage=100&page=
+              schema:
+                $ref: '#/components/schemas/EngagementsGetAllResponse'
+        '401':
+          description: an invalid access token
+          content:
+            application/json:
+              examples:
+                an invalid access token:
+                  value:
+                    error:
+                      message: The access token is invalid
+              schema:
+                $ref: '#/components/schemas/error'
+  /v1/meta/operations/{operation_key}:
+    get:
+      tags:
+        - Operations
+      summary: Retrieve an operation
+      operationId: Operations_getByOperationKey
+      security:
+        - bearer_auth:
+            - read
+      description: Returns details for an operation with a given operation key.
+      parameters:
+        - description: Operation key
+          name: operation_key
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful
+          content:
+            application/json:
+              examples:
+                Successful:
+                  value:
+                    request:
+                      method: GET
+                      path: /resources
+                      queryParams:
+                        foo: bar
+                      responseCode: 200
+                    data:
+                      foo: bar
+                      bar: baz
+                    meta:
+                      completed: true
+                      success: true
+              schema:
+                $ref: '#/components/schemas/OperationsGetByOperationKeyResponse'
+        '404':
+          description: Resource does not exist, or no permission to access resource
+  /v1/payroll/{id}:
+    get:
+      tags:
+        - Payroll
+      summary: Retrieve an individual payroll
+      operationId: Payroll_getById
+      security:
+        - bearer_auth:
+            - read
+      description: Returns details for a payroll with a given payroll ID.
+      parameters:
+        - description: Payroll ID
+          name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful
+          content:
+            application/json:
+              examples:
+                Successful:
+                  value:
+                    data:
+                      payrollId: UmTDnTUV
+                      currencyCode: USD
+                      cutoffTimeForPayroll: '2022-10-07T05:00:00.000Z'
+                      state: DRAFT
+                      payrollRecordsCount: 2
+                      records:
+                        - engagementId: CjVBtL3E
+                          currencyCode: EUR
+                          monthlyPaymentsTotalAmount:
+                            decimal: '0.00'
+                            currencyCode: USD
+                          allowancesTotalAmount:
+                            decimal: '0.00'
+                            currencyCode: USD
+                          benefitsTotalAmount:
+                            decimal: '0.00'
+                            currencyCode: USD
+                          bonusesTotalAmount:
+                            decimal: '0.00'
+                            currencyCode: USD
+                          addOnsTotalAmount:
+                            decimal: '0.00'
+                            currencyCode: USD
+                          taxesTotalAmount:
+                            decimal: '0.00'
+                            currencyCode: USD
+                          trueUpsTotalAmount:
+                            decimal: '0.00'
+                            currencyCode: USD
+                          oysterFeesTotalAmount:
+                            decimal: '0.00'
+                            currencyCode: USD
+                          engagement:
+                            name: Georgeann Hintz
+                            cutoffMonthDay: 6
+                            engagementType: EMPLOYMENT
+                        - engagementId: R73L6T8L
+                          currencyCode: EUR
+                          monthlyPaymentsTotalAmount:
+                            decimal: '0.00'
+                            currencyCode: USD
+                          allowancesTotalAmount:
+                            decimal: '0.00'
+                            currencyCode: USD
+                          benefitsTotalAmount:
+                            decimal: '0.00'
+                            currencyCode: USD
+                          bonusesTotalAmount:
+                            decimal: '0.00'
+                            currencyCode: USD
+                          addOnsTotalAmount:
+                            decimal: '0.00'
+                            currencyCode: USD
+                          taxesTotalAmount:
+                            decimal: '0.00'
+                            currencyCode: USD
+                          trueUpsTotalAmount:
+                            decimal: '0.00'
+                            currencyCode: USD
+                          oysterFeesTotalAmount:
+                            decimal: '0.00'
+                            currencyCode: USD
+                          engagement:
+                            name: Msgr Floyd Streich
+                            cutoffMonthDay: 6
+                            engagementType: EMPLOYMENT
+              schema:
+                $ref: '#/components/schemas/PayrollGetByIdResponse'
+        '404':
+          description: Resource does not exist, or no permission to access resource
+  /v1/payroll:
+    get:
+      tags:
+        - Payroll
+      summary: Retrieve all payroll
+      operationId: Payroll_getAllPayrolls
+      security:
+        - bearer_auth:
+            - read
+      description: Returns a list of payrolls
+      parameters:
+        - name: per_page
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: from
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: to
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: include_records
+          in: query
+          required: false
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Successful
+          content:
+            application/json:
+              examples:
+                No payrolls:
+                  value:
+                    data: []
+                    meta:
+                      items: 100
+                      count: 0
+                      page: 1
+                      pages: 1
+                      firstUrl: /v1/payroll?perPage=100&page=1&from=&to=&includeRecords=
+                      lastUrl: /v1/payroll?perPage=100&page=1&from=&to=&includeRecords=
+                      pageUrl: /v1/payroll?perPage=100&page=1&from=&to=&includeRecords=
+                      nextUrl: /v1/payroll?perPage=100&page=&from=&to=&includeRecords=
+                      prevUrl: /v1/payroll?perPage=100&page=&from=&to=&includeRecords=
+                Successful:
+                  value:
+                    data:
+                      - payrollId: abw0ovv2
+                        currencyCode: USD
+                        cutoffTimeForPayroll: '2022-10-07T05:00:00.000Z'
+                        state: DRAFT
+                        payrollRecordsCount: 2
+                      - payrollId: ED6xssq7
+                        currencyCode: USD
+                        cutoffTimeForPayroll: '2022-10-07T05:00:00.000Z'
+                        state: DRAFT
+                        payrollRecordsCount: 2
+                    meta:
+                      items: 100
+                      count: 2
+                      page: 1
+                      pages: 1
+                      firstUrl: >-
+                        /v1/payroll?perPage=100&page=1&from=2023-03&to=2023-04&includeRecords=
+                      lastUrl: >-
+                        /v1/payroll?perPage=100&page=1&from=2023-03&to=2023-04&includeRecords=
+                      pageUrl: >-
+                        /v1/payroll?perPage=100&page=1&from=2023-03&to=2023-04&includeRecords=
+                      nextUrl: >-
+                        /v1/payroll?perPage=100&page=&from=2023-03&to=2023-04&includeRecords=
+                      prevUrl: >-
+                        /v1/payroll?perPage=100&page=&from=2023-03&to=2023-04&includeRecords=
+              schema:
+                $ref: '#/components/schemas/PayrollGetAllPayrollsResponse'
+        '401':
+          description: an invalid access token
+          content:
+            application/json:
+              examples:
+                an invalid access token:
+                  value:
+                    error:
+                      message: The access token is invalid
+              schema:
+                $ref: '#/components/schemas/error'
+  /v1/time_off/entitlements:
+    get:
+      tags:
+        - Time Off
+      summary: Retrieve entitlements
+      operationId: TimeOff_getEntitlements
+      security:
+        - bearer_auth:
+            - read
+      description: Returns entitlements for each engagement of the company.
+      parameters:
+        - name: per_page
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful
+          content:
+            application/json:
+              examples:
+                No engagements:
+                  value:
+                    data: []
+                    meta:
+                      items: 100
+                      count: 0
+                      page: 1
+                      pages: 1
+                      firstUrl: /v1/time_off/entitlements?perPage=100&page=1
+                      lastUrl: /v1/time_off/entitlements?perPage=100&page=1
+                      pageUrl: /v1/time_off/entitlements?perPage=100&page=1
+                      nextUrl: /v1/time_off/entitlements?perPage=100&page=
+                      prevUrl: /v1/time_off/entitlements?perPage=100&page=
+                Successful:
+                  value:
+                    data:
+                      - engagement:
+                          engagementId: AaaEAOPo
+                          name: Brad Doe
+                          type: EMPLOYMENT
+                          countryCode: GB
+                        annualEntitlement: 30
+                        accrued: 30
+                        carried: 0
+                        adjustedAdhoc: 0
+                        taken: 0
+                        availableBalance: 29
+                        upcoming: 0
+                        projectedBalance: 29
+                        units: DAYS
+                      - engagement:
+                          engagementId: vPiWNX7X
+                          name: John Mark
+                          type: EMPLOYMENT
+                          countryCode: GB
+                        annualEntitlement: 24.5
+                        accrued: 24.5
+                        carried: 0
+                        adjustedAdhoc: 0
+                        taken: 0
+                        availableBalance: 24.5
+                        upcoming: 0
+                        projectedBalance: 24.5
+                        units: DAYS
+                    meta:
+                      items: 100
+                      count: 2
+                      page: 1
+                      pages: 1
+                      firstUrl: /v1/time_off/entitlements?perPage=100&page=1
+                      lastUrl: /v1/time_off/entitlements?perPage=100&page=1
+                      pageUrl: /v1/time_off/entitlements?perPage=100&page=1
+                      nextUrl: /v1/time_off/entitlements?perPage=100&page=
+                      prevUrl: /v1/time_off/entitlements?perPage=100&page=
+              schema:
+                $ref: '#/components/schemas/TimeOffGetEntitlementsResponse'
+        '401':
+          description: an invalid access token
+          content:
+            application/json:
+              examples:
+                an invalid access token:
+                  value:
+                    error:
+                      message: The access token is invalid
+              schema:
+                $ref: '#/components/schemas/error'
+  /v1/time_off/requests/{id}/approve:
+    post:
+      tags:
+        - Time Off
+      summary: Approve request
+      operationId: TimeOff_approveRequest
+      security:
+        - bearer_auth:
+            - manage
+      description: Approves a time off request.
+      parameters:
+        - description: Time Off Request ID
+          name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful
+        '401':
+          description: an invalid access token
+          content:
+            application/json:
+              examples:
+                an invalid access token:
+                  value:
+                    error:
+                      message: The access token is invalid
+              schema:
+                $ref: '#/components/schemas/error'
+        '403':
+          description: an invalid OAuth scope
+          content:
+            application/json:
+              examples:
+                an invalid OAuth scope:
+                  value:
+                    error:
+                      message: Access to this resource requires scope "manage".
+              schema:
+                $ref: '#/components/schemas/error'
+        '404':
+          description: Resource does not exist, or no permission to access resource
+        '422':
+          description: Operation cannot be performed
+          content:
+            application/json:
+              examples:
+                Operation cannot be performed:
+                  value:
+                    errors:
+                      - message: Can't approve a request that's in the APPROVED state
+              schema:
+                $ref: '#/components/schemas/errors'
+  /v1/time_off/requests/{id}/reject:
+    post:
+      tags:
+        - Time Off
+      summary: Reject request
+      operationId: TimeOff_rejectRequest
+      security:
+        - bearer_auth:
+            - manage
+      description: Rejects a time off request.
+      parameters:
+        - description: Time Off Request ID
+          name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TimeOffRejectRequestRequest'
+            examples:
+              Successful:
+                summary: Successful
+                value:
+                  reason: We need you!
+      responses:
+        '200':
+          description: Successful
+        '401':
+          description: an invalid access token
+          content:
+            application/json:
+              examples:
+                an invalid access token:
+                  value:
+                    error:
+                      message: The access token is invalid
+              schema:
+                $ref: '#/components/schemas/error'
+        '403':
+          description: an invalid OAuth scope
+          content:
+            application/json:
+              examples:
+                an invalid OAuth scope:
+                  value:
+                    error:
+                      message: Access to this resource requires scope "manage".
+              schema:
+                $ref: '#/components/schemas/error'
+        '404':
+          description: Resource does not exist, or no permission to access resource
+        '422':
+          description: Operation cannot be performed
+          content:
+            application/json:
+              examples:
+                Operation cannot be performed:
+                  value:
+                    errors:
+                      - message: Can't reject a request that's in the REJECTED state
+              schema:
+                $ref: '#/components/schemas/errors'
+  /v1/time_off/requests/{id}:
+    get:
+      tags:
+        - Time Off
+      summary: Retrieve an individual request
+      operationId: TimeOff_getRequest
+      security:
+        - bearer_auth:
+            - read
+      description: Returns details for a request.
+      parameters:
+        - description: Time Off Request ID
+          name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful
+          content:
+            application/json:
+              examples:
+                Successful:
+                  value:
+                    data:
+                      timeOffRequestId: 6tkQOMxy
+                      engagement:
+                        engagementId: AhbNxBVN
+                        name: Lizette Paucek
+                        type: EMPLOYMENT
+                        countryCode: PK
+                      startDate: '2022-02-01'
+                      endDate: '2022-02-02'
+                      firstDayDuration: FULL_DAY
+                      lastDayDuration: FULL_DAY
+                      state: SUBMITTED
+                      type: VACATION
+                      requesterComments: Need a rest
+                      rejectionReason: null
+                      reason: PAID_TIME_OFF
+                      periodInHours: 16
+              schema:
+                $ref: '#/components/schemas/TimeOffGetRequestResponse'
+        '401':
+          description: an invalid access token
+          content:
+            application/json:
+              examples:
+                an invalid access token:
+                  value:
+                    error:
+                      message: The access token is invalid
+              schema:
+                $ref: '#/components/schemas/error'
+        '404':
+          description: Resource does not exist, or no permission to access resource
+  /v1/time_off/requests:
+    get:
+      tags:
+        - Time Off
+      summary: Retrieve all requests
+      operationId: TimeOff_getAllRequests
+      security:
+        - bearer_auth:
+            - read
+      description: Returns all Time Off Requests for a company.
+      parameters:
+        - name: per_page
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful
+          content:
+            application/json:
+              examples:
+                No requests:
+                  value:
+                    data: []
+                    meta:
+                      items: 100
+                      count: 0
+                      page: 1
+                      pages: 1
+                      firstUrl: /v1/time_off/requests?perPage=100&page=1
+                      lastUrl: /v1/time_off/requests?perPage=100&page=1
+                      pageUrl: /v1/time_off/requests?perPage=100&page=1
+                      nextUrl: /v1/time_off/requests?perPage=100&page=
+                      prevUrl: /v1/time_off/requests?perPage=100&page=
+                Successful:
+                  value:
+                    data:
+                      - timeOffRequestId: aR1F7cum
+                        engagement:
+                          engagementId: K2HrjqDi
+                          name: Alonso Hyatt
+                          type: EMPLOYMENT
+                          countryCode: LV
+                        startDate: '2022-02-01'
+                        endDate: '2022-02-02'
+                        firstDayDuration: FULL_DAY
+                        lastDayDuration: FULL_DAY
+                        state: SUBMITTED
+                        type: VACATION
+                        requesterComments: Need a rest
+                        rejectionReason: null
+                        reason: PAID_TIME_OFF
+                        periodInHours: 16
+                      - timeOffRequestId: xaQYmvy3
+                        engagement:
+                          engagementId: y9UvCkMi
+                          name: Msgr. Juan Larson
+                          type: EMPLOYMENT
+                          countryCode: GS
+                        startDate: '2022-02-01'
+                        endDate: '2022-02-02'
+                        firstDayDuration: FULL_DAY
+                        lastDayDuration: FULL_DAY
+                        state: SUBMITTED
+                        type: VACATION
+                        requesterComments: Need a rest
+                        rejectionReason: null
+                        reason: PAID_TIME_OFF
+                        periodInHours: 16
+                      - timeOffRequestId: ADyXwhvf
+                        engagement:
+                          engagementId: 2ueHWmjt
+                          name: Shayne Runte
+                          type: EMPLOYMENT
+                          countryCode: NC
+                        startDate: '2022-02-01'
+                        endDate: '2022-02-02'
+                        firstDayDuration: FULL_DAY
+                        lastDayDuration: FULL_DAY
+                        state: SUBMITTED
+                        type: VACATION
+                        requesterComments: Need a rest
+                        rejectionReason: null
+                        reason: PAID_TIME_OFF
+                        periodInHours: 16
+                    meta:
+                      items: 100
+                      count: 3
+                      page: 1
+                      pages: 1
+                      firstUrl: /v1/time_off/requests?perPage=100&page=1
+                      lastUrl: /v1/time_off/requests?perPage=100&page=1
+                      pageUrl: /v1/time_off/requests?perPage=100&page=1
+                      nextUrl: /v1/time_off/requests?perPage=100&page=
+                      prevUrl: /v1/time_off/requests?perPage=100&page=
+              schema:
+                $ref: '#/components/schemas/TimeOffGetAllRequestsResponse'
+        '401':
+          description: an invalid access token
+          content:
+            application/json:
+              examples:
+                an invalid access token:
+                  value:
+                    error:
+                      message: The access token is invalid
+              schema:
+                $ref: '#/components/schemas/error'
+components:
+  schemas:
+    Token:
+      type: object
+      properties:
+        access_token:
+          type: string
+          example: 1234ABCD
+        token_type:
+          type: string
+          example: Bearer
+        expires_in:
+          type: number
+          example: 7200
+        refresh_token:
+          type: string
+          example: 1234ABCD
+        scope:
+          type: string
+          example: read
+        created_at:
+          type: number
+          example: 167474949830
+    address:
+      type: object
+      properties:
+        addressId:
+          type: string
+        addressLine1:
+          type: string
+          nullable: true
+        addressLine2:
+          type: string
+          nullable: true
+        city:
+          type: string
+          nullable: true
+        region:
+          type: string
+          nullable: true
+        countryCode:
+          type: string
+          nullable: true
+        postalCode:
+          type: string
+          nullable: true
+      required:
+        - addressId
+        - addressLine1
+        - postalCode
+    amount:
+      type: object
+      properties:
+        decimal:
+          type: string
+          pattern: ^\d+([.]\d+)?$
+        currencyCode:
+          type: string
+          minLength: 3
+          maxLength: 3
+      required:
+        - decimal
+        - currencyCode
+    phoneNumber:
+      type: object
+      properties:
+        countryCode:
+          type: string
+          nullable: true
+        number:
+          type: string
+      required:
+        - number
+    company:
+      type: object
+      properties:
+        companyId:
+          type: string
+        name:
+          type: string
+        registrationNumber:
+          type: string
+        addresses:
+          type: object
+          properties:
+            corporateAddress:
+              type: object
+              nullable: true
+              $ref: '#/components/schemas/address'
+            billingAddress:
+              type: object
+              nullable: true
+              $ref: '#/components/schemas/address'
+      required:
+        - companyId
+        - name
+        - registrationNumber
+        - addresses
+    department:
+      type: object
+      properties:
+        description:
+          type: string
+          nullable: true
+        departmentId:
+          type: string
+        name:
+          type: string
+        engagementsCount:
+          type: integer
+      required:
+        - departmentId
+        - name
+        - description
+        - engagementsCount
+    departments:
+      type: array
+      items:
+        $ref: '#/components/schemas/department'
+    engagement:
+      type: object
+      properties:
+        engagementId:
+          type: string
+        modifiedAt:
+          type: string
+          format: date-time
+        startDate:
+          type: string
+          format: date
+        engagementType:
+          enum:
+            - EMPLOYMENT
+            - CONTRACT
+          type: string
+        state:
+          type: string
+        role:
+          type: string
+        countryCode:
+          type: string
+        personalDetails:
+          type: object
+          properties:
+            name:
+              type: string
+              nullable: true
+            addresses:
+              type: object
+              properties:
+                livingAddress:
+                  type: object
+                  nullable: true
+                  $ref: '#/components/schemas/address'
+                mailingAddress:
+                  type: object
+                  nullable: true
+                  $ref: '#/components/schemas/address'
+            citizenships:
+              type: array
+              items:
+                type: string
+                nullable: true
+            dateOfBirth:
+              type: string
+              nullable: true
+            phoneNumbers:
+              type: object
+              properties:
+                default:
+                  type: object
+                  nullable: true
+                  $ref: '#/components/schemas/phoneNumber'
+                emergency:
+                  type: object
+                  nullable: true
+                  $ref: '#/components/schemas/phoneNumber'
+          required:
+            - name
+            - addresses
+        employment:
+          type: object
+          nullable: true
+        contract:
+          type: object
+          nullable: true
+        benefitEnrollments:
+          type: array
+          items:
+            type: object
+            properties:
+              benefitEnrollmentId:
+                type: string
+              plan:
+                type: object
+                properties:
+                  provider:
+                    type: string
+                  descriptiveName:
+                    type: string
+              name:
+                type: string
+              state:
+                type: string
+        terminations:
+          type: array
+          items:
+            type: object
+            properties:
+              state:
+                type: string
+              proposedDate:
+                type: string
+                format: date
+        department:
+          type: object
+          nullable: true
+          properties:
+            description:
+              type: string
+            departmentId:
+              type: string
+            name:
+              type: string
+      required:
+        - engagementId
+        - engagementType
+        - personalDetails
+        - startDate
+        - countryCode
+        - role
+    engagements:
+      type: array
+      items:
+        $ref: '#/components/schemas/engagement'
+    expense:
+      type: object
+      properties:
+        description:
+          type: string
+          nullable: true
+        expenseId:
+          type: string
+        name:
+          type: string
+        amount:
+          type: object
+          $ref: '#/components/schemas/amount'
+        category:
+          type: string
+          pattern: ^[A-Z_]+$
+        incurredOn:
+          type: string
+          format: date
+        submittedAt:
+          type: string
+          format: date-time
+        reviewState:
+          type: string
+        reviewedAt:
+          type: string
+          nullable: true
+          format: date-time
+        receiptAmount:
+          type: object
+          $ref: '#/components/schemas/amount'
+        receiptUrl:
+          type: string
+          nullable: true
+          format: uri
+        engagement:
+          type: object
+          properties:
+            engagementId:
+              type: string
+            name:
+              type: string
+              nullable: true
+            engagementType:
+              type: string
+              pattern: ^[A-Z_]+$
+        source:
+          type: string
+      required:
+        - expenseId
+        - name
+        - amount
+        - category
+        - receiptAmount
+    expenses:
+      type: array
+      items:
+        $ref: '#/components/schemas/expense'
+    payroll:
+      type: object
+      properties:
+        payrollId:
+          type: string
+        currencyCode:
+          type: string
+        cutoffTimeForPayroll:
+          type: string
+          format: date-time
+          nullable: true
+        state:
+          type: string
+        payrollRecordsCount:
+          type: integer
+        records:
+          type: array
+          items:
+            $ref: '#/components/schemas/payrollRecord'
+      required:
+        - payrollId
+        - currencyCode
+        - cutoffTimeForPayroll
+        - state
+        - payrollRecordsCount
+    payrollRecord:
+      type: object
+      properties:
+        engagementId:
+          type: string
+        currencyCode:
+          type: string
+        monthlyPaymentsTotalAmount:
+          $ref: '#/components/schemas/amount'
+        allowancesTotalAmount:
+          $ref: '#/components/schemas/amount'
+        benefitsTotalAmount:
+          $ref: '#/components/schemas/amount'
+        bonusesTotalAmount:
+          $ref: '#/components/schemas/amount'
+        addOnsTotalAmount:
+          $ref: '#/components/schemas/amount'
+        taxesTotalAmount:
+          $ref: '#/components/schemas/amount'
+        trueUpsTotalAmount:
+          $ref: '#/components/schemas/amount'
+        oysterFeesTotalAmount:
+          $ref: '#/components/schemas/amount'
+        engagement:
+          type: object
+          properties:
+            name:
+              type: string
+            cutoffMonthDay:
+              type: integer
+            engagementType:
+              type: string
+          required:
+            - name
+            - cutoffMonthDay
+            - engagementType
+      required:
+        - engagementId
+        - currencyCode
+        - monthlyPaymentsTotalAmount
+        - allowancesTotalAmount
+        - benefitsTotalAmount
+        - bonusesTotalAmount
+        - addOnsTotalAmount
+        - taxesTotalAmount
+        - trueUpsTotalAmount
+        - oysterFeesTotalAmount
+        - engagement
+    payrolls:
+      type: array
+      items:
+        $ref: '#/components/schemas/payroll'
+    timeOffRequest:
+      type: object
+      properties:
+        timeOffRequestId:
+          type: string
+        engagement:
+          $ref: '#/components/schemas/timeOffEngagementDetails'
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        firstDayDuration:
+          type: string
+          pattern: ^[A-Z_]+$
+        lastDayDuration:
+          type: string
+          nullable: true
+          pattern: ^[A-Z_]+$
+        state:
+          type: string
+          pattern: ^[A-Z_]+$
+        type:
+          type: string
+          pattern: ^[A-Z_]+$
+        requesterComments:
+          type: string
+          nullable: true
+        rejectionReason:
+          type: string
+          nullable: true
+        reason:
+          type: string
+          pattern: ^[A-Z_]+$
+        periodInHours:
+          type: number
+          format: float
+    timeOffRequests:
+      type: array
+      items:
+        $ref: '#/components/schemas/timeOffRequest'
+    timeOffEntitlements:
+      type: array
+      items:
+        type: object
+        properties:
+          engagement:
+            $ref: '#/components/schemas/timeOffEngagementDetails'
+          annualEntitlement:
+            type: number
+            format: float
+          accrued:
+            type: number
+            format: float
+          carried:
+            type: number
+            format: float
+          adjustedAdhoc:
+            type: number
+            format: float
+          taken:
+            type: number
+            format: float
+          availableBalance:
+            type: number
+            format: float
+          upcoming:
+            type: number
+            format: float
+          projectedBalance:
+            type: number
+            format: float
+          units:
+            type: string
+            enum:
+              - DAYS
+    timeOffEngagementDetails:
+      type: object
+      properties:
+        engagementId:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+          pattern: ^[A-Z_]+$
+        countryCode:
+          type: string
+    meta:
+      type: object
+      properties:
+        items:
+          type: integer
+        count:
+          type: integer
+        page:
+          type: integer
+        pages:
+          type: integer
+        firstUrl:
+          type: string
+        lastUrl:
+          type: string
+        pageUrl:
+          type: string
+        nextUrl:
+          type: string
+        prevUrl:
+          type: string
+    asyncResponse:
+      type: object
+      properties:
+        meta:
+          type: object
+          properties:
+            operationKey:
+              type: string
+    error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            message:
+              type: string
+    errors:
+      type: object
+      properties:
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              message:
+                type: string
+    fieldErrors:
+      type: object
+      properties:
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              message:
+                type: string
+    operation:
+      type: object
+      properties:
+        request:
+          type: object
+          properties:
+            method:
+              type: string
+            path:
+              type: string
+            queryParams:
+              type: object
+            responseCode:
+              type: integer
+        data:
+          type: object
+        meta:
+          type: object
+          properties:
+            completed:
+              type: boolean
+            success:
+              type: boolean
+    AuthenticationCreateAccessTokenRequest:
+      type: object
+      properties:
+        client_id:
+          description: >-
+            The client_id of your Developer App. This can be found by visting
+            https://app.oysterhr.com/developer
+          type: string
+          example: 1234ABCD
+        client_secret:
+          description: The secret of your Developer App.
+          type: string
+          example: 1234ABCD
+        grant_type:
+          description: >-
+            First you need to request an `authorization_code`. Afterwards you
+            can request a `refresh_token`.
+          type: string
+          example: authorization_code
+        code:
+          description: The code is required when requesting an `authorization_code`.
+          type: string
+          example: 1234ABCD
+        redirect_uri:
+          description: >-
+            The redirect_uri is required when requesting an
+            `authorization_code`.
+          type: string
+          example: https://example.com/inbound
+        refresh_token:
+          description: >-
+            A `refresh_token` is required when requesting a `refresh_token`. A
+            `refresh_token` will be provided when requesting an
+            `authorization_code`
+          type: string
+          example: https://example.com/inbound
+    ExpensesDeclineExpenseRequest:
+      type: object
+      properties:
+        reason:
+          type: string
+    ExpensesCreateOperationKeyRequest:
+      type: object
+      properties:
+        description:
+          type: string
+        engagementId:
+          type: string
+          minLength: 1
+        name:
+          type: string
+          minLength: 1
+        incurredOn:
+          type: string
+          format: date
+          minLength: 1
+        category:
+          type: string
+          minLength: 1
+        receiptUrl:
+          type: string
+          minLength: 1
+        receiptAmount:
+          type: object
+          properties:
+            decimal:
+              type: string
+              minLength: 1
+            currencyCode:
+              type: string
+              minLength: 1
+          required:
+            - decimal
+            - currencyCode
+      required:
+        - engagementId
+        - name
+        - incurredOn
+        - category
+        - receiptUrl
+        - receiptAmount
+    TimeOffRejectRequestRequest:
+      type: object
+      properties:
+        reason:
+          type: string
+      required:
+        - reason
+    ExpensesGetByIdResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/expense'
+      required:
+        - data
+    CompanyDetailsRetrieveResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/company'
+      required:
+        - data
+    DepartmentsGetAllResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/departments'
+        meta:
+          $ref: '#/components/schemas/meta'
+      required:
+        - data
+        - meta
+    EngagementsGetByIdResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/engagement'
+      required:
+        - data
+    EngagementsGetAllResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/engagements'
+        meta:
+          $ref: '#/components/schemas/meta'
+      required:
+        - data
+        - meta
+    OperationsGetByOperationKeyResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/operation'
+      required:
+        - data
+    PayrollGetByIdResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/payroll'
+      required:
+        - data
+    PayrollGetAllPayrollsResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/payrolls'
+        meta:
+          $ref: '#/components/schemas/meta'
+      required:
+        - data
+        - meta
+    TimeOffGetEntitlementsResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/timeOffEntitlements'
+        meta:
+          $ref: '#/components/schemas/meta'
+      required:
+        - data
+        - meta
+    TimeOffGetRequestResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/timeOffRequest'
+      required:
+        - data
+    TimeOffGetAllRequestsResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/timeOffRequests'
+        meta:
+          $ref: '#/components/schemas/meta'
+      required:
+        - data
+        - meta
+  securitySchemes:
+    bearer_auth:
+      type: http
+      scheme: bearer
+x-readme:
+  explorer-enabled: true
+  proxy-enabled: true
+  samples-enabled: true
+_id: 6514040da1ecab004a312d3c
