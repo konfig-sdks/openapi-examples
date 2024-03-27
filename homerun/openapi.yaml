@@ -1,0 +1,1443 @@
+openapi: 3.0.0
+info:
+  title: Homerun Public API
+  description: >
+    # Introduction
+
+
+    Welcome to the Homerun API! You can use our API to programmatically access
+    your jobs and applicants in Homerun.
+
+
+
+    ## Authentication
+
+
+    All API endpoints require Bearer authentication. We'll reference this
+    authentication method later in this document as `public-api-v2-key`. Example
+    authentication header:
+
+
+    ```http
+
+    Authorization: Bearer <your secret API key>
+
+    ```
+
+
+    ## Authorization
+
+
+    Your API key has scopes attached to it. Those scopes are used to authorize
+    request to each endpoint. We recommend that you only assign scopes that you
+    need to get the job done and nothing more.
+
+
+    Scopes can only be assigned once, when generating a new key on the
+    [Integrations Page](https://app.homerun.co/settings/integrations) page in
+    the Homerun App.
+
+
+    Possible scopes include:
+
+
+    * `vacancies:read`
+
+    * `job-applications:read`
+
+    * `job-applications:write`
+
+    * `job-application-notes:read`
+
+    * `job-application-notes:write`
+
+    * `job-application-files:write`
+
+
+    Check endpoint documentation below to learn which scopes are required to
+    make a specific request.
+
+
+    ## General security advice and fair use
+
+
+    Don’t share your API key in publicly accessible places such as client-side
+    code or services like Github. If you suspect unauthorized usage of your key,
+    please delete it on the [Integrations
+    Page](https://app.homerun.co/settings/integrations) in the Homerun App.
+
+
+    When assigning scopes to your API keys, follow the [principle of least
+    privilege](https://en.wikipedia.org/wiki/Principle_of_least_privilege) and
+    only grant the scopes that are absolutely necessary for your use-case. If
+    you want to use our API in multiple workflows, consider generating separate
+    keys with scopes tailored to the their specific needs, rather than re-using
+    the same key.
+
+
+    Consider periodically rotating your API keys. You can have up to 10 active
+    API keys, so you can generate new ones to replace old ones without forcing
+    downtime on your workflows.
+
+
+    Note that keys can have an expiry date assigned to them. You can use it for
+    keys that you know in advance you'll only need for a limited time.
+
+
+    If your workflow only involves fetching a list of vacancies, please consider
+    using our [Job XML
+    Feeds](https://help.homerun.co/en/articles/5013627-how-do-i-generate-an-xml-feed)
+    feature instead.
+
+
+    We enforce a rate limit of 60 requests per minute to our API to ensure fair
+    usage and limit abuse.
+
+
+    ## Pagination
+
+
+    All endpoints returning a list of objects are using configurable pagination
+    mechanism. You can adjust the number of items per page (through `perPage`
+    parameter). You can fetch more objects by incrementing the `page` query
+    parameter. Pagination metadata is returned in a separate, top-level `meta`
+    property, providing convenience links to following pages, current pagination
+    state and a total number of objects.
+
+
+    Example of a `meta` object:
+
+
+    ```json
+
+    {
+        "meta": {
+            "current_page": 1,
+            "from": 1,
+            "last_page": 4,
+            "links": [
+                {
+                    "url": null,
+                    "label": "&laquo; Previous",
+                    "active": false
+                },
+                {
+                    "url": "http://api.homerun.co/v2/job-applications?page=1",
+                    "label": "1",
+                    "active": true
+                },
+                {
+                    "url": "http://api.homerun.co/v2/job-applications?page=2",
+                    "label": "2",
+                    "active": false
+                },
+                {
+                    "url": "http://api.homerun.co/v2/job-applications?page=3",
+                    "label": "3",
+                    "active": false
+                },
+                {
+                    "url": "http://api.homerun.co/v2/job-applications?page=4",
+                    "label": "4",
+                    "active": false
+                },
+                {
+                    "url": "http://api.homerun.co/v2/job-applications?page=2",
+                    "label": "Next &raquo;",
+                    "active": false
+                }
+            ],
+            "path": "http://api.homerun.co/v2/job-applications",
+            "per_page": 15,
+            "to": 15,
+            "total": 46
+        }
+    }
+
+    ```
+
+
+    ## Changelog
+
+
+    ### 21.09.2023
+
+
+    * `total_candidate_count` field from `Vacancy` schema is now an optional and
+    can be added using `include[]=total_candidate_count`
+
+
+    ### 14.09.2023
+
+
+    * `is_remote` field from `Vacancy` has been deprecated in favour of the new
+    enum `location_type` field. `remote` is one of the values of the new field.
+  version: 2.0.0
+  termsOfService: https://www.homerun.co/terms-of-service
+  x-logo:
+    url: img/logo.svg
+    backgroundColor: '#f5f3ef'
+    altText: Homerun logo
+servers:
+  - url: https://api.homerun.co/v2
+tags:
+  - name: Job Applications
+  - name: Job Application Files
+  - name: Vacancies
+  - name: Job Application Notes
+  - name: Other
+paths:
+  /job-applications:
+    get:
+      tags:
+        - Job Applications
+      summary: Get a list of job applications
+      operationId: JobApplications_listOfApplications
+      description: |
+        Required scope: `job-applications:read`
+      parameters:
+        - description: Filter by one of the fields
+          in: query
+          name: filter
+          required: false
+          style: deepObject
+          explode: true
+          schema:
+            type: object
+            properties:
+              vacancy_id:
+                type: string
+                nullable: true
+              stage:
+                type: string
+                nullable: true
+              hired_after:
+                type: string
+                format: date
+                nullable: true
+          examples:
+            filter_by_vacancy:
+              summary: Only return job applications from a specific vacancy
+              value:
+                vacancy_id: job_pvjbDqdSOpO070eLHSvT
+            filter_by_vacancies:
+              summary: Only return job applications from a specific vacancy
+              value:
+                vacancy_id: >-
+                  job_pvjbDqdSOpO070eLHSvT,job_bzNXUjKw9yoPcgE3CyVI,job_8FAj89sQHHAZPcc2yKjx
+            filter_by_stage:
+              summary: >
+                Only return job applications from a specific stage in the hiring
+                process.
+
+                Stage names are specific to vacancies they were defined for.
+              value:
+                stage: hired
+            filter_by_hired_after:
+              summary: >-
+                Only return job application of applicants hired after a specific
+                date
+              value:
+                hired_after: '2023-06-01'
+        - description: Include additional information in the response
+          in: query
+          name: include
+          style: form
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - sources
+                - stage
+                - vacancy
+          required: false
+          examples:
+            include_stage:
+              summary: >-
+                If a job application was created for a specific vacancy then
+                return the stage it's in
+              value:
+                include[]: stage
+            include_sources:
+              summary: Return all sources of the job application
+              value:
+                include[]: sources
+            include_vacancy:
+              summary: >-
+                If a job application was created for a specific vacancy then
+                return that vacancy object
+              value:
+                include[]: vacancy
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: List of job applications
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobApplicationsListOfApplicationsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '402':
+          $ref: '#/components/responses/PaymentRequired'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+    post:
+      tags:
+        - Job Applications
+      summary: Create new job applications
+      operationId: JobApplications_addNewApplication
+      description: |
+        Required scope: `job-applications:write`
+      requestBody:
+        description: Job application attributes
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JobApplicationsAddNewApplicationRequest'
+      responses:
+        '201':
+          description: Job application was created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobApplicationsAddNewApplicationResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '402':
+          $ref: '#/components/responses/PaymentRequired'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /job-applications/{job_application_id}:
+    parameters:
+      - description: Job Application ID
+        in: path
+        name: job_application_id
+        required: true
+        schema:
+          type: string
+        example: ap_D3kCkoClbG6n6KlqD0ob
+    get:
+      tags:
+        - Job Applications
+      summary: Get detailed information of a job application
+      operationId: JobApplications_detailedInfo
+      description: |
+        Required scope: `job-applications:read`
+      parameters:
+        - description: Include additional information in the response
+          in: query
+          name: include
+          style: form
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - notes
+                - sources
+                - vacancy
+          required: false
+          examples:
+            include_notes:
+              summary: |
+                Include notes associated with this application.
+                Requires `job-application-notes:read` scope
+              value:
+                include[]: notes
+            include_sources:
+              summary: Return all sources of the job application
+              value:
+                include[]: sources
+            include_vacancy:
+              summary: Include the vacancy if job application was made to one
+              value:
+                include[]: vacancy
+      responses:
+        '200':
+          description: Detailed job application data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobApplicationsDetailedInfoResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '402':
+          $ref: '#/components/responses/PaymentRequired'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+    patch:
+      tags:
+        - Job Applications
+      summary: Update job application properties
+      operationId: JobApplications_updateProperties
+      description: |
+        Required scope: `job-applications:write`
+      requestBody:
+        description: Job application attributes
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JobApplicationsUpdatePropertiesRequest'
+            examples:
+              change_stages:
+                summary: Move applicant to a different stage
+                value:
+                  stage:
+                    name: hired
+              move_to_a_different_vacancy:
+                summary: Move applicant to a different vacancy
+                value:
+                  vacancy_id: job_644689182a1b8
+              update_last_name:
+                summary: Update applicant's personal details
+                value:
+                  email: applicant@example.com
+                  city: Amsterdam
+                  phone_number: '06111111111'
+              add_new_property_to_custom_Data:
+                summary: Update custom properties
+                value:
+                  custom_data:
+                    new_property: new information
+                    existing_property: update existing information
+      responses:
+        '200':
+          description: Detailed job application data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobApplicationsUpdatePropertiesResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '402':
+          $ref: '#/components/responses/PaymentRequired'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+    delete:
+      tags:
+        - Job Applications
+      summary: Delete a job application
+      operationId: JobApplications_removeJobApp
+      description: |
+        Required scope: `job-applications:write`
+      responses:
+        '204':
+          description: Job application was deleted successfully.
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /job-applications/{job_application_id}/notes:
+    parameters:
+      - description: Job Application ID
+        in: path
+        name: job_application_id
+        required: true
+        schema:
+          type: string
+        example: ap_D3kCkoClbG6n6KlqD0ob
+    post:
+      tags:
+        - Job Application Notes
+      summary: Create a new note
+      operationId: JobApplicationNotes_createNewNote
+      description: |
+        Required scope: `job-application-notes:write`
+      requestBody:
+        description: Note attributes
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JobApplicationNotesCreateNewNoteRequest'
+      responses:
+        '201':
+          description: Job application note was created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobApplicationNotesCreateNewNoteResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '402':
+          $ref: '#/components/responses/PaymentRequired'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /job-applications/{job_application_id}/files:
+    parameters:
+      - description: Job Application ID
+        in: path
+        name: job_application_id
+        required: true
+        schema:
+          type: string
+        example: ap_D3kCkoClbG6n6KlqD0ob
+    post:
+      tags:
+        - Job Application Files
+      summary: Upload files to a job application
+      operationId: JobApplicationFiles_uploadFilesToJobApplication
+      description: >
+        Maximum allowed file size is 25MB (can be subject to change in the
+        future).
+
+        Required scope: `job-application-files:write`
+      requestBody:
+        description: File attributes
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: >-
+                #/components/schemas/JobApplicationFilesUploadFilesToJobApplicationRequest
+      responses:
+        '200':
+          description: File added successfully to the job application
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/JobApplicationFilesUploadFilesToJobApplicationResponse
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '402':
+          $ref: '#/components/responses/PaymentRequired'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /job-applications/{job_application_id}/photo:
+    parameters:
+      - description: Job Application ID
+        in: path
+        name: job_application_id
+        required: true
+        schema:
+          type: string
+        example: ap_D3kCkoClbG6n6KlqD0ob
+    post:
+      tags:
+        - Job Application Files
+      summary: Upload an applicant photo
+      operationId: JobApplicationFiles_uploadPhoto
+      description: >
+        If job application already has a photo, it'll be replaced by the newly
+
+        uploaded one.
+
+        Maximum allowed file size is 5MB (can be subject to change in the
+        future).
+
+        Required scope: `job-application-files:write`
+      requestBody:
+        description: File attributes
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/JobApplicationFilesUploadPhotoRequest'
+      responses:
+        '200':
+          description: Photo successfully uploaded to the job application
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobApplicationFilesUploadPhotoResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '402':
+          $ref: '#/components/responses/PaymentRequired'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /vacancies:
+    get:
+      tags:
+        - Vacancies
+      summary: Get a list of vacancies
+      operationId: Vacancies_listOfVacancies
+      description: |
+        Required scope: `vacancies:read`
+      parameters:
+        - description: Name of the vacancy status
+          in: query
+          name: filter
+          required: false
+          style: deepObject
+          explode: true
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                enum:
+                  - public
+                  - private
+                  - draft
+                  - closed
+          examples:
+            drafts:
+              summary: Only return draft vacancies
+              value:
+                status: draft
+            public_and_private:
+              summary: Return private and public vacancies
+              value:
+                status: private,public
+        - description: Include additional information in the response
+          in: query
+          name: include
+          style: form
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - location
+                - department
+                - stages
+                - total_candidate_count
+          required: false
+          examples:
+            include_location:
+              summary: >-
+                If a vacancy has a location attached to it then return that
+                location in the response
+              value:
+                include[]: location
+            include_stages:
+              summary: >-
+                Return job application stages defined for the vacancy in the
+                response
+              value:
+                include[]: stages
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PerPage'
+      responses:
+        '200':
+          description: List of vacancies
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VacanciesListOfVacanciesResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '402':
+          $ref: '#/components/responses/PaymentRequired'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /vacancies/{vacancy_id}:
+    parameters:
+      - description: Vacancy ID
+        in: path
+        name: vacancy_id
+        required: true
+        schema:
+          type: string
+        example: job_SnhUsAg1QwTRFIRNUfM6
+    get:
+      tags:
+        - Vacancies
+      summary: Get detailed information of a vacancy
+      operationId: Vacancies_detailedInfo
+      description: |
+        Required scope: `vacancies:read`
+      parameters:
+        - description: Include additional information in the response
+          in: query
+          name: include
+          style: form
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - location
+                - department
+                - stages
+                - total_candidate_count
+          required: false
+      responses:
+        '200':
+          description: Detailed vacancy data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VacanciesDetailedInfoResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '402':
+          $ref: '#/components/responses/PaymentRequired'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /ping:
+    get:
+      tags:
+        - Other
+      summary: Dummy endpoint for testing authentication
+      operationId: Other_dummyEndpoint
+      responses:
+        '200':
+          description: Test response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OtherDummyEndpointResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '402':
+          $ref: '#/components/responses/PaymentRequired'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+components:
+  parameters:
+    PerPage:
+      description: Change the number of object returned per page
+      in: query
+      name: perPage
+      style: simple
+      schema:
+        type: integer
+        default: 15
+        minimum: 1
+        maximum: 100
+      required: false
+    Page:
+      description: Change the page number to get more results
+      in: query
+      name: page
+      style: simple
+      schema:
+        type: integer
+        default: 1
+        minimum: 1
+      required: false
+  responses:
+    Unauthenticated:
+      description: Public API key is missing or invalid
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/JobApplicationsListOfApplications401Response'
+    Unauthorized:
+      description: Your API key is not authorized to perform this action
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/JobApplicationsListOfApplications403Response'
+    NotFound:
+      description: Requested resource was not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/JobApplicationsRemoveJobAppResponse'
+    PaymentRequired:
+      description: Your plan doesn't include Public API feature
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/JobApplicationsListOfApplications402Response'
+    ValidationError:
+      description: Request content was not valid
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/JobApplicationsAddNewApplication400Response'
+    TooManyRequests:
+      description: >-
+        You’re requesting too much in too little time. The current rate limit is
+        60 requests per minute.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/JobApplicationsListOfApplications429Response'
+  securitySchemes:
+    public-api-v2-key:
+      type: http
+      scheme: bearer
+  schemas:
+    Vacancy:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        id:
+          type: string
+        application_form_url:
+          type: string
+          format: uri
+        job_url:
+          type: string
+          format: uri
+        share_image_url:
+          type: string
+          nullable: true
+          format: uri
+        status:
+          type: string
+          enum:
+            - public
+            - private
+            - closed
+            - draft
+        total_candidate_count:
+          description: Added through `include` query parameter
+          type: integer
+        type:
+          type: string
+          enum:
+            - Contracted
+            - Full-time
+            - Full-time / Part-time
+            - Internship
+            - Part-time
+            - Seasonal
+            - Temporary
+            - Traineeship
+            - Volunteer
+        expires_at:
+          description: ISO 8601 date-time UTC string
+          type: string
+          nullable: true
+          format: date-time
+        is_remote:
+          description: Deprecated, use `location_type=remote` instead
+          type: boolean
+          nullable: true
+        location_type:
+          type: string
+          enum:
+            - on-site
+            - remote
+        location:
+          $ref: '#/components/schemas/Location'
+        department:
+          $ref: '#/components/schemas/Department'
+        stages:
+          type: array
+          items:
+            $ref: '#/components/schemas/Stage'
+        created_at:
+          description: ISO 8601 date-time UTC string
+          type: string
+          format: date-time
+    Location:
+      type: object
+      nullable: true
+      properties:
+        name:
+          type: string
+        country:
+          type: string
+        address:
+          type: string
+        postal_code:
+          type: string
+        city:
+          type: string
+        region:
+          type: string
+    Department:
+      type: object
+      nullable: true
+      properties:
+        name:
+          type: string
+    JobApplication:
+      type: object
+      properties:
+        id:
+          type: string
+        rating:
+          type: number
+          format: float
+        retention_period_ends_at:
+          description: ISO 8601 date-time UTC string
+          type: string
+          format: date-time
+        sourced:
+          type: boolean
+        total_votes:
+          type: integer
+        homerun_url:
+          description: URL to the application in Homerun
+          type: string
+          format: url
+        created_at:
+          description: ISO 8601 date-time UTC string
+          type: string
+          format: date-time
+        disqualified:
+          type: boolean
+        hired_at:
+          description: ISO 8601 date-time UTC string
+          type: string
+          nullable: true
+          format: date-time
+        first_reply_at:
+          description: ISO 8601 date-time UTC string
+          type: string
+          nullable: true
+          format: date-time
+        personal_info:
+          type: object
+          properties:
+            first_name:
+              type: string
+            last_name:
+              type: string
+            email:
+              type: string
+              format: email
+            city:
+              type: string
+              nullable: true
+            country:
+              type: string
+              nullable: true
+            date_of_birth:
+              description: Date string
+              type: string
+              format: date
+              nullable: true
+            phone_number:
+              type: string
+              nullable: true
+            photo:
+              type: string
+              format: url
+              nullable: true
+        vacancy_id:
+          type: string
+          nullable: true
+        stage:
+          $ref: '#/components/schemas/Stage'
+        notes:
+          nullable: true
+          type: array
+          items:
+            $ref: '#/components/schemas/Note'
+        sources:
+          nullable: true
+          type: array
+          items:
+            $ref: '#/components/schemas/JobApplicationSource'
+    JobApplicationDetails:
+      description: |
+        Contains all data from JobApplication schema + additional information.
+        Stage is included by default.
+      allOf:
+        - $ref: '#/components/schemas/JobApplication'
+        - type: object
+          properties:
+            education:
+              type: string
+              nullable: true
+            experience:
+              type: string
+              nullable: true
+            pronouns:
+              type: string
+              nullable: true
+            skype:
+              type: string
+              nullable: true
+            facebook:
+              type: string
+              format: url
+              nullable: true
+            twitter:
+              type: string
+              format: url
+              nullable: true
+            linkedin:
+              type: string
+              format: url
+              nullable: true
+            github:
+              type: string
+              format: url
+              nullable: true
+            website:
+              type: string
+              format: url
+              nullable: true
+            assignment:
+              type: string
+              nullable: true
+            files:
+              type: array
+              nullable: true
+              items:
+                $ref: '#/components/schemas/JobApplicationFile'
+            custom_data:
+              type: object
+              nullable: true
+              properties:
+                key:
+                  type: string
+                  example: value
+                different_key:
+                  type: string
+                  example: diffrent value
+    Stage:
+      type: object
+      nullable: true
+      properties:
+        name:
+          type: string
+    Note:
+      type: object
+      nullable: true
+      properties:
+        display_name:
+          type: string
+        is_sensitive:
+          type: boolean
+        note:
+          type: string
+        created_at:
+          description: ISO 8601 date-time UTC string
+          type: string
+          format: date-time
+        updated_at:
+          description: ISO 8601 date-time UTC string
+          type: string
+          format: date-time
+    JobApplicationFile:
+      type: object
+      properties:
+        name:
+          type: string
+          example: my-resume.pdf
+        type:
+          type: string
+          enum:
+            - resume
+            - assignment
+          example: resume
+        temporary_download_url:
+          description: |
+            Signed URL to download the file, valid for
+            5 minutes after issuing.
+          type: string
+          format: url
+    JobApplicationSource:
+      type: object
+      properties:
+        name:
+          type: string
+          example: Homerun Career Page
+    JobApplicationsAddNewApplicationRequest:
+      type: object
+      required:
+        - first_name
+        - last_name
+        - email
+      properties:
+        first_name:
+          type: string
+        last_name:
+          type: string
+        email:
+          type: string
+          format: email
+        date_of_birth:
+          description: Date string in the format of YYYY-MM-DD
+          type: string
+          format: date
+          example: '1983-01-28'
+        vacancy_id:
+          description: |
+            Id of one of the existing vacancies in open or private status.
+            If not sent or sent as `null`, the application will be visible
+            on candidate page in our UI.
+          type: string
+          example: job_jfGhv8FnurJalJTmp8I1
+        city:
+          type: string
+          example: Rotterdam
+        country:
+          type: string
+          example: The Netherlands
+        phone_number:
+          type: string
+          example: 012-34567890
+        photo:
+          description: You can also upload a photo through Job Application Files endpoint
+          type: string
+          format: url
+          example: https://static.homerun.co/images/hiring-with-homerun-dark.png
+        sourced:
+          description: Indicates if the candidate was sourced or "applied" themselves.
+          type: boolean
+          example: true
+        experience:
+          type: string
+        education:
+          type: string
+        pronouns:
+          type: string
+        skype:
+          type: string
+        facebook:
+          type: string
+          format: url
+        twitter:
+          type: string
+          format: url
+        linkedin:
+          type: string
+          format: url
+        github:
+          type: string
+          format: url
+        website:
+          type: string
+          format: url
+        assignment:
+          description: >
+            Text part of the assignment.
+
+            Files can be added via Job Application Files endpoint with
+            `assignment` type.
+          type: string
+        custom_data:
+          description: >
+            Key-Value property storage for properties not covered by Job
+            Application object schema
+          type: object
+          example:
+            internal_id: hr-2131
+            driving_licence: 'yes'
+        sources:
+          description: Names of job application sources
+          type: array
+          example:
+            - Homerun Career Page
+          items:
+            description: >-
+              WARNING: Missing items property in array schema. Missing items
+              property has been filled with this AnyType schema.
+    JobApplicationsUpdatePropertiesRequest:
+      type: object
+      properties:
+        first_name:
+          type: string
+        last_name:
+          type: string
+        email:
+          type: string
+          format: email
+        date_of_birth:
+          type: string
+          format: date
+          example: '1983-01-28'
+        vacancy_id:
+          description: |
+            Id of one of the existing vacancies in open or private status.
+            If not sent or sent as `null`, the application will be moved
+            to candidate page in our UI.
+            If id cannot be matched to any of your jobs, 404 response will
+            be returned.
+          type: string
+          example: job_jfGhv8FnurJalJTmp8I1
+        city:
+          type: string
+          example: Rotterdam
+        country:
+          type: string
+          example: The Netherlands
+        phone_number:
+          type: string
+          example: 012-34567890
+        photo:
+          type: string
+          format: url
+          example: https://d2zr9w65gdacs9.cloudfront.net/53/14da63a1435155015.jpg
+        sourced:
+          description: Indicates if the candidate was sourced or "applied" themselves.
+          type: boolean
+          example: true
+        experience:
+          type: string
+        education:
+          type: string
+        pronouns:
+          type: string
+        skype:
+          type: string
+        facebook:
+          type: string
+          format: url
+        twitter:
+          type: string
+          format: url
+        linkedin:
+          type: string
+          format: url
+        github:
+          type: string
+          format: url
+        website:
+          type: string
+          format: url
+        assignment:
+          type: string
+        stage:
+          description: |
+            Move application to a different, existing hiring stage.
+            If stage cannot be matched, a 404 will be returned.
+            If also moving between vacancies, stage also needs to exist
+            in the new vacancy otherwise a 404 response will be returned.
+          type: object
+          required:
+            - name
+          properties:
+            name:
+              type: string
+        custom_data:
+          description: Only sent properties will be affected
+          type: object
+          example:
+            internal_id: hr-2131
+            driving_licence: 'yes'
+    JobApplicationNotesCreateNewNoteRequest:
+      type: object
+      required:
+        - note
+        - display_name
+      properties:
+        note:
+          description: Content of the note
+          type: string
+          example: Excellent candidate, interview scheduled for Monday.
+        display_name:
+          description: Name of the note's author
+          type: string
+          example: Ted
+        is_sensitive:
+          description: |
+            Mark note's content as sensitive.
+          type: boolean
+          example: false
+    JobApplicationFilesUploadFilesToJobApplicationRequest:
+      type: object
+      required:
+        - type
+        - file
+      properties:
+        type:
+          description: Type of uploaded file
+          type: string
+          enum:
+            - resume
+            - assignment
+          example: resume
+        file:
+          description: Uploaded file
+          type: string
+          format: binary
+    JobApplicationFilesUploadPhotoRequest:
+      type: object
+      required:
+        - file
+      properties:
+        file:
+          description: Image, only jpg, png and gif formats are supported.
+          type: string
+          format: binary
+    JobApplicationsListOfApplicationsResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/JobApplication'
+    JobApplicationsListOfApplications401Response:
+      type: object
+      properties:
+        code:
+          type: integer
+          default: 401
+        error:
+          type: boolean
+          default: true
+        message:
+          type: string
+          default: Unauthenticated
+    JobApplicationsListOfApplications402Response:
+      type: object
+      properties:
+        code:
+          type: integer
+          default: 402
+        error:
+          type: boolean
+          default: true
+        message:
+          type: string
+          default: Your plan does not include public api access
+    JobApplicationsListOfApplications403Response:
+      type: object
+      properties:
+        code:
+          type: integer
+          default: 403
+        error:
+          type: boolean
+          default: true
+        message:
+          type: string
+          default: Forbidden
+    JobApplicationsListOfApplications429Response:
+      type: object
+      properties:
+        code:
+          type: integer
+          default: 429
+        error:
+          type: boolean
+          default: true
+        message:
+          type: string
+          default: The given input was invalid
+        details:
+          type: array
+          items:
+            - type: object
+              properties:
+                param:
+                  type: string
+                  example: field_name
+                message:
+                  type: string
+                  example: field_name is not a valid value
+    JobApplicationsAddNewApplicationResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/JobApplicationDetails'
+    JobApplicationsAddNewApplication400Response:
+      type: object
+      properties:
+        code:
+          type: integer
+          default: 400
+        error:
+          type: boolean
+          default: true
+        message:
+          type: string
+          default: The given input was invalid
+        details:
+          type: array
+          items:
+            - type: object
+              properties:
+                param:
+                  type: string
+                  example: field_name
+                message:
+                  type: string
+                  example: field_name is not a valid value
+    JobApplicationsRemoveJobAppResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          default: 403
+        error:
+          type: boolean
+          default: true
+        message:
+          type: string
+          default: Not found
+    JobApplicationsDetailedInfoResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/JobApplicationDetails'
+    JobApplicationsUpdatePropertiesResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/JobApplicationDetails'
+    JobApplicationNotesCreateNewNoteResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/Note'
+    JobApplicationFilesUploadFilesToJobApplicationResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/JobApplicationFile'
+    JobApplicationFilesUploadPhotoResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/JobApplication'
+    VacanciesListOfVacanciesResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Vacancy'
+    VacanciesDetailedInfoResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/Vacancy'
+    OtherDummyEndpointResponse:
+      type: object
+      properties:
+        pong:
+          type: boolean
+security:
+  - public-api-v2-key: []
