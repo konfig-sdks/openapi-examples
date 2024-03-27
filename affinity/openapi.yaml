@@ -1,0 +1,4502 @@
+openapi: 3.0.1
+info:
+  title: Affinity API v2
+  description: >
+    # Introduction
+
+
+    Welcome to Affinity API v2! This API provides a RESTful interface for
+    building internal apps,
+
+    automated workflows, and other integrations on top of the core data models
+    in Affinity, and for
+
+    connecting Affinity to the rest of your tech and data stack.
+
+
+    Please note that this new version of the API is not at feature parity with
+
+    [Affinity API v1](https://api-docs.affinity.co/). We will add to this new
+    version to cover more of
+
+    v1's functionality over time. **This API version is also only available on
+    select Affinity license
+
+    types.** See
+
+    [this Help Center
+    article](https://support.affinity.co/hc/en-us/articles/5563700459533-Getting-started-with-the-Affinity-API-FAQs)
+
+    or contact your Customer Success Manager for more information.
+
+
+    # Getting Started
+
+
+    All Affinity API endpoints use the base URL `https://api.affinity.co`. All
+    v2 endpoint paths start
+
+    with `/v2`. Requests must be sent over HTTPS.
+
+
+    ## Using These Docs
+
+
+    The first few sections of these docs cover general information on the API.
+    Each subsequent section
+
+    covers a set of API endpoints.
+
+
+    Each endpoint is documented with its accepted request parameters, expected
+    response shapes, and a
+
+    sample request and response. Please note that the shape of a given response
+    can vary depending on
+
+    what "type" of object or data is being returned. When this is the case, the
+    response documentation
+
+    will include a dropdown that can be used to select the "type" for which to
+    display the response
+
+    shape.
+
+
+    ## Authentication
+
+
+    Affinity API v2 uses API keys and **bearer authentication** (this is an
+    important difference from
+
+    Affinity API v1's use of basic authentication).
+
+
+    To generate an API key, navigate to the Settings page in the Affinity web
+    app. You will need the
+
+    "Generate an API key" role-based permission controlled by your Affinity
+    admin to be able to do this.
+
+    See
+
+    [this Help Center
+    article](https://support.affinity.co/hc/en-us/articles/360032633992-How-to-obtain-your-API-Key)
+
+    for full instructions on API key generation, and
+
+    [this
+    article](https://support.affinity.co/hc/en-us/articles/360015976732-Account-Level-Permissions)
+
+    for more information on role-based permissions in Affinity.
+
+
+    Currently, we support one API key per user in your Affinity account. Your
+    API key is able to read
+
+    data and perform actions in Affinity on your behalf, so keep it safe as you
+    would a password.
+
+
+    Provide your API key as your bearer authentication token to start making
+    calls to Affinity API v2.
+
+
+    ## Permissions
+
+
+    ### Overall requirements
+
+
+    You must have the "Generate an API key" permission to be able to work with
+    the Affinity API. Most
+
+    users in most Affinity accounts with API access have this by default —
+    Contact your Affinity admin
+
+    if you are not able to generate an API key, and see
+
+    [this
+    article](https://support.affinity.co/hc/en-us/articles/360015976732-Account-Level-Permissions)
+
+    for more information on role-based permissions in Affinity.
+
+
+    ### Resource-level permissions
+
+
+    The Affinity API respects sharing permissions that are set in-product. For
+    example, if a given user
+
+    does not have access to a list, note, or interaction in-product, they will
+    not be able to see or
+
+    modify it via API.
+
+
+    ### Endpoint-level permissions
+
+
+    Many API endpoints also require endpoint-specific permissions that map to
+    permissions in-product.
+
+    These permissions, along with the "Generate an API key" permission, are
+    managed by your Affinity
+
+    admin in the Settings page:
+
+
+    | API v2 Endpoint                                            | Required
+    Permission                  |
+
+    | ---------------------------------------------------------- |
+    ------------------------------------ |
+
+    | GET `/v2/companies`                                        | "Export All
+    Organizations directory" |
+
+    | GET `/v2/companies/{id}`                                   | "Export All
+    Organizations directory" |
+
+    | GET `/v2/companies/{id}/list-entries`                      | "Export data
+    from Lists"             |
+
+    | GET `/v2/persons`                                          | "Export All
+    People directory"        |
+
+    | GET `/v2/persons/{id}`                                     | "Export All
+    People directory"        |
+
+    | GET `/v2/persons/{id}/list-entries`                        | "Export data
+    from Lists"             |
+
+    | GET `/v2/opportunities`                                    | "Export data
+    from Lists"             |
+
+    | GET `/v2/opportunities/{id}`                               | "Export data
+    from Lists"             |
+
+    | GET `/v2/lists/{listId}/list-entries`                      | "Export data
+    from Lists"             |
+
+    | GET `/v2/lists/{listId}/saved-views/{viewId}/list-entries` | "Export data
+    from Lists"             |
+
+
+    ## Rate Limits
+
+
+    The Affinity API sets a limit on the number of calls that a user can make
+    per minute, and that all
+
+    the users on an account can make per month. It also sets a reasonable limit
+    on the number of
+
+    concurrent requests it will support from an account at one time.
+
+
+    Requests to **both** Affinity API versions will count toward the one pool of
+    requests allowed for a
+
+    user or account. Once a per-minute, monthly, or concurrent rate limit is
+    hit, subsequent requests
+
+    will return an error code of 429. **We highly recommend designing your
+    application to handle 429
+
+    errors.**
+
+
+    ### Per-Minute Limits (User-Level)
+
+
+    To help protect our systems, API requests will be halted at **900 per user,
+    per minute.** We may
+
+    also lower this limit on a temporary basis to manage API availability.
+
+
+    ### Concurrent Request Limits (Account-Level)
+
+
+    To protect our systems and manage availability across customers, we set a
+    reasonable limit on
+
+    concurrent requests at the account level. Customers should not expect to hit
+    this limit unless they
+
+    are hitting the API with heavy operations from many concurrent threads at
+    once.
+
+
+    ### Monthly Plan Tier Limits (Account-Level)
+
+
+    The overall number of requests you can make per month will depend on your
+    account's plan tier.
+
+    **This monthly account-level limit resets at the end of each calendar
+    month.** Current rate limits
+
+    by plan tier are:
+
+
+    | Plan Tier  | Calls Per Month |
+
+    | ---------- | --------------- |
+
+    | Essentials | None            |
+
+    | Scale      | 100k            |
+
+    | Advanced   | 100k            |
+
+    | Enterprise | Unlimited\*     |
+
+
+    \*Per-Minute and Concurrent Request Limits still apply.
+
+
+    ### Rate Limit Headers
+
+
+    All API calls will return the following response headers with information
+    about per-minute and
+
+    monthly limits:
+
+
+    | Header                           |
+    Description                                             |
+
+    | -------------------------------- |
+    ------------------------------------------------------- |
+
+    | X-Ratelimit-Limit-User           | Number of requests allowed per minute
+    for the user      |
+
+    | X-Ratelimit-Limit-User-Remaining | Number of requests remaining for the
+    user               |
+
+    | X-Ratelimit-Limit-User-Reset     | Time in seconds before the limit resets
+    for the user    |
+
+    | X-Ratelimit-Limit-Org            | Number of requests allowed per month
+    for the account    |
+
+    | X-Ratelimit-Limit-Org-Remaining  | Number of requests remaining for the
+    account            |
+
+    | X-Ratelimit-Limit-Org-Reset      | Time in seconds before the limit resets
+    for the account |
+
+
+    ## Pagination
+
+
+    When an endpoint is expected to return multiple results, we break the
+    results up into pages to make
+
+    them easier to handle. To cycle forward through multiple pages of data, look
+    for the `nextUrl`
+
+    property in the `pagination` portion of an API response, and use it for your
+    next request. See
+
+    endpoint documentation for more information.
+
+
+    ## Error Codes
+
+
+    Here is a list of the error codes this API will generally return if
+    something goes wrong (see
+
+    endpoint documentation for endpoint-specific error information):
+
+
+    | Error Code |
+    Meaning                                                                                                                                                                                                    
+    |
+
+    | ---------- |
+    -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    |
+
+    | 400        | Bad Request — See endpoint documentation for more
+    information.                                                                                                                                             
+    |
+
+    | 401        | Unauthorized — Your API key is
+    invalid.                                                                                                                                                                    
+    |
+
+    | 403        | Forbidden — Insufficient rights to a
+    resource.                                                                                                                                                             
+    |
+
+    | 404        | Not Found — Requested resource does not exist. See endpoint
+    documentation for more
+    information.                                                                                                            
+    |
+
+    | 405        | Method Not Allowed — The method being used is not supported
+    for this
+    resource.                                                                                                                             
+    |
+
+    | 422        | Unprocessable Entity — Malformed parameters supplied. This
+    can also happen in cases the parameters supplied logically cannot complete
+    the request. In this case, an appropriate error message is delivered. |
+
+    | 429        | Too Many Requests — You have exceeded the rate
+    limit.                                                                                                                                                      
+    |
+
+    | 500        | Internal Server Error — We had a problem with our server. Try
+    again
+    later.                                                                                                                                 
+    |
+
+    | 503        | Service Unavailable — This shouldn't generally happen.
+    Contact us if you encounter this
+    error.                                                                                                             
+    |
+
+
+    # Data Model
+
+
+    ## The Basics
+
+
+    - The three top-level objects in Affinity are **Persons, Companies, and
+    Opportunities**. (Please
+      note: Companies are called Organizations in the Affinity web app.) These have profiles in the
+      Affinity web app and can be added to Lists.
+    - A lot of the work of Affinity happens within Lists. A **List** is a
+    spreadsheet-like collection of
+      rows tied to Persons, Companies, or Opportunities.
+    - Each row on a List is a **List Entry**. A List Entry contains data and
+    metadata about a given
+      Person, Company, or Opportunity in the context of a List. This includes list-specific field data,
+      and information about who added the row to the List and when.
+      - Do note that a given entity can be added to a List more than once, i.e., it can have multiple
+        List Entries on the same List. These List Entries can have different list-specific field data
+        and List Entry-level metadata.
+    - Each column on a List maps to a **Field**. Fields and field data also show
+    up within Affinity
+      profile pages, extensions, and integrations.
+      - Some Fields are scoped to a single List — These are **list-specific fields**, and in the API,
+        their data can only be accessed through the List Entry resource. "Global" data from other Fields
+        can be accessed both through the Person/Company/Opportunity resource and the List Entry
+        resource.
+
+    ## Working with Field Data
+
+
+    ### Field Types and IDs
+
+
+    There are a few types of Fields in Affinity, differentiated by the scope and
+    source of their data:
+
+
+    | Field&nbsp;Type             |
+    Description                                                                                                                                                 
+    | Example
+    Fields                                                                                                                                             
+    | Field ID
+    Pattern                                                                                                                            
+    |
+
+    | --------------------------- |
+    ------------------------------------------------------------------------------------------------------------------------------------------------------------
+    |
+    -----------------------------------------------------------------------------------------------------------------------------------------------------------
+    |
+    --------------------------------------------------------------------------------------------------------------------------------------------
+    |
+
+    | `enriched`                  | Firmographic, funding, and people Fields
+    populated by Affinity. These can be "Affinity Data" Fields or come from
+    distinct data partners.                     | "Affinity Data: Description",
+    "Dealroom: Number of
+    Employees"                                                                                              
+    | A string representing the enrichment source, followed by the field name,
+    e.g. `affinity-data-description` or `dealroom-number-of-employees`. |
+
+    | `list`                      | Fields that are specific to the context of a
+    given list. These can only be accessed through `*/list-entries` endpoints in
+    this version of the API.           | Default "Status" and "Amount" columns,
+    custom columns that pertain to a given List of deals or
+    founders                                                     | `field-`,
+    followed by a unique integer, e.g.
+    `field-1234`                                                                                   
+    |
+
+    | `global`                    | Fields that persist across an Affinity
+    account and are not
+    list-specific.                                                                                   
+    | "My Firm's Founder Scoring
+    Column"                                                                                                                         
+    | `field-`, followed by a unique integer, e.g.
+    `field-1234`                                                                                   
+    |
+
+    | `relationship-intelligence` | Fields populated by Affinity from users'
+    email and calendar data that provide insight into your firm's relationship
+    with a given Person/Company/Opportunity. | "Source of Introduction", "First
+    Email", "Last Email", "First Event", "Last Event", "Next Event", "First Chat
+    Message", "Last Chat Message", "Last Contact" | A string similar to the
+    field's name in-product, e.g.
+    `source-of-introduction`                                                              
+    |
+
+
+    ### Field Value Types
+
+
+    Field data can take a variety of shapes. These value types are described in
+    the Affinity Help Center
+
+    [here](https://support.affinity.co/hc/en-us/articles/115001608232-How-to-create-a-new-column-in-a-list).
+
+    Here is a list of the same value types, as represented in this API. Notice
+    how array types end with
+
+    `-multi`:
+
+
+    | Single Type         | Array Type                |
+
+    | ------------------- | ------------------------- |
+
+    | `text`              | Not supported in Affinity |
+
+    | `number`            | `number-multi`            |
+
+    | `datetime`          | Not supported in Affinity |
+
+    | `location`          | `location-multi`          |
+
+    | `dropdown`          | `dropdown-multi`          |
+
+    | `ranked-dropdown`   | Not supported in Affinity |
+
+    | `person`            | `person-multi`            |
+
+    | `company`           | `company-multi`           |
+
+    | `filterable-text`\* | `filterable-text-multi`\* |
+
+
+    \*Please note that `filterable-text` and `filterable-text-multi` are special
+    types that operate
+
+    similarly to `dropdown` and `dropdown-multi`. They are reserved for
+    Affinity-populated Fields, and
+
+    users cannot create Fields with these types.
+
+
+    When an array-typed value has no data in it, the API will return `null`
+    (rather than an empty
+
+    array).
+
+
+    ### Retrieving Field Data
+
+
+    To retrieve field data on companies, persons, or opportunities, call GET
+    `/v2/companies`, GET
+
+    `/v2/persons`, or one of our GET `*/list-entries` endpoints. (Note that
+    Opportunities only have
+
+    list-specific Fields, so all their field data will live on the
+    `*/list-entries` endpoints.) For most
+
+    of these endpoints, you will need to specify the Fields for which you want
+    data returned via the
+
+    `fieldIds` or `fieldTypes` parameter — Otherwise, entities will be returned
+    without any field data
+
+    attached.
+
+
+    The GET `/v2/companies` and `/v2/persons` endpoints can return entities with
+    enriched, global, and
+
+    relationship intelligence field data attached, but do not support
+    list-specific field data. **To get
+
+    comprehensive field data including list-specific field data on Companies and
+    Persons, use the GET
+
+    `*/list-entries` endpoints.**
+
+
+    ### Specifying Desired Fields (Field Selection)
+
+
+    As mentioned above, you will need to specify the Fields (either by ID or by
+    Type) for which you want
+
+    data returned when using the following endpoints:
+
+
+    - GET `/v2/companies`
+
+    - GET `/v2/companies/{id}`
+
+    - GET `/v2/persons`
+
+    - GET `/v2/persons/{id}`
+
+    - GET `/v2/lists/{listId}/list-entries`
+
+
+    Each of these endpoints has a `fieldIds` parameter that accepts an array of
+    Field IDs, and a
+
+    `fieldTypes` parameter that accepts an array of Field Types. Use the GET
+    `*/fields` endpoints to get
+
+    Field IDs, Field Types, and other Field-level metadata:
+
+
+    - Call GET `/v2/companies/fields` and `/v2/persons/fields` to get a list of
+    the enriched, global,
+      and relationship intelligence (AKA non-list-specific) Fields that exist on Companies and Persons,
+      respectively. These are the Fields whose values are available to pull via GET `/v2/companies`, GET
+      `/v2/companies/{id}`, GET `/v2/persons`, and `/v2/persons/{id}`.
+
+    - Call GET `/v2/lists/{listId}/fields` to get a list of the enriched,
+    global, relationship
+      intelligence, **and list-specific** Fields for a given List. These are the Fields whose values are
+      available to pull via GET `/v2/lists/{listId}/list-entries`.
+
+    The following endpoints don't require field selection:
+
+
+    - GET `/v2/lists/{listId}/saved-views/{viewId}/list-entries` — See below.
+    This endpoint returns just
+      the field data that has been pulled into the given Saved View via UI.
+    - GET `/v2/companies/{id}/list-entries` and GET
+    `/v2/persons/{id}/list-entries` — These endpoints
+      return comprehensive field data for the given person or company in the context of each List Entry.
+
+    ### Saved Views
+
+
+    A Saved View allows a user to configure the Fields they want to see in the
+    UI for a given List, and
+
+    set filters and sorts on the rows on that List. A List can have multiple
+    Saved Views. In the context
+
+    of this API, Saved Views can be useful for specifying the exact Fields for
+    which data is needed. The
+
+    `*/saved-views/{viewId}/list-entries` endpoint also respects the filters
+    that have been set on the
+
+    given Saved View in the Affinity web app. (It does not, however, respect
+    sorts just yet.)
+
+
+    ### Partner Data Restrictions
+
+
+    This API supports pulling data from
+
+    [Affinity
+    Data](https://support.affinity.co/hc/en-us/articles/360058255052-Affinity-Data)
+    fields and
+
+    select
+
+    [Dealroom
+    fields](https://support.affinity.co/hc/en-us/articles/6106558518797-Dealroom-co-data-in-Affinity#h_01G2N22SVH7TJR3DJV3NQDE9HQ).
+
+    Due the agreements we have with some of our data partners, the API does not
+    expose data from the
+
+    following sources:
+
+
+    - Crunchbase, including Crunchbase UUID
+
+    - Pitchbook
+
+    - [Dealroom "exclusive"
+    fields](https://support.affinity.co/hc/en-us/articles/6106558518797-Dealroom-co-data-in-Affinity#h_01G2N22YEAZJ5TC1X9ENKZFWF5)
+
+
+    ## A Note on Nested Associations
+
+
+    Some GET endpoints return "association" data under `fields`. For example,
+    the Persons GET endpoints
+
+    return data about which Companies a Person is associated with in Affinity.
+    The Opportunities GET
+
+    endpoints return similar data about associated Companies and Persons. The
+    List Entries GET endpoints
+
+    also return this data for Person and Opportunity List Entries.
+
+
+    The API truncates these nested arrays of Persons or Companies **at 100
+    entries**. For example, if an
+
+    Opportunity is associated with 200 Persons in Affinity, only 100 of those
+    Persons will be returned
+
+    by the GET `/opportunities` or `/opportunities/{id}` endpoint.
+
+
+    # User Guides
+
+
+    ## A Tour of Our GET Endpoints
+
+
+    | Desired Data                                                | Relevant
+    Endpoints                                                                                                                                                                                                                                                                                                                                   
+    |
+    Notes                                                                                    
+    |
+
+    | ----------------------------------------------------------- |
+    -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    |
+    -----------------------------------------------------------------------------------------
+    |
+
+    | Company/Person/Opportunity rows from a List                 | Grab the
+    List’s ID from its URL in the Affinity web app, then hit GET
+    `/v2/lists/{listId}/list-entries`                                                                                                                                                                                                                                              
+    | Data returned will be restricted to the rows on the requested
+    List                        |
+
+    | Company/Person/Opportunity rows from a Saved View           | In the
+    Affinity web app, navigate to a List and [create a Saved
+    View](https://support.affinity.co/hc/en-us/articles/115001508572-How-to-leverage-saved-views-within-a-list)
+    with the desired field data and filters on it. Grab the List and Saved View
+    IDs from the web app URL, then hit GET
+    `/v2/lists/{listId}/saved-views/{viewId}/list-entries` | Data returned will
+    be restricted to the rows and columns on the requested Saved View      |
+
+    | Full rolodex of Companies or Persons in Affinity            | GET
+    `/v2/companies`, GET
+    `/v2/persons`                                                                                                                                                                                                                                                                                                               
+    | Data from list-specific Fields will not be
+    returned                                       |
+
+    | All the rows for a given Company or Person across all Lists | GET
+    `/v2/companies/{id}/list-entries`, GET
+    `/v2/persons/{id}/list-entries`                                                                                                                                                                                                                                                                           
+    |                                                                                          
+    |
+
+    | Metadata on Fields, including Field IDs                     | GET
+    `/v2/companies/fields`, GET `/v2/persons/fields`, GET
+    `/v2/lists/{listId}/fields`                                                                                                                                                                                                                                                                
+    | Metadata on list-specific Fields will only be returned by GET
+    `/v2/lists/{listId}/fields` |
+
+    | Metadata on Lists or Saved Views                            | GET
+    `/v2/lists`, GET
+    `/v2/lists/{listId}/saved-views`                                                                                                                                                                                                                                                                                                
+    |                                                                                          
+    |
+
+    | Opportunity data                                            | GET
+    `/v2/opportunities` will only return Opportunity names and List IDs. For
+    comprehensive Opportunity data, hit GET `/v2/lists/{listId}/list-entries`
+    for an Opportunity
+    List                                                                                                                                                                       
+    |                                                                                          
+    |
+
+
+    Tip: The ID for a List, Saved View, Person, Company, or Opportunity can
+    always be found in its
+
+    Affinity web app URL.
+
+
+    # Changelog
+
+
+    ## March 25, 2024
+
+
+    - Added the ability to retrieve the date and other details of your firm's
+    "First Email", "Last
+      Email", "First Event", "Last Event", "Next Event", "First Chat Message", "Last Chat Message", and
+      "Last Contact" with a given entity. Use these timestamps to add relationship context to your
+      applications, and to identify founders and companies that need investors' attention.
+    - Endpoints that previously required a `fieldIds` parameter to return field
+    data, now accept either
+      `fieldIds` or `fieldTypes`, and will return field data accordingly. See the
+      [Specifying Desired Fields (Field Selection)](https://developer.affinity.co/) section
+      of these docs for more information. The new `fieldTypes` parameter should make field data
+      retrieval easier for users looking to pull data from many similar Fields at a time.
+
+    ## January 4, 2023
+
+
+    - Most endpoints that return field data now require the user to use the
+    `fieldIds` parameter to
+      specify which Fields they want data for. Without `fieldIds` specified, these endpoints will return
+      basic entity data but not field data.
+
+    ## December 12, 2023
+
+
+    - Added the ability to retrieve metadata (e.g. ID, name, type, enrichment
+    source, and data type) on
+      Fields. See the [Retrieving Field Metadata](https://developer.affinity.co/) section
+      of these docs for more information.
+  version: 2.0.0
+  contact:
+    email: support@affinity.co
+    name: Affinity Support
+    url: https://support.affinity.co
+  termsOfService: https://www.affinity.co/legal/terms-of-use
+  x-logo:
+    url: >-
+      https://s3.us-west-2.amazonaws.com/assets.affinity.co/img/logos/full-color-svg.svg
+    altText: Affinity logo
+servers:
+  - url: //api.affinity.co
+tags:
+  - description: Operations about lists
+    name: lists
+  - description: Operations about companies
+    name: companies
+  - description: Operations about persons
+    name: persons
+  - description: Operations about opportunities
+    name: opportunities
+  - description: Operations about auths
+    name: auth
+paths:
+  /v2/auth/whoami:
+    get:
+      tags:
+        - auth
+      summary: Get current user
+      operationId: Auth_getCurrentUser
+      description: Returns metadata about the current user.
+      responses:
+        '200':
+          description: Get current user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WhoAmI'
+  /v2/companies:
+    get:
+      tags:
+        - companies
+      summary: Get all Companies
+      operationId: Companies_getAll
+      description: >-
+        Paginate through Companies in Affinity.
+
+        Returns basic information and non-list-specific field data on each
+        Company.
+
+
+        To retrieve field data, you must use either the `fieldIds` or the
+        `fieldTypes` parameter
+
+        to specify the Fields for which you want data returned.
+
+        These Field IDs and Types can be found using the GET
+        `/v2/companies/fields` endpoint.
+
+        When no `fieldIds` or `fieldTypes` are provided, Companies will be
+        returned without any field data attached.
+
+        To supply multiple `fieldIds` or `fieldTypes` parameters, generate a
+        query string that looks like this:
+
+        `?fieldIds=field-1234&fieldIds=affinity-data-location` or
+        `?fieldTypes=enriched&fieldTypes=global`.
+
+
+        Requires the "Export All Organizations directory"
+        [permission](https://developer.affinity.co/).
+      parameters:
+        - description: Cursor for the next or previous page
+          in: query
+          name: cursor
+          schema:
+            type: string
+        - description: Number of items to include in the page
+          in: query
+          name: limit
+          schema:
+            default: 100
+            format: int32
+            maximum: 100
+            minimum: 1
+            type: integer
+        - description: Company IDs
+          explode: true
+          in: query
+          name: ids
+          schema:
+            items:
+              format: int64
+              maximum: 9223372036854776000
+              minimum: 1
+              type: integer
+            type: array
+          style: form
+        - description: Field IDs for which to return field data
+          explode: true
+          in: query
+          name: fieldIds
+          schema:
+            items:
+              format: string
+              type: string
+            type: array
+          style: form
+        - description: Field Types for which to return field data
+          explode: true
+          in: query
+          name: fieldTypes
+          schema:
+            items:
+              enum:
+                - enriched
+                - global
+                - relationship-intelligence
+              format: string
+              type: string
+            type: array
+          style: form
+      responses:
+        '200':
+          description: Get all Companies
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompanyPaged'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrors'
+  /v2/companies/fields:
+    get:
+      tags:
+        - companies
+      summary: Get metadata on Company Fields
+      operationId: Companies_getFieldMetadata
+      description: >-
+        Returns metadata on non-list-specific Company Fields.
+
+
+        Use the returned Field IDs to request field data from the GET
+        `/v2/companies` and GET `/v2/companies/{id}` endpoints.
+      parameters:
+        - description: Cursor for the next or previous page
+          in: query
+          name: cursor
+          schema:
+            type: string
+        - description: Number of items to include in the page
+          in: query
+          name: limit
+          schema:
+            default: 100
+            format: int32
+            maximum: 100
+            minimum: 1
+            type: integer
+      responses:
+        '200':
+          description: Get metadata on Company Fields
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FieldMetadataPaged'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrors'
+  /v2/companies/{id}:
+    get:
+      tags:
+        - companies
+      summary: Get a single Company
+      operationId: Companies_getSingleCompany
+      description: >-
+        Returns basic information and non-list-specific field data on the
+        requested Company.
+
+
+        To retrieve field data, you must use either the `fieldIds` or the
+        `fieldTypes` parameter
+
+        to specify the Fields for which you want data returned.
+
+        These Field IDs and Types can be found using the GET
+        `/v2/companies/fields` endpoint.
+
+        When no `fieldIds` or `fieldTypes` are provided, Companies will be
+        returned without any field data attached.
+
+        To supply multiple `fieldIds` or `fieldTypes` parameters, generate a
+        query string that looks like this:
+
+        `?fieldIds=field-1234&fieldIds=affinity-data-location` or
+        `?fieldTypes=enriched&fieldTypes=global`.
+
+
+        Requires the "Export All Organizations directory"
+        [permission](https://developer.affinity.co/).
+      parameters:
+        - description: Company ID
+          in: path
+          name: id
+          required: true
+          schema:
+            format: int64
+            maximum: 9223372036854776000
+            minimum: 1
+            type: integer
+        - description: Field IDs for which to return field data
+          explode: true
+          in: query
+          name: fieldIds
+          schema:
+            items:
+              format: string
+              type: string
+            type: array
+          style: form
+        - description: Field Types for which to return field data
+          explode: true
+          in: query
+          name: fieldTypes
+          schema:
+            items:
+              enum:
+                - enriched
+                - global
+                - relationship-intelligence
+              format: string
+              type: string
+            type: array
+          style: form
+      responses:
+        '200':
+          description: Get a single Company
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Company'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrors'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundErrors'
+  /v2/companies/{id}/lists:
+    get:
+      tags:
+        - companies
+      summary: Get a Company's Lists
+      operationId: Companies_getListsMetadata
+      description: Returns metadata for all the Lists on which the given Company appears.
+      parameters:
+        - description: Company ID
+          in: path
+          name: id
+          required: true
+          schema:
+            format: int64
+            maximum: 9223372036854776000
+            minimum: 1
+            type: integer
+        - description: Cursor for the next or previous page
+          in: query
+          name: cursor
+          schema:
+            type: string
+        - description: Number of items to include in the page
+          in: query
+          name: limit
+          schema:
+            default: 100
+            format: int32
+            maximum: 100
+            minimum: 1
+            type: integer
+      responses:
+        '200':
+          description: Get a Company's Lists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListPaged'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrors'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundErrors'
+  /v2/companies/{id}/list-entries:
+    get:
+      tags:
+        - companies
+      summary: Get a Company's List Entries
+      operationId: Companies_getListEntries
+      description: >-
+        Paginate through the List Entries (AKA rows) for the given Company
+        across all Lists.
+
+        Each List Entry includes field data for the Company, including
+        list-specific field data.
+
+        Each List Entry also includes metadata about its creation, i.e., when it
+        was added to the List and by whom.
+
+
+        Requires the "Export data from Lists"
+        [permission](https://developer.affinity.co/).
+      parameters:
+        - description: Company ID
+          in: path
+          name: id
+          required: true
+          schema:
+            format: int64
+            maximum: 9223372036854776000
+            minimum: 1
+            type: integer
+        - description: Cursor for the next or previous page
+          in: query
+          name: cursor
+          schema:
+            type: string
+        - description: Number of items to include in the page
+          in: query
+          name: limit
+          schema:
+            default: 100
+            format: int32
+            maximum: 100
+            minimum: 1
+            type: integer
+      responses:
+        '200':
+          description: Get a Company's List Entries
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListEntryPaged'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrors'
+  /v2/lists:
+    get:
+      tags:
+        - lists
+      summary: Get metadata on all Lists
+      operationId: Lists_getMetadata
+      description: Returns metadata on Lists.
+      parameters:
+        - description: Cursor for the next or previous page
+          in: query
+          name: cursor
+          schema:
+            type: string
+        - description: Number of items to include in the page
+          in: query
+          name: limit
+          schema:
+            default: 100
+            format: int32
+            maximum: 100
+            minimum: 1
+            type: integer
+      responses:
+        '200':
+          description: Get metadata on all Lists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListWithTypePaged'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrors'
+  /v2/lists/{listId}/list-entries:
+    get:
+      tags:
+        - lists
+      summary: Get all List Entries on a List
+      operationId: Lists_getAllListEntries
+      description: >-
+        Paginate through the List Entries (AKA rows) on a given List.
+
+        Returns basic information and field data, including list-specific
+
+        field data, on each Company, Person, or Opportunity on the List.
+
+        List Entries also include metadata about their creation,
+
+        i.e., when they were added to the List and by whom.
+
+
+        To retrieve field data, you must use either the `fieldIds` or the
+        `fieldTypes` parameter
+
+        to specify the Fields for which you want data returned.
+
+        These Field IDs and Types can be found using the GET
+        `/v2/lists/{listId}/fields` endpoint.
+
+        When no `fieldIds` or `fieldTypes` are provided, List Entries will be
+        returned without any field data attached.
+
+        To supply multiple `fieldIds` or `fieldTypes` parameters, generate a
+        query string that looks like this:
+
+        `?fieldIds=field-1234&fieldIds=affinity-data-location` or
+        `?fieldTypes=enriched&fieldTypes=global`.
+
+
+        Requires the "Export data from Lists"
+        [permission](https://developer.affinity.co/).
+      parameters:
+        - description: List ID
+          in: path
+          name: listId
+          required: true
+          schema:
+            format: int64
+            maximum: 9223372036854776000
+            minimum: 1
+            type: integer
+        - description: Cursor for the next or previous page
+          in: query
+          name: cursor
+          schema:
+            type: string
+        - description: Number of items to include in the page
+          in: query
+          name: limit
+          schema:
+            default: 100
+            format: int32
+            maximum: 100
+            minimum: 1
+            type: integer
+        - description: Field IDs for which to return field data
+          explode: true
+          in: query
+          name: fieldIds
+          schema:
+            items:
+              format: string
+              type: string
+            type: array
+          style: form
+        - description: Field Types for which to return field data
+          explode: true
+          in: query
+          name: fieldTypes
+          schema:
+            items:
+              enum:
+                - enriched
+                - global
+                - list
+                - relationship-intelligence
+              format: string
+              type: string
+            type: array
+          style: form
+      responses:
+        '200':
+          description: Get all List Entries on a List
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListEntryWithEntityPaged'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrors'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundErrors'
+  /v2/lists/{listId}:
+    get:
+      tags:
+        - lists
+      summary: Get metadata on a single List
+      operationId: Lists_getMetadataSingle
+      description: Returns metadata on a single List.
+      parameters:
+        - description: List ID
+          in: path
+          name: listId
+          required: true
+          schema:
+            format: int64
+            maximum: 9223372036854776000
+            minimum: 1
+            type: integer
+      responses:
+        '200':
+          description: Get metadata on a single List
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListWithType'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrors'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundErrors'
+  /v2/lists/{listId}/fields:
+    get:
+      tags:
+        - lists
+      summary: Get metadata on a single List's Fields
+      operationId: Lists_getFieldMetadata
+      description: >-
+        Returns metadata on the Fields available on a single List.
+
+
+        Use the returned Field IDs to request field data from the GET
+        `/v2/lists/{listId}/list-entries` endpoint.
+      parameters:
+        - description: List ID
+          in: path
+          name: listId
+          required: true
+          schema:
+            format: int64
+            maximum: 9223372036854776000
+            minimum: 1
+            type: integer
+        - description: Cursor for the next or previous page
+          in: query
+          name: cursor
+          schema:
+            type: string
+        - description: Number of items to include in the page
+          in: query
+          name: limit
+          schema:
+            default: 100
+            format: int32
+            maximum: 100
+            minimum: 1
+            type: integer
+      responses:
+        '200':
+          description: Get metadata on a single List's Fields
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FieldMetadataPaged'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrors'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundErrors'
+  /v2/lists/{listId}/saved-views:
+    get:
+      tags:
+        - lists
+      summary: Get metadata on Saved Views
+      operationId: Lists_listSavedViewsMetadata
+      description: Returns metadata on the Saved Views on a List.
+      parameters:
+        - description: List ID
+          in: path
+          name: listId
+          required: true
+          schema:
+            format: int64
+            maximum: 9223372036854776000
+            minimum: 1
+            type: integer
+        - description: Cursor for the next or previous page
+          in: query
+          name: cursor
+          schema:
+            type: string
+        - description: Number of items to include in the page
+          in: query
+          name: limit
+          schema:
+            default: 100
+            format: int32
+            maximum: 100
+            minimum: 1
+            type: integer
+      responses:
+        '200':
+          description: Get metadata on Saved Views
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavedViewPaged'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrors'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundErrors'
+  /v2/lists/{listId}/saved-views/{viewId}/list-entries:
+    get:
+      tags:
+        - lists
+      summary: Get all List Entries on a Saved View
+      operationId: Lists_getSavedViewListEntries
+      description: >-
+        Paginate through the List Entries (AKA rows) on a given Saved View.
+
+        Use this endpoint when you need to filter entities or only want **some**
+
+        field data to be returned: This endpoint respects the filters set on a
+        Saved View
+
+        via web app, and only returns field data corresponding to the columns
+        that have been
+
+        pulled into the Saved View via web app.
+
+
+        Though this endpoint respects the Saved View's filters and column/Field
+        selection,
+
+        it does not yet preserve sort order. This endpoint also only supports
+        **sheet-type
+
+        Saved Views**, and not board- or dashboard-type Saved Views.
+
+
+        See the [Data Model](https://developer.affinity.co/) section for more
+        information about Saved Views.
+
+
+        Requires the "Export data from Lists"
+        [permission](https://developer.affinity.co/).
+      parameters:
+        - description: List ID
+          in: path
+          name: listId
+          required: true
+          schema:
+            format: int64
+            maximum: 9223372036854776000
+            minimum: 1
+            type: integer
+        - description: Saved view ID
+          in: path
+          name: viewId
+          required: true
+          schema:
+            format: int64
+            maximum: 9223372036854776000
+            minimum: 1
+            type: integer
+        - description: Cursor for the next or previous page
+          in: query
+          name: cursor
+          schema:
+            type: string
+        - description: Number of items to include in the page
+          in: query
+          name: limit
+          schema:
+            default: 100
+            format: int32
+            maximum: 100
+            minimum: 1
+            type: integer
+      responses:
+        '200':
+          description: Get all List Entries on a Saved View
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListEntryWithEntityPaged'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrors'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundErrors'
+  /v2/lists/{listId}/saved-views/{viewId}:
+    get:
+      tags:
+        - lists
+      summary: Get metadata on a single Saved View
+      operationId: Lists_getSavedViewMetadata
+      description: Returns metadata on a single Saved View.
+      parameters:
+        - description: List ID
+          in: path
+          name: listId
+          required: true
+          schema:
+            format: int64
+            maximum: 9223372036854776000
+            minimum: 1
+            type: integer
+        - description: Saved view ID
+          in: path
+          name: viewId
+          required: true
+          schema:
+            format: int64
+            maximum: 9223372036854776000
+            minimum: 1
+            type: integer
+      responses:
+        '200':
+          description: Get metadata on a single Saved View
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavedView'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrors'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundErrors'
+  /v2/opportunities:
+    get:
+      tags:
+        - opportunities
+      summary: Get all Opportunities
+      operationId: Opportunities_getAll
+      description: >-
+        Paginate through Opportunities in Affinity.
+
+        Returns basic information but **not** field data on each Opportunity.
+
+
+        To access field data on Opportunities, use the
+        `/lists/{list_id}/list-entries`
+
+        or the `/v2/lists/{list_id}/saved-views/{view_id}/list-entries` GET
+        endpoint.
+
+
+        Requires the "Export data from Lists"
+        [permission](https://developer.affinity.co/).
+      parameters:
+        - description: Cursor for the next or previous page
+          in: query
+          name: cursor
+          schema:
+            type: string
+        - description: Number of items to include in the page
+          in: query
+          name: limit
+          schema:
+            default: 100
+            format: int32
+            maximum: 100
+            minimum: 1
+            type: integer
+        - description: Opportunity IDs
+          explode: true
+          in: query
+          name: ids
+          schema:
+            items:
+              format: int64
+              maximum: 9223372036854776000
+              minimum: 1
+              type: integer
+            type: array
+          style: form
+      responses:
+        '200':
+          description: Get all Opportunities
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpportunityPaged'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrors'
+  /v2/opportunities/{id}:
+    get:
+      tags:
+        - opportunities
+      summary: Get a single Opportunity
+      operationId: Opportunities_getBasicInfo
+      description: >-
+        Returns basic information but **not** field data on the requested
+        Opportunity.
+
+
+        To access field data on Opportunities, use the
+        `/lists/{list_id}/list-entries`
+
+        or the `/v2/lists/{list_id}/saved-views/{view_id}/list-entries` GET
+        endpoint.
+
+
+        Requires the "Export data from Lists"
+        [permission](https://developer.affinity.co/).
+      parameters:
+        - description: Opportunity ID
+          in: path
+          name: id
+          required: true
+          schema:
+            format: int64
+            maximum: 9223372036854776000
+            minimum: 1
+            type: integer
+      responses:
+        '200':
+          description: Get a single Opportunity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Opportunity'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrors'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundErrors'
+  /v2/persons:
+    get:
+      tags:
+        - persons
+      summary: Get all Persons
+      operationId: Persons_getAll
+      description: >-
+        Paginate through Persons in Affinity.
+
+        Returns basic information and non-list-specific field data on each
+        Person.
+
+
+        To retrieve field data, you must use either the `fieldIds` or the
+        `fieldTypes` parameter
+
+        to specify the Fields for which you want data returned.
+
+        These Field IDs and Types can be found using the GET
+        `/v2/persons/fields` endpoint.
+
+        When no `fieldIds` or `fieldTypes` are provided, Persons will be
+        returned without any field data attached.
+
+        To supply multiple `fieldIds` or `fieldTypes` parameters, generate a
+        query string that looks like this:
+
+        `?fieldIds=field-1234&fieldIds=affinity-data-location` or
+        `?fieldTypes=enriched&fieldTypes=global`.
+
+
+        Requires the "Export All People directory"
+        [permission](https://developer.affinity.co/).
+      parameters:
+        - description: Cursor for the next or previous page
+          in: query
+          name: cursor
+          schema:
+            type: string
+        - description: Number of items to include in the page
+          in: query
+          name: limit
+          schema:
+            default: 100
+            format: int32
+            maximum: 100
+            minimum: 1
+            type: integer
+        - description: People IDs
+          explode: true
+          in: query
+          name: ids
+          schema:
+            items:
+              format: int64
+              maximum: 9223372036854776000
+              minimum: 1
+              type: integer
+            type: array
+          style: form
+        - description: Field IDs for which to return field data
+          explode: true
+          in: query
+          name: fieldIds
+          schema:
+            items:
+              format: string
+              type: string
+            type: array
+          style: form
+        - description: Field Types for which to return field data
+          explode: true
+          in: query
+          name: fieldTypes
+          schema:
+            items:
+              enum:
+                - enriched
+                - global
+                - relationship-intelligence
+              format: string
+              type: string
+            type: array
+          style: form
+      responses:
+        '200':
+          description: Get all Persons
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonPaged'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrors'
+  /v2/persons/fields:
+    get:
+      tags:
+        - persons
+      summary: Get metadata on Person Fields
+      operationId: Persons_getMetadata
+      description: >-
+        Returns metadata on non-list-specific Person Fields.
+
+
+        Use the returned Field IDs to request field data from the GET
+        `/v2/persons` and GET `/v2/persons/{id}` endpoints.
+      parameters:
+        - description: Cursor for the next or previous page
+          in: query
+          name: cursor
+          schema:
+            type: string
+        - description: Number of items to include in the page
+          in: query
+          name: limit
+          schema:
+            default: 100
+            format: int32
+            maximum: 100
+            minimum: 1
+            type: integer
+      responses:
+        '200':
+          description: Get metadata on Person Fields
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FieldMetadataPaged'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrors'
+  /v2/persons/{id}:
+    get:
+      tags:
+        - persons
+      summary: Get a single Person
+      operationId: Persons_getPersonFieldData
+      description: >-
+        Returns basic information and non-list-specific field data on the
+        requested Person.
+
+
+        To retrieve field data, you must use either the `fieldIds` or the
+        `fieldTypes` parameter
+
+        to specify the Fields for which you want data returned.
+
+        These Field IDs and Types can be found using the GET
+        `/v2/persons/fields` endpoint.
+
+        When no `fieldIds` or `fieldTypes` are provided, Persons will be
+        returned without any field data attached.
+
+        To supply multiple `fieldIds` or `fieldTypes` parameters, generate a
+        query string that looks like this:
+
+        `?fieldIds=field-1234&fieldIds=affinity-data-location` or
+        `?fieldTypes=enriched&fieldTypes=global`.
+
+
+        Requires the "Export All People directory"
+        [permission](https://developer.affinity.co/).
+      parameters:
+        - description: Person ID
+          in: path
+          name: id
+          required: true
+          schema:
+            format: int64
+            maximum: 9223372036854776000
+            minimum: 1
+            type: integer
+        - description: Field IDs for which to return field data
+          explode: true
+          in: query
+          name: fieldIds
+          schema:
+            items:
+              format: string
+              type: string
+            type: array
+          style: form
+        - description: Field Types for which to return field data
+          explode: true
+          in: query
+          name: fieldTypes
+          schema:
+            items:
+              enum:
+                - enriched
+                - global
+                - relationship-intelligence
+              format: string
+              type: string
+            type: array
+          style: form
+      responses:
+        '200':
+          description: Get a single Person
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Person'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrors'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundErrors'
+  /v2/persons/{id}/lists:
+    get:
+      tags:
+        - persons
+      summary: Get a Person's Lists
+      operationId: Persons_getListsMetadata
+      description: Returns metadata for all the Lists on which the given Person appears.
+      parameters:
+        - description: Persons ID
+          in: path
+          name: id
+          required: true
+          schema:
+            format: int64
+            maximum: 9223372036854776000
+            minimum: 1
+            type: integer
+        - description: Cursor for the next or previous page
+          in: query
+          name: cursor
+          schema:
+            type: string
+        - description: Number of items to include in the page
+          in: query
+          name: limit
+          schema:
+            default: 100
+            format: int32
+            maximum: 100
+            minimum: 1
+            type: integer
+      responses:
+        '200':
+          description: Get a Person's Lists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListPaged'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrors'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundErrors'
+  /v2/persons/{id}/list-entries:
+    get:
+      tags:
+        - persons
+      summary: Get a Person's List Entries
+      operationId: Persons_paginateEntries
+      description: >-
+        Paginate through the List Entries (AKA rows) for the given Person across
+        all Lists.
+
+        Each List Entry includes field data for the Person, including
+        list-specific field data.
+
+        Each List Entry also includes metadata about its creation, i.e., when it
+        was added to the List and by whom.
+
+
+        Requires the "Export data from Lists"
+        [permission](https://developer.affinity.co/).
+      parameters:
+        - description: Persons ID
+          in: path
+          name: id
+          required: true
+          schema:
+            format: int64
+            maximum: 9223372036854776000
+            minimum: 1
+            type: integer
+        - description: Cursor for the next or previous page
+          in: query
+          name: cursor
+          schema:
+            type: string
+        - description: Number of items to include in the page
+          in: query
+          name: limit
+          schema:
+            default: 100
+            format: int32
+            maximum: 100
+            minimum: 1
+            type: integer
+      responses:
+        '200':
+          description: Get a Person's List Entries
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListEntryPaged'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrors'
+components:
+  schemas:
+    Grant:
+      example:
+        createdAt: '2023-01-01 00:00:00.000000000 Z'
+        scopes:
+          - api
+        type: api-key
+      properties:
+        type:
+          description: The type of grant used to authenticate
+          enum:
+            - api-key
+          example: api-key
+          type: string
+          nullable: true
+        scopes:
+          description: The scopes available to the current grant
+          example:
+            - api
+          items:
+            type: string
+          type: array
+          nullable: true
+        createdAt:
+          description: When the grant was created
+          example: '2023-01-01 00:00:00.000000000 Z'
+          format: date-time
+          type: string
+          nullable: true
+      type: object
+    User:
+      example:
+        firstName: John
+        lastName: Smith
+        emailAddress: john.smith@contoso.com
+        id: 1
+      properties:
+        id:
+          description: The user's unique identifier
+          example: 1
+          format: int64
+          type: integer
+          nullable: true
+        firstName:
+          description: The user's first name
+          example: John
+          type: string
+          nullable: true
+        lastName:
+          description: The user's last name
+          example: Smith
+          type: string
+          nullable: true
+        emailAddress:
+          description: The user's email address
+          example: john.smith@contoso.com
+          format: email
+          type: string
+          nullable: true
+      type: object
+    Tenant:
+      example:
+        name: Contoso Ltd.
+        subdomain: contoso
+        id: 1
+      properties:
+        id:
+          description: The tenant's unique identifier
+          example: 1
+          format: int64
+          type: integer
+          nullable: true
+        name:
+          description: The name of the tenant
+          example: Contoso Ltd.
+          type: string
+          nullable: true
+        subdomain:
+          description: The tenant's subdomain under affinity.co
+          example: contoso
+          format: hostname
+          type: string
+          nullable: true
+      type: object
+    WhoAmI:
+      description: WhoAmI model
+      example:
+        grant:
+          createdAt: '2023-01-01 00:00:00.000000000 Z'
+          scopes:
+            - api
+          type: api-key
+        user:
+          firstName: John
+          lastName: Smith
+          emailAddress: john.smith@contoso.com
+          id: 1
+        tenant:
+          name: Contoso Ltd.
+          subdomain: contoso
+          id: 1
+      properties:
+        tenant:
+          $ref: '#/components/schemas/Tenant'
+          nullable: true
+        user:
+          $ref: '#/components/schemas/User'
+          nullable: true
+        grant:
+          $ref: '#/components/schemas/Grant'
+          nullable: true
+      type: object
+    SavedViewPaged:
+      description: SavedViewPaged model
+      example:
+        pagination:
+          prevUrl: https://api.affinity.co/v2/foo?cursor=ICAgICAgYmVmb3JlOjo6Nw
+          nextUrl: https://api.affinity.co/v2/foo?cursor=ICAgICAgIGFmdGVyOjo6NA
+        data:
+          - createdAt: '2023-01-01 00:00:00.000000000 Z'
+            name: my interesting companies
+            id: 28
+            type: sheet
+          - createdAt: '2023-01-01 00:00:00.000000000 Z'
+            name: my interesting companies
+            id: 28
+            type: sheet
+      properties:
+        data:
+          description: A page of SavedView results
+          items:
+            $ref: '#/components/schemas/SavedView'
+          type: array
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+      required:
+        - data
+        - pagination
+      type: object
+    SavedView:
+      description: SavedView model
+      example:
+        createdAt: '2023-01-01 00:00:00.000000000 Z'
+        name: my interesting companies
+        id: 28
+        type: sheet
+      properties:
+        id:
+          description: The saved view's unique identifier
+          example: 28
+          format: int64
+          type: integer
+          nullable: true
+        name:
+          description: The saved view's name
+          example: my interesting companies
+          type: string
+          nullable: true
+        type:
+          description: The type for this saved view
+          enum:
+            - sheet
+            - board
+            - dashboard
+          example: sheet
+          type: string
+          nullable: true
+        createdAt:
+          description: The date that the saved view was created
+          example: '2023-01-01 00:00:00.000000000 Z'
+          format: date-time
+          type: string
+          nullable: true
+      type: object
+    Pagination:
+      example:
+        prevUrl: https://api.affinity.co/v2/foo?cursor=ICAgICAgYmVmb3JlOjo6Nw
+        nextUrl: https://api.affinity.co/v2/foo?cursor=ICAgICAgIGFmdGVyOjo6NA
+      properties:
+        prevUrl:
+          description: URL for the previous page
+          example: https://api.affinity.co/v2/foo?cursor=ICAgICAgYmVmb3JlOjo6Nw
+          format: url
+          type: string
+          nullable: true
+        nextUrl:
+          description: URL for the next page
+          example: https://api.affinity.co/v2/foo?cursor=ICAgICAgIGFmdGVyOjo6NA
+          format: url
+          type: string
+          nullable: true
+      type: object
+    ListWithTypePaged:
+      description: ListWithTypePaged model
+      example:
+        pagination:
+          prevUrl: https://api.affinity.co/v2/foo?cursor=ICAgICAgYmVmb3JlOjo6Nw
+          nextUrl: https://api.affinity.co/v2/foo?cursor=ICAgICAgIGFmdGVyOjo6NA
+        data:
+          - name: All companies
+            creatorId: 1
+            isPublic: false
+            id: 1
+            ownerId: 1
+            type: company
+          - name: All companies
+            creatorId: 1
+            isPublic: false
+            id: 1
+            ownerId: 1
+            type: company
+      properties:
+        data:
+          description: A page of ListWithType results
+          items:
+            $ref: '#/components/schemas/ListWithType'
+          type: array
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+      required:
+        - data
+        - pagination
+      type: object
+    ListWithType:
+      description: ListWithType model
+      example:
+        name: All companies
+        creatorId: 1
+        isPublic: false
+        id: 1
+        ownerId: 1
+        type: company
+      properties:
+        id:
+          description: The unique identifier for the list
+          example: 1
+          format: int64
+          type: integer
+          nullable: true
+        name:
+          description: The name of the list
+          example: All companies
+          type: string
+          nullable: true
+        creatorId:
+          description: The ID of the user that created this list
+          example: 1
+          format: int64
+          type: integer
+          nullable: true
+        ownerId:
+          description: The ID of the user that owns this list
+          example: 1
+          format: int64
+          type: integer
+          nullable: true
+        isPublic:
+          description: Whether or not the list is public
+          example: false
+          type: boolean
+          nullable: true
+        type:
+          description: The entity type for this list
+          enum:
+            - company
+            - opportunity
+            - person
+          example: company
+          type: string
+          nullable: true
+      type: object
+    ListEntryWithEntityPaged:
+      description: ListEntryWithEntityPaged model
+      example:
+        pagination:
+          prevUrl: https://api.affinity.co/v2/foo?cursor=ICAgICAgYmVmb3JlOjo6Nw
+          nextUrl: https://api.affinity.co/v2/foo?cursor=ICAgICAgIGFmdGVyOjo6NA
+        data:
+          - createdAt: '2023-01-01 00:00:00.000000000 Z'
+            creatorId: 1
+            id: 1
+            type: company
+            entity:
+              domain: acme.co
+              name: Acme
+              isGlobal: true
+              domains:
+                - acme.co
+              id: 1
+              fields:
+                - enrichmentSource: affinity-data
+                  name: Location
+                  id: affinity-data-location
+                  type: enriched
+                  value:
+                    data:
+                      continent: North America
+                      country: United States
+                      streetAddress: 170 Columbus Ave
+                      city: San Francisco
+                      state: California
+                    type: location
+                - enrichmentSource: affinity-data
+                  name: Location
+                  id: affinity-data-locationX
+                  type: enriched
+                  value:
+                    data:
+                      continent: North America
+                      country: United States
+                      streetAddress: 170 Columbus Ave
+                      city: San Francisco
+                      state: California
+                    type: location
+          - createdAt: '2023-01-01 00:00:00.000000000 Z'
+            creatorId: 1
+            id: 1
+            type: company
+            entity:
+              domain: acme.co
+              name: Acme
+              isGlobal: true
+              domains:
+                - acme.co
+              id: 1
+              fields:
+                - enrichmentSource: affinity-data
+                  name: Location
+                  id: affinity-data-locationX
+                  type: enriched
+                  value:
+                    data:
+                      continent: North America
+                      country: United States
+                      streetAddress: 170 Columbus Ave
+                      city: San Francisco
+                      state: California
+                    type: location
+                - enrichmentSource: affinity-data
+                  name: Location
+                  id: affinity-data-locationX
+                  type: enriched
+                  value:
+                    data:
+                      continent: North America
+                      country: United States
+                      streetAddress: 170 Columbus Ave
+                      city: San Francisco
+                      state: California
+                    type: location
+      properties:
+        data:
+          description: A page of ListEntryWithEntity results
+          items:
+            $ref: '#/components/schemas/ListEntryWithEntity'
+          type: array
+          nullable: true
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+      required:
+        - data
+        - pagination
+      type: object
+    ListEntryWithEntity:
+      example:
+        createdAt: '2023-01-01 00:00:00.000000000 Z'
+        creatorId: 1
+        id: 1
+        type: company
+        entity:
+          domain: acme.co
+          name: Acme
+          isGlobal: true
+          domains:
+            - acme.co
+          id: 1
+          fields:
+            - enrichmentSource: affinity-data
+              name: Location
+              id: affinity-data-locationX
+              type: enriched
+              value:
+                data:
+                  continent: North America
+                  country: United States
+                  streetAddress: 170 Columbus Ave
+                  city: San Francisco
+                  state: California
+                type: location
+            - enrichmentSource: affinity-data
+              name: Location
+              id: affinity-data-locationX
+              type: enriched
+              value:
+                data:
+                  continent: North America
+                  country: United States
+                  streetAddress: 170 Columbus Ave
+                  city: San Francisco
+                  state: California
+                type: location
+      properties:
+        id:
+          description: The list entry's unique identifier
+          example: 1
+          format: int64
+          type: integer
+          nullable: true
+        createdAt:
+          description: The date that the list entry was created
+          example: '2023-01-01 00:00:00.000000000 Z'
+          format: date-time
+          type: string
+          nullable: true
+        creatorId:
+          description: The ID of the user that created this list entry
+          example: 1
+          format: int64
+          type: integer
+          nullable: true
+        type:
+          description: The entity type for this list entry
+          enum:
+            - company
+            - opportunity
+            - person
+          example: company
+          type: string
+          nullable: true
+        entity:
+          $ref: '#/components/schemas/Company'
+          nullable: true
+      type: object
+      discriminator:
+        propertyName: type
+        mapping:
+          company: '#/components/schemas/CompanyListEntry'
+          opportunity: '#/components/schemas/OpportunityListEntry'
+          person: '#/components/schemas/PersonListEntry'
+      oneOf:
+        - $ref: '#/components/schemas/CompanyListEntry'
+        - $ref: '#/components/schemas/OpportunityListEntry'
+        - $ref: '#/components/schemas/PersonListEntry'
+    Company:
+      description: Company model
+      example:
+        domain: acme.co
+        name: Acme
+        isGlobal: true
+        domains:
+          - acme.co
+        id: 1
+        fields:
+          - enrichmentSource: affinity-data
+            name: Location
+            id: affinity-data-locationX
+            type: enriched
+            value:
+              data:
+                continent: North America
+                country: United States
+                streetAddress: 170 Columbus Ave
+                city: San Francisco
+                state: California
+              type: location
+          - enrichmentSource: affinity-data
+            name: Location
+            id: affinity-data-locationX
+            type: enriched
+            value:
+              data:
+                continent: North America
+                country: United States
+                streetAddress: 170 Columbus Ave
+                city: San Francisco
+                state: California
+              type: location
+      properties:
+        id:
+          description: The company's unique identifier
+          example: 1
+          format: int64
+          type: integer
+          nullable: true
+        name:
+          description: The company's name
+          example: Acme
+          type: string
+          nullable: true
+        domain:
+          description: The company's primary domain
+          example: acme.co
+          format: hostname
+          type: string
+          nullable: true
+        domains:
+          description: All of the company's domains
+          example:
+            - acme.co
+          items:
+            format: hostname
+            type: string
+          type: array
+          nullable: true
+        isGlobal:
+          description: Whether or not the company is org specific
+          example: true
+          type: boolean
+          nullable: true
+        fields:
+          description: The fields associated with the company
+          items:
+            $ref: '#/components/schemas/Field'
+          type: array
+      type: object
+    Field:
+      example:
+        enrichmentSource: affinity-data
+        name: Location
+        id: affinity-data-locationX
+        type: enriched
+        value:
+          data:
+            continent: North America
+            country: United States
+            streetAddress: 170 Columbus Ave
+            city: San Francisco
+            state: California
+          type: location
+      properties:
+        id:
+          description: The field's unique identifier
+          example: affinity-data-location
+          type: string
+          nullable: true
+        name:
+          description: The field's name
+          example: Location
+          type: string
+          nullable: true
+        type:
+          description: The field's type
+          enum:
+            - enriched
+            - global
+            - list
+            - relationship-intelligence
+          example: enriched
+          type: string
+          nullable: true
+        enrichmentSource:
+          description: The source of the data in this Field (if it is enriched)
+          enum:
+            - affinity-data
+            - dealroom
+          example: affinity-data
+          type: string
+          nullable: true
+        value:
+          $ref: '#/components/schemas/FieldValue'
+          nullable: true
+      type: object
+    FieldValue:
+      example:
+        data:
+          continent: North America
+          country: United States
+          streetAddress: 170 Columbus Ave
+          city: San Francisco
+          state: California
+        type: location
+      properties:
+        type:
+          description: The type of value
+          enum:
+            - person
+            - person-multi
+            - company
+            - company-multi
+            - filterable-text
+            - filterable-text-multi
+            - number
+            - number-multi
+            - datetime
+            - location
+            - location-multi
+            - text
+            - ranked-dropdown
+            - dropdown
+            - dropdown-multi
+            - formula-number
+            - interaction
+          example: location
+          type: string
+          nullable: true
+        data:
+          $ref: '#/components/schemas/Location'
+          nullable: true
+      type: object
+      discriminator:
+        propertyName: type
+        mapping:
+          person: '#/components/schemas/PersonValue'
+          person-multi: '#/components/schemas/PersonsValue'
+          company: '#/components/schemas/CompanyValue'
+          company-multi: '#/components/schemas/CompaniesValue'
+          filterable-text: '#/components/schemas/TextValue'
+          filterable-text-multi: '#/components/schemas/TextsValue'
+          location: '#/components/schemas/LocationValue'
+          location-multi: '#/components/schemas/LocationsValue'
+          number: '#/components/schemas/FloatValue'
+          number-multi: '#/components/schemas/FloatsValue'
+          datetime: '#/components/schemas/DateValue'
+          text: '#/components/schemas/TextValue'
+          ranked-dropdown: '#/components/schemas/RankedDropdownValue'
+          dropdown: '#/components/schemas/DropdownValue'
+          dropdown-multi: '#/components/schemas/DropdownsValue'
+          formula-number: '#/components/schemas/FormulaValue'
+          interaction: '#/components/schemas/InteractionValue'
+      oneOf:
+        - $ref: '#/components/schemas/PersonValue'
+        - $ref: '#/components/schemas/PersonsValue'
+        - $ref: '#/components/schemas/CompanyValue'
+        - $ref: '#/components/schemas/CompaniesValue'
+        - $ref: '#/components/schemas/TextValue'
+        - $ref: '#/components/schemas/TextsValue'
+        - $ref: '#/components/schemas/LocationValue'
+        - $ref: '#/components/schemas/LocationsValue'
+        - $ref: '#/components/schemas/FloatValue'
+        - $ref: '#/components/schemas/FloatsValue'
+        - $ref: '#/components/schemas/DateValue'
+        - $ref: '#/components/schemas/TextValue'
+        - $ref: '#/components/schemas/RankedDropdownValue'
+        - $ref: '#/components/schemas/DropdownValue'
+        - $ref: '#/components/schemas/DropdownsValue'
+        - $ref: '#/components/schemas/FormulaValue'
+        - $ref: '#/components/schemas/InteractionValue'
+    Location:
+      example:
+        continent: North America
+        country: United States
+        streetAddress: 170 Columbus Ave
+        city: San Francisco
+        state: California
+      properties:
+        streetAddress:
+          description: Street address
+          example: 170 Columbus Ave
+          type: string
+          nullable: true
+        city:
+          description: City
+          example: San Francisco
+          type: string
+          nullable: true
+        state:
+          description: State
+          example: California
+          type: string
+          nullable: true
+        country:
+          description: Country
+          example: United States
+          type: string
+          nullable: true
+        continent:
+          description: Continent
+          example: North America
+          type: string
+          nullable: true
+      type: object
+    OpportunityPaged:
+      description: OpportunityPaged model
+      example:
+        pagination:
+          prevUrl: https://api.affinity.co/v2/foo?cursor=ICAgICAgYmVmb3JlOjo6Nw
+          nextUrl: https://api.affinity.co/v2/foo?cursor=ICAgICAgIGFmdGVyOjo6NA
+        data:
+          - listId: 1
+            name: Acme Upsell $10k
+            id: 1
+          - listId: 1
+            name: Acme Upsell $10k
+            id: 1
+      properties:
+        data:
+          description: A page of Opportunity results
+          items:
+            $ref: '#/components/schemas/Opportunity'
+          type: array
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+      required:
+        - data
+        - pagination
+      type: object
+    Opportunity:
+      description: Opportunity model
+      example:
+        listId: 1
+        name: Acme Upsell $10k
+        id: 1
+      properties:
+        id:
+          description: The unique identifier for the opportunity
+          example: 1
+          format: int64
+          type: integer
+          nullable: true
+        name:
+          description: The name of the opportunity
+          example: Acme Upsell $10k
+          type: string
+          nullable: true
+        listId:
+          description: The ID of the list that the opportunity belongs to
+          example: 1
+          format: int64
+          type: integer
+          nullable: true
+      type: object
+    ListPaged:
+      description: ListPaged model
+      example:
+        pagination:
+          prevUrl: https://api.affinity.co/v2/foo?cursor=ICAgICAgYmVmb3JlOjo6Nw
+          nextUrl: https://api.affinity.co/v2/foo?cursor=ICAgICAgIGFmdGVyOjo6NA
+        data:
+          - name: All companies
+            creatorId: 1
+            isPublic: false
+            id: 1
+            ownerId: 1
+          - name: All companies
+            creatorId: 1
+            isPublic: false
+            id: 1
+            ownerId: 1
+      properties:
+        data:
+          description: A page of List results
+          items:
+            $ref: '#/components/schemas/List'
+          type: array
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+      required:
+        - data
+        - pagination
+      type: object
+    List:
+      example:
+        name: All companies
+        creatorId: 1
+        isPublic: false
+        id: 1
+        ownerId: 1
+      properties:
+        id:
+          description: The unique identifier for the list
+          example: 1
+          format: int64
+          type: integer
+          nullable: true
+        name:
+          description: The name of the list
+          example: All companies
+          type: string
+          nullable: true
+        creatorId:
+          description: The ID of the user that created this list
+          example: 1
+          format: int64
+          type: integer
+          nullable: true
+        ownerId:
+          description: The ID of the user that owns this list
+          example: 1
+          format: int64
+          type: integer
+          nullable: true
+        isPublic:
+          description: Whether or not the list is public
+          example: false
+          type: boolean
+          nullable: true
+      type: object
+    FieldMetadataPaged:
+      description: FieldMetadataPaged model
+      example:
+        pagination:
+          prevUrl: https://api.affinity.co/v2/foo?cursor=ICAgICAgYmVmb3JlOjo6Nw
+          nextUrl: https://api.affinity.co/v2/foo?cursor=ICAgICAgIGFmdGVyOjo6NA
+        data:
+          - enrichmentSource: affinity-data
+            valueType: location
+            name: Location
+            id: affinity-data-locationX
+            type: enriched
+          - enrichmentSource: affinity-data
+            valueType: location
+            name: Location
+            id: affinity-data-locationX
+            type: enriched
+      properties:
+        data:
+          description: A page of FieldMetadata results
+          items:
+            $ref: '#/components/schemas/FieldMetadata'
+          type: array
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+      required:
+        - data
+        - pagination
+      type: object
+    FieldMetadata:
+      example:
+        enrichmentSource: affinity-data
+        valueType: location
+        name: Location
+        id: affinity-data-locationX
+        type: enriched
+      properties:
+        id:
+          description: The field's unique identifier
+          example: affinity-data-location
+          type: string
+          nullable: true
+        name:
+          description: The field's name
+          example: Location
+          type: string
+          nullable: true
+        type:
+          description: The field's type
+          enum:
+            - enriched
+            - global
+            - list
+            - relationship-intelligence
+          example: enriched
+          type: string
+          nullable: true
+        enrichmentSource:
+          description: The source of the data in this Field (if it is enriched)
+          enum:
+            - affinity-data
+            - dealroom
+          example: affinity-data
+          type: string
+          nullable: true
+        valueType:
+          description: The type of the data in this Field
+          enum:
+            - person
+            - person-multi
+            - company
+            - company-multi
+            - filterable-text
+            - filterable-text-multi
+            - number
+            - number-multi
+            - datetime
+            - location
+            - location-multi
+            - text
+            - ranked-dropdown
+            - dropdown
+            - dropdown-multi
+            - formula-number
+            - interaction
+          example: location
+          type: string
+          nullable: true
+      type: object
+    CompanyWithListEntriesPaged:
+      properties:
+        data:
+          description: A page of CompanyWithListEntries results
+          items:
+            $ref: '#/components/schemas/CompanyWithListEntries'
+          type: array
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+      required:
+        - data
+        - pagination
+      type: object
+    CompanyWithListEntries:
+      properties:
+        id:
+          description: The company's unique identifier
+          example: 1
+          format: int64
+          type: integer
+          nullable: true
+        name:
+          description: The company's name
+          example: Acme
+          type: string
+          nullable: true
+        domain:
+          description: The company's primary domain
+          example: acme.co
+          format: hostname
+          type: string
+          nullable: true
+        domains:
+          description: All of the company's domains
+          example:
+            - acme.co
+          items:
+            format: hostname
+            type: string
+          type: array
+          nullable: true
+        isGlobal:
+          description: Whether or not the company is org specific
+          example: true
+          type: boolean
+          nullable: true
+        fields:
+          description: The fields associated with the company
+          items:
+            $ref: '#/components/schemas/Field'
+          type: array
+        listEntries:
+          description: The list entries that this company is connected to
+          items:
+            $ref: '#/components/schemas/ListEntry'
+          type: array
+          nullable: true
+      type: object
+    ListEntry:
+      example:
+        listId: 1
+        createdAt: '2023-01-01 00:00:00.000000000 Z'
+        creatorId: 1
+        id: 1
+        fields:
+          - enrichmentSource: affinity-data
+            name: Location
+            id: affinity-data-locationX
+            type: enriched
+            value:
+              data:
+                continent: North America
+                country: United States
+                streetAddress: 170 Columbus Ave
+                city: San Francisco
+                state: California
+              type: location
+          - enrichmentSource: affinity-data
+            name: Location
+            id: affinity-data-locationX
+            type: enriched
+            value:
+              data:
+                continent: North America
+                country: United States
+                streetAddress: 170 Columbus Ave
+                city: San Francisco
+                state: California
+              type: location
+      properties:
+        id:
+          description: The list entry's unique identifier
+          example: 1
+          format: int64
+          type: integer
+          nullable: true
+        listId:
+          description: The ID of the list that this list entry belongs to
+          example: 1
+          format: int64
+          type: integer
+          nullable: true
+        createdAt:
+          description: The date that the list entry was created
+          example: '2023-01-01 00:00:00.000000000 Z'
+          format: date-time
+          type: string
+          nullable: true
+        creatorId:
+          description: The ID of the user that created this list entry
+          example: 1
+          format: int64
+          type: integer
+          nullable: true
+        fields:
+          description: The fields associated with the list entry
+          items:
+            $ref: '#/components/schemas/Field'
+          type: array
+          nullable: true
+      type: object
+    ListEntryPaged:
+      description: ListEntryPaged model
+      example:
+        pagination:
+          prevUrl: https://api.affinity.co/v2/foo?cursor=ICAgICAgYmVmb3JlOjo6Nw
+          nextUrl: https://api.affinity.co/v2/foo?cursor=ICAgICAgIGFmdGVyOjo6NA
+        data:
+          - listId: 1
+            createdAt: '2023-01-01 00:00:00.000000000 Z'
+            creatorId: 1
+            id: 1
+            fields:
+              - enrichmentSource: affinity-data
+                name: Location
+                id: affinity-data-locationX
+                type: enriched
+                value:
+                  data:
+                    continent: North America
+                    country: United States
+                    streetAddress: 170 Columbus Ave
+                    city: San Francisco
+                    state: California
+                  type: location
+              - enrichmentSource: affinity-data
+                name: Location
+                id: affinity-data-locationX
+                type: enriched
+                value:
+                  data:
+                    continent: North America
+                    country: United States
+                    streetAddress: 170 Columbus Ave
+                    city: San Francisco
+                    state: California
+                  type: location
+          - listId: 1
+            createdAt: '2023-01-01 00:00:00.000000000 Z'
+            creatorId: 1
+            id: 1
+            fields:
+              - enrichmentSource: affinity-data
+                name: Location
+                id: affinity-data-locationX
+                type: enriched
+                value:
+                  data:
+                    continent: North America
+                    country: United States
+                    streetAddress: 170 Columbus Ave
+                    city: San Francisco
+                    state: California
+                  type: location
+              - enrichmentSource: affinity-data
+                name: Location
+                id: affinity-data-locationX
+                type: enriched
+                value:
+                  data:
+                    continent: North America
+                    country: United States
+                    streetAddress: 170 Columbus Ave
+                    city: San Francisco
+                    state: California
+                  type: location
+      properties:
+        data:
+          description: A page of ListEntry results
+          items:
+            $ref: '#/components/schemas/ListEntry'
+          type: array
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+      required:
+        - data
+        - pagination
+      type: object
+    CompanyPaged:
+      description: CompanyPaged model
+      example:
+        pagination:
+          prevUrl: https://api.affinity.co/v2/foo?cursor=ICAgICAgYmVmb3JlOjo6Nw
+          nextUrl: https://api.affinity.co/v2/foo?cursor=ICAgICAgIGFmdGVyOjo6NA
+        data:
+          - domain: acme.co
+            name: Acme
+            isGlobal: true
+            domains:
+              - acme.co
+            id: 1
+            fields:
+              - enrichmentSource: affinity-data
+                name: Location
+                id: affinity-data-locationX
+                type: enriched
+                value:
+                  data:
+                    continent: North America
+                    country: United States
+                    streetAddress: 170 Columbus Ave
+                    city: San Francisco
+                    state: California
+                  type: location
+              - enrichmentSource: affinity-data
+                name: Location
+                id: affinity-data-locationX
+                type: enriched
+                value:
+                  data:
+                    continent: North America
+                    country: United States
+                    streetAddress: 170 Columbus Ave
+                    city: San Francisco
+                    state: California
+                  type: location
+          - domain: acme.co
+            name: Acme
+            isGlobal: true
+            domains:
+              - acme.co
+            id: 1
+            fields:
+              - enrichmentSource: affinity-data
+                name: Location
+                id: affinity-data-locationX
+                type: enriched
+                value:
+                  data:
+                    continent: North America
+                    country: United States
+                    streetAddress: 170 Columbus Ave
+                    city: San Francisco
+                    state: California
+                  type: location
+              - enrichmentSource: affinity-data
+                name: Location
+                id: affinity-data-locationX
+                type: enriched
+                value:
+                  data:
+                    continent: North America
+                    country: United States
+                    streetAddress: 170 Columbus Ave
+                    city: San Francisco
+                    state: California
+                  type: location
+      properties:
+        data:
+          description: A page of Company results
+          items:
+            $ref: '#/components/schemas/Company'
+          type: array
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+      required:
+        - data
+        - pagination
+      type: object
+    PersonPaged:
+      description: PersonPaged model
+      example:
+        pagination:
+          prevUrl: https://api.affinity.co/v2/foo?cursor=ICAgICAgYmVmb3JlOjo6Nw
+          nextUrl: https://api.affinity.co/v2/foo?cursor=ICAgICAgIGFmdGVyOjo6NA
+        data:
+          - firstName: Jane
+            lastName: Doe
+            emailAddresses:
+              - jane.doe@acme.co
+              - janedoe@gmail.com
+            id: 1
+            type: internal
+            fields:
+              - enrichmentSource: affinity-data
+                name: Location
+                id: affinity-data-locationX
+                type: enriched
+                value:
+                  data:
+                    continent: North America
+                    country: United States
+                    streetAddress: 170 Columbus Ave
+                    city: San Francisco
+                    state: California
+                  type: location
+              - enrichmentSource: affinity-data
+                name: Location
+                id: affinity-data-locationX
+                type: enriched
+                value:
+                  data:
+                    continent: North America
+                    country: United States
+                    streetAddress: 170 Columbus Ave
+                    city: San Francisco
+                    state: California
+                  type: location
+            primaryEmailAddress: jane.doe@acme.co
+          - firstName: Jane
+            lastName: Doe
+            emailAddresses:
+              - jane.doe@acme.co
+              - janedoe@gmail.com
+            id: 1
+            type: internal
+            fields:
+              - enrichmentSource: affinity-data
+                name: Location
+                id: affinity-data-locationX
+                type: enriched
+                value:
+                  data:
+                    continent: North America
+                    country: United States
+                    streetAddress: 170 Columbus Ave
+                    city: San Francisco
+                    state: California
+                  type: location
+              - enrichmentSource: affinity-data
+                name: Location
+                id: affinity-data-locationX
+                type: enriched
+                value:
+                  data:
+                    continent: North America
+                    country: United States
+                    streetAddress: 170 Columbus Ave
+                    city: San Francisco
+                    state: California
+                  type: location
+            primaryEmailAddress: jane.doe@acme.co
+      properties:
+        data:
+          description: A page of Person results
+          items:
+            $ref: '#/components/schemas/Person'
+          type: array
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+      required:
+        - data
+        - pagination
+      type: object
+    Person:
+      description: Person model
+      example:
+        firstName: Jane
+        lastName: Doe
+        emailAddresses:
+          - jane.doe@acme.co
+          - janedoe@gmail.com
+        id: 1
+        type: internal
+        fields:
+          - enrichmentSource: affinity-data
+            name: Location
+            id: affinity-data-locationX
+            type: enriched
+            value:
+              data:
+                continent: North America
+                country: United States
+                streetAddress: 170 Columbus Ave
+                city: San Francisco
+                state: California
+              type: location
+          - enrichmentSource: affinity-data
+            name: Location
+            id: affinity-data-locationX
+            type: enriched
+            value:
+              data:
+                continent: North America
+                country: United States
+                streetAddress: 170 Columbus Ave
+                city: San Francisco
+                state: California
+              type: location
+        primaryEmailAddress: jane.doe@acme.co
+      properties:
+        id:
+          description: The persons's unique identifier
+          example: 1
+          format: int64
+          type: integer
+          nullable: true
+        firstName:
+          description: The person's first name
+          example: Jane
+          type: string
+          nullable: true
+        lastName:
+          description: The person's last name
+          example: Doe
+          type: string
+          nullable: true
+        primaryEmailAddress:
+          description: The person's primary email address
+          example: jane.doe@acme.co
+          format: email
+          type: string
+          nullable: true
+        emailAddresses:
+          description: All of the person's email addresses
+          example:
+            - jane.doe@acme.co
+            - janedoe@gmail.com
+          items:
+            format: email
+            type: string
+          type: array
+          nullable: true
+        type:
+          description: The person's type
+          enum:
+            - internal
+            - external
+          example: internal
+          type: string
+          nullable: true
+        fields:
+          description: The fields associated with the person
+          items:
+            $ref: '#/components/schemas/Field'
+          type: array
+      type: object
+    Interaction:
+      properties:
+        type:
+          description: The type of interaction
+          enum:
+            - call
+            - email
+            - meeting
+            - chat-message
+          example: meeting
+          type: string
+          nullable: true
+      type: object
+      discriminator:
+        propertyName: type
+        mapping:
+          chat-message: '#/components/schemas/ChatMessage'
+          email: '#/components/schemas/Email'
+          meeting: '#/components/schemas/Meeting'
+          call: '#/components/schemas/PhoneCall'
+      oneOf:
+        - $ref: '#/components/schemas/ChatMessage'
+        - $ref: '#/components/schemas/Email'
+        - $ref: '#/components/schemas/Meeting'
+        - $ref: '#/components/schemas/PhoneCall'
+    Attendee:
+      properties:
+        emailAddress:
+          description: The email addresses of the attendee
+          example: john.smith@contoso.com
+          format: email
+          type: string
+          nullable: true
+        person:
+          $ref: '#/components/schemas/PersonData'
+          nullable: true
+      type: object
+    PersonData:
+      properties:
+        id:
+          description: The persons's unique identifier
+          example: 1
+          format: int64
+          type: integer
+          nullable: true
+        firstName:
+          description: The person's first name
+          example: Jane
+          type: string
+          nullable: true
+        lastName:
+          description: The person's last name
+          example: Doe
+          type: string
+          nullable: true
+        primaryEmailAddress:
+          description: The person's primary email address
+          example: jane.doe@acme.co
+          format: email
+          type: string
+          nullable: true
+        type:
+          description: The person's type
+          enum:
+            - internal
+            - external
+            - collaborator
+          example: internal
+          type: string
+          nullable: true
+      type: object
+    FormulaNumber:
+      properties:
+        calculatedValue:
+          description: Calculated value
+          format: float
+          type: number
+          nullable: true
+      type: object
+    Dropdown:
+      properties:
+        dropdownOptionId:
+          description: Dropdown item's unique identifier
+          example: 1
+          format: int64
+          type: integer
+          nullable: true
+        text:
+          description: Dropdown item text
+          example: first
+          type: string
+          nullable: true
+      type: object
+    RankedDropdown:
+      properties:
+        dropdownOptionId:
+          description: Dropdown item's unique identifier
+          example: 1
+          format: int64
+          type: integer
+          nullable: true
+        text:
+          description: Dropdown item text
+          example: first
+          type: string
+          nullable: true
+        rank:
+          description: Dropdown item rank
+          example: 0
+          format: int64
+          type: integer
+          nullable: true
+        color:
+          description: Dropdown item color
+          example: white
+          type: string
+          nullable: true
+      type: object
+    CompanyData:
+      properties:
+        id:
+          description: The company's unique identifier
+          example: 1
+          format: int64
+          type: integer
+          nullable: true
+        name:
+          description: The company's name
+          example: Acme
+          type: string
+          nullable: true
+        domain:
+          description: The company's primary domain
+          example: acme.co
+          format: hostname
+          type: string
+          nullable: true
+      type: object
+    Errors:
+      properties:
+        errors:
+          description: Errors
+          items:
+            $ref: '#/components/schemas/Error'
+          type: array
+          nullable: true
+      type: object
+    Error:
+      properties:
+        code:
+          description: Error code
+          type: string
+          nullable: true
+        message:
+          description: Error message
+          example: 🚨 Error! Sound the alarm! 🚨
+          type: string
+          nullable: true
+      type: object
+      discriminator:
+        propertyName: code
+        mapping:
+          authentication: '#/components/schemas/AuthenticationError'
+          authorization: '#/components/schemas/AuthorizationError'
+          conflict: '#/components/schemas/ConflictError'
+          method-not-allowed: '#/components/schemas/MethodNotAllowedError'
+          not-found: '#/components/schemas/NotFoundError'
+          server: '#/components/schemas/ServerError'
+          validation: '#/components/schemas/ValidationError'
+          empty-message-body: '#/components/schemas/EmptyMessageBodyError'
+          invalid-accept-header: '#/components/schemas/InvalidAcceptHeaderError'
+          invalid-message-body: '#/components/schemas/InvalidMessageBodyError'
+          invalid-version-header: '#/components/schemas/InvalidVersionHeaderError'
+          too-many-multipart-files: '#/components/schemas/TooManyMultipartFilesError'
+          rate-limit: '#/components/schemas/RateLimitError'
+          error: '#/components/schemas/GenericError'
+      oneOf:
+        - $ref: '#/components/schemas/AuthenticationError'
+        - $ref: '#/components/schemas/AuthorizationError'
+        - $ref: '#/components/schemas/ConflictError'
+        - $ref: '#/components/schemas/MethodNotAllowedError'
+        - $ref: '#/components/schemas/NotFoundError'
+        - $ref: '#/components/schemas/ServerError'
+        - $ref: '#/components/schemas/ValidationError'
+        - $ref: '#/components/schemas/EmptyMessageBodyError'
+        - $ref: '#/components/schemas/InvalidAcceptHeaderError'
+        - $ref: '#/components/schemas/InvalidMessageBodyError'
+        - $ref: '#/components/schemas/InvalidVersionHeaderError'
+        - $ref: '#/components/schemas/TooManyMultipartFilesError'
+        - $ref: '#/components/schemas/RateLimitError'
+        - $ref: '#/components/schemas/GenericError'
+    OpportunityWithFields:
+      properties:
+        id:
+          description: The unique identifier for the opportunity
+          example: 1
+          format: int64
+          type: integer
+          nullable: true
+        name:
+          description: The name of the opportunity
+          example: Acme Upsell $10k
+          type: string
+          nullable: true
+        listId:
+          description: The ID of the list that the opportunity belongs to
+          example: 1
+          format: int64
+          type: integer
+          nullable: true
+        fields:
+          description: The fields associated with the opportunity
+          items:
+            $ref: '#/components/schemas/Field'
+          type: array
+      type: object
+    PersonListEntry:
+      properties:
+        id:
+          description: The list entry's unique identifier
+          example: 1
+          format: int64
+          type: integer
+          nullable: true
+        createdAt:
+          description: The date that the list entry was created
+          example: '2023-01-01 00:00:00.000000000 Z'
+          format: date-time
+          type: string
+          nullable: true
+        creatorId:
+          description: The ID of the user that created this list entry
+          example: 1
+          format: int64
+          type: integer
+          nullable: true
+        type:
+          description: The entity type for this list entry
+          enum:
+            - company
+            - opportunity
+            - person
+          example: company
+          type: string
+          nullable: true
+        entity:
+          $ref: '#/components/schemas/Person'
+          nullable: true
+      type: object
+    OpportunityListEntry:
+      properties:
+        id:
+          description: The list entry's unique identifier
+          example: 1
+          format: int64
+          type: integer
+          nullable: true
+        createdAt:
+          description: The date that the list entry was created
+          example: '2023-01-01 00:00:00.000000000 Z'
+          format: date-time
+          type: string
+          nullable: true
+        creatorId:
+          description: The ID of the user that created this list entry
+          example: 1
+          format: int64
+          type: integer
+          nullable: true
+        type:
+          description: The entity type for this list entry
+          enum:
+            - company
+            - opportunity
+            - person
+          example: company
+          type: string
+          nullable: true
+        entity:
+          $ref: '#/components/schemas/OpportunityWithFields'
+          nullable: true
+      type: object
+    CompanyListEntry:
+      properties:
+        id:
+          description: The list entry's unique identifier
+          example: 1
+          format: int64
+          type: integer
+          nullable: true
+        createdAt:
+          description: The date that the list entry was created
+          example: '2023-01-01 00:00:00.000000000 Z'
+          format: date-time
+          type: string
+          nullable: true
+        creatorId:
+          description: The ID of the user that created this list entry
+          example: 1
+          format: int64
+          type: integer
+          nullable: true
+        type:
+          description: The entity type for this list entry
+          enum:
+            - company
+            - opportunity
+            - person
+          example: company
+          type: string
+          nullable: true
+        entity:
+          $ref: '#/components/schemas/Company'
+          nullable: true
+      type: object
+    InteractionValue:
+      properties:
+        type:
+          description: The type of value
+          enum:
+            - person
+            - person-multi
+            - company
+            - company-multi
+            - filterable-text
+            - filterable-text-multi
+            - number
+            - number-multi
+            - datetime
+            - location
+            - location-multi
+            - text
+            - ranked-dropdown
+            - dropdown
+            - dropdown-multi
+            - formula-number
+            - interaction
+          example: location
+          type: string
+          nullable: true
+        data:
+          $ref: '#/components/schemas/Interaction'
+          nullable: true
+      type: object
+    FormulaValue:
+      properties:
+        type:
+          description: The type of value
+          enum:
+            - person
+            - person-multi
+            - company
+            - company-multi
+            - filterable-text
+            - filterable-text-multi
+            - number
+            - number-multi
+            - datetime
+            - location
+            - location-multi
+            - text
+            - ranked-dropdown
+            - dropdown
+            - dropdown-multi
+            - formula-number
+            - interaction
+          example: location
+          type: string
+          nullable: true
+        data:
+          $ref: '#/components/schemas/FormulaNumber'
+          nullable: true
+      type: object
+    DropdownValue:
+      properties:
+        type:
+          description: The type of value
+          enum:
+            - person
+            - person-multi
+            - company
+            - company-multi
+            - filterable-text
+            - filterable-text-multi
+            - number
+            - number-multi
+            - datetime
+            - location
+            - location-multi
+            - text
+            - ranked-dropdown
+            - dropdown
+            - dropdown-multi
+            - formula-number
+            - interaction
+          example: location
+          type: string
+          nullable: true
+        data:
+          $ref: '#/components/schemas/Dropdown'
+          nullable: true
+      type: object
+    RankedDropdownValue:
+      properties:
+        type:
+          description: The type of value
+          enum:
+            - person
+            - person-multi
+            - company
+            - company-multi
+            - filterable-text
+            - filterable-text-multi
+            - number
+            - number-multi
+            - datetime
+            - location
+            - location-multi
+            - text
+            - ranked-dropdown
+            - dropdown
+            - dropdown-multi
+            - formula-number
+            - interaction
+          example: location
+          type: string
+          nullable: true
+        data:
+          $ref: '#/components/schemas/RankedDropdown'
+          nullable: true
+      type: object
+    TextValue:
+      properties:
+        type:
+          description: The type of value
+          enum:
+            - person
+            - person-multi
+            - company
+            - company-multi
+            - filterable-text
+            - filterable-text-multi
+            - number
+            - number-multi
+            - datetime
+            - location
+            - location-multi
+            - text
+            - ranked-dropdown
+            - dropdown
+            - dropdown-multi
+            - formula-number
+            - interaction
+          example: location
+          type: string
+          nullable: true
+        data:
+          description: The value for a string
+          type: string
+          nullable: true
+      type: object
+    DateValue:
+      properties:
+        type:
+          description: The type of value
+          enum:
+            - person
+            - person-multi
+            - company
+            - company-multi
+            - filterable-text
+            - filterable-text-multi
+            - number
+            - number-multi
+            - datetime
+            - location
+            - location-multi
+            - text
+            - ranked-dropdown
+            - dropdown
+            - dropdown-multi
+            - formula-number
+            - interaction
+          example: location
+          type: string
+          nullable: true
+        data:
+          description: The value for a date
+          format: date-time
+          type: string
+          nullable: true
+      type: object
+    FloatValue:
+      properties:
+        type:
+          description: The type of value
+          enum:
+            - person
+            - person-multi
+            - company
+            - company-multi
+            - filterable-text
+            - filterable-text-multi
+            - number
+            - number-multi
+            - datetime
+            - location
+            - location-multi
+            - text
+            - ranked-dropdown
+            - dropdown
+            - dropdown-multi
+            - formula-number
+            - interaction
+          example: location
+          type: string
+          nullable: true
+        data:
+          description: The value for a number
+          format: float
+          type: number
+          nullable: true
+      type: object
+    LocationValue:
+      properties:
+        type:
+          description: The type of value
+          enum:
+            - person
+            - person-multi
+            - company
+            - company-multi
+            - filterable-text
+            - filterable-text-multi
+            - number
+            - number-multi
+            - datetime
+            - location
+            - location-multi
+            - text
+            - ranked-dropdown
+            - dropdown
+            - dropdown-multi
+            - formula-number
+            - interaction
+          example: location
+          type: string
+          nullable: true
+        data:
+          $ref: '#/components/schemas/Location'
+          nullable: true
+      type: object
+    CompanyValue:
+      properties:
+        type:
+          description: The type of value
+          enum:
+            - person
+            - person-multi
+            - company
+            - company-multi
+            - filterable-text
+            - filterable-text-multi
+            - number
+            - number-multi
+            - datetime
+            - location
+            - location-multi
+            - text
+            - ranked-dropdown
+            - dropdown
+            - dropdown-multi
+            - formula-number
+            - interaction
+          example: location
+          type: string
+          nullable: true
+        data:
+          $ref: '#/components/schemas/CompanyData'
+          nullable: true
+      type: object
+    PersonValue:
+      properties:
+        type:
+          description: The type of value
+          enum:
+            - person
+            - person-multi
+            - company
+            - company-multi
+            - filterable-text
+            - filterable-text-multi
+            - number
+            - number-multi
+            - datetime
+            - location
+            - location-multi
+            - text
+            - ranked-dropdown
+            - dropdown
+            - dropdown-multi
+            - formula-number
+            - interaction
+          example: location
+          type: string
+          nullable: true
+        data:
+          $ref: '#/components/schemas/PersonData'
+          nullable: true
+      type: object
+    DropdownsValue:
+      properties:
+        type:
+          description: The type of value
+          enum:
+            - person
+            - person-multi
+            - company
+            - company-multi
+            - filterable-text
+            - filterable-text-multi
+            - number
+            - number-multi
+            - datetime
+            - location
+            - location-multi
+            - text
+            - ranked-dropdown
+            - dropdown
+            - dropdown-multi
+            - formula-number
+            - interaction
+          example: location
+          type: string
+          nullable: true
+        data:
+          description: The value for many dropdown items
+          items:
+            $ref: '#/components/schemas/Dropdown'
+          type: array
+          nullable: true
+      type: object
+    TextsValue:
+      properties:
+        type:
+          description: The type of value
+          enum:
+            - person
+            - person-multi
+            - company
+            - company-multi
+            - filterable-text
+            - filterable-text-multi
+            - number
+            - number-multi
+            - datetime
+            - location
+            - location-multi
+            - text
+            - ranked-dropdown
+            - dropdown
+            - dropdown-multi
+            - formula-number
+            - interaction
+          example: location
+          type: string
+          nullable: true
+        data:
+          description: The value for many strings
+          items:
+            type: string
+          type: array
+          nullable: true
+      type: object
+    FloatsValue:
+      properties:
+        type:
+          description: The type of value
+          enum:
+            - person
+            - person-multi
+            - company
+            - company-multi
+            - filterable-text
+            - filterable-text-multi
+            - number
+            - number-multi
+            - datetime
+            - location
+            - location-multi
+            - text
+            - ranked-dropdown
+            - dropdown
+            - dropdown-multi
+            - formula-number
+            - interaction
+          example: location
+          type: string
+          nullable: true
+        data:
+          description: The value for many numbers
+          items:
+            format: float
+            type: number
+          type: array
+          nullable: true
+      type: object
+    LocationsValue:
+      properties:
+        type:
+          description: The type of value
+          enum:
+            - person
+            - person-multi
+            - company
+            - company-multi
+            - filterable-text
+            - filterable-text-multi
+            - number
+            - number-multi
+            - datetime
+            - location
+            - location-multi
+            - text
+            - ranked-dropdown
+            - dropdown
+            - dropdown-multi
+            - formula-number
+            - interaction
+          example: location
+          type: string
+          nullable: true
+        data:
+          description: The values for many locations
+          items:
+            $ref: '#/components/schemas/Location'
+          type: array
+          nullable: true
+      type: object
+    CompaniesValue:
+      properties:
+        type:
+          description: The type of value
+          enum:
+            - person
+            - person-multi
+            - company
+            - company-multi
+            - filterable-text
+            - filterable-text-multi
+            - number
+            - number-multi
+            - datetime
+            - location
+            - location-multi
+            - text
+            - ranked-dropdown
+            - dropdown
+            - dropdown-multi
+            - formula-number
+            - interaction
+          example: location
+          type: string
+          nullable: true
+        data:
+          description: The values for many companies
+          items:
+            $ref: '#/components/schemas/CompanyData'
+          type: array
+          nullable: true
+      type: object
+    PersonsValue:
+      properties:
+        type:
+          description: The type of value
+          enum:
+            - person
+            - person-multi
+            - company
+            - company-multi
+            - filterable-text
+            - filterable-text-multi
+            - number
+            - number-multi
+            - datetime
+            - location
+            - location-multi
+            - text
+            - ranked-dropdown
+            - dropdown
+            - dropdown-multi
+            - formula-number
+            - interaction
+          example: location
+          type: string
+          nullable: true
+        data:
+          description: The values for many persons
+          items:
+            $ref: '#/components/schemas/PersonData'
+          type: array
+          nullable: true
+      type: object
+    PhoneCall:
+      properties:
+        type:
+          description: The type of interaction
+          enum:
+            - call
+            - email
+            - meeting
+            - chat-message
+          example: meeting
+          type: string
+          nullable: true
+        id:
+          description: The phon_call's unique identifier
+          example: 1
+          format: int64
+          type: integer
+          nullable: true
+        startTime:
+          description: The call start time
+          example: '2023-02-03 04:00:00.000000000 Z'
+          format: date-time
+          type: string
+          nullable: true
+        attendees:
+          description: People attending the call
+          items:
+            $ref: '#/components/schemas/Attendee'
+          type: array
+          nullable: true
+      type: object
+    Meeting:
+      properties:
+        title:
+          description: The meeting's title
+          example: Acme Upsell $10k
+          type: string
+          nullable: true
+        type:
+          description: The type of interaction
+          enum:
+            - call
+            - email
+            - meeting
+            - chat-message
+          example: meeting
+          type: string
+          nullable: true
+        id:
+          description: The meeting's unique identifier
+          example: 1
+          format: int64
+          type: integer
+          nullable: true
+        allDay:
+          description: Whether the meeting is an all-day event
+          example: false
+          type: boolean
+          nullable: true
+        startTime:
+          description: The meeting start time
+          example: '2023-02-03 04:00:00.000000000 Z'
+          format: date-time
+          type: string
+          nullable: true
+        endTime:
+          description: The meeting end time
+          example: '2023-02-03 05:00:00.000000000 Z'
+          format: date-time
+          type: string
+          nullable: true
+        attendees:
+          description: People attending the meeting
+          items:
+            $ref: '#/components/schemas/Attendee'
+          type: array
+          nullable: true
+      type: object
+    Email:
+      properties:
+        type:
+          description: The type of interaction
+          enum:
+            - call
+            - email
+            - meeting
+            - chat-message
+          example: meeting
+          type: string
+          nullable: true
+        id:
+          description: The email's unique identifier
+          example: 1
+          format: int64
+          type: integer
+          nullable: true
+        subject:
+          description: The subject of the email
+          example: Acme Upsell $10k
+          type: string
+          nullable: true
+        sentAt:
+          description: The time the email was sent
+          example: '2023-01-01 00:00:00.000000000 Z'
+          format: date-time
+          type: string
+          nullable: true
+        from:
+          $ref: '#/components/schemas/Attendee'
+          nullable: true
+        to:
+          $ref: '#/components/schemas/Attendee'
+          nullable: true
+        cc:
+          $ref: '#/components/schemas/Attendee'
+          nullable: true
+      type: object
+    ChatMessage:
+      properties:
+        type:
+          description: The type of interaction
+          enum:
+            - call
+            - email
+            - meeting
+            - chat-message
+          example: meeting
+          type: string
+          nullable: true
+        id:
+          description: The chat message's unique identifier
+          example: 1
+          format: int64
+          type: integer
+          nullable: true
+        direction:
+          description: The direction of the chat message
+          enum:
+            - received
+            - sent
+          example: outbound
+          type: string
+          nullable: true
+        sentAt:
+          description: The time the chat message was sent
+          example: '2023-01-01 00:00:00.000000000 Z'
+          format: date-time
+          type: string
+          nullable: true
+        manualCreator:
+          $ref: '#/components/schemas/PersonData'
+          nullable: true
+        participants:
+          description: The participants of the chat
+          items:
+            $ref: '#/components/schemas/PersonData'
+          type: array
+          nullable: true
+      type: object
+    ValidationErrors:
+      description: ValidationErrors model
+      example:
+        errors:
+          - code: validation
+            param: limit
+            message: 🚨 Error! Sound the alarm! 🚨
+          - code: validation
+            param: limit
+            message: 🚨 Error! Sound the alarm! 🚨
+      properties:
+        errors:
+          description: ValidationError errors
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          nullable: true
+      type: object
+    ValidationError:
+      example:
+        code: validation
+        param: limit
+        message: 🚨 Error! Sound the alarm! 🚨
+      properties:
+        code:
+          description: Error code
+          example: validation
+          type: string
+          nullable: true
+        message:
+          description: Error message
+          example: 🚨 Error! Sound the alarm! 🚨
+          type: string
+          nullable: true
+        param:
+          description: Param the error refers to
+          example: limit
+          type: string
+          nullable: true
+      type: object
+    NotFoundErrors:
+      description: NotFoundErrors model
+      example:
+        errors:
+          - code: not-found
+            message: 🚨 Error! Sound the alarm! 🚨
+          - code: not-found
+            message: 🚨 Error! Sound the alarm! 🚨
+      properties:
+        errors:
+          description: NotFoundError errors
+          items:
+            $ref: '#/components/schemas/NotFoundError'
+          type: array
+          nullable: true
+      type: object
+    NotFoundError:
+      example:
+        code: not-found
+        message: 🚨 Error! Sound the alarm! 🚨
+      properties:
+        code:
+          description: Error code
+          example: not-found
+          type: string
+          nullable: true
+        message:
+          description: Error message
+          example: 🚨 Error! Sound the alarm! 🚨
+          type: string
+          nullable: true
+      type: object
+    GenericError:
+      properties:
+        code:
+          description: Error code
+          type: string
+          nullable: true
+        message:
+          description: Error message
+          example: 🚨 Error! Sound the alarm! 🚨
+          type: string
+          nullable: true
+      type: object
+    RateLimitError:
+      properties:
+        code:
+          description: Error code
+          example: rate-limit
+          type: string
+          nullable: true
+        message:
+          description: Error message
+          example: 🚨 Error! Sound the alarm! 🚨
+          type: string
+          nullable: true
+      type: object
+    TooManyMultipartFilesError:
+      properties:
+        code:
+          description: Error code
+          example: too-many-multipart-files
+          type: string
+          nullable: true
+        message:
+          description: Error message
+          example: 🚨 Error! Sound the alarm! 🚨
+          type: string
+          nullable: true
+      type: object
+    InvalidVersionHeaderError:
+      properties:
+        code:
+          description: Error code
+          example: invalid-version-header
+          type: string
+          nullable: true
+        message:
+          description: Error message
+          example: 🚨 Error! Sound the alarm! 🚨
+          type: string
+          nullable: true
+      type: object
+    InvalidMessageBodyError:
+      properties:
+        code:
+          description: Error code
+          example: invalid-message-body
+          type: string
+          nullable: true
+        message:
+          description: Error message
+          example: 🚨 Error! Sound the alarm! 🚨
+          type: string
+          nullable: true
+      type: object
+    InvalidAcceptHeaderError:
+      properties:
+        code:
+          description: Error code
+          example: invalid-accept-header
+          type: string
+          nullable: true
+        message:
+          description: Error message
+          example: 🚨 Error! Sound the alarm! 🚨
+          type: string
+          nullable: true
+      type: object
+    EmptyMessageBodyError:
+      properties:
+        code:
+          description: Error code
+          example: empty-message-body
+          type: string
+          nullable: true
+        message:
+          description: Error message
+          example: 🚨 Error! Sound the alarm! 🚨
+          type: string
+          nullable: true
+      type: object
+    ServerError:
+      properties:
+        code:
+          description: Error code
+          example: server
+          type: string
+          nullable: true
+        message:
+          description: Error message
+          example: 🚨 Error! Sound the alarm! 🚨
+          type: string
+          nullable: true
+      type: object
+    MethodNotAllowedError:
+      properties:
+        code:
+          description: Error code
+          example: method-not-allowed
+          type: string
+          nullable: true
+        message:
+          description: Error message
+          example: 🚨 Error! Sound the alarm! 🚨
+          type: string
+          nullable: true
+      type: object
+    ConflictError:
+      properties:
+        code:
+          description: Error code
+          example: conflict
+          type: string
+          nullable: true
+        message:
+          description: Error message
+          example: 🚨 Error! Sound the alarm! 🚨
+          type: string
+          nullable: true
+      type: object
+    AuthorizationError:
+      properties:
+        code:
+          description: Error code
+          example: authorization
+          type: string
+          nullable: true
+        message:
+          description: Error message
+          example: 🚨 Error! Sound the alarm! 🚨
+          type: string
+          nullable: true
+      type: object
+    AuthenticationError:
+      properties:
+        code:
+          description: Error code
+          example: authentication
+          type: string
+          nullable: true
+        message:
+          description: Error message
+          example: 🚨 Error! Sound the alarm! 🚨
+          type: string
+          nullable: true
+      type: object
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+security:
+  - bearerAuth: []
+x-original-swagger-version: '2.0'
