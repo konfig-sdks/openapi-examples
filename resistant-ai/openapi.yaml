@@ -1,0 +1,3384 @@
+openapi: 3.0.1
+info:
+  title: Resistant Documents API
+  description: >-
+
+    Resistant Documents provides this API to programmatically interact with its
+    document analysis engine.
+
+    Interaction with the API can be divided into three phases:
+
+
+    1. Creating document submission
+
+    2. Uploading a file for for analysis to an address returned from step 1.
+
+    3. Fetching analysis results
+
+
+    In the first step, the submission is created by posting to the 
+    `/v2/submission` endpoint. The response contains a `submission_id` uniquely
+    identifying the document to be analyzed throughout the entire interaction,
+    and is used to fetch analysis results later.
+
+
+    Submission response also returns `upload_url` containing a pre-signed URL.
+    This URL should be used to upload the actual document to be analyzed in the
+    second step. Please note the document has to be uploaded using HTTP `PUT`
+    method with `Content-Type` HTTP header set to `application/octet-stream`.
+
+
+    In the last step, client should repeatedly poll using the
+    `/v2/submission/{submission_id}/fraud` endpoint for analysis results. The
+    best practice is to use polling with an [exponential
+    back-off](https://en.wikipedia.org/wiki/Exponential_backoff) to reduce load
+    on the API.
+
+
+    # Authentication
+
+
+    <SecurityDefinitions />
+  version: 2.0.0b
+  x-konfig-ignore:
+    potential-incorrect-type: true
+servers:
+  - url: https://api.documents.resistant.ai
+tags:
+  - name: Submission
+  - name: Report
+  - name: Quality
+  - name: Decision
+  - name: Fraud
+paths:
+  /v2/submission:
+    post:
+      tags:
+        - Submission
+      summary: Create a submission
+      operationId: Submission_analyzeDocument
+      security:
+        - OAuth2:
+            - submissions.write
+      description: Create a new submission for a document to be analyzed
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubmissionRequest'
+      responses:
+        '200':
+          description: Submission created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubmissionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /v2/submission/{submission_id}/characteristics:
+    put:
+      tags:
+        - Submission
+      summary: Add submission characteristics
+      operationId: Submission_attachCharacteristics
+      security:
+        - OAuth2:
+            - submissions.write
+      description: >-
+        Attach submission characteristics to the submission. Submission
+        characteristics are properties associated with the <i>original</i>
+        submission of the document (i.e., from the end user).
+
+        In descriptions of the properties, "user" refers to the person who
+        initially submitted the document, "customer" refers to a customer of
+        Resistant.ai using this API.
+
+
+        Calling this endpoint is only allowed if
+        `enable_submission_characteristics` is set to `true` when creating the
+        submission. When submission characteristics are enabled for the
+        submission, submitting then is <b>required</b> (the document will not be
+        analyzed without them).
+      parameters:
+        - in: path
+          name: submission_id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubmissionCharacteristicsRequest'
+      responses:
+        '204':
+          description: Submission characteristics were submitted successfully
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /v2/submission/{submission_id}/fraud:
+    get:
+      tags:
+        - Fraud
+      summary: Fetch fraud result
+      operationId: Fraud_getResult
+      security:
+        - OAuth2:
+            - submissions.read
+      description: Fetch fraud analysis result
+      parameters:
+        - description: Enables indicator medatadata in the response object
+          in: query
+          name: with_metadata
+          required: false
+          schema:
+            type: boolean
+            default: false
+        - in: path
+          name: submission_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: >-
+            Asynchronous processing finished (either with a success or an
+            error). Result of the processing is described by the specific
+            response object.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalysisResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /v2/submission/{submission_id}/content:
+    get:
+      tags:
+        - Submission
+      summary: Fetch content result
+      operationId: Submission_getContentResult
+      security:
+        - OAuth2:
+            - submissions.read
+      description: Fetch content extraction result
+      parameters:
+        - in: path
+          name: submission_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: >-
+            Asynchronous processing finished (either with a success or an
+            error). Result of the processing is described by specific response
+            object.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContentResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /v2/submission/{submission_id}/quality:
+    get:
+      tags:
+        - Quality
+      summary: Fetch quality result
+      operationId: Quality_resultFetch
+      security:
+        - OAuth2:
+            - submissions.read
+      parameters:
+        - in: path
+          name: submission_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: >-
+            Asynchronous processing finished (either with a success or an
+            error). Result of the processing is described by specific response
+            object.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QualityResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /v2/submission/{submission_id}/decision:
+    get:
+      tags:
+        - Decision
+      summary: Fetch Adaptive Decision result
+      operationId: Decision_getResult
+      security:
+        - OAuth2:
+            - submissions.read
+      description: >-
+        Fetch Adaptive Decision result. Note that if the response is too large,
+        the endpoint may send a 302 FOUND response with a `Location` header
+        pointing to result download location. Clients must follow such redirect.
+      parameters:
+        - in: path
+          name: submission_id
+          required: true
+          schema:
+            type: string
+        - description: >-
+            Coma-separated list of `decision_inputs` that should include the
+            full data in its `data` attribute, e.g. `?embed=fraud`.
+          in: query
+          name: embed
+          example: fraud
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: >-
+            Results of Adaptive Decision if Adaptive Decision was enabled for
+            the submission.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdaptiveDecisionResponse'
+        '302':
+          description: >-
+            Response too large. The full response can be downloaded from the URL
+            returned in the `Location` header.
+        '400':
+          description: >-
+            Bad request. Submission must be created with `enable_decision` flag
+            set to `true`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: Not found. Submission doesn't exist or verdict is not ready yet.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /v2/submission/{submission_id}/classification:
+    get:
+      tags:
+        - Submission
+      summary: Fetch document classification [preview]
+      operationId: Submission_getClassificationPreview
+      security:
+        - OAuth2:
+            - submissions.read
+      description: Fetch classification of the type of the submitted document
+      parameters:
+        - in: path
+          name: submission_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: >-
+            Results of document type classification if classification analysis
+            was enabled for the submission.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClassificationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /v2/submission/{submission_id}/report:
+    get:
+      tags:
+        - Report
+      summary: Fetch report [preview]
+      operationId: Report_getFraudAnalysis
+      security:
+        - OAuth2:
+            - submissions.read
+      description: Fetch fraud analysis report of the submitted document
+      parameters:
+        - in: path
+          name: submission_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Download URL to get the fraud analysis report.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: >-
+            The report cannot be downloaded because the fraud analysis was not
+            completed successfully or was skipped.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /v2/submission/{submission_id}:
+    delete:
+      tags:
+        - Submission
+      summary: Delete submission
+      operationId: Submission_remove
+      security:
+        - OAuth2:
+            - submissions.write
+      description: >-
+        Permanently deletes the submission. Can be used, e.g., to remove a
+        document before the configured retention period.
+      parameters:
+        - in: path
+          name: submission_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Submission deleted.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: Submission doesn't exist.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: >-
+            Submission cannot be deleted while it is being processed. Retry the
+            request later.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /v2/submission/{submission_id}/feedback:
+    put:
+      tags:
+        - Submission
+      summary: Add analysis feedback
+      operationId: Submission_addFeedback
+      security:
+        - OAuth2:
+            - submissions.write
+      description: >-
+        Add custom feedback for the document analysis result. Comment value is
+        sanitized.
+      parameters:
+        - in: path
+          name: submission_id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FeedbackRequest'
+      responses:
+        '200':
+          description: Custom feedback for fraud analysis.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FeedbackResponse'
+        '400':
+          description: Bad request. Feedback must be sent with all required properties.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: Not found. Submission doesn't exist.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+    get:
+      tags:
+        - Submission
+      summary: Get analysis feedback
+      operationId: Submission_getFeedback
+      security:
+        - OAuth2:
+            - submissions.read
+      description: >-
+        Get custom feedback for the document analysis result previously stored
+        with a PUT request to this endpoint.
+      parameters:
+        - in: path
+          name: submission_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Custom feedback for fraud analysis.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FeedbackResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: Not found. Submission or feedback doesn't exist.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+components:
+  responses:
+    UnsupportedMediaType:
+      description: Unsupported media type.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    BadRequest:
+      description: Bad request.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: The requested resource was not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Missing valid authentication credentials.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Forbidden:
+      description: Access to the requested resource is forbidden.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    TooManyRequests:
+      description: Request quota was exceeded
+  schemas:
+    SubmissionResponse:
+      title: SubmissionResponse
+      type: object
+      properties:
+        upload_url:
+          title: Presigned URL
+          description: >
+            Presigned URL to AWS S3 service where the actual file will
+
+            be uploaded using the PUT method. Note that the content type in the
+            PUT request
+
+            has to be set to `application/octet-stream`.
+
+
+            Example file upload request using `curl`:
+
+            ```
+
+            curl --request PUT \
+              --url $UPLOAD_URL \
+              --header 'content-type: application/octet-stream' \
+              --data @path_to_file
+            ```
+          type: string
+          format: uri
+        submission_id:
+          title: Submission ID
+          description: >-
+            Unique submission ID generated by Documents service that uniquely
+            identifies the submitted file.
+          minLength: 24
+          maxLength: 36
+          type: string
+        submission_characteristics_upload_url:
+          title: Submission characteristics upload URL
+          description: >-
+            URL where submission characteristics can be attached to this
+            submission - see the
+            `/v2/submission/{submission_id}/characteristics` endpoint. Note that
+            this URL is not pre-signed and requires access token in headers. The
+            URL may be relative.
+          type: string
+          format: uri
+      required:
+        - upload_url
+        - submission_id
+    PipelineConfiguration:
+      title: PipelineConfiguration
+      description: Type of analysis pipeline to execute.
+      enum:
+        - FRAUD_ONLY
+        - CLASSIFICATION_ONLY
+        - QUALITY_ONLY
+        - QUALITY_AND_FRAUD
+        - FRAUD_AFTER_QUALITY
+      type: string
+    SubmissionRequest:
+      title: SubmissionRequest
+      type: object
+      properties:
+        query_id:
+          title: Query ID
+          description: >-
+            User-defined ID of analyzed file - typically refers to internal ID
+            of the analyzed document in user's CMS. Please ensure the query_id
+            of any document is reviewed prior to submitting to ensure no PII is
+            shared. Query_id is used for subsequent indexing of outputs from the
+            document forensics analysis.
+          minLength: 0
+          maxLength: 1024
+          type: string
+          nullable: true
+        pipeline_configuration:
+          $ref: '#/components/schemas/PipelineConfiguration'
+        enable_decision:
+          title: Adaptive Decision enable flag
+          description: >-
+            `true` to enable Adaptive Decision for the submitted document,
+            `false` to disable it
+          default: false
+          type: boolean
+        enable_submission_characteristics:
+          title: Submission characteristics enable flag.
+          description: >-
+            `true` to enable attachment of submission characteristics for the
+            submitted document, `false` to disable it (see
+            `submission_characteristics_upload_url` field in the response
+            object)
+          default: false
+          type: boolean
+      x-konfig-properties:
+        pipeline_configuration:
+          title: Pipeline configuration enum
+          description: Type of analysis pipeline to execute.
+          default: FRAUD_ONLY
+    SubmissionCharacteristicsRequest:
+      title: SubmissionCharacteristicsRequest
+      description: >-
+        Properties associated with the <i>original</i> submission of the
+        document (i.e., from the actual end client).
+      type: object
+      properties:
+        document_characteristics:
+          title: Document characteristics
+          description: Properties associated with the analyzed document.
+          type: object
+          nullable: true
+          properties:
+            document_type:
+              title: Document type enum
+              description: >-
+                Type of the document, e.g. ID card, passport, account statement,
+                ...
+              type: string
+              enum:
+                - unknown
+                - id_card
+                - drivers_license
+                - birth_certificate
+                - health_insurance_card
+                - id_certificate
+                - passport
+                - residence_permit
+                - account_confirmation
+                - account_statement
+                - bank_details
+                - delivery_note
+                - company_detail
+                - earnings_confirmation
+                - employer_identification_number
+                - fees_statement
+                - government_registry_confirmation
+                - incorporation_certificate
+                - insurance_claim
+                - insurance_documentation
+                - invoice
+                - order
+                - order_confirmation
+                - payment
+                - payment_confirmation
+                - payslip
+                - proof_of_address
+                - receipt
+                - registration_certificate
+                - rental_agreement
+                - report
+                - residence_certificate
+                - tax_form
+                - tax_information
+                - ticket
+                - tracking_note
+                - transaction_detail
+                - transaction_history
+                - transport_order
+                - utility_bill
+                - vehicle_appraisal
+                - vehicle_registration_certificate
+              maxLength: 1024
+              nullable: true
+            document_type_string:
+              title: Document type string
+              description: >-
+                Unconstrained value for type of document, e.g. customer-specific
+                naming not mapped to document types defined in document_type
+                attribute
+              type: string
+              maxLength: 1024
+              nullable: true
+            issuing_country_code:
+              $ref: '#/components/schemas/CountryCode'
+            document_id:
+              title: Document ID assigned by customer
+              description: >-
+                Document identifier assigned by the customer (e.g., scan
+                reference).
+              type: string
+              maxLength: 1024
+              nullable: true
+            document_score:
+              title: >-
+                Internal document score or classification computed by the
+                customer
+              type: string
+              maxLength: 1024
+              nullable: true
+            status:
+              title: Document submission status computed by the customer
+              description: >-
+                Document status computed by the customer, e.g., `accepted`,
+                `rejected`, `sms verification needed`, ...
+              type: string
+              maxLength: 1024
+              nullable: true
+            document_position_on_image:
+              title: Document position on image
+              description: Position of a document (e.g., ID card) on the submitted image
+              type: object
+              nullable: true
+              properties:
+                corner_1:
+                  title: First corner (e.g., top-left) of the document
+                  description: >-
+                    Coordinates of a first corner of the document on the
+                    submitted image.
+                  type: object
+                  properties:
+                    x:
+                      $ref: '#/components/schemas/XCoordinate'
+                    'y':
+                      $ref: '#/components/schemas/YCoordinate'
+                  required:
+                    - x
+                    - 'y'
+                corner_2:
+                  title: Second corner (e.g., top-right) of the document
+                  description: >-
+                    Coordinates of a second corner of the document on the
+                    submitted image.
+                  type: object
+                  properties:
+                    x:
+                      $ref: '#/components/schemas/XCoordinate'
+                    'y':
+                      $ref: '#/components/schemas/YCoordinate'
+                  required:
+                    - x
+                    - 'y'
+                corner_3:
+                  title: Third corner (e.g., bottom-right) of the document
+                  description: >-
+                    Coordinates of a third corner of the document on the
+                    submitted image.
+                  type: object
+                  properties:
+                    x:
+                      $ref: '#/components/schemas/XCoordinate'
+                    'y':
+                      $ref: '#/components/schemas/YCoordinate'
+                  required:
+                    - x
+                    - 'y'
+                corner_4:
+                  title: Fourth corner (e.g., bottom-left) of the document
+                  description: >-
+                    Coordinates of a fourth corner of the document on the
+                    submitted image.
+                  type: object
+                  properties:
+                    x:
+                      $ref: '#/components/schemas/XCoordinate'
+                    'y':
+                      $ref: '#/components/schemas/YCoordinate'
+                  required:
+                    - x
+                    - 'y'
+              required:
+                - corner_1
+                - corner_2
+                - corner_3
+                - corner_4
+            source_channel:
+              title: Channel that the document originated from
+              description: >-
+                Identification of source that document came form eg. mobile
+                device, Web UI etc.
+              type: string
+              enum:
+                - api
+                - web
+                - mobile
+              nullable: true
+              maxLength: 1024
+            document_side:
+              title: Document side
+              description: Side of the document, e.g. front or back side of an ID card.
+              type: string
+              enum:
+                - front
+                - back
+              nullable: true
+              maxLength: 1024
+        device_characteristics:
+          title: Device characteristics
+          description: Properties associated with the device used to submit the document.
+          type: object
+          nullable: true
+          properties:
+            device_ip_address:
+              title: >-
+                Public IP address of the end-user's device used to submit the
+                document
+              type: string
+              maxLength: 39
+              nullable: true
+            server_ip_address:
+              title: IP address of the server where the document was submitted
+              type: string
+              maxLength: 39
+              nullable: true
+            country_code:
+              title: Code of the country from where to document was submitted
+              description: >-
+                [ISO 3166-1 alpha-3
+                code](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-3#Officially_assigned_code_elements)
+                of the country from where the document was submitted.
+              type: string
+              maxLength: 1024
+              nullable: true
+              example: GBR
+            country_name:
+              title: Country name
+              description: Name of the country from where the document was submitted.
+              type: string
+              maxLength: 1024
+              nullable: true
+            city:
+              title: City, from where the document was submitted
+              type: string
+              maxLength: 1024
+              nullable: true
+            postal_code:
+              title: >-
+                Postal code of the location from where the document was
+                submitted
+              type: string
+              maxLength: 1024
+              nullable: true
+            gcs_latitude:
+              title: >-
+                Latitude of the location from where the document was submitted
+                in decimal degrees (e.g. `38.775546` or `32.30642° N`).
+              type: string
+              maxLength: 1024
+              nullable: true
+              example: 38.77554692
+            gcs_longitude:
+              title: >-
+                Longitude of the location from where the document was submitted
+                in decimal degrees  (e.g. `-75.1396939` or `75.1396939° E`).
+              type: string
+              maxLength: 1024
+              nullable: true
+              example: -75.1396939
+            isp:
+              title: >-
+                Name of the internet service provider of the connection used to
+                submit the document
+              type: string
+              maxLength: 1024
+              nullable: true
+            referer:
+              title: Browser referer url related to the submission
+              type: string
+              maxLength: 1024
+              nullable: true
+            user_agent:
+              title: User agent of the browser used to submit the document
+              type: string
+              maxLength: 1024
+              nullable: true
+              example: >-
+                Mozilla/5.0 (Android 4.4; Mobile; rv:41.0) Gecko/41.0
+                Firefox/41.0
+            browser_description:
+              title: Browser, e.g., Chrome, Safari, ...
+              type: string
+              maxLength: 1024
+              nullable: true
+            device_platform:
+              title: Device platform, e.g., Windows 10, Android, ...
+              type: string
+              maxLength: 1024
+              nullable: true
+            device_language:
+              title: Device language
+              description: >-
+                Device language in [ISO
+                639-1](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes)
+                format
+              type: string
+              maxLength: 1024
+              nullable: true
+              example: en
+            screen_height:
+              title: Screen height in pixels
+              type: integer
+              nullable: true
+            screen_width:
+              title: Screen width in pixels
+              type: integer
+              nullable: true
+            device_fingerprint:
+              title: >-
+                Unique identifier of the device assigned by customer, e.g.,
+                fingerprint hash. The same device should have the same
+                device_fingerprint for all submissions.
+              type: string
+              maxLength: 1024
+              nullable: true
+        identity_characteristics:
+          title: User identity characteristics
+          description: Properties identifying the user who submitted the document.
+          type: object
+          nullable: true
+          properties:
+            first_name:
+              title: First name
+              type: string
+              maxLength: 1024
+              nullable: true
+            last_name:
+              title: Last name
+              type: string
+              maxLength: 1024
+              nullable: true
+            email:
+              title: Email address
+              type: string
+              maxLength: 1024
+              nullable: true
+            user_id:
+              title: User ID assigned by customer
+              description: >-
+                Customer-assigned identifier of the user who originally
+                submitted the document (or the entity that created the account
+                under which the document was submitted, e.g., "account holder
+                ID")
+              type: string
+              maxLength: 1024
+              nullable: true
+            user_group_id:
+              title: User grouping ID assigned by customer
+              description: >-
+                ID assigned by customer to group several users acting as a
+                single entity
+              type: string
+              maxLength: 1024
+              nullable: true
+            phone_number:
+              title: Phone number
+              type: string
+              maxLength: 1024
+              nullable: true
+            date_of_birth:
+              title: Date of birth in YYYY-MM-DD (ISO-8601) format
+              type: string
+              maxLength: 64
+              nullable: true
+              example: '2020-01-30'
+        transaction_characteristics:
+          title: Characteristics related to a transaction with the user
+          description: >-
+            Properties of a transaction between the user and customer, e.g.,
+            load or purchase.
+          type: object
+          nullable: true
+          properties:
+            amount_usd:
+              title: Amount converted to USD
+              type: number
+              nullable: true
+              example: 120.5
+            maturity_days:
+              title: Number of days until maturity
+              description: Number of days until maturity (e.g., for a loan)
+              type: integer
+              nullable: true
+              example: 60
+        submission_time:
+          title: Document submission time
+          description: Time of document submission by the end user
+          type: string
+          format: date-time
+          nullable: true
+        customer_tenant_id:
+          title: Customer-assigned identifier tenant identifier
+          description: >-
+            Customer-assigned identifier of a customer's tenant (e.g., internal
+            merchant ID)
+          type: string
+          maxLength: 1024
+          nullable: true
+    XCoordinate:
+      title: X (horizontal) coordinate
+      description: >-
+        X (horizontal) coordinate in pixels. The axis starts (x=0) at the
+        top-left corner of the image.
+      type: integer
+    YCoordinate:
+      title: Y (vertical) coordinate
+      description: >-
+        Y (vertical) coordinate in pixels. The axis starts (y=0) at the top-left
+        corner of the image.
+      type: integer
+    FeedbackRequest:
+      title: FeedbackRequest
+      type: object
+      properties:
+        analysis_feedback:
+          $ref: '#/components/schemas/AnalysisFeedback'
+        comment:
+          title: Feedback comment
+          description: Additional feedback comment.
+          minLength: 0
+          maxLength: 1024
+          type: string
+          nullable: true
+      required:
+        - analysis_feedback
+      x-konfig-properties:
+        analysis_feedback:
+          title: Analysis feedback
+          description: Type of feedback on the result of document analysis.
+    FeedbackResponse:
+      title: FeedbackResponse
+      type: object
+      properties:
+        analysis_feedback:
+          $ref: '#/components/schemas/AnalysisFeedback'
+        comment:
+          title: Feedback comment
+          description: Additional feedback comment.
+          minLength: 0
+          maxLength: 1024
+          type: string
+          nullable: true
+        updated:
+          title: Feedback timestamp
+          description: UTC date and time of the latest feedback update.
+          type: string
+          format: date-time
+      required:
+        - analysis_feedback
+        - updated
+      x-konfig-properties:
+        analysis_feedback:
+          title: Analysis feedback
+          description: Type of feedback on the result of document analysis.
+    AnalysisFeedback:
+      title: Analysis Feedback
+      description: Type of feedback on the result of document analysis.
+      enum:
+        - CORRECT
+        - NOT_CORRECT
+      type: string
+    Error:
+      title: Error
+      type: object
+      properties:
+        message:
+          title: Error message
+          description: Detailed error message
+          minLength: 0
+          maxLength: 512
+          type: string
+      required:
+        - message
+    FileType:
+      title: FileType
+      description: Type of analyzed file
+      enum:
+        - unsupported
+        - pdf
+        - image
+      type: string
+    FraudScore:
+      title: FraudScore
+      description: Fraud score produced by the document analysis.
+      enum:
+        - NORMAL
+        - TRUSTED
+        - WARNING
+        - HIGH_RISK
+      type: string
+    SampleMetadata:
+      title: SampleMetadata
+      description: Metadata of an analyzed file.
+      type: object
+      properties:
+        title:
+          title: Document title
+          minLength: 0
+          maxLength: 256
+          type: string
+          nullable: true
+        producer:
+          title: Document producer
+          minLength: 0
+          maxLength: 256
+          type: string
+          nullable: true
+        creator:
+          title: Document creator
+          minLength: 0
+          maxLength: 256
+          type: string
+          nullable: true
+        creation_date:
+          title: Creation date
+          type: string
+          format: date-time
+          nullable: true
+        mod_date:
+          title: Modification date
+          type: string
+          format: date-time
+          nullable: true
+        author:
+          title: Document author
+          minLength: 0
+          maxLength: 256
+          type: string
+          nullable: true
+        keywords:
+          title: Keywords
+          minLength: 0
+          maxLength: 256
+          type: string
+          nullable: true
+        subject:
+          title: Subject
+          minLength: 0
+          maxLength: 256
+          type: string
+          nullable: true
+    IndicatorType:
+      title: IndicatorType
+      description: Type of a quality indicator.
+      enum:
+        - RISK
+        - TRUST
+        - INFO
+      type: string
+    DataOnlyIndicatorMetadata:
+      title: DataOnlyIndicatorMetadata
+      type: object
+      properties:
+        type:
+          title: Type
+          enum:
+            - DataOnly
+          type: string
+        column_names:
+          title: Column names
+          description: Names of individual columns in data table
+          type: array
+          items:
+            type: string
+        data:
+          title: Data
+          description: >-
+            Detailed information related to given indicator, e.g. document
+            metadata, details about discrepancies in parsed content, etc.
+          type: array
+          items:
+            type: array
+            items:
+              anyOf:
+                - type: string
+                - type: integer
+                - type: number
+                - type: boolean
+                - type: array
+                  items:
+                    type: string
+                  uniqueItems: true
+              nullable: true
+      required:
+        - type
+        - column_names
+        - data
+    BoundingBox:
+      title: Bounding box of given modification
+      type: object
+      properties:
+        x:
+          title: Bounding box X coordinate
+          description: >-
+            Horizontal position of the lower left corner of the detected
+            modification.
+          type: number
+        'y':
+          title: Bounding box Y coordinate.
+          description: >-
+            Vertical position of the lower left corner of the detected
+            modification.
+          type: number
+        width:
+          title: Bounding box width.
+          description: Width of the detected modification.
+          type: number
+        height:
+          title: Bounding box height.
+          description: Height of the detected modification.
+          type: number
+      required:
+        - x
+        - 'y'
+        - width
+        - height
+    BBoxOnlyMetadataElement:
+      title: Metadata element with single bounding box
+      type: object
+      properties:
+        type:
+          title: Type
+          enum:
+            - BBoxOnly
+          type: string
+        page_id:
+          title: Page id
+          description: >-
+            Number of the page corresponding to the modification. Note that
+            first page has page_id = 0. In case of images, the page_id is always
+            0.
+          type: integer
+        bbox:
+          $ref: '#/components/schemas/BoundingBox'
+      required:
+        - type
+        - page_id
+        - bbox
+      x-konfig-properties:
+        bbox:
+          title: Bounding box
+          description: Bounding box corresponding to given modification
+    BBoxGroupsMetadataElement:
+      title: Metadata element with multiple bounding boxes
+      type: object
+      properties:
+        type:
+          title: Type
+          enum:
+            - BBoxGroups
+          type: string
+        page_id:
+          title: Page id
+          description: >-
+            Number of the page corresponding to the modification. Note that
+            first page has page_id = 0. In case of images, the page_id is always
+            0.
+          type: integer
+        bbox:
+          title: Bounding boxes
+          description: >-
+            Group of bounding boxes corresponding to given modification, e.g.
+            copy-move detection where single character is copied to multiple
+            places
+          type: array
+          items:
+            $ref: '#/components/schemas/BoundingBox'
+      required:
+        - type
+        - page_id
+        - bbox
+    NewAndOldTextMetadataElement:
+      title: Metadata element with bounding box, original text and modified text
+      type: object
+      properties:
+        type:
+          title: Type
+          enum:
+            - BBoxWithOldAndNewText
+          type: string
+        page_id:
+          title: Page id
+          description: >-
+            Number of the page corresponding to the modification. Note that
+            first page has page_id = 0. In case of images, the page_id is always
+            0.
+          type: integer
+        bbox:
+          $ref: '#/components/schemas/BoundingBox'
+        original_text:
+          title: Original text
+          description: Text that was originally present in the document.
+          type: string
+          nullable: true
+        new_text:
+          title: New text
+          description: Text that replaced or modified the original text.
+          type: string
+          nullable: true
+      required:
+        - type
+        - page_id
+        - bbox
+        - original_text
+        - new_text
+      x-konfig-properties:
+        bbox:
+          title: Bounding box
+          description: Bounding box corresponding to given modification
+    TextMetadataElement:
+      title: Metadata element with bounding box and additional text data
+      type: object
+      properties:
+        type:
+          title: Type
+          enum:
+            - BBoxWithText
+          type: string
+        page_id:
+          title: Page id
+          description: >-
+            Number of the page corresponding to the modification. Note that
+            first page has page_id = 0. In case of images, the page_id is always
+            0.
+          type: integer
+        bbox:
+          $ref: '#/components/schemas/BoundingBox'
+        text:
+          title: Text
+          type: string
+          nullable: true
+      required:
+        - type
+        - page_id
+        - bbox
+        - text
+      x-konfig-properties:
+        bbox:
+          title: Bounding box
+          description: Bounding box corresponding to given modification
+    IncrementalUpdateType:
+      title: IncrementalUpdateType
+      description: An enumeration.
+      enum:
+        - add
+        - edit
+        - remove
+      type: string
+    IncrementalUpdateIndicatorMetadataElement:
+      title: Metadata element with bounding box, original text and modified text
+      type: object
+      properties:
+        type:
+          title: Type
+          enum:
+            - BBoxIncrementalUpdate
+          type: string
+        page_id:
+          title: Page id
+          description: >-
+            Number of the page corresponding to the modification. Note that
+            first page has page_id = 0. In case of images, the page_id is always
+            0.
+          type: integer
+        bbox:
+          $ref: '#/components/schemas/BoundingBox'
+        original_text:
+          title: Original text
+          description: Text that was originally present in the document.
+          type: string
+          nullable: true
+        new_text:
+          title: New text
+          description: Text that replaced or modified the original text.
+          type: string
+          nullable: true
+        update_type:
+          $ref: '#/components/schemas/IncrementalUpdateType'
+      required:
+        - type
+        - page_id
+        - bbox
+        - original_text
+        - new_text
+        - update_type
+      x-konfig-properties:
+        bbox:
+          title: Bounding box
+          description: Bounding box corresponding to given modification
+        update_type:
+          title: Update type
+          description: Type of incremental update change
+    IndicatorMetadataElement:
+      title: IndicatorMetadataElement
+      discriminator:
+        propertyName: type
+        mapping:
+          BBoxOnly: '#/components/schemas/BBoxOnlyMetadataElement'
+          BBoxGroups: '#/components/schemas/BBoxGroupsMetadataElement'
+          BBoxWithOldAndNewText: '#/components/schemas/NewAndOldTextMetadataElement'
+          BBoxWithText: '#/components/schemas/TextMetadataElement'
+          BBoxIncrementalUpdate: '#/components/schemas/IncrementalUpdateIndicatorMetadataElement'
+      anyOf:
+        - $ref: '#/components/schemas/BBoxOnlyMetadataElement'
+        - $ref: '#/components/schemas/BBoxGroupsMetadataElement'
+        - $ref: '#/components/schemas/NewAndOldTextMetadataElement'
+        - $ref: '#/components/schemas/TextMetadataElement'
+        - $ref: '#/components/schemas/IncrementalUpdateIndicatorMetadataElement'
+    ColumnDefinition:
+      title: ColumnDefinition
+      type: object
+      properties:
+        column_name:
+          title: Column name
+          description: Name of column in data table
+          type: string
+        field_name:
+          title: Field name
+          description: Field name in IndicatorMetadataElement object
+          type: string
+      required:
+        - column_name
+        - field_name
+    ElementsCollectionIndicatorMetadata:
+      title: ElementsCollectionIndicatorMetadata
+      type: object
+      properties:
+        type:
+          title: Type
+          enum:
+            - ElementsCollection
+          type: string
+        data:
+          title: Metadata elements
+          description: >-
+            Metadata elements that represents individual detections, e.g.
+            modified characters, area with flash reflection, etc.
+          type: array
+          items:
+            $ref: '#/components/schemas/IndicatorMetadataElement'
+        columns_definition:
+          title: Columns definition
+          description: Definition of columns in data table.
+          type: array
+          items:
+            $ref: '#/components/schemas/ColumnDefinition'
+      required:
+        - type
+    IndicatorMetadata:
+      title: Indicator metadata
+      description: >-
+        Additional metadata associated with the indicator. <b>Content of
+        metadata evolves and can change without prior notice</b>. It is intended
+        mainly for visualization in UI and tracking purposes.
+      discriminator:
+        propertyName: type
+        mapping:
+          DataOnly: '#/components/schemas/DataOnlyIndicatorMetadata'
+          ElementsCollection: '#/components/schemas/ElementsCollectionIndicatorMetadata'
+      anyOf:
+        - $ref: '#/components/schemas/DataOnlyIndicatorMetadata'
+        - $ref: '#/components/schemas/ElementsCollectionIndicatorMetadata'
+    SerialFraudIndicatorAttributes:
+      title: Additional attributes for Serial fraud indicator
+      properties:
+        indicator_id:
+          title: Indicator ID
+          type: string
+          enum:
+            - in_transaction_cluster
+            - in_transaction_cluster_benevolent
+        serial_fraud_cluster_id:
+          title: Serial fraud cluster ID
+          type: string
+        cluster_submission_ids_sample:
+          title: Other submissions in the same serial fraud cluster
+          type: array
+          items:
+            type: string
+        cluster_query_ids_sample:
+          title: Other query ids in the same serial fraud cluster
+          type: array
+          items:
+            type: string
+    LogoAttributes:
+      title: Additional attributes for Has logo indicator
+      properties:
+        authority_id:
+          title: Issuer authority ID
+          type: string
+        authority_name:
+          title: Issuer authority name
+          type: string
+        authority_type:
+          title: Issuer authority type
+          enum:
+            - bank
+            - government
+            - insurance
+            - income
+            - multipurpose
+            - utility
+            - unclassified
+          type: string
+        authority_country:
+          title: Issuer authority country
+          description: >-
+            Country that issued this document, e.g. USA, DEU, FRA, CZE, SVK,
+            etc. The country code is encoded with ISO-31661 alpha-3 code, see
+            https://en.wikipedia.org/wiki/ISO_3166-1_alpha-3#Officially_assigned_code_elements.
+          minLength: 3
+          maxLength: 3
+          type: string
+      required:
+        - authority_id
+        - authority_type
+    HasLogoIndicatorAttributes:
+      title: Additional attributes for Has logo indicator
+      properties:
+        indicator_id:
+          title: Indicator ID
+          type: string
+          enum:
+            - has_logo
+        logo_primary:
+          $ref: '#/components/schemas/LogoAttributes'
+        detected_logos:
+          title: List of detected logos
+          type: array
+          items:
+            $ref: '#/components/schemas/LogoAttributes'
+      required:
+        - indicator_id
+        - detected_logos
+    Indicator:
+      title: Analysis indicator
+      type: object
+      properties:
+        title:
+          title: Indicator title
+          minLength: 0
+          maxLength: 256
+          type: string
+        description:
+          title: Indicator description
+          description: Detailed description of the indicator.
+          minLength: 0
+          maxLength: 2048
+          type: string
+        indicator_id:
+          title: Indicator ID
+          description: Unique identifier for the indicator
+          minLength: 0
+          maxLength: 256
+          type: string
+        type:
+          $ref: '#/components/schemas/IndicatorType'
+        category:
+          title: Indicator category
+          description: Category of indicator (e.g. `modifications`, `text_hiding`, etc.)
+          minLength: 0
+          maxLength: 256
+          type: string
+        metadata:
+          title: Indicator metadata
+          allOf:
+            - $ref: '#/components/schemas/IndicatorMetadata'
+          type: object
+          nullable: true
+        indicator_attributes:
+          description: Additional indicator-specific attributes associated with Indicator
+          discriminator:
+            propertyName: indicator_id
+            mapping:
+              in_transaction_cluster: '#/components/schemas/SerialFraudIndicatorAttributes'
+              in_transaction_cluster_benevolent: '#/components/schemas/SerialFraudIndicatorAttributes'
+              has_logo: '#/components/schemas/HasLogoIndicatorAttributes'
+          anyOf:
+            - $ref: '#/components/schemas/SerialFraudIndicatorAttributes'
+            - $ref: '#/components/schemas/HasLogoIndicatorAttributes'
+          type: object
+          nullable: true
+        origin:
+          title: Origin
+          enum:
+            - fraud
+            - quality
+          type: string
+      required:
+        - indicator_id
+        - type
+        - category
+        - title
+        - description
+        - origin
+      x-konfig-properties:
+        type:
+          title: Indicator type
+          description: Type of indicator.
+    DocumentType:
+      title: DocumentType
+      description: An enumeration.
+      enum:
+        - mixed
+        - unknown
+        - account_confirmation
+        - account_statement
+        - bank_details
+        - delivery_note
+        - company_detail
+        - earnings_confirmation
+        - employer_identification_number
+        - fees_statement
+        - government_registry_confirmation
+        - id_document
+        - incorporation_certificate
+        - insurance_claim
+        - insurance_documentation
+        - invoice
+        - order
+        - order_confirmation
+        - payment
+        - payment_confirmation
+        - payslip
+        - proof_of_address
+        - receipt
+        - registration_certificate
+        - rental_agreement
+        - report
+        - residence_certificate
+        - tax_form
+        - tax_information
+        - ticket
+        - tracking_note
+        - transaction_detail
+        - transaction_history
+        - transport_order
+        - utility_bill
+        - vehicle_appraisal
+        - vehicle_registration_certificate
+      type: string
+    DocumentClassificationType:
+      title: Document type
+      description: A unique identifier of the document type
+      type: string
+      nullable: true
+      enum:
+        - id_document
+        - income_confirmation
+        - loan_document
+        - bank_document
+        - utility_bill
+        - company_information
+        - government_document
+        - commercial_document
+        - legal_document
+        - insurance_document
+        - tax_details
+        - vehicle_documentation
+        - other_document
+        - document_missing
+    DocumentClassificationDetailedType:
+      title: Detailed document type
+      description: More specific type of document
+      type: string
+      nullable: true
+      enum:
+        - birth_certificate
+        - drivers_license
+        - health_insurance_card
+        - id_card
+        - id_certificate
+        - passport
+        - residence_permit
+        - proof_of_address
+        - earnings_confirmation
+        - earnings_statement
+        - earnings_summary
+        - payslip
+        - unemployment_certificate
+        - client_assessment
+        - costs_estimate
+        - loan_agreement
+        - loan_application
+        - loan_closure
+        - security_agreement
+        - account_confirmation
+        - account_statement
+        - bank_details
+        - fees_statement
+        - payment_confirmation
+        - bank_card
+        - energy
+        - water
+        - utilities
+        - telco
+        - municipal_services
+        - other
+        - company_detail
+        - employer_identification_number
+        - financial_report
+        - accounting_records
+        - company_share_capital_detail
+        - incorporation_certificate
+        - maternity_allowance_claim
+        - property_detail
+        - postal_document
+        - invoice
+        - receipt
+        - delivery_note
+        - order_confirmation
+        - tracking_note
+        - transport_order
+        - quote
+        - payment_request
+        - rate_confirmation
+        - load_confirmation
+        - order
+        - rental_agreement
+        - court_document
+        - employment_contract
+        - contract
+        - policy
+        - education_certificate
+        - insurance_claim
+        - insurance_documentation
+        - insurance_claim_settlement
+        - investigation_report
+        - proof_of_insurance
+        - tax_form
+        - tax_information
+        - vehicle_appraisal
+        - vehicle_registration_certificate
+        - vehicle_technical_certificate
+        - medical_report
+        - email
+        - letter
+        - loan_offer
+        - credit_card
+        - ticket
+        - report
+        - paper_date
+        - screenshot
+        - conflict
+        - missing
+        - null
+    DocumentClass:
+      title: DocumentClass
+      type: object
+      properties:
+        id:
+          title: Document class
+          description: >-
+            Document class that describes type of file submitted for analysis,
+            e.g. invoice, account statement, payslip, etc.
+          minLength: 0
+          maxLength: 256
+          type: string
+        type:
+          $ref: '#/components/schemas/DocumentType'
+        document_class_type:
+          title: Object discriminator
+          description: >-
+            This field can be used to discriminate the actual type of the
+            serialized object, for more details see
+            http://spec.openapis.org/oas/v3.1.0#composition-and-inheritance-polymorphism.
+            Note that the list is not fixed and additional types may be added
+            without further notice.
+          enum:
+            - DocumentClass
+          type: string
+      required:
+        - id
+        - type
+        - document_class_type
+      x-konfig-properties:
+        type:
+          title: Document class identifier
+          description: >-
+            A unique identifier for the document class, e.g.
+            `invoice_bouygues_fra`, `receipt_github`, `payslip_sdworx`, etc.
+    IdDocumentType:
+      title: IdDocumentType
+      description: An enumeration.
+      enum:
+        - unknown
+        - birth_certificate
+        - drivers_license
+        - health_insurance_card
+        - id_card
+        - id_certificate
+        - passport
+        - residence_permit
+      type: string
+    IdDocumentClass:
+      title: IdDocumentClass
+      type: object
+      properties:
+        id:
+          title: Document class
+          description: >-
+            Document class that describes type of file submitted for analysis,
+            e.g. invoice, account statement, payslip, etc.
+          minLength: 0
+          maxLength: 256
+          type: string
+        type:
+          $ref: '#/components/schemas/DocumentType'
+        document_class_type:
+          title: Document Class Type
+          enum:
+            - IdDocumentClass
+          type: string
+        detailed_type:
+          $ref: '#/components/schemas/IdDocumentType'
+        issuing_country:
+          title: Issuing country
+          description: >-
+            Country that issued this ID document, e.g. USA, DEU, FRA, CZE, SVK,
+            etc. The country code is encoded with ISO-31661 alpha-3 code, see
+            https://en.wikipedia.org/wiki/ISO_3166-1_alpha-3#Officially_assigned_code_elements.
+          minLength: 3
+          maxLength: 3
+          type: string
+      required:
+        - id
+        - type
+        - document_class_type
+        - detailed_type
+        - issuing_country
+      x-konfig-properties:
+        type:
+          title: Document class identifier
+          description: >-
+            A unique identifier for the document class, e.g.
+            `invoice_bouygues_fra`, `receipt_github`, `payslip_sdworx`, etc.
+        detailed_type:
+          title: ID document type
+          description: >-
+            Type of the ID document, e.g. id card, passport, health insurance
+            card, etc. Note that the list is not fixed and additional types may
+            be added without further notice.
+    UtilityBillType:
+      title: UtilityBillType
+      description: An enumeration.
+      enum:
+        - unknown
+        - electricity
+        - electricity_gas_water
+        - mobile_phone
+        - internet
+        - internet_mobile_television
+        - municipal_services
+      type: string
+    UtilityBillDocumentClass:
+      title: UtilityBillDocumentClass
+      type: object
+      properties:
+        id:
+          title: Document class
+          description: >-
+            Document class that describes type of file submitted for analysis,
+            e.g. invoice, account statement, payslip, etc.
+          minLength: 0
+          maxLength: 256
+          type: string
+        type:
+          $ref: '#/components/schemas/DocumentType'
+        document_class_type:
+          title: Document Class Type
+          enum:
+            - UtilityBillDocumentClass
+          type: string
+        detailed_type:
+          $ref: '#/components/schemas/UtilityBillType'
+      required:
+        - id
+        - type
+        - document_class_type
+        - detailed_type
+      x-konfig-properties:
+        type:
+          title: Document class identifier
+          description: >-
+            A unique identifier for the document class, e.g.
+            `invoice_bouygues_fra`, `receipt_github`, `payslip_sdworx`, etc.
+        detailed_type:
+          title: Utility bill type
+          description: >-
+            Type of the utility bill. Note that the list is not fixed and
+            additional types may be added without further notice.
+    DocumentClassType:
+      title: DocumentClassType
+      discriminator:
+        propertyName: document_class_type
+        mapping:
+          DocumentClass: '#/components/schemas/DocumentClass'
+          IdDocumentClass: '#/components/schemas/IdDocumentClass'
+          UtilityBillDocumentClass: '#/components/schemas/UtilityBillDocumentClass'
+      anyOf:
+        - $ref: '#/components/schemas/DocumentClass'
+        - $ref: '#/components/schemas/IdDocumentClass'
+        - $ref: '#/components/schemas/UtilityBillDocumentClass'
+    AnalysisSuccessResponse:
+      title: Analysis success response
+      type: object
+      properties:
+        status:
+          title: Status
+          enum:
+            - SUCCESS
+          type: string
+        analysis_time:
+          title: Analysis time
+          description: Timestamp of analysis
+          type: string
+          format: date-time
+        file_type:
+          $ref: '#/components/schemas/FileType'
+        mime_type:
+          title: Mime type
+          description: >-
+            Mime type of the input file, e.g. `application/pdf`, `image/jpeg`,
+            etc.
+          minLength: 0
+          maxLength: 256
+          type: string
+        deployment_version:
+          title: Deployment version
+          description: Version of quality engine used for analysis
+          minLength: 0
+          maxLength: 256
+          type: string
+        query_id:
+          title: Query ID
+          description: >-
+            Customer's own submission ID. This field may contain customer's own
+            internal ID of analyzed file (e.g. ID in database).
+          minLength: 0
+          maxLength: 2048
+          type: string
+          nullable: true
+        sha256:
+          title: File sha256
+          description: Sha256 of the input file
+          minLength: 64
+          maxLength: 64
+          type: string
+        score:
+          $ref: '#/components/schemas/FraudScore'
+        sample_metadata:
+          $ref: '#/components/schemas/SampleMetadata'
+        indicators:
+          title: Indicators
+          description: >-
+            Indicators contains detailed information about the specific results
+            of our analysis. This field contains detailed observations that the
+            system was able to make about the file. Some indicators may be
+            positive and may increase the Trust score, while the others would be
+            negative and would increase the Risk.
+          type: array
+          items:
+            $ref: '#/components/schemas/Indicator'
+        document_class:
+          $ref: '#/components/schemas/DocumentClassType'
+      required:
+        - status
+        - analysis_time
+        - file_type
+        - mime_type
+        - deployment_version
+        - query_id
+        - sha256
+        - score
+        - sample_metadata
+        - indicators
+        - document_class
+      x-konfig-properties:
+        file_type:
+          title: File type
+          description: General type of the input file
+        score:
+          title: Overall score
+          description: >-
+            Overall score of analyzed sample. A TRUSTED score is attributed to
+            documents where the system has identified a reason to trust them. A
+            NORMAL score describes the documents where the system has no
+            particular reason to trust or distrust them. A WARNING score is
+            given to documents that are identified as more likely to have been
+            modified, such as scanned documents. A HIGH_RISK score identifies
+            the documents where the system has identified modifications that are
+            frequently associated with fraud or forgery attempts.
+        sample_metadata:
+          title: Sample metadata
+          description: >-
+            Metadata extracted from the analyzed file. This field may contain
+            various information such as creation date, software used to create
+            the file, etc.
+        document_class:
+          title: Document class
+          description: >-
+            Document class describes type of the document, e.g. utility bill,
+            account statement, ID document, etc.
+    PipelineFailedResponse:
+      title: Pipeline failed
+      type: object
+      properties:
+        status:
+          title: Status
+          enum:
+            - FAILED
+          type: string
+        message:
+          title: Error message
+          minLength: 0
+          maxLength: 256
+          type: string
+        deployment_version:
+          title: Deployment version
+          description: Version of analysis engine used for analysis
+          minLength: 0
+          maxLength: 256
+          type: string
+        analysis_time:
+          title: Analysis time
+          description: Timestamp of analysis
+          type: string
+          format: date-time
+        file_type:
+          title: File type
+          description: General type of the input file
+          allOf:
+            - $ref: '#/components/schemas/FileType'
+          type: string
+          nullable: true
+        mime_type:
+          title: Mime type
+          description: >-
+            Mime type of the input file, e.g. `application/pdf`, `image/jpeg`,
+            etc.
+          minLength: 0
+          maxLength: 256
+          type: string
+          nullable: true
+        query_id:
+          title: Query ID
+          description: >-
+            Customer's own submission ID. This field may contain customer's own
+            internal ID of analyzed file (e.g. ID in database).
+          minLength: 0
+          maxLength: 256
+          type: string
+          nullable: true
+      required:
+        - status
+        - message
+        - deployment_version
+        - analysis_time
+    PipelineInvalidInputResponse:
+      title: Unprocessable input entity
+      type: object
+      properties:
+        status:
+          title: Status
+          enum:
+            - INVALID_INPUT
+          type: string
+        message:
+          title: Error message
+          minLength: 0
+          maxLength: 256
+          type: string
+        deployment_version:
+          title: Deployment version
+          description: Version of analysis engine used for analysis
+          minLength: 0
+          maxLength: 256
+          type: string
+        analysis_time:
+          title: Analysis time
+          description: Timestamp of analysis
+          type: string
+          format: date-time
+        file_type:
+          title: File Type
+          default: unsupported
+          enum:
+            - unsupported
+          type: string
+        mime_type:
+          title: Mime type
+          description: >-
+            Mime type of the input file, e.g. `application/pdf`, `image/jpeg`,
+            etc.
+          minLength: 0
+          maxLength: 256
+          type: string
+          nullable: true
+        query_id:
+          title: Query ID
+          description: >-
+            Customer's own submission ID. This field may contain customer's own
+            internal ID of analyzed file (e.g. ID in database).
+          minLength: 0
+          maxLength: 256
+          type: string
+          nullable: true
+      required:
+        - status
+        - message
+        - deployment_version
+        - analysis_time
+    PipelineSkippedResponse:
+      title: Pipeline was skipped
+      type: object
+      properties:
+        status:
+          title: Status
+          default: SKIPPED
+          enum:
+            - SKIPPED
+          type: string
+        message:
+          title: Pipeline skipped
+          minLength: 0
+          maxLength: 256
+          type: string
+        deployment_version:
+          title: Deployment version
+          description: Version of analysis engine used for analysis
+          minLength: 0
+          maxLength: 256
+          type: string
+        analysis_time:
+          title: Analysis time
+          description: Timestamp of analysis
+          type: string
+          format: date-time
+        query_id:
+          title: Query ID
+          description: >-
+            Customer's own submission ID. This field may contain customer's own
+            internal ID of analyzed file (e.g. ID in database).
+          minLength: 0
+          maxLength: 256
+          type: string
+          nullable: true
+      required:
+        - message
+        - deployment_version
+        - analysis_time
+    AnalysisResponse:
+      title: Fraud  analysis response
+      discriminator:
+        propertyName: status
+        mapping:
+          SUCCESS: '#/components/schemas/AnalysisSuccessResponse'
+          FAILED: '#/components/schemas/PipelineFailedResponse'
+          INVALID_INPUT: '#/components/schemas/PipelineInvalidInputResponse'
+          SKIPPED: '#/components/schemas/PipelineSkippedResponse'
+      anyOf:
+        - $ref: '#/components/schemas/AnalysisSuccessResponse'
+        - $ref: '#/components/schemas/PipelineFailedResponse'
+        - $ref: '#/components/schemas/PipelineInvalidInputResponse'
+        - $ref: '#/components/schemas/PipelineSkippedResponse'
+    CardGeneration:
+      title: CardGeneration
+      description: An enumeration.
+      enum:
+        - UNKNOWN
+        - ISSUED_BEFORE_2012
+        - ISSUED_AFTER_2012
+      type: string
+    MachineReadableSummary:
+      title: MachineReadableSummary
+      type: object
+      properties:
+        raw_lines:
+          title: Raw Lines
+          type: array
+          items:
+            type: string
+        date_of_birth_str:
+          title: Date Of Birth Str
+          type: string
+          nullable: true
+        date_of_expiration_str:
+          title: Date Of Expiration Str
+          type: string
+          nullable: true
+        card_no:
+          title: Card No
+          type: integer
+          nullable: true
+        last_name:
+          title: Last Name
+          type: string
+          nullable: true
+        first_name:
+          title: First Name
+          type: string
+          nullable: true
+        nationality:
+          title: Nationality
+          minLength: 3
+          maxLength: 3
+          type: string
+          nullable: true
+        sex:
+          title: Sex
+          type: string
+          nullable: true
+      required:
+        - raw_lines
+    MaritalStatus:
+      title: MaritalStatus
+      description: An enumeration.
+      enum:
+        - UNKNOWN
+        - SINGLE
+        - MARRIED
+        - DIVORCED
+        - WIDOWED
+      type: string
+    CardBackCze2012:
+      title: CZE IdCard Back
+      type: object
+      properties:
+        card_generation:
+          $ref: '#/components/schemas/CardGeneration'
+        issuing_country:
+          title: Issuing country
+          description: >-
+            Country that issued this ID card, e.g. USA, DEU, FRA, CZE, SVK, etc.
+            The country code is encoded with ISO-31661 alpha-3 code, see
+            https://en.wikipedia.org/wiki/ISO_3166-1_alpha-3#Officially_assigned_code_elements.
+          minLength: 3
+          maxLength: 3
+          type: string
+        id_card_type:
+          title: Id Card Type
+          enum:
+            - CzeBack2012
+          type: string
+        content_type:
+          title: Content Type
+          enum:
+            - IdCard
+          type: string
+        personal_no:
+          title: Personal No
+          type: string
+          nullable: true
+        machine_readable_summary:
+          $ref: '#/components/schemas/MachineReadableSummary'
+        barcode_str:
+          title: Barcode Str
+          type: string
+          nullable: true
+        permanent_stay:
+          title: Permanent Stay
+          type: string
+          nullable: true
+        academic_degree:
+          title: Academic Degree
+          type: string
+          nullable: true
+        issued_by:
+          title: Issued By
+          type: string
+          nullable: true
+        marital_status:
+          $ref: '#/components/schemas/MaritalStatus'
+          nullable: true
+      required:
+        - card_generation
+        - issuing_country
+        - id_card_type
+        - content_type
+        - machine_readable_summary
+      x-konfig-properties:
+        card_generation:
+          title: Card generation
+    Sex:
+      title: Sex
+      description: An enumeration.
+      enum:
+        - <
+        - M
+        - F
+      type: string
+    CardFrontCze2012:
+      title: CZE IdCard Front
+      type: object
+      properties:
+        card_generation:
+          $ref: '#/components/schemas/CardGeneration'
+        issuing_country:
+          title: Issuing country
+          description: >-
+            Country that issued this ID card, e.g. USA, DEU, FRA, CZE, SVK, etc.
+            The country code is encoded with ISO-31661 alpha-3 code, see
+            https://en.wikipedia.org/wiki/ISO_3166-1_alpha-3#Officially_assigned_code_elements.
+          minLength: 3
+          maxLength: 3
+          type: string
+        id_card_type:
+          title: Id Card Type
+          enum:
+            - CzeFront2012
+          type: string
+        content_type:
+          title: Content Type
+          enum:
+            - IdCard
+          type: string
+        first_name:
+          title: First Name
+          type: string
+          nullable: true
+        last_name:
+          title: Last Name
+          type: string
+          nullable: true
+        card_no:
+          title: Card No
+          type: integer
+          nullable: true
+        date_of_birth_str:
+          title: Date Of Birth Str
+          type: string
+          nullable: true
+        date_of_expiry_str:
+          title: Date Of Expiry Str
+          type: string
+          nullable: true
+        nationality:
+          title: Nationality
+          type: string
+          nullable: true
+        date_of_issue_str:
+          title: Date Of Issue Str
+          type: string
+          nullable: true
+        place_of_birth:
+          title: Place Of Birth
+          type: string
+          nullable: true
+        sex:
+          $ref: '#/components/schemas/Sex'
+          nullable: true
+      required:
+        - card_generation
+        - issuing_country
+        - id_card_type
+        - content_type
+      x-konfig-properties:
+        card_generation:
+          title: Card generation
+    CardBackZaf:
+      title: ZAF IdCard Back
+      type: object
+      properties:
+        card_generation:
+          $ref: '#/components/schemas/CardGeneration'
+        issuing_country:
+          title: Issuing country
+          description: >-
+            Country that issued this ID card, e.g. USA, DEU, FRA, CZE, SVK, etc.
+            The country code is encoded with ISO-31661 alpha-3 code, see
+            https://en.wikipedia.org/wiki/ISO_3166-1_alpha-3#Officially_assigned_code_elements.
+          minLength: 3
+          maxLength: 3
+          type: string
+        id_card_type:
+          title: Id Card Type
+          enum:
+            - ZafBack
+          type: string
+        content_type:
+          title: Content Type
+          enum:
+            - IdCard
+          type: string
+        card_no_str:
+          title: Card No Str
+          type: string
+          nullable: true
+        barcode_str:
+          title: Barcode Str
+          type: string
+          nullable: true
+      required:
+        - card_generation
+        - issuing_country
+        - id_card_type
+        - content_type
+      x-konfig-properties:
+        card_generation:
+          title: Card generation
+    CardFrontTha:
+      title: THA IdCard Front
+      type: object
+      properties:
+        card_generation:
+          $ref: '#/components/schemas/CardGeneration'
+        issuing_country:
+          title: Issuing country
+          description: >-
+            Country that issued this ID card, e.g. USA, DEU, FRA, CZE, SVK, etc.
+            The country code is encoded with ISO-31661 alpha-3 code, see
+            https://en.wikipedia.org/wiki/ISO_3166-1_alpha-3#Officially_assigned_code_elements.
+          minLength: 3
+          maxLength: 3
+          type: string
+        id_card_type:
+          title: Id Card Type
+          enum:
+            - ThaFront
+          type: string
+        content_type:
+          title: Content Type
+          enum:
+            - IdCard
+          type: string
+        card_no_str:
+          title: Card No Str
+          type: string
+          nullable: true
+        barcode_str:
+          title: Barcode Str
+          type: string
+          nullable: true
+      required:
+        - card_generation
+        - issuing_country
+        - id_card_type
+        - content_type
+      x-konfig-properties:
+        card_generation:
+          title: Card generation
+    CardFrontInd:
+      title: IND IdCard Front
+      type: object
+      properties:
+        card_generation:
+          $ref: '#/components/schemas/CardGeneration'
+        issuing_country:
+          title: Issuing country
+          description: >-
+            Country that issued this ID card, e.g. USA, DEU, FRA, CZE, SVK, etc.
+            The country code is encoded with ISO-31661 alpha-3 code, see
+            https://en.wikipedia.org/wiki/ISO_3166-1_alpha-3#Officially_assigned_code_elements.
+          minLength: 3
+          maxLength: 3
+          type: string
+        id_card_type:
+          title: Id Card Type
+          enum:
+            - IndFront
+          type: string
+        content_type:
+          title: Content Type
+          enum:
+            - IdCard
+          type: string
+        card_no_str:
+          title: Card No Str
+          type: string
+          nullable: true
+        barcode_str:
+          title: Barcode Str
+          type: string
+          nullable: true
+      required:
+        - card_generation
+        - issuing_country
+        - id_card_type
+        - content_type
+      x-konfig-properties:
+        card_generation:
+          title: Card generation
+    SupportedCountry:
+      title: SupportedCountry
+      description: An enumeration.
+      enum:
+        - CZ
+      type: string
+    SupportedBank:
+      title: SupportedBank
+      description: An enumeration.
+      enum:
+        - airbank
+        - ceska_sporitelna
+        - ceskoslovenska_obchodni_banka
+        - equa
+        - fio
+        - komercni_banka
+        - mbank
+        - moneta
+        - raiffeisen
+        - unicredit
+      type: string
+    BankAccountTransaction:
+      title: BankAccountTransaction
+      type: object
+      properties:
+        country:
+          $ref: '#/components/schemas/SupportedCountry'
+        accounting_date:
+          title: Transaction accounting date
+          type: string
+          format: date
+          nullable: true
+        transaction_date:
+          title: Transaction date
+          type: string
+          format: date
+          nullable: true
+        operation_type:
+          title: Type of transaction
+          type: string
+          nullable: true
+        operation_id:
+          title: Operation ID
+          description: Operation ID that is unique within a bank
+          type: string
+          nullable: true
+        message_for_recipient:
+          title: Message displayed to recipient
+          type: string
+          nullable: true
+        message_for_sender:
+          title: Message displayed to sender
+          type: string
+          nullable: true
+        detail:
+          title: Transaction additional description
+          type: array
+          items:
+            type: string
+          nullable: true
+        counterparty_account_number:
+          title: Recipient's account number
+          type: string
+          nullable: true
+        counterparty_account_name:
+          title: Recipient's account name
+          description: Can be name of the owner of counteraccount
+          type: string
+          nullable: true
+        amount:
+          title: Transaction amount
+          type: number
+          nullable: true
+      required:
+        - country
+      x-konfig-properties:
+        country:
+          title: Country in which the account is held
+    BankAccountStatement:
+      title: BankAccountStatement
+      type: object
+      properties:
+        content_type:
+          title: Content Type
+          enum:
+            - BankAccountStatement
+          type: string
+        country:
+          $ref: '#/components/schemas/SupportedCountry'
+        bank:
+          $ref: '#/components/schemas/SupportedBank'
+        transactions:
+          title: Transactions in bank account statement
+          type: array
+          items:
+            $ref: '#/components/schemas/BankAccountTransaction'
+        account_number:
+          title: Account number
+          description: Unique identifier of an account within the bank
+          type: string
+          nullable: true
+        iban:
+          title: Account IBAN
+          type: string
+          nullable: true
+        bic:
+          title: Account BIC
+          description: Unique identifier of an account within the bank
+          type: string
+          nullable: true
+        start_date:
+          title: Account statement start date
+          description: First day of the time period covered by the account statement
+          type: string
+          format: date
+          nullable: true
+        end_date:
+          title: Account statement end date
+          description: Last day of the time period covered by the account statement
+          type: string
+          format: date
+          nullable: true
+        account_currency:
+          title: Account currency
+          type: string
+          nullable: true
+        statement_periodicity:
+          title: Statement periodicity
+          description: >-
+            Periodicity with which the account statement is generated, e.g.
+            monthly, querterly, yerly
+          type: string
+          nullable: true
+        statement_generation_date:
+          title: Statement generation date
+          description: Date on which the account statement was generated
+          type: string
+          format: date
+          nullable: true
+        account_balance_start:
+          title: Starting account balance
+          description: >-
+            Account balance at the start of the period covered by the account
+            statement
+          type: number
+          nullable: true
+        account_balance_end:
+          title: Ending account balance
+          description: >-
+            Account balance at the end of the period covered by the account
+            statement
+          type: number
+          nullable: true
+        credit_transactions_sum:
+          title: Sum of credit transactions covered by account statement
+          type: number
+          nullable: true
+        debit_transactions_sum:
+          title: Sum of debit transactions covered by account statement
+          type: number
+          nullable: true
+        account_type:
+          title: Account type
+          type: string
+          nullable: true
+        statement_id:
+          title: Statement id
+          description: >-
+            Statement ID can be the ordinal number of the statement, or month
+            number it covers, etc.
+          type: string
+          nullable: true
+        account_owner_name:
+          title: Account owner name
+          description: Name of the owner of the account
+          type: string
+          nullable: true
+        account_owner_address:
+          title: Account owner address
+          description: Address of the owner of the account
+          type: array
+          items:
+            type: string
+          nullable: true
+      required:
+        - content_type
+        - country
+        - bank
+        - transactions
+      x-konfig-properties:
+        country:
+          title: Country in which the account is held
+        bank:
+          title: Bank name
+    InvoiceContent:
+      title: Invoice content
+      type: object
+      properties:
+        content:
+          title: Non-normalized invoice content
+          type: object
+          additionalProperties:
+            nullable: true
+        content_type:
+          title: Content Type
+          enum:
+            - invoice
+          type: string
+      required:
+        - content
+        - content_type
+    VrcContent:
+      title: VrcContent
+      type: object
+      properties:
+        vin:
+          title: Vehicle identification number
+          type: string
+        content_type:
+          title: Content Type
+          enum:
+            - VRC
+          type: string
+      required:
+        - vin
+        - content_type
+    BillingMonth:
+      title: BillingMonth
+      type: object
+      properties:
+        month:
+          title: Billing month
+          type: integer
+        year:
+          title: Billing year
+          type: integer
+      required:
+        - month
+        - year
+    SpecialPayment:
+      title: SpecialPayment
+      type: object
+      properties:
+        description:
+          title: Special payment description
+          type: string
+        amount:
+          title: Payment amount
+          type: number
+        identification:
+          title: Payment ID
+          type: string
+          nullable: true
+      required:
+        - description
+        - amount
+    PayslipContent:
+      title: PayslipContent
+      type: object
+      properties:
+        version:
+          title: Version of the document
+          type: string
+          nullable: true
+        issuer:
+          title: Issuer of the document
+          type: string
+          nullable: true
+        bank_account_number:
+          title: Employee account number to which salary is paid
+          type: string
+          nullable: true
+        bank_name:
+          title: Employee's bank
+          type: string
+          nullable: true
+        billing_month:
+          title: Billing month
+          allOf:
+            - $ref: '#/components/schemas/BillingMonth'
+          type: object
+          nullable: true
+        employment_start:
+          title: Employment start date
+          description: Date in isoformat
+          type: string
+          nullable: true
+        employment_end:
+          title: Employment end date
+          description: Date in isoformat
+          type: string
+          nullable: true
+        employee_identity:
+          title: Identity of the employee.
+          description: >-
+            Field can contain information such as employee name, employee
+            address
+          type: array
+          items:
+            type: string
+        net_payout:
+          title: Net payout for the given billing month.
+          type: number
+          nullable: true
+        special_payments:
+          title: Special payments to the employee
+          type: array
+          items:
+            $ref: '#/components/schemas/SpecialPayment'
+        content_type:
+          title: Content Type
+          enum:
+            - Payslip
+          type: string
+      required:
+        - employee_identity
+        - special_payments
+        - content_type
+    ContentSuccessResponse:
+      title: Content success response
+      type: object
+      properties:
+        status:
+          title: Status
+          enum:
+            - SUCCESS
+          type: string
+        analysis_time:
+          title: Analysis time
+          description: Timestamp of analysis
+          type: string
+          format: date-time
+        file_type:
+          $ref: '#/components/schemas/FileType'
+        mime_type:
+          title: Mime type
+          description: >-
+            Mime type of the input file, e.g. `application/pdf`, `image/jpeg`,
+            etc.
+          minLength: 0
+          maxLength: 256
+          type: string
+        deployment_version:
+          title: Deployment version
+          description: Version of quality engine used for analysis
+          minLength: 0
+          maxLength: 256
+          type: string
+        query_id:
+          title: Query ID
+          description: >-
+            Customer's own submission ID. This field may contain customer's own
+            internal ID of analyzed file (e.g. ID in database).
+          minLength: 0
+          maxLength: 2048
+          type: string
+          nullable: true
+        sha256:
+          title: File sha256
+          description: Sha256 of the input file
+          minLength: 64
+          maxLength: 64
+          type: string
+        contents:
+          title: Parsed content
+          type: array
+          items:
+            anyOf:
+              - $ref: '#/components/schemas/CardBackCze2012'
+              - $ref: '#/components/schemas/CardFrontCze2012'
+              - $ref: '#/components/schemas/CardBackZaf'
+              - $ref: '#/components/schemas/CardFrontTha'
+              - $ref: '#/components/schemas/CardFrontInd'
+              - $ref: '#/components/schemas/BankAccountStatement'
+              - $ref: '#/components/schemas/InvoiceContent'
+              - $ref: '#/components/schemas/VrcContent'
+              - $ref: '#/components/schemas/PayslipContent'
+      required:
+        - status
+        - analysis_time
+        - file_type
+        - mime_type
+        - deployment_version
+        - query_id
+        - sha256
+        - contents
+      x-konfig-properties:
+        file_type:
+          title: File type
+          description: General type of the input file
+    ContentResponse:
+      title: Engine response
+      discriminator:
+        propertyName: status
+        mapping:
+          SUCCESS: '#/components/schemas/ContentSuccessResponse'
+          FAILED: '#/components/schemas/PipelineFailedResponse'
+          INVALID_INPUT: '#/components/schemas/PipelineInvalidInputResponse'
+          SKIPPED: '#/components/schemas/PipelineSkippedResponse'
+      anyOf:
+        - $ref: '#/components/schemas/ContentSuccessResponse'
+        - $ref: '#/components/schemas/PipelineFailedResponse'
+        - $ref: '#/components/schemas/PipelineInvalidInputResponse'
+        - $ref: '#/components/schemas/PipelineSkippedResponse'
+    QualityScore:
+      title: QualityScore
+      description: An enumeration.
+      enum:
+        - HIGH_QUALITY
+        - LOW_QUALITY
+      type: string
+    QualityIndicator:
+      title: Quality indicator
+      type: object
+      properties:
+        title:
+          title: Indicator title
+          minLength: 0
+          maxLength: 256
+          type: string
+        description:
+          title: Indicator description
+          description: Detailed description of the indicator.
+          minLength: 0
+          maxLength: 2048
+          type: string
+        indicator_id:
+          title: Indicator ID
+          description: Unique identifier for the indicator
+          minLength: 0
+          maxLength: 256
+          type: string
+        type:
+          $ref: '#/components/schemas/IndicatorType'
+        category:
+          title: Indicator category
+          description: Category of indicator (e.g. `modifications`, `text_hiding`, etc.)
+          minLength: 0
+          maxLength: 256
+          type: string
+        metadata:
+          title: Indicator metadata
+          allOf:
+            - $ref: '#/components/schemas/IndicatorMetadata'
+          type: object
+          nullable: true
+        origin:
+          title: Origin
+          enum:
+            - quality
+          type: string
+      required:
+        - indicator_id
+        - type
+        - category
+        - title
+        - description
+        - origin
+      x-konfig-properties:
+        type:
+          title: Indicator type
+          description: Type of indicator.
+    QualitySuccessResponse:
+      title: Quality success response
+      type: object
+      properties:
+        status:
+          title: Status
+          enum:
+            - SUCCESS
+          type: string
+        analysis_time:
+          title: Analysis time
+          description: Timestamp of analysis
+          type: string
+          format: date-time
+        file_type:
+          $ref: '#/components/schemas/FileType'
+        mime_type:
+          title: Mime type
+          description: >-
+            Mime type of the input file, e.g. `application/pdf`, `image/jpeg`,
+            etc.
+          minLength: 0
+          maxLength: 256
+          type: string
+        deployment_version:
+          title: Deployment version
+          description: Version of quality engine used for analysis
+          minLength: 0
+          maxLength: 256
+          type: string
+        query_id:
+          title: Query ID
+          description: >-
+            Customer's own submission ID. This field may contain customer's own
+            internal ID of analyzed file (e.g. ID in database).
+          minLength: 0
+          maxLength: 2048
+          type: string
+          nullable: true
+        sha256:
+          title: File sha256
+          description: Sha256 of the input file
+          minLength: 64
+          maxLength: 64
+          type: string
+        score:
+          $ref: '#/components/schemas/QualityScore'
+        sample_metadata:
+          $ref: '#/components/schemas/SampleMetadata'
+        indicators:
+          title: Indicators
+          description: >-
+            Indicators contains detailed information about the specific results
+            of our analysis, namely the quality issues detected.
+          type: array
+          items:
+            $ref: '#/components/schemas/QualityIndicator'
+      required:
+        - status
+        - analysis_time
+        - file_type
+        - mime_type
+        - deployment_version
+        - query_id
+        - sha256
+        - score
+        - sample_metadata
+        - indicators
+      x-konfig-properties:
+        file_type:
+          title: File type
+          description: General type of the input file
+        score:
+          title: Overall score
+          description: >-
+            Overall score of analyzed sample. A LOW_QUALITY score is given to
+            documents where quality issue indicator has been foundA HIGH_QUALITY
+            score identifies documents where system found no quality issues
+        sample_metadata:
+          title: Sample metadata
+          description: >-
+            Metadata extracted from the analyzed file. This field may contain
+            various information such as creation date, software used to create
+            the file, etc.
+    QualityResponse:
+      title: Quality engine response
+      discriminator:
+        propertyName: status
+        mapping:
+          SUCCESS: '#/components/schemas/QualitySuccessResponse'
+          FAILED: '#/components/schemas/PipelineFailedResponse'
+          INVALID_INPUT: '#/components/schemas/PipelineInvalidInputResponse'
+          SKIPPED: '#/components/schemas/PipelineSkippedResponse'
+      anyOf:
+        - $ref: '#/components/schemas/QualitySuccessResponse'
+        - $ref: '#/components/schemas/PipelineFailedResponse'
+        - $ref: '#/components/schemas/PipelineInvalidInputResponse'
+        - $ref: '#/components/schemas/PipelineSkippedResponse'
+    AdaptiveDecisionResponse:
+      title: Adaptive Decision response
+      discriminator:
+        propertyName: status
+        mapping:
+          SUCCESS: '#/components/schemas/AdaptiveDecisionSuccessResponse'
+          FAILED: '#/components/schemas/AdaptiveDecisionNonSuccessResponse'
+          INVALID_INPUT: '#/components/schemas/AdaptiveDecisionNonSuccessResponse'
+          INVALID_PIPELINE_CONFIG: '#/components/schemas/AdaptiveDecisionNonSuccessResponse'
+          SKIPPED: '#/components/schemas/AdaptiveDecisionNonSuccessResponse'
+      oneOf:
+        - $ref: '#/components/schemas/AdaptiveDecisionSuccessResponse'
+        - $ref: '#/components/schemas/AdaptiveDecisionNonSuccessResponse'
+    AdaptiveDecisionSuccessResponse:
+      title: Adaptive Decision success response
+      type: object
+      properties:
+        status:
+          title: Status
+          description: '`SUCCESS` status indicates the Adaptive Decision result is available'
+          type: string
+          enum:
+            - SUCCESS
+        decision:
+          title: Decision
+          type: string
+          enum:
+            - APPROVED
+            - DECLINED
+            - MANUAL_REVIEW
+        decision_inputs:
+          title: Decision inputs
+          description: Inputs the decision is based on
+          type: object
+          properties:
+            fraud:
+              title: Fraud analysis result
+              description: >-
+                Link to fraud analysis result. Full `data` is only included if
+                requested with the `embed` query string parameter
+              type: object
+              properties:
+                url:
+                  title: Fraud analysis result URL
+                  description: URL where full fraud analysis can be retrieved
+                  example: /v2/submission/submission123/fraud
+                  type: string
+                  format: uri
+                data:
+                  $ref: '#/components/schemas/AnalysisResponse'
+              required:
+                - url
+        adaptive_decision_version:
+          title: Version of Adaptive Decision configuration
+          type: string
+        reason:
+          title: Customer-specific explanation of the decision
+          type: object
+          nullable: true
+      required:
+        - status
+        - decision
+        - decision_inputs
+        - adaptive_decision_version
+    AdaptiveDecisionNonSuccessResponse:
+      title: Adaptive Decision failed response
+      type: object
+      properties:
+        status:
+          title: Status
+          description: >-
+            `INVALID_INPUT` status indicates the submitted document is not
+            parsable.
+
+            `INVALID_PIPELINE_CONFIG` status indicates that some key part of the
+            pipeline is missing.
+
+            `FAILED` status indicates document analysis or Adaptive Decision
+            failed.
+
+            `SKIPPED` status indicates that the Adaptive Decision has not run
+            and was skipped.
+          enum:
+            - FAILED
+            - INVALID_INPUT
+            - INVALID_PIPELINE_CONFIG
+            - SKIPPED
+          type: string
+        message:
+          title: Error message
+          minLength: 0
+          maxLength: 256
+          type: string
+        adaptive_decision_version:
+          title: Version of Adaptive Decision configuration
+          type: string
+      required:
+        - status
+        - adaptive_decision_version
+    ClassificationResponse:
+      title: Document type classification response
+      discriminator:
+        propertyName: status
+        mapping:
+          SUCCESS: '#/components/schemas/ClassificationSuccessResponse'
+          FAILED: '#/components/schemas/PipelineFailedResponse'
+          INVALID_INPUT: '#/components/schemas/PipelineInvalidInputResponse'
+          SKIPPED: '#/components/schemas/PipelineSkippedResponse'
+      anyOf:
+        - $ref: '#/components/schemas/ClassificationSuccessResponse'
+        - $ref: '#/components/schemas/PipelineFailedResponse'
+        - $ref: '#/components/schemas/PipelineInvalidInputResponse'
+        - $ref: '#/components/schemas/PipelineSkippedResponse'
+    ClassificationSuccessResponse:
+      title: Document type classification success response
+      type: object
+      properties:
+        status:
+          title: Status
+          enum:
+            - SUCCESS
+          type: string
+        analysis_time:
+          title: Analysis time
+          description: Timestamp of analysis
+          type: string
+          format: date-time
+        deployment_version:
+          title: Deployment version
+          description: Version of quality engine used for analysis
+          minLength: 0
+          maxLength: 256
+          type: string
+        query_id:
+          title: Query ID
+          description: >-
+            Customer's own submission ID. This field may contain customer's own
+            internal ID of analyzed file (e.g. ID in database).
+          minLength: 0
+          maxLength: 2048
+          type: string
+          nullable: true
+        document_classification:
+          title: Classification of document type
+          description: >-
+            Information about the type and issuer of the submitted document, or
+            null if classification is not available
+          type: object
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/DocumentClassification'
+      required:
+        - status
+        - analysis_time
+        - deployment_version
+        - query_id
+    DocumentClassification:
+      title: Classification of document type
+      description: Information about the type and issuer of the submitted document
+      type: object
+      properties:
+        document_type:
+          $ref: '#/components/schemas/DocumentClassificationType'
+        detailed_type:
+          $ref: '#/components/schemas/DocumentClassificationDetailedType'
+        issuer_parent:
+          $ref: '#/components/schemas/DocumentIssuer'
+        issuer:
+          $ref: '#/components/schemas/DocumentIssuer'
+        variant:
+          title: A descriptor indicating the version or variant of the document.
+          description: >-
+            The values assigned to the "variant" field should accurately reflect
+            the specific version or variation of the document, allowing for
+            precise classification and subsequent processing.
+          type: string
+          minLength: 0
+          maxLength: 1024
+          nullable: true
+      x-konfig-properties:
+        issuer_parent:
+          title: Parent entity of document issuer
+          description: Parent legal entity of the document issuer
+        issuer:
+          title: Document issuer
+          description: Legal entity that issued the document
+    DocumentIssuer:
+      title: Document issuer
+      description: Document issuer information
+      type: object
+      properties:
+        name:
+          title: Name
+          description: Legal entity name
+          maxLength: 1024
+          type: string
+        country:
+          $ref: '#/components/schemas/CountryCode'
+        issuer_id:
+          title: Issuer official identificator
+          description: Official identificator of the issuing legal entity
+          maxLength: 1024
+          type: string
+          example: '07825439'
+        legal_address:
+          $ref: '#/components/schemas/PhysicalAddress'
+      required:
+        - name
+        - country
+    PhysicalAddress:
+      title: Address
+      type: object
+      properties:
+        street_address:
+          type: string
+          example: 16192 COASTAL HWY, LEWES, DE 19958
+      required:
+        - street_address
+    CountryCode:
+      title: Country code
+      description: >-
+        [ISO 3166-1 alpha-3
+        code](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-3#Officially_assigned_code_elements)
+        of the country or the string `UNKNOWN`
+      type: string
+      maxLength: 1024
+      nullable: true
+    ReportResponse:
+      title: Analysis report response
+      type: object
+      properties:
+        download_url:
+          title: Download URL
+          description: Download URL to get the analysis report
+          type: string
+      required:
+        - download_url
+  securitySchemes:
+    OAuth2:
+      description: >
+        The standard [client
+        credentials](https://developer.okta.com/docs/guides/implement-grant-type/clientcreds/main/#about-the-client-credentials-grant)
+        flow:
+
+
+        1. Client makes a
+        [request](https://developer.okta.com/docs/guides/implement-grant-type/clientcreds/main/#request-for-token)
+        to authorization server using client credentials
+
+        ```
+
+        BASIC_AUTH=$(echo -n $CLIENT_ID:$CLIENT_SECRET | base64)
+
+        curl --request POST \
+          --url 'https://eu.id.resistant.ai/oauth2/aus2un1hkrKhPjir4417/v1/token' \
+          --header 'accept: application/json' \
+          --header "authorization: Basic $BASIC_AUTH" \
+          --header 'content-type: application/x-www-form-urlencoded' \
+          --data 'grant_type=client_credentials&scope=submissions.read submissions.write'
+        ```
+
+        2. If the credentials are valid, authorization server responds with an
+        access token
+
+        ```
+
+        {
+          "access_token": "eyJhbG[...]1LQ",
+          "token_type": "Bearer",
+          "expires_in": 3600,
+          "scope": "submissions.read submissions.write"
+        }
+
+        ```
+
+        3. Client uses the access token to make subsequent API requests with
+        Authorization header
+
+        ```
+
+        Authorization: Bearer eyJhbG[...]1LQ
+
+        ```
+
+
+        Please note that Token URL is specific for a given environment. Correct
+        URL is in the corresponding environment documentation.
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: https://eu.id.resistant.ai/oauth2/aus2un1hkrKhPjir4417/v1/token
+          scopes:
+            submissions.read: Read analysis results for a submission
+            submissions.write: Create a new submission
