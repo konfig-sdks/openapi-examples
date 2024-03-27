@@ -1,0 +1,1736 @@
+openapi: 3.0.0
+info:
+  title: TripAdd API
+  description: >
+    TripAdd API enables you to create personalized travel ancillary product
+    bundles and make orders.
+
+
+    ## Concepts
+
+
+    A **Bundle** is a set of products defined by an ancillary manager. They can
+    contain specific products or product categories. Bundles and markups are
+    managed on the TripAdd [Partner Portal](https://dashboard.tripadd.com/).
+
+
+    A **Bundle Offer** is a unique short-lived set of product offers created for
+    a specific user and based on specific trip parameters. Bundle offers can be
+    available from 15 minutes to 25 hours, depending on which products are
+    included in the bundle. The offers later expire and have to be generated
+    again to ensure up-to-date pricing and availability of products at the time
+    of booking. The bundle expiration time is returned in the API response.
+
+
+    ### Pricing Types
+
+
+    TripAdd supports the following pricing types for products in bundles:
+    **passenger** and **group**. The passenger-type products will have
+    individual pricing per passenger, while the group-type products will have a
+    single price for the entire group/booking. When calculating the total order
+    price, you should multiply the passenger-type product prices by the
+    passenger count and add the group-type product prices directly.
+
+
+    ### Age Categories
+
+
+    TripAdd uses these age categories: adult (12 years old and above), child
+    (2-11 years old), and infant (up to 2 years old). Each product will specify
+    which age categories it applies to.
+
+
+    ### Product Delivery
+
+
+    Product delivery information is returned in the create order response.
+    TripAdd has a wide variety of products with different delivery options. Each
+    product will contain its delivery information consisting of a short
+    description, voucher codes, and/or links to vouchers or product pages. For
+    example, the eSIM product delivery will have the following information:
+
+
+    ```json
+
+    {
+      "description": "Your data plan will be automatically activated on {{arrivalDateTime}}. You can install the eSIM at any time before your departure."
+      "links": [
+        "label": "Claim Now",
+        "url": "https://app.tripadd.com/esim/jwmdyxemed"
+      ]
+    }
+
+    ```
+
+
+    ## Integration Steps
+
+
+    1. [Reach out](https://tripadd.com/) to acquire credentials to the TripAdd
+    [Partner Portal](https://dashboard.tripadd.com/).
+
+
+    2. Generate API tokens. On the partner portal, go to "Integration" → "API
+    Tokens" and click "Create Token" to generate a new API token. Make sure to
+    save the token because it cannot be retrieved in the dashboard again.
+
+
+    3. Create a Bundle. Click "New Bundle" and follow the steps to set up a
+    product bundle. At the "Installation" step, you will receive a unique
+    "Bundle ID" which you will need for the API calls. Bundles created in "Test
+    Mode" can only be used with "Test Mode" tokens.
+
+
+    4. Call the "Create Bundle Offer" endpoint. Each time you want to present a
+    bundle offer to the user, you should call this endpoint. It will check
+    product availability and pricing based on trip parameters and create a
+    unique offer.
+
+
+    5. Call the "Create Order" endpoint. Once the user selects the products,
+    completes the booking, and you successfully process the payment, call this
+    API to purchase the products.
+
+
+    ## Authentication
+
+
+    TripAdd API expects your access token as part of the `Authorization` header
+    in your requests using the `Bearer` method. Send your token in the HTTP
+    request header like this: `Authorization: Bearer <token>`. The access token
+    must be provided with all API calls. Access tokens created in "Test Mode"
+    work only with data created in "Test Mode" and vice versa.
+
+
+    **Notice:** Make sure you keep your access tokens secret and do not expose
+    them to the client side code.
+
+
+    ## Environments
+
+
+    TripAdd API is available on two environments: **sandbox** and
+    **production**. The sandbox environment is meant for integration testing:
+    the API matches production but the orders will not incur charges. Access
+    tokens on these environments will be different.
+
+
+    | Environment | API Base URL                       |
+
+    |-------------|------------------------------------|
+
+    | Sandbox     | https://sandbox.tripadd.com/v1     |
+
+    | Production  | https://api.tripadd.com/v1         |
+
+
+    ## Front-end
+
+
+    TripAdd bundles can be integrated into any checkout flow using your existing
+    technology stack. You only need to make sure to allow HTML tags in product
+    and delivery description fields.
+
+
+    Optionally, if you use React in your front end, you can take advantage of
+    our [**React component
+    library**](https://www.npmjs.com/package/@tripadd/components). It is a
+    collection of UI elements providing the easiest way to integrate the TripAdd
+    bundles into your checkout path.
+
+
+    # Changelog
+
+
+    **1.8.0 (2024-01-17)** Added support for partial orders: you can now specify
+    individual products for each passenger. Added `passenger_purchases` to the
+    "Create Order" request. The previous request format is still supported but
+    deprecated.
+
+
+    **1.7.9 (2023-12-12)** Added `customer_ip` element to the `available_data`
+    object in the "Create Bundle Offer" request.
+
+
+    **1.7.8 (2023-10-22)** Updated `booking_reference` in CreateOrderRequest` to
+    accept values from minimum 5 to maximum 16 character long.
+
+
+    **1.7.7 (2023-10-16)** Added `confirmation_recipients` in the "Create Order"
+    request, allowing you to specify the recipients for the order confirmation
+    and order cancellation emails.
+
+
+    **1.7.6 (2023-10-03)** Added `net_price` in the "Create Bundle Offer" API
+    response.
+
+
+    **1.7.5 (2023-08-24)** Added `delivery` to "Create Order" response, which
+    contains information about product delivery to user.
+
+
+    **1.7.4 (2023-08-22)** Added `terms_url` in the "Create Bundle Offer" API
+    response. You can use it to link users to the Terms and Conditions for the
+    products in the bundle.
+
+
+    **1.7.3 (2023-08-09)** Added support for partial cancellations. It is now
+    possible to cancel only part of the order by specifying product IDs.
+
+
+    **1.7.2 (2023-08-04)** Added `support_url` in the "Create Order" API
+    response.
+
+
+    **1.7.1 (2023-06-21)** Added product cancellation details to the "Product"
+    object (`cancellation_policy`, `refundable_until`).
+
+
+    **1.7.0 (2023-06-21)** Added the detailed pricing information to the "Create
+    Bundle Offer" response (`pricing`, `bundled_pricing`). Changed the `price`
+    and `bundled_price` values to include the TripAdd fee and removed the
+    separate `fee` object. The `price` field in the "Create Order" request will
+    have to include the TripAdd fee, as the separate field for `fee` is removed.
+
+
+    **1.6.1 (2023-05-05)** Made the customer's phone number optional in the
+    "Create Order" request. To receive all the product offers that do require
+    the customer's phone number, `customer_phone` has to be set as "true" in
+    `available_data` in the "Create Bundle Offer" request.
+
+
+    **1.6.0 (2023-05-03)** Added product delivery information to "Create Order"
+    response. You can now find product instructions, coupon codes and links to
+    vouchers in the response to construct your own product delivery email.
+
+
+    **1.5.1 (2023-05-02)** Added `expires_at` in the BundleOffer response. It
+    will inform you how long the bundle offer is available for the booking until
+    it expires and has to be generated again.
+
+
+    **1.5.0 (2023-04-14)** Renamed "Create Bundle" API to "Create Bundle Offer"
+    API to improve distinction between bundles and bundle offers. The
+    documentation reflects the new API but the old API paths and parameters are
+    still being supported until migration is complete.
+
+
+    **1.4.2 (2023-04-14)** Made `date_of_birth`, `gender`, `cabin_class`
+    optional and removed `retail_price`.
+
+
+    **1.4.1 (2023-04-13)** Made `outbound_flights` optional.
+
+
+    **1.4.0 (2023-02-22)** Added `language` property on CreateBundleRequest
+    object. The language property should be ISO 639-1 (language code) i.e. "en".
+
+
+    **1.3.0 (2023-02-22)** Removed `price` from the bundles and added
+    `bundled_price` on bundle products. You can now display how much individual
+    products cost when purchased in full bundle.
+
+
+    **1.2.0 (2023-01-27)** Added "Cancel Order" API.
+
+
+    **1.1.1 (2022-11-28)** Added `cabin_class` on the flight object.
+
+
+    **1.1.0 (2022-11-25)** Added "Get Order" API. It is now possible to fetch
+    any previous order information by its ID.
+
+
+    **1.0.4 (2022-11-24)** Made passenger email and phone fields optional. At
+    least one (customer's) email and phone pair is still required to deliver the
+    products after purchase.
+
+
+    **1.0.3 (2022-11-16)** Moved passengers data to orders. The passenger data
+    is now collected at the time of ordering and only the passenger age category
+    is required to generate a product bundle. If possible the optional
+    information should be provided for better recommendations.
+
+
+    **1.0.2 (2022-11-07)** Made customer address optional. It is now possible to
+    create an order without customer's address although any additional
+    information will enable more products.
+
+
+    **1.0.1 (2022-11-03)** Added optional fields for providing flight departure
+    and arrival terminals. The additional information will enable more products.
+
+
+    **1.0.0** Initial API release.
+  version: 1.8.0
+  contact:
+    email: info@tripadd.com
+  x-konfig-ignore:
+    potential-incorrect-type: true
+servers:
+  - description: Sandbox URL
+    url: https://sandbox.tripadd.com/v1
+  - description: Production URL
+    url: https://api.tripadd.com/v1
+tags:
+  - name: Orders
+  - name: Bundle Offers
+paths:
+  /bundle_offers:
+    post:
+      tags:
+        - Bundle Offers
+      summary: Create Bundle Offer
+      operationId: BundleOffers_generateNewOffer
+      description: >
+        Creates a personalized travel ancillary product bundle offer based on
+        the provided trip information. The flight and passenger information will
+        be used to select the best products (according to the particular flight
+        options and passenger types). The offers expire between 15 minutes and
+        25 hours depending on the products in the bundle. The bundle offers can
+        only be used for purchase once. You should generate a new offer for each
+        checkout session. After the bundle has expired, we cannot guarantee a
+        successful purchase of products due to any changes in pricing and/or
+        availability.
+
+
+        ### ❗️ Review available_data field
+
+
+        You may not have all the customer and passenger data available at the
+        time of creating the bundle offer. If any additional data (such as the
+        customer's phone number or PNR) will be collected later in the process
+        or become available during the ordering, you should set the appropriate
+        flags to `true`. Certain products requiring additional data will not be
+        returned in the bundle offer if their flags are set to `false`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBundleOfferRequest'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BundleOffer'
+        '400':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '401':
+          description: Authentication Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedErrorResponse'
+  /bundle_offers/{bundle_offer_id}:
+    get:
+      tags:
+        - Bundle Offers
+      summary: Get Bundle Offer
+      operationId: BundleOffers_getById
+      description: Retrieve previously generated bundle offer by ID.
+      parameters:
+        - $ref: '#/components/parameters/BundleOfferId'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BundleOffer'
+        '401':
+          description: Authentication Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedErrorResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundErrorResponse'
+  /orders:
+    post:
+      tags:
+        - Orders
+      summary: Create Order
+      operationId: Orders_placeOrder
+      description: >
+        Create an order for a bundle offer. It will make bookings on external
+        supplier systems and may take up to 120s to complete. It is important to
+        **increase the timeout of this API call to 120 seconds**. You also need
+        to use unique `client_reference_id` values to avoid double bookings (in
+        rare cases when bookings take longer).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrderRequest'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '400':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '401':
+          description: Authentication Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedErrorResponse'
+  /orders/{order_id}:
+    get:
+      tags:
+        - Orders
+      summary: Get Order
+      operationId: Orders_getById
+      description: Retrieve order by ID.
+      parameters:
+        - $ref: '#/components/parameters/OrderId'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '401':
+          description: Authentication Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedErrorResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundErrorResponse'
+  /orders/{order_id}/cancel:
+    post:
+      tags:
+        - Orders
+      summary: Cancel Order
+      operationId: Orders_cancelOrder
+      description: Cancel Order.
+      parameters:
+        - $ref: '#/components/parameters/OrderId'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CancellationRequest'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '401':
+          description: Authentication Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedErrorResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundErrorResponse'
+components:
+  parameters:
+    BundleOfferId:
+      name: bundle_offer_id
+      in: path
+      required: true
+      example: 8162eccc-6050-4eaa-8df0-0998cf9e9cf6
+      schema:
+        description: Unique identifier of the bundle offer.
+        type: string
+        format: uuid
+        minLength: 36
+        maxLength: 36
+    OrderId:
+      name: order_id
+      in: path
+      required: true
+      example: 8162eccc-6050-4eaa-8df0-0998cf9e9cf6
+      schema:
+        description: Unique identifier of the order.
+        type: string
+        format: uuid
+        minLength: 36
+        maxLength: 36
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    CreateBundleOfferRequest:
+      type: object
+      required:
+        - bundle_id
+        - currency
+        - destination
+        - arrival_date_time
+        - passengers
+      properties:
+        bundle_id:
+          description: >-
+            Bundle for offer generation. You can manage your bundles on the
+            TripAdd partner portal. You will find this identifier on the
+            installation page of the bundle.
+          type: string
+          example: 019cb030-aadd-4bb1-be61-00bc6c6a1b08
+        currency:
+          $ref: '#/components/schemas/currency'
+        booking_value:
+          $ref: '#/components/schemas/booking_value'
+        destination:
+          description: Trip destination.
+          type: object
+          required:
+            - iata
+          properties:
+            iata:
+              description: IATA code for the destination city/airport.
+              type: string
+              example: JFK
+        arrival_date_time:
+          description: >-
+            The local arrival date and time in `yyyy-MM-dd'T'HH:mm:ss` format,
+            for example `2022-04-24T09:44:51`.
+          type: string
+          example: '2022-04-24T09:44:51'
+        return_date_time:
+          description: >-
+            The local return date and time in `yyyy-MM-dd'T'HH:mm:ss` format,
+            for example `2022-04-24T09:44:51`. It must match the
+            arrival_date_time of the last flight when the inbound_flights data
+            is sent.
+          type: string
+          example: '2022-04-24T09:44:51'
+        passengers:
+          description: Passenger information.
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/partial_passenger'
+        outbound_flights:
+          description: Departure flight information.
+          type: array
+          items:
+            $ref: '#/components/schemas/Flight'
+        inbound_flights:
+          description: Return flight information.
+          type: array
+          items:
+            $ref: '#/components/schemas/Flight'
+        available_data:
+          $ref: '#/components/schemas/available_data'
+        language:
+          $ref: '#/components/schemas/language_code'
+    BundleOffer:
+      required:
+        - id
+        - currency
+        - products
+        - passengers
+        - expires_at
+        - language
+        - terms_url
+      type: object
+      properties:
+        id:
+          description: Unique identifier for the bundle offer.
+          type: string
+          format: uuid
+          example: 019cb030-aadd-4bb1-be61-00bc6c6a1b07
+        currency:
+          $ref: '#/components/schemas/currency'
+        products:
+          description: Products available in the bundle.
+          type: array
+          items:
+            $ref: '#/components/schemas/Product'
+        passengers:
+          description: Passenger information.
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/partial_passenger'
+        expires_at:
+          description: >-
+            The date and time until the Bundle Offer expires in ISO8601 format
+            (`yyyy-MM-ddTHH:mm:ss.sssZ`).
+          type: string
+          example: '2022-04-24T09:44:51.000Z'
+        language:
+          $ref: '#/components/schemas/language_code'
+        terms_url:
+          description: >-
+            A link to the Terms and Conditions of each product in the bundle
+            offer.
+          type: string
+          example: https://app.tripadd.com/terms/019cb030-aadd-4bb1-be61-00bc6c6a1b07
+    Product:
+      description: Product information.
+      required:
+        - id
+        - name
+        - category
+        - pricing_type
+        - pricing
+        - bundled_pricing
+        - icon_url
+        - description
+        - short_description
+        - age_categories
+        - cancellation_policy
+        - refundable_until
+      type: object
+      properties:
+        description:
+          description: The product's description.
+          type: string
+          example: >-
+            Track and expedite the return of your lost luggage. Receive
+            real-time push notifications regarding the status of your bags.
+            Collect $1000 per bag that is not returned within 96 hours.
+        id:
+          description: Unique identifier for the product offer.
+          type: string
+          example: 018ab040-aadd-4bb1-be61-00bc6c6a1b07
+        name:
+          description: The product's name.
+          type: string
+          example: Lost Bag Protection
+        icon_url:
+          description: A URL of a publicly-accessible icon for this product in PNG format.
+          type: string
+          example: https://example.com/icons/019cb030-aadd-4bb1-be61-00bc6c6a1b07.png
+        images:
+          description: Images of the product.
+          type: array
+          items:
+            $ref: '#/components/schemas/Image'
+        category:
+          $ref: '#/components/schemas/product_category'
+        short_description:
+          description: >-
+            The product's short description. This field provides a narrow
+            description, meant to be displayed when very little space is
+            available.
+          type: string
+          example: Track and Expedite the return of your lost luggage.
+        pricing_type:
+          description: >-
+            Determines whether the product price is returned for a single
+            passenger or the whole group.
+          type: string
+          enum:
+            - PASSENGER
+            - GROUP
+        age_categories:
+          description: The passenger age categories to which the product is applicable.
+          example:
+            - ADULT
+            - CHILD
+            - INFANT
+          type: array
+          items:
+            $ref: '#/components/schemas/age_category'
+        pricing:
+          $ref: '#/components/schemas/Pricing'
+        bundled_pricing:
+          $ref: '#/components/schemas/Pricing'
+        cancellation_policy:
+          $ref: '#/components/schemas/cancellation_policy'
+        refundable_until:
+          $ref: '#/components/schemas/refundable_until'
+    ProductWithInstructions:
+      description: Product information.
+      required:
+        - id
+        - name
+        - category
+        - pricing_type
+        - pricing
+        - bundled_pricing
+        - icon_url
+        - description
+        - quantity
+        - short_description
+        - cancellation_policy
+        - refundable_until
+      type: object
+      properties:
+        description:
+          description: The product's description.
+          type: string
+          example: >-
+            Track and expedite the return of your lost luggage. Receive
+            real-time push notifications regarding the status of your bags.
+            Collect $1000 per bag that is not returned within 96 hours.
+        id:
+          description: Unique identifier for the product offer.
+          type: string
+          example: 018ab040-aadd-4bb1-be61-00bc6c6a1b07
+        name:
+          description: The product's name.
+          type: string
+          example: Lost Bag Protection
+        icon_url:
+          description: A URL of a publicly-accessible icon for this product in PNG format.
+          type: string
+          example: https://example.com/icons/019cb030-aadd-4bb1-be61-00bc6c6a1b07.png
+        images:
+          description: Images of the product.
+          type: array
+          items:
+            $ref: '#/components/schemas/Image'
+        category:
+          $ref: '#/components/schemas/product_category'
+        short_description:
+          description: >-
+            The product's short description. This field provides a narrow
+            description, meant to be displayed when very little space is
+            available.
+          type: string
+          example: Track and Expedite the return of your lost luggage.
+        pricing_type:
+          description: >-
+            Determines whether the product price is returned for a single
+            passenger or the whole group.
+          type: string
+          enum:
+            - PASSENGER
+            - GROUP
+        pricing:
+          $ref: '#/components/schemas/Pricing'
+        bundled_pricing:
+          $ref: '#/components/schemas/Pricing'
+        quantity:
+          description: The quantity of the product.
+          type: number
+          minimum: 1
+        delivery:
+          $ref: '#/components/schemas/Delivery'
+        cancellation_policy:
+          $ref: '#/components/schemas/cancellation_policy'
+        refundable_until:
+          $ref: '#/components/schemas/refundable_until'
+    CreateOrderRequest:
+      type: object
+      required:
+        - currency
+        - bundle_offer_id
+        - client_reference_id
+        - price
+        - passenger_purchases
+        - customer
+      properties:
+        currency:
+          $ref: '#/components/schemas/currency'
+        bundle_offer_id:
+          description: The ID of the bundle offer for this order.
+          type: string
+          minLength: 36
+          maxLength: 36
+          example: 6982caed-fbfc-4719-bc41-0060a1c97e5d
+        client_reference_id:
+          description: >-
+            An identifier to reference the order in your system. It has to be
+            unique to avoid duplicate bookings.
+          type: string
+          maxLength: 36
+          example: 6982caed-fbfc-4719-bc41-0060a1c97e5d
+        price:
+          description: >-
+            The price of the order (including the TripAdd fee). It will be used
+            to validate the price calculation.
+          type: number
+          minimum: 0
+          exclusiveMinimum: true
+          example: 42.24
+        booking_reference:
+          description: >-
+            Booking reference (PNR number) for the trip. It must be provided if
+            the bundle was created with `booking_reference` set to `true` in
+            `available_data`.
+          type: string
+          nullable: true
+          minLength: 5
+          maxLength: 16
+          example: PNR123
+        passenger_purchases:
+          description: Passenger purchases.
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/passenger_purchase'
+        customer:
+          $ref: '#/components/schemas/customer'
+        confirmation_recipients:
+          description: >-
+            The list of the recipients for the order confirmation and order
+            cancellation emails.
+          type: array
+          items:
+            $ref: '#/components/schemas/ConfirmationRecipient'
+    Order:
+      required:
+        - id
+        - client_reference_id
+        - confirmation_code
+        - currency
+        - price
+        - products
+        - support_url
+        - cancellations
+      type: object
+      properties:
+        id:
+          description: Unique identifier for the order.
+          type: string
+          format: uuid
+          example: 019cb030-aadd-4bb1-be61-00bc6c6a1b07
+        client_reference_id:
+          description: >-
+            An identifier to reference the order in your system. We recommend to
+            use unique value but we don't enforce it on our side.
+          type: string
+          maxLength: 36
+          example: 6982caed-fbfc-4719-bc41-0060a1c97e5d
+        confirmation_code:
+          description: Unique short identifier of the order.
+          type: string
+          maxLength: 16
+          example: ASASD12
+        currency:
+          $ref: '#/components/schemas/currency'
+        support_url:
+          description: Support page URL for the order.
+          type: string
+          example: https://app.tripadd.com/orders/XXXXXX/support
+        price:
+          description: The price of the order (including the TripAdd fee).
+          type: string
+          example: '42.24'
+        products:
+          description: Products purchased with the order.
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductWithInstructions'
+        cancellations:
+          description: Products cancelled.
+          type: array
+          items:
+            $ref: '#/components/schemas/Cancellation'
+    CancellationRequest:
+      type: object
+      properties:
+        product_ids:
+          description: IDs of the product offers to be cancelled.
+          type: array
+          minItems: 1
+          items:
+            type: string
+          example:
+            - 3735f848-3643-4828-8c7d-7515996bbc2a
+            - 3735f848-3643-4828-8c7d-7515996bbc2b
+    Cancellation:
+      required:
+        - id
+        - product_id
+        - refund_amount
+      type: object
+      properties:
+        id:
+          description: Unique identifier for the cancellation.
+          type: string
+          format: uuid
+          example: 019cb030-aadd-4bb1-be61-00bc6c6a1b08
+        product_id:
+          description: Unique identifier for the product offer.
+          type: string
+          format: uuid
+          example: 019cb030-aadd-4bb1-be61-00bc6c6a1b07
+        refund_amount:
+          description: >-
+            Total amount (including markups and fees) to be refunded to the
+            customer.
+          type: string
+          example: '5.00'
+    UnauthorizedErrorResponse:
+      type: object
+      required:
+        - error_code
+        - message
+      properties:
+        error_code:
+          type: number
+          example: 401
+        message:
+          type: string
+          example: unauthorized
+    ValidationErrorResponse:
+      type: object
+      required:
+        - error_code
+        - message
+        - errors
+      properties:
+        error_code:
+          type: number
+          example: 400
+        message:
+          type: string
+          example: validation failed
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationError'
+    NotFoundErrorResponse:
+      type: object
+      required:
+        - error_code
+        - message
+      properties:
+        error_code:
+          type: number
+          example: 404
+        message:
+          type: string
+          example: not found
+    ValidationError:
+      type: object
+      required:
+        - path
+        - message
+      properties:
+        path:
+          type: string
+          example: flight.date
+        message:
+          type: string
+          example: 2022-13-67 is not a valid date
+    Flight:
+      type: object
+      required:
+        - number
+        - departure_airport
+        - destination_airport
+        - departure_date_time
+        - arrival_date_time
+      properties:
+        number:
+          description: IATA/ICAO flight number.
+          type: string
+          example: AC123
+        departure_airport:
+          description: IATA code of departure airport.
+          type: string
+          minLength: 3
+          maxLength: 3
+          example: VNO
+        destination_airport:
+          description: IATA code of departure airport.
+          type: string
+          minLength: 3
+          maxLength: 3
+          example: JFK
+        departure_date_time:
+          description: >-
+            The local departure date and time in `yyyy-MM-dd'T'HH:mm:ss` format,
+            for example `2022-04-24T09:44:51`.
+          type: string
+          example: '2022-04-24T09:44:51'
+        arrival_date_time:
+          description: >-
+            The local arrival date and time in `yyyy-MM-dd'T'HH:mm:ss` format,
+            for example `2022-04-24T09:44:51`.
+          type: string
+          example: '2022-04-28T09:44:51'
+        departure_terminal:
+          description: The terminal of the departure airport.
+          type: string
+          example: A
+        arrival_terminal:
+          description: The terminal of the arrival airport.
+          type: string
+          example: W
+        cabin_class:
+          description: Cabin class type.
+          type: string
+          enum:
+            - FIRST_CLASS
+            - BUSINESS_CLASS
+            - PREMIUM_ECONOMY
+            - ECONOMY
+    Image:
+      type: object
+      required:
+        - url
+      properties:
+        url:
+          description: Link to the image.
+          type: string
+          example: https://example.com/images/019cb030-aadd-4bb1-be61-00bc6c6a1b07.jpg
+    Delivery:
+      type: object
+      properties:
+        description:
+          description: Instructions on how the product works or how to redeem it.
+          type: string
+        codes:
+          description: Voucher codes used for redeeming the product.
+          type: array
+          items:
+            type: string
+        links:
+          description: Links to a voucher, product page, or more information page.
+          type: array
+          items:
+            $ref: '#/components/schemas/Link'
+    Link:
+      type: object
+      required:
+        - label
+        - url
+      properties:
+        label:
+          type: string
+        url:
+          type: string
+    Pricing:
+      type: object
+      required:
+        - price
+        - fee
+        - total
+        - net_price
+      properties:
+        price:
+          description: Product price (product net price + markup).
+          type: string
+          example: '10.00'
+        fee:
+          description: TripAdd fee.
+          type: string
+          example: '1.00'
+        total:
+          description: Total price (product price + TripAdd fee).
+          type: string
+          example: '11.00'
+        net_price:
+          description: Product net price.
+          type: string
+          example: '2.50'
+    ConfirmationRecipient:
+      type: object
+      required:
+        - email
+      properties:
+        name:
+          type: string
+          example: John
+        email:
+          type: string
+          example: john@example.com
+    currency:
+      description: >-
+        Three-letter ISO 4217 representing the currency code. Only one currency
+        per organization is supported based on the contract.
+      type: string
+      example: USD
+      enum:
+        - EUR
+        - USD
+    booking_value:
+      description: Booking value to take advantage of refund products.
+      type: object
+      required:
+        - currency
+      properties:
+        flight_value:
+          description: The total value of the flight booking for all passengers.
+          type: number
+          example: 100
+        hotel_value:
+          description: The total value of the hotel booking for all travelers.
+          type: number
+          example: 50
+        currency:
+          $ref: '#/components/schemas/currency'
+    age_category:
+      description: >-
+        The age group of the passenger. Infants (0-1 years old), Child ( from 2
+        to 11 years old), and Adults (above 12 years old).
+      type: string
+      example: ADULT
+      enum:
+        - ADULT
+        - CHILD
+        - INFANT
+    country_code:
+      description: Two-letter ISO code representing the country.
+      type: string
+      nullable: true
+      example: US
+      enum:
+        - AD
+        - AE
+        - AF
+        - AG
+        - AI
+        - AL
+        - AM
+        - AO
+        - AQ
+        - AR
+        - AS
+        - AT
+        - AU
+        - AW
+        - AX
+        - AZ
+        - BA
+        - BB
+        - BD
+        - BE
+        - BF
+        - BG
+        - BH
+        - BI
+        - BJ
+        - BL
+        - BM
+        - BN
+        - BO
+        - BQ
+        - BR
+        - BS
+        - BT
+        - BW
+        - BY
+        - BZ
+        - CA
+        - CC
+        - CD
+        - CF
+        - CG
+        - CH
+        - CI
+        - CK
+        - CL
+        - CM
+        - CN
+        - CO
+        - CR
+        - CU
+        - CV
+        - CW
+        - CX
+        - CY
+        - CZ
+        - DE
+        - DJ
+        - DK
+        - DM
+        - DO
+        - DZ
+        - EC
+        - EE
+        - EG
+        - EH
+        - ER
+        - ES
+        - ET
+        - FI
+        - FJ
+        - FK
+        - FM
+        - FO
+        - FR
+        - GA
+        - GB
+        - GD
+        - GE
+        - GF
+        - GG
+        - GH
+        - GI
+        - GL
+        - GM
+        - GN
+        - GP
+        - GQ
+        - GR
+        - GS
+        - GT
+        - GU
+        - GW
+        - GY
+        - HK
+        - HN
+        - HR
+        - HT
+        - HU
+        - ID
+        - IE
+        - IL
+        - IM
+        - IN
+        - IO
+        - IQ
+        - IR
+        - IS
+        - IT
+        - JE
+        - JM
+        - JO
+        - JP
+        - KE
+        - KG
+        - KH
+        - KI
+        - KM
+        - KN
+        - KP
+        - KR
+        - KW
+        - KY
+        - KZ
+        - LA
+        - LB
+        - LC
+        - LI
+        - LK
+        - LR
+        - LS
+        - LT
+        - LU
+        - LV
+        - LY
+        - MA
+        - MC
+        - MD
+        - ME
+        - MF
+        - MG
+        - MH
+        - MK
+        - ML
+        - MM
+        - MN
+        - MO
+        - MP
+        - MQ
+        - MR
+        - MS
+        - MT
+        - MU
+        - MV
+        - MW
+        - MX
+        - MY
+        - MZ
+        - NA
+        - NC
+        - NE
+        - NF
+        - NG
+        - NI
+        - NL
+        - 'NO'
+        - NP
+        - NR
+        - NU
+        - NZ
+        - OM
+        - PA
+        - PE
+        - PF
+        - PG
+        - PH
+        - PK
+        - PL
+        - PM
+        - PN
+        - PR
+        - PS
+        - PT
+        - PW
+        - PY
+        - QA
+        - RE
+        - RO
+        - RS
+        - RU
+        - RW
+        - SA
+        - SB
+        - SC
+        - SD
+        - SE
+        - SG
+        - SH
+        - SI
+        - SJ
+        - SK
+        - SL
+        - SM
+        - SN
+        - SO
+        - SR
+        - SS
+        - ST
+        - SV
+        - SX
+        - SY
+        - SZ
+        - TC
+        - TD
+        - TF
+        - TG
+        - TH
+        - TJ
+        - TK
+        - TL
+        - TM
+        - TN
+        - TO
+        - TR
+        - TT
+        - TV
+        - TW
+        - TZ
+        - UA
+        - UG
+        - UM
+        - US
+        - UY
+        - UZ
+        - VA
+        - VC
+        - VE
+        - VG
+        - VI
+        - VN
+        - VU
+        - WF
+        - WS
+        - XK
+        - YE
+        - YT
+        - ZA
+        - ZM
+        - ZW
+        - null
+    gender:
+      description: The passenger's gender.
+      type: string
+      example: FEMALE
+      enum:
+        - FEMALE
+        - MALE
+    partial_passenger:
+      type: object
+      required:
+        - age_category
+      properties:
+        age_category:
+          $ref: '#/components/schemas/age_category'
+        citizenship:
+          $ref: '#/components/schemas/country_code'
+        date_of_birth:
+          description: Date of birth in `yyyy-MM-dd` format, for example `1989-10-24`.
+          type: string
+          nullable: true
+          format: date
+          example: '1989-10-24'
+        gender:
+          $ref: '#/components/schemas/gender'
+        checked_in_bags:
+          description: Number of check-in baggage units.
+          type: integer
+          minimum: 0
+          example: 1
+    available_data:
+      description: >-
+        Allows specifying what additional information will be included in the
+        "Create Order" request. Some products will not be available without
+        additional data.
+      type: object
+      properties:
+        booking_reference:
+          description: >-
+            Booking reference (PNR number). Required to sell flight claim and
+            similar products depending on the booking reference.
+          type: boolean
+          default: false
+          example: false
+        customer_address:
+          description: >-
+            Some vendors require the customer's address. Their products will not
+            be available if you don't send the customer's address.
+          type: boolean
+          default: false
+          example: false
+        customer_phone:
+          description: >-
+            Some vendors require the customer's phone number. Their products
+            will not be available if you don't send the customer's phone number.
+          type: boolean
+          default: false
+          example: false
+        customer_ip:
+          description: The IP address of customer.
+          type: boolean
+          default: false
+          example: false
+        passenger_email:
+          description: Email address of each passenger.
+          type: boolean
+          default: false
+          example: false
+        passenger_phone:
+          description: Phone number of each passenger.
+          type: boolean
+          default: false
+          example: false
+        passenger_date_of_birth:
+          description: Date of birth of each passenger.
+          type: boolean
+          default: false
+          example: false
+        passenger_citizenship:
+          description: Citizenship of each passenger.
+          type: boolean
+          default: false
+          example: false
+    language_code:
+      description: Two-letter ISO 639-1 representing the language code.
+      type: string
+      example: en
+      default: en
+      enum:
+        - af
+        - ak
+        - am
+        - ar
+        - as
+        - ay
+        - az
+        - be
+        - bg
+        - bm
+        - bn
+        - bs
+        - ca
+        - co
+        - cs
+        - cy
+        - da
+        - de
+        - doi
+        - dv
+        - ee
+        - el
+        - en
+        - es
+        - et
+        - eu
+        - fa
+        - fi
+        - fil
+        - fr
+        - fy
+        - ga
+        - gd
+        - gl
+        - gn
+        - gu
+        - ha
+        - he
+        - hi
+        - hr
+        - ht
+        - hu
+        - hy
+        - id
+        - ig
+        - ilo
+        - is
+        - it
+        - ja
+        - jv
+        - ka
+        - kk
+        - km
+        - kn
+        - ko
+        - ku
+        - ky
+        - lb
+        - lg
+        - ln
+        - lo
+        - lt
+        - lv
+        - mg
+        - mi
+        - mk
+        - ml
+        - mn
+        - mr
+        - ms
+        - mt
+        - my
+        - ne
+        - nl
+        - 'no'
+        - ny
+        - om
+        - or
+        - pa
+        - pl
+        - ps
+        - pt
+        - qu
+        - ro
+        - ru
+        - rw
+        - sa
+        - sd
+        - si
+        - sk
+        - sl
+        - sm
+        - sn
+        - so
+        - sq
+        - sr
+        - st
+        - su
+        - sv
+        - sw
+        - ta
+        - te
+        - tg
+        - th
+        - ti
+        - tk
+        - tl
+        - tr
+        - ts
+        - tt
+        - ug
+        - uk
+        - ur
+        - uz
+        - vi
+        - xh
+        - yi
+        - yo
+        - zh_CN
+        - zh_TW
+        - zu
+    product_category:
+      description: The category of the product.
+      type: string
+      enum:
+        - TOURS
+        - ACTIVITIES
+        - SIGHTSEEING
+        - EVENTS
+        - FLIGHT_CLAIM
+        - LUGGAGE_PROTECTION
+        - AIRPORT_LOUNGES
+        - FLIGHT_DELAY_PROTECTION
+        - MEET_AND_GREET
+        - ONLINE_MAGAZINES
+        - FLIGHT_NOTIFICATIONS
+        - WEATHER_NOTIFICATIONS
+        - AIRPORT_PARKING
+        - CONCIERGE
+        - AIRPORT_TRANSFER
+        - ESIM
+        - AUTO_CHECKIN
+        - MUSEUMS
+        - EXCURSIONS
+        - OUTDOORS
+        - NIGHT_LIFE
+        - RESTAURANTS
+        - OTHER
+        - TRIPADD_PROTECTION
+        - TRIP_PROTECTION
+        - CARBON_OFFSET
+        - VISA
+        - FAST_TRACK
+        - VIP_SERVICE
+        - TRAVEL_OUTFIT
+        - VPN
+    cancellation_policy:
+      description: The product's cancellation policy, whether it is refundable or not.
+      type: string
+      enum:
+        - FULL_REFUND
+        - NO_REFUND
+    refundable_until:
+      description: >-
+        The date and time until the full refund will be provided in case of
+        cancellation in ISO8601 format (`yyyy-MM-ddTHH:mm:ss.sssZ`).
+      type: string
+      example: '2022-04-24T09:44:51.000Z'
+    passenger:
+      type: object
+      required:
+        - age_category
+        - first_name
+        - last_name
+      properties:
+        age_category:
+          $ref: '#/components/schemas/age_category'
+        first_name:
+          description: The passenger's first name.
+          type: string
+          example: Peter
+        last_name:
+          description: The passenger's last name.
+          type: string
+          example: Parker
+        email:
+          description: The passenger's email address.
+          type: string
+          nullable: true
+          format: email
+          example: peter.parker@example.com
+        phone:
+          description: The passenger's phone number.
+          type: string
+          nullable: true
+          example: '+12065550199'
+        citizenship:
+          $ref: '#/components/schemas/country_code'
+        date_of_birth:
+          description: Date of birth in `yyyy-MM-dd` format, for example `1989-10-24`.
+          type: string
+          nullable: true
+          format: date
+          example: '1989-10-24'
+        gender:
+          $ref: '#/components/schemas/gender'
+        checked_in_bags:
+          description: Number of check-in baggage units.
+          type: integer
+          minimum: 0
+          example: 1
+    passenger_purchase:
+      type: object
+      required:
+        - passenger
+        - products
+      properties:
+        passenger:
+          $ref: '#/components/schemas/passenger'
+        products:
+          description: IDs of the products selected for purchase.
+          type: array
+          items:
+            type: string
+          example:
+            - 3735f848-3643-4828-8c7d-7515996bbc2d
+            - 3735f848-3643-4828-8c7d-7515996bbc2f
+    customer:
+      description: The customer information.
+      type: object
+      required:
+        - first_name
+        - last_name
+        - email
+      properties:
+        first_name:
+          description: The customer's first name.
+          type: string
+          example: Peter
+        last_name:
+          description: The customer's last name.
+          type: string
+          example: Parker
+        email:
+          description: The customer's email address.
+          type: string
+          format: email
+          example: peter.parker@example.com
+        phone:
+          description: >-
+            The customer's phone number. It must be provided if the bundle was
+            created with `customer_phone` set to `true` in `available_data`.
+          type: string
+          nullable: true
+          example: '+12065550199'
+        ip:
+          description: >-
+            The customer's IP address. It must be provided if the bundle was
+            created with `customer_ip` set to `true` in `available_data`.
+          type: string
+          nullable: true
+          example: 192.168.100.228
+        address:
+          description: >-
+            The customer's address. It must be provided if the bundle was
+            created with `customer_address` set to `true` in `available_data`.
+          type: object
+          nullable: true
+          required:
+            - address_1
+            - city
+            - zip_code
+            - state
+            - country_code
+          properties:
+            address_1:
+              description: Street address.
+              type: string
+              example: 669 Parker St
+            address_2:
+              description: >-
+                Address Line 2 is for the apartment, suite, unit number, or
+                other address designation that is not part of the physical
+                address.
+              type: string
+              example: Suite 101
+            city:
+              type: string
+              example: New York
+            zip_code:
+              type: string
+              example: '10018'
+            state:
+              type: string
+              example: New York
+            country_code:
+              $ref: '#/components/schemas/country_code'
+security:
+  - bearerAuth: []
