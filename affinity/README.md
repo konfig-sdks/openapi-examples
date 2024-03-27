@@ -2,7 +2,7 @@
 
 # [Affinity](https://affinity.co)
 
-Affinity's patented technology structures and analyzes millions of data points across emails, calendars, and third-party sources to offer users the tools they need to automatically manage their most valuable relationships, prioritize important connections, and discover untapped opportunities. Affinity uses artificial intelligence to analyze relationship strength and illuminate the best paths to warm introductions. The platform also offers a holistic view of users' networks in a centralized, automatically updated database without any manual upkeep. Founded in 2014, Affinity is headquartered in San Francisco, California. 
+Affinity's patented technology structures and analyzes millions of data points across emails, calendars, and third-party sources to offer users the tools they need to automatically manage their most valuable relationships, prioritize important connections, and discover untapped opportunities. Affinity uses artificial intelligence to analyze relationship strength and illuminate the best paths to warm introductions. The platform also offers a holistic view of users' networks in a centralized, automatically updated database without any manual upkeep. Founded in 2014, Affinity is headquartered in San Francisco, California.
 
 Affinity has raised $120M to date and is backed by leading investors including Menlo Ventures, Advance Venture Partners, 8VC and MassMutual Ventures.
 

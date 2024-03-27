@@ -9,3 +9,6 @@ GitLab is a complete DevOps platform, delivered as a single application, that pr
 #### [www.gitlab.com/api](https://www.gitlab.com/api)
 
 ![www.gitlab.com/api](response-time-charts/7777772e6769746c61622e636f6d2f617069.png)
+#### [www.gitlab.com/api/v4](https://www.gitlab.com/api/v4)
+
+![www.gitlab.com/api/v4](response-time-charts/7777772e6769746c61622e636f6d2f6170692f7634.png)
