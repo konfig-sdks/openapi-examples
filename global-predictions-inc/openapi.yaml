@@ -1,0 +1,1554 @@
+openapi: 3.0.0
+info:
+  title: Global Predictions API
+  description: Global Predictions external api
+  version: 1.0.0
+  contact:
+    email: support@globalpredictions.com
+servers:
+  - description: Global predictions URL
+    url: https://portfoliopilot.com/api
+tags:
+  - description: >-
+      Update and access individual portfolios and their associated scores,
+      recommendations, and performance metrics
+    name: Portfolio Management
+  - description: >-
+      Access individual time series, historical or forecasted, from the large
+      Global Predictions data library
+    name: Data Series
+  - description: >-
+      Access the massive Global Predictions Knowledge Graph which contains over
+      50,000 nodes and millions of relationships representing the global economy
+    name: Knowledge Graph
+  - description: >-
+      Access individual time series, historical or forecasted, from the large
+      Global Predictions data library
+    name: World Monitoring
+paths:
+  /v1/influential_drivers:
+    get:
+      tags:
+        - Knowledge Graph
+      summary: Influential Drivers
+      operationId: KnowledgeGraph_getTopDriversBySeries
+      security:
+        - api_key: []
+      description: List of top 10 most influential drivers (given by series_name type)
+      parameters:
+        - description: Series name for which the most influential drivers will be returned
+          name: series_name
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InfluentialDrivers'
+              examples:
+                Example:
+                  description: Influential Drivers output
+                  value:
+                    - United States CPI
+                    - Real Estate Index
+                    - South Korea Building Permits
+                    - United States GDP
+                    - Information Technology Index
+                    - Communication Services Index
+                    - Consumer Discretionary Index
+                    - Financials Index
+                    - China GDP
+                    - United States Change in Confirmed Covid Cases
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+              examples:
+                Example:
+                  description: Bad Request
+                  value:
+                    status_code: 400
+                    error: Bad Request
+                    message: Series doesn't exist
+      x-code-samples:
+        - lang: Node
+          source: >-
+            const fetch = require('node-fetch');
+
+
+            let url =
+            'https://portfoliopilot.com/api/v1/influential_drivers?series_name=SOME_STRING_VALUE&api_key=SOME_STRING_VALUE';
+
+
+            let options = {method: 'GET'};
+
+
+            fetch(url, options)
+              .then(res => res.json())
+              .then(json => console.log(json))
+              .catch(err => console.error('error:' + err));
+        - lang: Python
+          source: >-
+            import requests
+
+
+            url = "https://portfoliopilot.com/api/v1/influential_drivers"
+
+
+            querystring =
+            {"series_name":"SOME_STRING_VALUE","api_key":"SOME_STRING_VALUE"}
+
+
+            response = requests.request("GET", url, params=querystring)
+
+
+            print(response.text)
+        - lang: Shell
+          source: |-
+            curl --request GET \
+              --url 'https://portfoliopilot.com/api/v1/influential_drivers?series_name=SOME_STRING_VALUE&api_key=SOME_STRING_VALUE'
+        - lang: Java
+          source: >-
+            HttpResponse<String> response =
+            Unirest.get("https://portfoliopilot.com/api/v1/influential_drivers?series_name=SOME_STRING_VALUE&api_key=SOME_STRING_VALUE")
+              .asString();
+  /v1/history:
+    parameters: []
+    get:
+      tags:
+        - Data Series
+      summary: History
+      operationId: DataSeries_getFullHistory
+      security:
+        - api_key: []
+      description: >-
+        JSON representing the full history of the given series at the frequency
+        available
+      parameters:
+        - description: The series name to get the history
+          schema:
+            type: string
+          in: query
+          name: series_name
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/History'
+              examples:
+                Example:
+                  description: History output which contains array of Date, Val
+                  value:
+                    - date: '2015-01-01'
+                      val: 42.8
+                    - date: '2015-02-01'
+                      val: 43.7
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+              examples:
+                Example:
+                  description: Bad Request
+                  value:
+                    status_code: 400
+                    error: Bad Request
+                    message: Series doesn't exist
+      x-code-samples:
+        - lang: Node
+          source: >-
+            const fetch = require('node-fetch');
+
+
+            let url =
+            'https://portfoliopilot.com/api/v1/history?series_name=SOME_STRING_VALUE&api_key=SOME_STRING_VALUE';
+
+
+            let options = {method: 'GET'};
+
+
+            fetch(url, options)
+              .then(res => res.json())
+              .then(json => console.log(json))
+              .catch(err => console.error('error:' + err));
+        - lang: Python
+          source: >-
+            import requests
+
+
+            url = "https://portfoliopilot.com/api/v1/history"
+
+
+            querystring =
+            {"series_name":"SOME_STRING_VALUE","api_key":"SOME_STRING_VALUE"}
+
+
+            response = requests.request("GET", url, params=querystring)
+
+
+            print(response.text)
+        - lang: Shell
+          source: |-
+            curl --request GET \
+              --url 'https://portfoliopilot.com/api/v1/history?series_name=SOME_STRING_VALUE&api_key=SOME_STRING_VALUE'
+        - lang: Java
+          source: >-
+            HttpResponse<String> response =
+            Unirest.get("https://portfoliopilot.com/api/v1/history?series_name=SOME_STRING_VALUE&api_key=SOME_STRING_VALUE")
+              .asString();
+  /v1/forecast:
+    get:
+      tags:
+        - Data Series
+      summary: Forecast
+      operationId: DataSeries_getForecastData
+      security:
+        - api_key: []
+      description: >-
+        JSON representing a 2-12 month forecast starting from the last history
+        date available, forecasted at the same frequency as the historical data
+      parameters:
+        - description: The series name to get the forecast
+          schema:
+            type: string
+          in: query
+          name: series_name
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Forecast'
+              examples:
+                Example:
+                  description: Forecast output which contains array of Date, Val, High, Low
+                  value:
+                    - date: '2021-01-01'
+                      val: 88.2
+                      high: 92.2
+                      low: 84.2
+                    - date: '2021-02-01'
+                      val: 89.4
+                      high: 93.4
+                      low: 85.4
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+              examples:
+                Example:
+                  description: Bad Request
+                  value:
+                    status_code: 400
+                    error: Bad Request
+                    message: Series doesn't exist
+      x-code-samples:
+        - lang: Node
+          source: >-
+            const fetch = require('node-fetch');
+
+
+            let url =
+            'https://portfoliopilot.com/api/v1/forecast?series_name=SOME_STRING_VALUE&api_key=SOME_STRING_VALUE';
+
+
+            let options = {method: 'GET'};
+
+
+            fetch(url, options)
+              .then(res => res.json())
+              .then(json => console.log(json))
+              .catch(err => console.error('error:' + err));
+        - lang: Python
+          source: >-
+            import requests
+
+
+            url = "https://portfoliopilot.com/api/v1/forecast"
+
+
+            querystring =
+            {"series_name":"SOME_STRING_VALUE","api_key":"SOME_STRING_VALUE"}
+
+
+            response = requests.request("GET", url, params=querystring)
+
+
+            print(response.text)
+        - lang: Shell
+          source: |-
+            curl --request GET \
+              --url 'https://portfoliopilot.com/api/v1/forecast?series_name=SOME_STRING_VALUE&api_key=SOME_STRING_VALUE'
+        - lang: Java
+          source: >-
+            HttpResponse<String> response =
+            Unirest.get("https://portfoliopilot.com/api/v1/forecast?series_name=SOME_STRING_VALUE&api_key=SOME_STRING_VALUE")
+              .asString();
+  /v1/anomalies:
+    get:
+      tags:
+        - World Monitoring
+      summary: Anomalies
+      operationId: WorldMonitoring_listEconomicAnomalies
+      security:
+        - api_key: []
+      description: >-
+        List of series with discovered economic anomalies which have occurred in
+        the last 3 months
+      parameters: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Anomalies'
+              examples:
+                Example:
+                  description: Anomalies output
+                  value:
+                    - United States CPI
+                    - Real Estate Index
+                    - South Korea Building Permits
+                    - United States GDP
+                    - Information Technology Index
+                    - Communication Services Index
+                    - Consumer Discretionary Index
+                    - Financials Index
+                    - China GDP
+                    - Clear Shares OCIO ETF
+                    - IQ Hedge Multi-Strategy Tracker ETF
+                    - RPAR Risk Parity ETF
+                    - Taiwan GDP
+                    - Vanguard Energy ETF
+                    - Vanguard Value ETF
+                    - Ability Inc
+                    - United States Inter Bank Rate
+                    - Invesco Senior Loan ETF
+                    - India GDP
+                    - Taiwan Total Investment
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+              examples:
+                Example:
+                  description: Bad Request
+                  value:
+                    status_code: 400
+                    error: Bad Request
+                    message: Series doesn't exist
+      x-code-samples:
+        - lang: Node
+          source: >-
+            const fetch = require('node-fetch');
+
+
+            let url =
+            'https://portfoliopilot.com/api/v1/anomalies?api_key=SOME_STRING_VALUE';
+
+
+            let options = {method: 'GET'};
+
+
+            fetch(url, options)
+              .then(res => res.json())
+              .then(json => console.log(json))
+              .catch(err => console.error('error:' + err));
+        - lang: Python
+          source: |-
+            import requests
+
+            url = "https://portfoliopilot.com/api/v1/anomalies"
+
+            querystring = {"api_key":"SOME_STRING_VALUE"}
+
+            response = requests.request("GET", url, params=querystring)
+
+            print(response.text)
+        - lang: Shell
+          source: |-
+            curl --request GET \
+              --url 'https://portfoliopilot.com/api/v1/anomalies?api_key=SOME_STRING_VALUE'
+        - lang: Java
+          source: >-
+            HttpResponse<String> response =
+            Unirest.get("https://portfoliopilot.com/api/v1/anomalies?api_key=SOME_STRING_VALUE")
+              .asString();
+  /v1/all_series_types:
+    get:
+      tags:
+        - Data Series
+      summary: Series Types
+      operationId: DataSeries_getAllTypes
+      security:
+        - api_key: []
+      description: Retrieve all series types and their associated categories
+      parameters: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SeriesTypeWithCategories'
+              examples:
+                Example:
+                  description: Series Type with their associated categories
+                  value:
+                    - series_type: Financial Market
+                      category: Currencies
+                    - series_type: Macroeconomics
+                      category: Central Government Debt
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+              examples:
+                Example:
+                  description: Bad Request
+                  value:
+                    status_code: 400
+                    error: Bad Request
+                    message: Series_types not found
+      x-code-samples:
+        - lang: Node
+          source: >-
+            const fetch = require('node-fetch');
+
+
+            let url =
+            'https://portfoliopilot.com/api/v1/all_series_types?api_key=SOME_STRING_VALUE';
+
+
+            let options = {method: 'GET'};
+
+
+            fetch(url, options)
+              .then(res => res.json())
+              .then(json => console.log(json))
+              .catch(err => console.error('error:' + err));
+        - lang: Python
+          source: |-
+            import requests
+
+            url = "https://portfoliopilot.com/api/v1/all_series_types"
+
+            querystring = {"api_key":"SOME_STRING_VALUE"}
+
+            response = requests.request("GET", url, params=querystring)
+
+            print(response.text)
+        - lang: Shell
+          source: |-
+            curl --request GET \
+              --url 'https://portfoliopilot.com/api/v1/all_series_types?api_key=SOME_STRING_VALUE'
+        - lang: Java
+          source: >-
+            HttpResponse<String> response =
+            Unirest.get("https://portfoliopilot.com/api/v1/all_series_types?api_key=SOME_STRING_VALUE")
+              .asString();
+  /v1/all_series_names:
+    get:
+      tags:
+        - Data Series
+      summary: Series Names
+      operationId: DataSeries_getAllNames
+      security:
+        - api_key: []
+      description: Retrieve all available time series within a given series type
+      parameters:
+        - description: The series type for which the series names are returned
+          schema:
+            type: string
+          in: query
+          name: series_type
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SeriesNames'
+              examples:
+                Example:
+                  description: All available time series names within a given series type
+                  value:
+                    - Global X Education ETF
+                    - Vanguard 500 ETF
+                    - iShares Asia 50 ETF
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+              examples:
+                Example:
+                  description: Bad Request
+                  value:
+                    status_code: 400
+                    error: Bad Request
+                    message: series_type is invalid
+      x-code-samples:
+        - lang: Node
+          source: >-
+            const fetch = require('node-fetch');
+
+
+            let url =
+            'https://portfoliopilot.com/api/v1/all_series_names?series_type=SOME_STRING_VALUE&api_key=SOME_STRING_VALUE';
+
+
+            let options = {method: 'GET'};
+
+
+            fetch(url, options)
+              .then(res => res.json())
+              .then(json => console.log(json))
+              .catch(err => console.error('error:' + err));
+        - lang: Python
+          source: >-
+            import requests
+
+
+            url = "https://portfoliopilot.com/api/v1/all_series_names"
+
+
+            querystring =
+            {"series_type":"SOME_STRING_VALUE","api_key":"SOME_STRING_VALUE"}
+
+
+            response = requests.request("GET", url, params=querystring)
+
+
+            print(response.text)
+        - lang: Shell
+          source: |-
+            curl --request GET \
+              --url 'https://portfoliopilot.com/api/v1/all_series_names?series_type=SOME_STRING_VALUE&api_key=SOME_STRING_VALUE'
+        - lang: Java
+          source: >-
+            HttpResponse<String> response =
+            Unirest.get("https://portfoliopilot.com/api/v1/all_series_names?series_type=SOME_STRING_VALUE&api_key=SOME_STRING_VALUE")
+              .asString();
+  /v1/get_portfolio:
+    get:
+      tags:
+        - Portfolio Management
+      summary: Get Portfolio
+      operationId: PortfolioManagement_getSecuritiesAmounts
+      security:
+        - api_key: []
+      description: >-
+        Retrieve all securities and their associated amounts for a given
+        portfolio id
+      parameters:
+        - description: The portfolio id for the portfolio to retrieve
+          schema:
+            type: integer
+          in: query
+          name: portfolio_id
+          required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Portfolio'
+              examples:
+                Example:
+                  description: List of all securities for the given portfolio id
+                  value:
+                    - security_name: Vanguard 500 ETF
+                      ticker: VOO
+                      amount: 20000
+                      weight: 12.2
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+              examples:
+                Example:
+                  description: Bad Request
+                  value:
+                    status_code: 400
+                    error: Bad Request
+                    message: portfolio_id is invalid
+      x-code-samples:
+        - lang: Node
+          source: >-
+            const fetch = require('node-fetch');
+
+
+            let url =
+            'https://portfoliopilot.com/api/v1/get_portfolio?portfolio_id=SOME_INTEGER_VALUE&api_key=SOME_STRING_VALUE';
+
+
+            let options = {method: 'GET'};
+
+
+            fetch(url, options)
+              .then(res => res.json())
+              .then(json => console.log(json))
+              .catch(err => console.error('error:' + err));
+        - lang: Python
+          source: >-
+            import requests
+
+
+            url = "https://portfoliopilot.com/api/v1/get_portfolio"
+
+
+            querystring =
+            {"portfolio_id":"SOME_INTEGER_VALUE","api_key":"SOME_STRING_VALUE"}
+
+
+            response = requests.request("GET", url, params=querystring)
+
+
+            print(response.text)
+        - lang: Shell
+          source: |-
+            curl --request GET \
+              --url 'https://portfoliopilot.com/api/v1/get_portfolio?portfolio_id=SOME_INTEGER_VALUE&api_key=SOME_STRING_VALUE'
+        - lang: Java
+          source: >-
+            HttpResponse<String> response =
+            Unirest.get("https://portfoliopilot.com/api/v1/get_portfolio?portfolio_id=SOME_INTEGER_VALUE&api_key=SOME_STRING_VALUE")
+              .asString();
+  /v1/update_portfolio:
+    post:
+      tags:
+        - Portfolio Management
+      summary: Update portfolio
+      operationId: PortfolioManagement_updatePortfolio
+      security:
+        - api_key: []
+      description: >-
+        Create or update the portfolio for the given id with the given list of
+        tickers and amounts
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PortfolioManagementUpdatePortfolioRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/PortfolioManagementUpdatePortfolioResponse
+              examples:
+                Example:
+                  description: Portfolio updated successfully
+                  value:
+                    - success: ok
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+              examples:
+                Example:
+                  description: Bad Request
+                  value:
+                    status_code: 400
+                    error: Bad Request
+                    message: >-
+                      portfolio or portfolio_id or investor_preference is
+                      invalid
+      x-code-samples:
+        - lang: Node
+          source: >-
+            const fetch = require('node-fetch');
+
+
+            let url =
+            'https://portfoliopilot.com/api/v1/update_portfolio?api_key=SOME_STRING_VALUE';
+
+
+            let options = {
+              method: 'POST',
+              headers: {'content-type': 'application/json'},
+              body: '[{"portfolio":[{"security_name":"Vanguard 500 ETF","ticker":"VOO","amount":20000,"weight":12.2}],"portfolio_id":102,"investor_preference":"aggressive"}]'
+            };
+
+
+            fetch(url, options)
+              .then(res => res.json())
+              .then(json => console.log(json))
+              .catch(err => console.error('error:' + err));
+        - lang: Python
+          source: >-
+            import requests
+
+
+            url = "https://portfoliopilot.com/api/v1/update_portfolio"
+
+
+            querystring = {"api_key":"SOME_STRING_VALUE"}
+
+
+            payload = [
+                {
+                    "portfolio": [
+                        {
+                            "security_name": "Vanguard 500 ETF",
+                            "ticker": "VOO",
+                            "amount": 20000,
+                            "weight": 12.2
+                        }
+                    ],
+                    "portfolio_id": 102,
+                    "investor_preference": "aggressive"
+                }
+            ]
+
+            headers = {"content-type": "application/json"}
+
+
+            response = requests.request("POST", url, json=payload,
+            headers=headers, params=querystring)
+
+
+            print(response.text)
+        - lang: Shell
+          source: |-
+            curl --request POST \
+              --url 'https://portfoliopilot.com/api/v1/update_portfolio?api_key=SOME_STRING_VALUE' \
+              --header 'content-type: application/json' \
+              --data '[{"portfolio":[{"security_name":"Vanguard 500 ETF","ticker":"VOO","amount":20000,"weight":12.2}],"portfolio_id":102,"investor_preference":"aggressive"}]'
+        - lang: Java
+          source: >-
+            HttpResponse<String> response =
+            Unirest.post("https://portfoliopilot.com/api/v1/update_portfolio?api_key=SOME_STRING_VALUE")
+              .header("content-type", "application/json")
+              .body("[{\"portfolio\":[{\"security_name\":\"Vanguard 500 ETF\",\"ticker\":\"VOO\",\"amount\":20000,\"weight\":12.2}],\"portfolio_id\":102,\"investor_preference\":\"aggressive\"}]")
+              .asString();
+  /v1/get_recommendations:
+    get:
+      tags:
+        - Portfolio Management
+      summary: Portfolio Recommendations
+      operationId: PortfolioManagement_computeRecommendations
+      security:
+        - api_key: []
+      description: Compute and return all recommendations for a given portfolio
+      parameters:
+        - description: The portfolio id for the portfolio to get recommendations for
+          schema:
+            type: integer
+          in: query
+          name: portfolio_id
+          required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Recommendations'
+              examples:
+                Example:
+                  description: All computed recommendations for the given portfolio id
+                  value:
+                    Example:
+                      - recommendation_type: Diversification
+                        key: Diversification-US Mid Cap Equities
+                        benefit: 10
+                        recommendation: >-
+                          Diversify your portfolio and decrease overall risk by
+                          adding securities where you have low asset class
+                          exposure
+                        problem: >-
+                          Your exposure to US Mid Cap Equities is lower than the
+                          system recommendation for you, increase exposure to
+                          reduce overall aggregated portfolio risk appropriately
+                        suggested_changes:
+                          - security_name: Global X CleanTech ETF
+                            ticker: CTEC
+                            amount: 12000
+                            weight: 24.6
+                    Example-2:
+                      - recommendation_type: Factor Exposure
+                        key: Factor Exposure-Core Inflation
+                        benefit: 4.3222
+                        recommendation: >-
+                          Improve your portfolio sensitivity to upside surprises
+                          in Core Inflation
+                        problem: >-
+                          If Core Inflation surprises significantly to the
+                          upside (which happens 2.5% of the time) your portfolio
+                          could decrease by -6.3% or more.
+                        suggested_changes:
+                          - security_name: Hubspot Inc
+                            ticker: HUBS
+                            amount: -6400
+                            weight: 3.4
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+              examples:
+                Example:
+                  description: Bad Request
+                  value:
+                    status_code: 400
+                    error: Bad Request
+                    message: portfolio_id is invalid
+      x-code-samples:
+        - lang: Node
+          source: >-
+            const fetch = require('node-fetch');
+
+
+            let url =
+            'https://portfoliopilot.com/api/v1/get_recommendations?portfolio_id=SOME_INTEGER_VALUE&api_key=SOME_STRING_VALUE';
+
+
+            let options = {method: 'GET'};
+
+
+            fetch(url, options)
+              .then(res => res.json())
+              .then(json => console.log(json))
+              .catch(err => console.error('error:' + err));
+        - lang: Python
+          source: >-
+            import requests
+
+
+            url = "https://portfoliopilot.com/api/v1/get_recommendations"
+
+
+            querystring =
+            {"portfolio_id":"SOME_INTEGER_VALUE","api_key":"SOME_STRING_VALUE"}
+
+
+            response = requests.request("GET", url, params=querystring)
+
+
+            print(response.text)
+        - lang: Shell
+          source: |-
+            curl --request GET \
+              --url 'https://portfoliopilot.com/api/v1/get_recommendations?portfolio_id=SOME_INTEGER_VALUE&api_key=SOME_STRING_VALUE'
+        - lang: Java
+          source: >-
+            HttpResponse<String> response =
+            Unirest.get("https://portfoliopilot.com/api/v1/get_recommendations?portfolio_id=SOME_INTEGER_VALUE&api_key=SOME_STRING_VALUE")
+              .asString();
+  /v1/get_portfolio_score:
+    get:
+      tags:
+        - Portfolio Management
+      summary: Portfolio Score
+      operationId: PortfolioManagement_computePortfolioScore
+      security:
+        - api_key: []
+      description: Compute and return the portfolio score and associated sub-scores
+      parameters:
+        - description: >-
+            A stringified (jsonified) portfolio dict (key=ticker, value=amount)
+            to calculate the portfolio score for
+          schema:
+            type: string
+          in: query
+          name: portfolio_dict
+          required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PortfolioScore'
+              examples:
+                Example:
+                  description: >-
+                    The computed Portfolio Score and score components for a
+                    given portfolio
+                  value:
+                    - portfolio_score: 720
+                      score_remark: Good
+                      percentile_rank: 81
+                      risk_match_score: 10
+                      sharpe_ratio_score: 5.4
+                      downside_protection_score: 6.1
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+              examples:
+                Example:
+                  description: Bad Request
+                  value:
+                    status_code: 400
+                    error: Bad Request
+                    message: portfolio_dict is invalid
+      x-code-samples:
+        - lang: Node
+          source: >-
+            const fetch = require('node-fetch');
+
+
+            let url =
+            'https://portfoliopilot.com/api/v1/get_portfolio_score?portfolio_dict=SOME_STRING_VALUE&api_key=SOME_STRING_VALUE';
+
+
+            let options = {method: 'GET'};
+
+
+            fetch(url, options)
+              .then(res => res.json())
+              .then(json => console.log(json))
+              .catch(err => console.error('error:' + err));
+        - lang: Python
+          source: >-
+            import requests
+
+
+            url = "https://portfoliopilot.com/api/v1/get_portfolio_score"
+
+
+            querystring =
+            {"portfolio_dict":"SOME_STRING_VALUE","api_key":"SOME_STRING_VALUE"}
+
+
+            response = requests.request("GET", url, params=querystring)
+
+
+            print(response.text)
+        - lang: Shell
+          source: |-
+            curl --request GET \
+              --url 'https://portfoliopilot.com/api/v1/get_portfolio_score?portfolio_dict=SOME_STRING_VALUE&api_key=SOME_STRING_VALUE'
+        - lang: Java
+          source: >-
+            HttpResponse<String> response =
+            Unirest.get("https://portfoliopilot.com/api/v1/get_portfolio_score?portfolio_dict=SOME_STRING_VALUE&api_key=SOME_STRING_VALUE")
+              .asString();
+  /v1/get_portfolio_performance_stats:
+    get:
+      tags:
+        - Portfolio Management
+      summary: Portfolio Performance Stats
+      operationId: PortfolioManagement_computePerformanceStats
+      security:
+        - api_key: []
+      description: Compute and return the performance statistics for a given portfolio
+      parameters:
+        - description: >-
+            A stringified (jsonified) portfolio dict (key=ticker, value=amount)
+            to calculate the portfolio score for
+          schema:
+            type: string
+          in: query
+          name: portfolio_dict
+          required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PortfolioPerformanceStats'
+              examples:
+                Example:
+                  description: >-
+                    The computed performance statistics for the given portfolio
+                    id
+                  value:
+                    - returns: 6.3
+                      risk: 9.1
+                      sharpe_ratio: 0.69
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+              examples:
+                Example:
+                  description: Bad Request
+                  value:
+                    status_code: 400
+                    error: Bad Request
+                    message: portfolio_id is invalid
+      x-code-samples:
+        - lang: Node
+          source: >-
+            const fetch = require('node-fetch');
+
+
+            let url =
+            'https://portfoliopilot.com/api/v1/get_portfolio_performance_stats?portfolio_dict=SOME_STRING_VALUE&api_key=SOME_STRING_VALUE';
+
+
+            let options = {method: 'GET'};
+
+
+            fetch(url, options)
+              .then(res => res.json())
+              .then(json => console.log(json))
+              .catch(err => console.error('error:' + err));
+        - lang: Python
+          source: >-
+            import requests
+
+
+            url =
+            "https://portfoliopilot.com/api/v1/get_portfolio_performance_stats"
+
+
+            querystring =
+            {"portfolio_dict":"SOME_STRING_VALUE","api_key":"SOME_STRING_VALUE"}
+
+
+            response = requests.request("GET", url, params=querystring)
+
+
+            print(response.text)
+        - lang: Shell
+          source: |-
+            curl --request GET \
+              --url 'https://portfoliopilot.com/api/v1/get_portfolio_performance_stats?portfolio_dict=SOME_STRING_VALUE&api_key=SOME_STRING_VALUE'
+        - lang: Java
+          source: >-
+            HttpResponse<String> response =
+            Unirest.get("https://portfoliopilot.com/api/v1/get_portfolio_performance_stats?portfolio_dict=SOME_STRING_VALUE&api_key=SOME_STRING_VALUE")
+              .asString();
+  /v1/get_portfolio_assessment:
+    get:
+      tags:
+        - Portfolio Management
+      summary: Get Portfolio Assessment
+      operationId: PortfolioManagement_getAssessmentData
+      security:
+        - api_key: []
+      description: Get portfolio assessment data for a given portfolio
+      parameters:
+        - description: >-
+            A stringified (jsonified) portfolio dict (key=ticker, value=amount)
+            to calculate the portfolio score for
+          schema:
+            type: string
+          in: query
+          name: portfolio_dict
+          required: true
+        - description: The target risk level for the portfolio.
+          name: target_risk
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - conservative
+              - moderately_conservative
+              - moderately_aggressive
+              - aggressive
+              - very_aggressive
+              - generic
+              - extreme
+      responses:
+        '200':
+          description: Portfolio assessment data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PortfolioAssessmentResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+      x-code-samples:
+        - lang: Node
+          source: >-
+            const fetch = require('node-fetch');
+
+
+            let url =
+            'https://portfoliopilot.com/api/v1/get_portfolio_assessment?portfolio_dict=SOME_STRING_VALUE&target_risk=SOME_STRING_VALUE&api_key=SOME_STRING_VALUE';
+
+
+            let options = {method: 'GET'};
+
+
+            fetch(url, options)
+              .then(res => res.json())
+              .then(json => console.log(json))
+              .catch(err => console.error('error:' + err));
+        - lang: Python
+          source: >-
+            import requests
+
+
+            url = "https://portfoliopilot.com/api/v1/get_portfolio_assessment"
+
+
+            querystring =
+            {"portfolio_dict":"SOME_STRING_VALUE","target_risk":"SOME_STRING_VALUE","api_key":"SOME_STRING_VALUE"}
+
+
+            response = requests.request("GET", url, params=querystring)
+
+
+            print(response.text)
+        - lang: Shell
+          source: |-
+            curl --request GET \
+              --url 'https://portfoliopilot.com/api/v1/get_portfolio_assessment?portfolio_dict=SOME_STRING_VALUE&target_risk=SOME_STRING_VALUE&api_key=SOME_STRING_VALUE'
+        - lang: Java
+          source: >-
+            HttpResponse<String> response =
+            Unirest.get("https://portfoliopilot.com/api/v1/get_portfolio_assessment?portfolio_dict=SOME_STRING_VALUE&target_risk=SOME_STRING_VALUE&api_key=SOME_STRING_VALUE")
+              .asString();
+  /v1/get_portfolio_insights:
+    get:
+      tags:
+        - Portfolio Management
+      summary: Get Portfolio Insights
+      operationId: PortfolioManagement_getInsights
+      security:
+        - api_key: []
+      description: Get portfolio insights for a given portfolio
+      parameters:
+        - description: >-
+            A stringified (jsonified) portfolio dict (key=ticker, value=amount)
+            to generate insights
+          schema:
+            type: string
+          in: query
+          name: portfolio_dict
+          required: true
+      responses:
+        '200':
+          description: Portfolio Insights list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PortfolioInsights'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequest'
+      x-code-samples:
+        - lang: Node
+          source: >-
+            const fetch = require('node-fetch');
+
+
+            let url =
+            'https://portfoliopilot.com/api/v1/get_portfolio_insights?portfolio_dict=SOME_STRING_VALUE&api_key=SOME_STRING_VALUE';
+
+
+            let options = {method: 'GET'};
+
+
+            fetch(url, options)
+              .then(res => res.json())
+              .then(json => console.log(json))
+              .catch(err => console.error('error:' + err));
+        - lang: Python
+          source: >-
+            import requests
+
+
+            url = "https://portfoliopilot.com/api/v1/get_portfolio_insights"
+
+
+            querystring =
+            {"portfolio_dict":"SOME_STRING_VALUE","api_key":"SOME_STRING_VALUE"}
+
+
+            response = requests.request("GET", url, params=querystring)
+
+
+            print(response.text)
+        - lang: Shell
+          source: |-
+            curl --request GET \
+              --url 'https://portfoliopilot.com/api/v1/get_portfolio_insights?portfolio_dict=SOME_STRING_VALUE&api_key=SOME_STRING_VALUE'
+        - lang: Java
+          source: >-
+            HttpResponse<String> response =
+            Unirest.get("https://portfoliopilot.com/api/v1/get_portfolio_insights?portfolio_dict=SOME_STRING_VALUE&api_key=SOME_STRING_VALUE")
+              .asString();
+components:
+  parameters:
+    ApiKey:
+      description: api_key for making the request.
+      name: api_key
+      in: query
+      required: true
+      schema:
+        type: string
+  links: {}
+  callbacks: {}
+  schemas:
+    InfluentialDrivers:
+      description: ''
+      type: array
+      x-examples:
+        Example:
+          - United States GDP
+          - United States CPI
+          - Apple Inc
+      items:
+        type: string
+    HistoryObject:
+      type: object
+      properties:
+        date:
+          type: string
+        val:
+          type: number
+      required:
+        - date
+        - val
+      x-examples:
+        Example:
+          - date: '2015-01-01'
+            val: 42.8
+          - date: '2015-02-01'
+            val: 43.7
+    History:
+      description: ''
+      type: array
+      items:
+        $ref: '#/components/schemas/HistoryObject'
+    ForecastObject:
+      description: ''
+      type: object
+      required:
+        - date
+        - val
+        - high
+        - low
+      properties:
+        date:
+          type: string
+        val:
+          type: number
+        high:
+          type: number
+        low:
+          type: number
+      x-examples:
+        example-1:
+          - date: '2021-01-01'
+            val: 88.2
+            high: 92.2
+            low: 84.2
+          - date: '2021-02-01'
+            val: 89.4
+            high: 93.4
+            low: 85.4
+    Forecast:
+      description: ''
+      type: array
+      items:
+        $ref: '#/components/schemas/ForecastObject'
+    Anomalies:
+      description: ''
+      type: array
+      x-examples:
+        example-1:
+          - United States CPI
+          - Real Estate Index
+          - South Korea Building Permits
+      items:
+        type: string
+    SeriesTypeWithCategory:
+      description: ''
+      type: object
+      properties:
+        series_type:
+          type: string
+        category:
+          type: string
+    SeriesTypeWithCategories:
+      description: ''
+      type: array
+      items:
+        $ref: '#/components/schemas/SeriesTypeWithCategory'
+    BadRequest:
+      description: Bad Request
+      type: object
+      required:
+        - status_code
+        - error
+        - message
+      properties:
+        status_code:
+          type: number
+        error:
+          type: string
+        message:
+          type: string
+    SeriesNames:
+      description: ''
+      type: array
+      x-examples:
+        Example:
+          - Global X Education ETF
+          - Vanguard 500 ETF
+          - iShares Asia 50 ETF
+      items:
+        type: string
+    Investment:
+      description: Investment of user
+      type: object
+      required:
+        - security_name
+        - ticker
+        - amount
+        - weight
+      properties:
+        security_name:
+          type: string
+        ticker:
+          type: string
+        amount:
+          type: number
+        weight:
+          type: number
+      x-examples:
+        Example:
+          - security_name: Vanguard 500 ETF
+            ticker: VOO
+            amount: 20000
+            weight: 12.2
+    Portfolio:
+      description: portfolio for the user
+      type: array
+      x-examples:
+        Example: null
+      items:
+        $ref: '#/components/schemas/Investment'
+    Recommendation:
+      type: object
+      required:
+        - recommendation_type
+        - key
+        - recommendation
+        - problem
+        - suggested_changes
+        - benefit
+      properties:
+        recommendation_type:
+          type: string
+        key:
+          type: string
+        recommendation:
+          type: string
+        problem:
+          type: string
+        suggested_changes:
+          type: array
+          items:
+            $ref: '#/components/schemas/Investment'
+        benefit:
+          type: number
+      x-examples:
+        Example:
+          - recommendation_type: Diversification
+            key: Diversification-US Mid Cap Equities
+            benefit: 10
+            recommendation: >-
+              Diversify your portfolio and decrease overall risk by adding
+              securities where you have low asset class exposure
+            problem: >-
+              Your exposure to US Mid Cap Equities is lower than the system
+              recommendation for you, increase exposure to reduce overall
+              aggregated portfolio risk appropriately
+            suggested_changes:
+              - security_name: Global X CleanTech ETF
+                ticker: CTEC
+                amount: 12000
+                weight: 24.6
+        Example-2:
+          - recommendation_type: Factor Exposure
+            key: Factor Exposure-Core Inflation
+            benefit: 4.3222
+            recommendation: >-
+              Improve your portfolio sensitivity to upside surprises in Core
+              Inflation
+            problem: >-
+              If Core Inflation surprises significantly to the upside (which
+              happens 2.5% of the time) your portfolio could decrease by -6.3%
+              or more.
+            suggested_changes:
+              - security_name: Hubspot Inc
+                ticker: HUBS
+                amount: -6400
+                weight: 3.4
+    Recommendations:
+      description: Recommendations
+      type: array
+      x-examples:
+        Example: null
+      items:
+        $ref: '#/components/schemas/Recommendation'
+    PortfolioScore:
+      description: Portfolio Score
+      type: object
+      x-examples:
+        Example:
+          - portfolio_score: 720
+            score_remark: Good
+            percentile_rank: 81
+            risk_match_score: 10
+            sharpe_ratio_score: 5.4
+            downside_protection_score: 6.1
+      properties:
+        portfolio_score:
+          type: number
+        score_remark:
+          type: string
+        percentile_rank:
+          type: number
+        risk_match_score:
+          type: number
+        sharpe_ratio_score:
+          type: number
+        downside_protection_score:
+          type: number
+    PortfolioAssessmentResponse:
+      type: object
+      properties:
+        portfolio_score:
+          type: number
+        score_remark:
+          type: string
+        percentile_rank:
+          type: number
+        risk_match_score:
+          type: number
+        sharpe_ratio_score:
+          type: number
+        downside_protection_score:
+          type: number
+        score_result:
+          $ref: '#/components/schemas/ScoreResult'
+        downside_component_statuses:
+          type: array
+          items:
+            $ref: '#/components/schemas/DownsideComponentStatus'
+        sharpe_ratio_analysis:
+          $ref: '#/components/schemas/SharpeRatioComponentStatus'
+    PortfolioInsights:
+      type: array
+      items:
+        type: string
+    ScoreResult:
+      type: object
+      properties:
+        risk_match_component_status:
+          $ref: '#/components/schemas/RiskMatchComponentStatus'
+    RiskMatchComponentStatus:
+      type: object
+      properties:
+        target_risk:
+          type: number
+        portfolio_risk:
+          type: number
+    DownsideComponentStatus:
+      type: object
+      properties:
+        name:
+          type: string
+        score:
+          type: number
+        status:
+          type: string
+        is_significant:
+          type: boolean
+    SharpeRatioComponentStatus:
+      type: object
+      properties:
+        sharpe_ratio_contribution:
+          type: object
+          additionalProperties:
+            type: number
+        portfolio_sharpe_ratio:
+          type: number
+    PortfolioPerformanceStats:
+      description: Portfolio Performance Stats
+      type: object
+      x-examples:
+        Example:
+          - returns: 6.3
+            risk: 9.1
+            sharpe_ratio: 0.69
+      properties:
+        returns:
+          type: number
+        risk:
+          type: number
+        sharpe_ratio:
+          type: number
+    PortfolioManagementUpdatePortfolioRequest:
+      type: object
+      properties:
+        portfolio:
+          $ref: '#/components/schemas/Portfolio'
+        portfolio_id:
+          type: number
+        investor_preference:
+          type: string
+      example:
+        - portfolio:
+            - security_name: Vanguard 500 ETF
+              ticker: VOO
+              amount: 20000
+              weight: 12.2
+          portfolio_id: 102
+          investor_preference: aggressive
+    PortfolioManagementUpdatePortfolioResponse:
+      type: object
+      properties:
+        success:
+          type: string
+  securitySchemes:
+    api_key:
+      type: apiKey
+      name: api_key
+      in: query
+security:
+  - api_key: []
+externalDocs:
+  url: https://www.globalpredictions.com
