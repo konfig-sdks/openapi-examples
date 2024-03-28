@@ -1,0 +1,6 @@
+[![Visit Weavy](imagePreview.png)](https://www.weavy.com)
+
+# [Weavy](https://www.weavy.com)
+
+Weavy is a complete toolkit for developers to add collaboration, productivity, and community features to web and mobile apps at a fraction of the cost and time. Our API, SDKs and UI Kits for Chat, Files, and Feeds enable dev teams to increase functionality and connect users, while focusing on your core product.
+
