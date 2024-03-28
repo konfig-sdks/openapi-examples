@@ -21,6 +21,7 @@ tags:
   - name: Reports
   - name: Tasks
   - name: Custom Tables
+  - name: Hiring
   - name: Onboarding
   - name: Attendance
   - name: Objects
@@ -2077,6 +2078,80 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/EmployeeDocumentResponse'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /hiring/job-ads:
+    post:
+      tags:
+        - Hiring
+      summary: Get a list of all active job ads.
+      operationId: Hiring_listActiveJobAds
+      security:
+        - Basic: []
+      description: Returns the list of all active job ads.<br />
+      parameters:
+        - description: >-
+            Preferred language code for the language results will be returned in
+            if available, otherwise language specified on the job ad will be
+            used.
+          name: preferredLanguage
+          in: query
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JobAdRequest'
+        required: true
+      responses:
+        '200':
+          description: The list of job ads.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobAds'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /hiring/job-ads/{id}:
+    get:
+      tags:
+        - Hiring
+      summary: Get the details of the job ad.
+      operationId: Hiring_jobAdDetails
+      security:
+        - Basic: []
+      description: Returns the details of the job ad.<br />
+      parameters:
+        - description: Job Ad ID.
+          name: id
+          in: path
+          schema:
+            type: string
+          required: true
+        - description: >-
+            Preferred language code for the language results will be returned in
+            if available, otherwise language specified on the job ad will be
+            used.
+          name: preferredLanguage
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The details of job ad.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobAd'
         default:
           description: Unexpected error
           content:
@@ -4967,6 +5042,165 @@ components:
             description: The manager's position ID.
           /position/managerPositionFilledBy:
             description: The current assigned manager for this position.
+    JobAdRequest:
+      required:
+        - fields
+        - filters
+      type: object
+      properties:
+        fields:
+          description: >-
+            Array of field ids (paths) to fetch for job ads.<br /> Minimum 1 up
+            to 50 fields. Any invalid number of fields will get a response of
+            400 HTTP error.
+          type: array
+          items:
+            type: string
+        filters:
+          type: array
+          items:
+            type: object
+            $ref: '#/components/schemas/JobAdFilterInstruction'
+    JobAdFilterInstruction:
+      required:
+        - fieldId
+        - operator
+        - values
+      properties:
+        fieldId:
+          description: >-
+            The field id (path) to filter by.<br /> Supported fields:<br
+            />“/jobAd/id”,<br />"/jobAd/title",<br />"/jobAd/departmentId",<br
+            />"/jobAd/employmentTypeId",<br />"/jobAd/siteId",<br
+            />"/jobAd/languageCode".<br />Any other path will get a response of
+            400 HTTP error.
+          type: string
+        operator:
+          description: >-
+            Supported operators:<br />“equals”,<br />"notEqual".<br />Any other
+            operator will get a response of 400 HTTP error.
+          type: string
+        values:
+          description: >-
+            List of values to compare.<br />Empty list will result in 400 HTTP
+            error.
+          type: array
+          items:
+            type: string
+    JobAd:
+      type: object
+      properties:
+        /jobAd/id:
+          description: The ID of the job ad.
+          type: object
+          properties:
+            value:
+              type: string
+              format: uuid
+        /jobAd/applyUrl:
+          description: The URL to the application form page for the job ad.
+          type: object
+          properties:
+            value:
+              type: string
+        /jobAd/title:
+          description: The title of the job ad.
+          type: object
+          properties:
+            value:
+              type: string
+        /jobAd/departmentId:
+          description: >-
+            The ID of the department defined on the job opening that the job ad
+            was created from.
+          type: object
+          properties:
+            value:
+              type: string
+        /jobAd/department:
+          description: >-
+            The name of the department defined on the job opening that the job
+            ad was created from.
+          type: object
+          properties:
+            value:
+              type: string
+        /jobAd/employmentTypeId:
+          description: >-
+            The ID of the employment type defined on the job opening that the
+            job ad was created from.
+          type: object
+          properties:
+            value:
+              type: string
+          format: string
+        /jobAd/employmentType:
+          description: >-
+            The name of the employment type defined on the job opening that the
+            job ad was created from.
+          type: object
+          properties:
+            value:
+              type: string
+        /jobAd/siteId:
+          description: >-
+            The ID of the site defined on the job opening that the job ad was
+            created from.
+          type: object
+          properties:
+            value:
+              type: integer
+              format: long
+        /jobAd/site:
+          description: >-
+            The name of the site defined on the job opening that the job ad was
+            created from.
+          type: object
+          properties:
+            value:
+              type: string
+        /jobAd/country:
+          description: >-
+            The county name of the site defined on the job opening that the job
+            ad was created from.
+          type: object
+          properties:
+            value:
+              type: string
+        /jobAd/language:
+          description: The language code of the selected language on the job ad.
+          type: object
+          properties:
+            value:
+              type: string
+        /jobAd/description:
+          description: The description of the job ad.
+          type: object
+          properties:
+            value:
+              type: string
+        /jobAd/requirements:
+          description: The requirements defined on the job ad.
+          type: object
+          properties:
+            value:
+              type: string
+        /jobAd/responsibilities:
+          description: The responsibilities defined on the job ad.
+          type: object
+          properties:
+            value:
+              type: string
+        /jobAd/benefits:
+          description: The benefits defined on the job ad.
+          type: object
+          properties:
+            value:
+              type: string
+    JobAds:
+      type: array
+      items:
+        $ref: '#/components/schemas/JobAd'
     PeopleUpdateEmployeeRecordRequest:
       type: object
       example:
