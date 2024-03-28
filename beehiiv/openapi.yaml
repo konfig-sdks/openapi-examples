@@ -1,0 +1,4649 @@
+openapi: 3.0.3
+info:
+  title: Beehiiv API
+  description: Swarm public API
+  version: 2.0.1
+  contact:
+    email: support@beehiiv.com
+    name: Support
+    url: support.beehiiv.com
+  x-konfig-ignore:
+    object-with-no-properties: true
+    potential-incorrect-type: true
+servers:
+  - description: Production server
+    url: https://api.beehiiv.com/v2
+tags:
+  - name: Subscriptions
+  - name: Custom Fields
+  - name: Segments
+  - name: Automation Journeys
+  - name: Posts
+  - name: Automations
+  - name: Bulk Subscription Updates
+  - name: Email Blasts
+  - name: Publications
+  - name: Referral Program
+  - name: Subscription Tags
+paths:
+  /publications:
+    get:
+      tags:
+        - Publications
+      summary: Index
+      operationId: Publications_getAll
+      description: Retrieve all publications associated with your API key.
+      parameters:
+        - $ref: '#/components/parameters/expandPublication'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/direction'
+        - $ref: '#/components/parameters/publicationOrderBy'
+      responses:
+        '200':
+          description: OK
+          headers:
+            RateLimit-Limit:
+              $ref: '#/components/headers/rate-limit-limit'
+            RateLimit-Remaining:
+              $ref: '#/components/headers/rate-limit-remaining'
+            RateLimit-Reset:
+              $ref: '#/components/headers/rate-limit-reset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicationsGetAllResponse'
+              examples:
+                example-1:
+                  value:
+                    data:
+                      - id: pub_00000000-0000-0000-0000-000000000000X
+                        name: The Daily Letter
+                        referral_program_enabled: false
+                        created: 1694198809
+                    limit: 10
+                    page: 1
+                    total_results: 1
+                    total_pages: 1
+        '400':
+          $ref: '#/components/responses/400'
+        '404':
+          $ref: '#/components/responses/404'
+        '429':
+          $ref: '#/components/responses/429'
+        '500':
+          $ref: '#/components/responses/500'
+  /publications/{publicationId}:
+    parameters:
+      - $ref: '#/components/parameters/publicationId'
+    get:
+      tags:
+        - Publications
+      summary: Show
+      operationId: Publications_getSingle
+      description: Retrieve a single publication
+      parameters:
+        - $ref: '#/components/parameters/expandPublication'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicationsGetSingleResponse'
+              examples: {}
+          headers:
+            RateLimit-Limit:
+              $ref: '#/components/headers/rate-limit-limit'
+            RateLimit-Remaining:
+              $ref: '#/components/headers/rate-limit-remaining'
+            RateLimit-Reset:
+              $ref: '#/components/headers/rate-limit-reset'
+        '400':
+          $ref: '#/components/responses/400'
+        '404':
+          $ref: '#/components/responses/404'
+        '429':
+          $ref: '#/components/responses/429'
+        '500':
+          $ref: '#/components/responses/500'
+  /publications/{publicationId}/posts:
+    parameters:
+      - $ref: '#/components/parameters/publicationId'
+    get:
+      tags:
+        - Posts
+      summary: Index
+      operationId: Posts_getAll
+      description: Retrieve all posts belonging to a specific publication
+      parameters:
+        - $ref: '#/components/parameters/expandPost'
+        - $ref: '#/components/parameters/filterPostAudience'
+        - $ref: '#/components/parameters/filterPostPlatform'
+        - $ref: '#/components/parameters/filterPostStatus'
+        - $ref: '#/components/parameters/filterPostContentTags'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/postOrderBy'
+        - $ref: '#/components/parameters/direction'
+        - $ref: '#/components/parameters/filterPostHiddenFromFeed'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostsGetAllResponse'
+          headers:
+            RateLimit-Limit:
+              $ref: '#/components/headers/rate-limit-limit'
+            RateLimit-Remaining:
+              $ref: '#/components/headers/rate-limit-remaining'
+            RateLimit-Reset:
+              $ref: '#/components/headers/rate-limit-reset'
+        '400':
+          $ref: '#/components/responses/400'
+        '404':
+          $ref: '#/components/responses/404'
+        '429':
+          $ref: '#/components/responses/429'
+        '500':
+          $ref: '#/components/responses/500'
+  /publications/{publicationId}/posts/{postId}:
+    parameters:
+      - $ref: '#/components/parameters/postId'
+      - $ref: '#/components/parameters/publicationId'
+    get:
+      tags:
+        - Posts
+      summary: Show
+      operationId: Posts_getSingle
+      description: Retreive a single Post belonging to a specific publication
+      parameters:
+        - $ref: '#/components/parameters/expandPost'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostsGetSingleResponse'
+          headers:
+            RateLimit-Limit:
+              $ref: '#/components/headers/rate-limit-limit'
+            RateLimit-Remaining:
+              $ref: '#/components/headers/rate-limit-remaining'
+            RateLimit-Reset:
+              $ref: '#/components/headers/rate-limit-reset'
+        '400':
+          $ref: '#/components/responses/400'
+        '404':
+          $ref: '#/components/responses/404'
+        '429':
+          $ref: '#/components/responses/429'
+        '500':
+          $ref: '#/components/responses/500'
+    delete:
+      tags:
+        - Posts
+      summary: Destroy
+      operationId: Posts_destroyPost
+      description: >-
+        Delete or Archive a post. Any post that has been confirmed will have
+        it's status changed to `archived`. Posts in the `draft` status will be
+        permenantly deleted.
+      responses:
+        '204':
+          description: No Content
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostsDestroyPostResponse'
+          headers:
+            RateLimit-Limit:
+              $ref: '#/components/headers/rate-limit-limit'
+            RateLimit-Remaining:
+              $ref: '#/components/headers/rate-limit-remaining'
+            RateLimit-Reset:
+              $ref: '#/components/headers/rate-limit-reset'
+        '400':
+          $ref: '#/components/responses/400'
+        '404':
+          $ref: '#/components/responses/404'
+        '429':
+          $ref: '#/components/responses/429'
+        '500':
+          $ref: '#/components/responses/500'
+  /publications/{publicationId}/subscriptions:
+    parameters:
+      - $ref: '#/components/parameters/publicationId'
+    post:
+      tags:
+        - Subscriptions
+      summary: Create
+      operationId: Subscriptions_createNew
+      description: Create new subscriptions for a publication.
+      parameters:
+        - schema:
+            type: string
+          in: query
+      requestBody:
+        $ref: '#/components/requestBodies/CreateSubscription'
+      responses:
+        '200':
+          description: Subscription created
+          headers:
+            RateLimit-Limit:
+              $ref: '#/components/headers/rate-limit-limit'
+            RateLimit-Remaining:
+              $ref: '#/components/headers/rate-limit-remaining'
+            RateLimit-Reset:
+              $ref: '#/components/headers/rate-limit-reset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionsCreateNewResponse'
+              examples: {}
+        '400':
+          $ref: '#/components/responses/400'
+        '404':
+          $ref: '#/components/responses/404'
+        '429':
+          $ref: '#/components/responses/429'
+        '500':
+          $ref: '#/components/responses/500'
+    get:
+      tags:
+        - Subscriptions
+      summary: Index
+      operationId: Subscriptions_getAll
+      description: Retrieve all subscriptions belonging to a specific publication
+      parameters:
+        - $ref: '#/components/parameters/expandSubscription'
+        - $ref: '#/components/parameters/filterSubscriptionsStatus'
+        - $ref: '#/components/parameters/filterSubscriptionsTier'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/filterSubscriptionEmail'
+        - $ref: '#/components/parameters/subscriptionOrderBy'
+        - $ref: '#/components/parameters/direction'
+      responses:
+        '200':
+          description: OK
+          headers:
+            RateLimit-Limit:
+              $ref: '#/components/headers/rate-limit-limit'
+            RateLimit-Remaining:
+              $ref: '#/components/headers/rate-limit-remaining'
+            RateLimit-Reset:
+              $ref: '#/components/headers/rate-limit-reset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionsGetAllResponse'
+              examples: {}
+        '400':
+          $ref: '#/components/responses/400'
+        '404':
+          $ref: '#/components/responses/404'
+        '429':
+          $ref: '#/components/responses/429'
+        '500':
+          $ref: '#/components/responses/500'
+    put:
+      tags:
+        - Subscriptions
+      summary: Bulk Update Status
+      operationId: Subscriptions_bulkUpdateStatus
+      description: Bulk update subscriptions' Status value
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubscriptionsBulkUpdateStatusRequest1'
+      responses:
+        '200':
+          description: OK
+          headers:
+            RateLimit-Limit:
+              $ref: '#/components/headers/rate-limit-limit'
+            RateLimit-Remaining:
+              $ref: '#/components/headers/rate-limit-remaining'
+            RateLimit-Reset:
+              $ref: '#/components/headers/rate-limit-reset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionsBulkUpdateStatus200Response'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          headers:
+            RateLimit-Limit:
+              $ref: '#/components/headers/rate-limit-limit'
+            RateLimit-Remaining:
+              $ref: '#/components/headers/rate-limit-remaining'
+            RateLimit-Reset:
+              $ref: '#/components/headers/rate-limit-reset'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          headers:
+            RateLimit-Limit:
+              $ref: '#/components/headers/rate-limit-limit'
+            RateLimit-Remaining:
+              $ref: '#/components/headers/rate-limit-remaining'
+            RateLimit-Reset:
+              $ref: '#/components/headers/rate-limit-reset'
+        '429':
+          description: ''
+          headers:
+            RateLimit-Limit:
+              $ref: '#/components/headers/rate-limit-limit'
+            RateLimit-Remaining:
+              $ref: '#/components/headers/rate-limit-remaining'
+            RateLimit-Reset:
+              $ref: '#/components/headers/rate-limit-reset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: ''
+          headers:
+            RateLimit-Limit:
+              $ref: '#/components/headers/rate-limit-limit'
+            RateLimit-Remaining:
+              $ref: '#/components/headers/rate-limit-remaining'
+            RateLimit-Reset:
+              $ref: '#/components/headers/rate-limit-reset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      x-stoplight:
+        id: on6udpkj61oa2
+    patch:
+      tags:
+        - Subscriptions
+      summary: Bulk Update Status
+      operationId: Subscriptions_bulkUpdateStatus
+      description: Bulk update subscriptions' Status value
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubscriptionsBulkUpdateStatusRequest'
+      responses:
+        '200':
+          description: OK
+          headers:
+            RateLimit-Limit:
+              $ref: '#/components/headers/rate-limit-limit'
+            RateLimit-Remaining:
+              $ref: '#/components/headers/rate-limit-remaining'
+            RateLimit-Reset:
+              $ref: '#/components/headers/rate-limit-reset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionsBulkUpdateStatusResponse'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          headers:
+            RateLimit-Limit:
+              $ref: '#/components/headers/rate-limit-limit'
+            RateLimit-Remaining:
+              $ref: '#/components/headers/rate-limit-remaining'
+            RateLimit-Reset:
+              $ref: '#/components/headers/rate-limit-reset'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          headers:
+            RateLimit-Limit:
+              $ref: '#/components/headers/rate-limit-limit'
+            RateLimit-Remaining:
+              $ref: '#/components/headers/rate-limit-remaining'
+            RateLimit-Reset:
+              $ref: '#/components/headers/rate-limit-reset'
+        '429':
+          description: ''
+          headers:
+            RateLimit-Limit:
+              $ref: '#/components/headers/rate-limit-limit'
+            RateLimit-Remaining:
+              $ref: '#/components/headers/rate-limit-remaining'
+            RateLimit-Reset:
+              $ref: '#/components/headers/rate-limit-reset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: ''
+          headers:
+            RateLimit-Limit:
+              $ref: '#/components/headers/rate-limit-limit'
+            RateLimit-Remaining:
+              $ref: '#/components/headers/rate-limit-remaining'
+            RateLimit-Reset:
+              $ref: '#/components/headers/rate-limit-reset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /publications/{publicationId}/subscriptions/{subscriptionId}:
+    parameters:
+      - $ref: '#/components/parameters/subscriptionId'
+      - $ref: '#/components/parameters/publicationId'
+    get:
+      tags:
+        - Subscriptions
+      summary: Show
+      operationId: Subscriptions_getSingle
+      description: Retrieve a single subscription belonging to a specific publication
+      parameters:
+        - $ref: '#/components/parameters/expandSubscription'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionsGetSingleResponse'
+              examples: {}
+          headers:
+            RateLimit-Limit:
+              $ref: '#/components/headers/rate-limit-limit'
+            RateLimit-Remaining:
+              $ref: '#/components/headers/rate-limit-remaining'
+            RateLimit-Reset:
+              $ref: '#/components/headers/rate-limit-reset'
+        '400':
+          $ref: '#/components/responses/400'
+        '404':
+          $ref: '#/components/responses/404'
+        '429':
+          $ref: '#/components/responses/429'
+        '500':
+          $ref: '#/components/responses/500'
+      x-extension-1: null
+    put:
+      tags:
+        - Subscriptions
+      summary: Update
+      operationId: Subscriptions_updateSubscriber
+      description: Update a subscriber
+      requestBody:
+        $ref: '#/components/requestBodies/UpdateSubscription'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionsUpdateSubscriber200Response'
+          headers:
+            RateLimit-Limit:
+              $ref: '#/components/headers/rate-limit-limit'
+            RateLimit-Remaining:
+              $ref: '#/components/headers/rate-limit-remaining'
+            RateLimit-Reset:
+              $ref: '#/components/headers/rate-limit-reset'
+        '400':
+          $ref: '#/components/responses/400'
+        '404':
+          $ref: '#/components/responses/404'
+        '429':
+          $ref: '#/components/responses/429'
+        '500':
+          $ref: '#/components/responses/500'
+    patch:
+      tags:
+        - Subscriptions
+      summary: Update
+      operationId: Subscriptions_updateSubscriber
+      description: Update a subscriber
+      requestBody:
+        $ref: '#/components/requestBodies/UpdateSubscription'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionsUpdateSubscriberResponse'
+          headers:
+            RateLimit-Limit:
+              $ref: '#/components/headers/rate-limit-limit'
+            RateLimit-Remaining:
+              $ref: '#/components/headers/rate-limit-remaining'
+            RateLimit-Reset:
+              $ref: '#/components/headers/rate-limit-reset'
+        '400':
+          $ref: '#/components/responses/400'
+        '404':
+          $ref: '#/components/responses/404'
+        '429':
+          $ref: '#/components/responses/429'
+        '500':
+          $ref: '#/components/responses/500'
+    delete:
+      tags:
+        - Subscriptions
+      summary: Delete
+      operationId: Subscriptions_deleteSubscription
+      description: >-
+        Delete a subscription.
+
+
+        **This cannot be undone** All data associated with the subscription will
+        also be deleted. We recommend unsubscribing when possible instead of
+        deleting.
+
+
+        If a premium subscription is deleted they will no longer be billed.
+      responses:
+        '204':
+          description: No Content
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionsDeleteSubscriptionResponse'
+          headers:
+            RateLimit-Limit:
+              $ref: '#/components/headers/rate-limit-limit'
+            RateLimit-Remaining:
+              $ref: '#/components/headers/rate-limit-remaining'
+            RateLimit-Reset:
+              $ref: '#/components/headers/rate-limit-reset'
+        '400':
+          $ref: '#/components/responses/400'
+        '404':
+          $ref: '#/components/responses/404'
+        '429':
+          $ref: '#/components/responses/429'
+        '500':
+          $ref: '#/components/responses/500'
+  /publications/{publicationId}/subscriptions/by_subscriber_id/{subscriberId}:
+    parameters:
+      - $ref: '#/components/parameters/publicationId'
+      - $ref: '#/components/parameters/subscriberId'
+    get:
+      tags:
+        - Subscriptions
+      summary: Show
+      operationId: Subscriptions_showSingleBySubscriberId
+      description: >-
+        Retrieve a single subscription belonging to a specific subscriber in a
+        specific publication
+      parameters:
+        - $ref: '#/components/parameters/expandSubscription'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/SubscriptionsShowSingleBySubscriberIdResponse
+              examples: {}
+          headers:
+            RateLimit-Limit:
+              $ref: '#/components/headers/rate-limit-limit'
+            RateLimit-Remaining:
+              $ref: '#/components/headers/rate-limit-remaining'
+            RateLimit-Reset:
+              $ref: '#/components/headers/rate-limit-reset'
+        '400':
+          $ref: '#/components/responses/400'
+        '404':
+          $ref: '#/components/responses/404'
+        '429':
+          $ref: '#/components/responses/429'
+        '500':
+          $ref: '#/components/responses/500'
+      x-extension-1: null
+  /publications/{publicationId}/subscriptions/by_email/{email}:
+    parameters:
+      - $ref: '#/components/parameters/publicationId'
+      - $ref: '#/components/parameters/email'
+    get:
+      tags:
+        - Subscriptions
+      summary: Show
+      operationId: Subscriptions_getSingleByEmail
+      description: >-
+        Retrieve a single subscription belonging to a specific email address in
+        a specific publication
+      parameters:
+        - $ref: '#/components/parameters/expandSubscription'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionsGetSingleByEmailResponse'
+              examples: {}
+          headers:
+            RateLimit-Limit:
+              $ref: '#/components/headers/rate-limit-limit'
+            RateLimit-Remaining:
+              $ref: '#/components/headers/rate-limit-remaining'
+            RateLimit-Reset:
+              $ref: '#/components/headers/rate-limit-reset'
+        '400':
+          $ref: '#/components/responses/400'
+        '404':
+          $ref: '#/components/responses/404'
+        '429':
+          $ref: '#/components/responses/429'
+        '500':
+          $ref: '#/components/responses/500'
+      x-extension-1: null
+  /publications/{publicationId}/subscriptions/bulk_actions:
+    parameters:
+      - description: The prefixed ID of the publication object
+        schema:
+          type: string
+        name: publicationId
+        in: path
+        required: true
+    put:
+      tags:
+        - Subscriptions
+      summary: Bulk Update
+      operationId: Subscriptions_bulkUpdateFields
+      description: >-
+        Bulk update subscriptions' field values (standard fields and custom
+        fields)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubscriptionsBulkUpdateFieldsRequest1'
+      responses:
+        '200':
+          description: OK
+          headers:
+            RateLimit-Limit:
+              $ref: '#/components/headers/rate-limit-limit'
+            RateLimit-Remaining:
+              $ref: '#/components/headers/rate-limit-remaining'
+            RateLimit-Reset:
+              $ref: '#/components/headers/rate-limit-reset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionsBulkUpdateFields200Response'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          headers:
+            RateLimit-Limit:
+              $ref: '#/components/headers/rate-limit-limit'
+            RateLimit-Remaining:
+              $ref: '#/components/headers/rate-limit-remaining'
+            RateLimit-Reset:
+              $ref: '#/components/headers/rate-limit-reset'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          headers:
+            RateLimit-Limit:
+              $ref: '#/components/headers/rate-limit-limit'
+            RateLimit-Remaining:
+              $ref: '#/components/headers/rate-limit-remaining'
+            RateLimit-Reset:
+              $ref: '#/components/headers/rate-limit-reset'
+        '429':
+          description: Too Many Requests
+          headers:
+            RateLimit-Limit:
+              $ref: '#/components/headers/rate-limit-limit'
+            RateLimit-Remaining:
+              $ref: '#/components/headers/rate-limit-remaining'
+            RateLimit-Reset:
+              $ref: '#/components/headers/rate-limit-reset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          headers:
+            RateLimit-Limit:
+              $ref: '#/components/headers/rate-limit-limit'
+            RateLimit-Remaining:
+              $ref: '#/components/headers/rate-limit-remaining'
+            RateLimit-Reset:
+              $ref: '#/components/headers/rate-limit-reset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    patch:
+      tags:
+        - Subscriptions
+      summary: Bulk Update
+      operationId: Subscriptions_bulkUpdateFields
+      description: >-
+        Bulk update subscriptions' field values (standard fields and custom
+        fields)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubscriptionsBulkUpdateFieldsRequest'
+      responses:
+        '200':
+          description: OK
+          headers:
+            RateLimit-Limit:
+              $ref: '#/components/headers/rate-limit-limit'
+            RateLimit-Remaining:
+              $ref: '#/components/headers/rate-limit-remaining'
+            RateLimit-Reset:
+              $ref: '#/components/headers/rate-limit-reset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionsBulkUpdateFieldsResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          headers:
+            RateLimit-Limit:
+              $ref: '#/components/headers/rate-limit-limit'
+            RateLimit-Remaining:
+              $ref: '#/components/headers/rate-limit-remaining'
+            RateLimit-Reset:
+              $ref: '#/components/headers/rate-limit-reset'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          headers:
+            RateLimit-Limit:
+              $ref: '#/components/headers/rate-limit-limit'
+            RateLimit-Remaining:
+              $ref: '#/components/headers/rate-limit-remaining'
+            RateLimit-Reset:
+              $ref: '#/components/headers/rate-limit-reset'
+        '429':
+          description: Too Many Requests
+          headers:
+            RateLimit-Limit:
+              $ref: '#/components/headers/rate-limit-limit'
+            RateLimit-Remaining:
+              $ref: '#/components/headers/rate-limit-remaining'
+            RateLimit-Reset:
+              $ref: '#/components/headers/rate-limit-reset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          headers:
+            RateLimit-Limit:
+              $ref: '#/components/headers/rate-limit-limit'
+            RateLimit-Remaining:
+              $ref: '#/components/headers/rate-limit-remaining'
+            RateLimit-Reset:
+              $ref: '#/components/headers/rate-limit-reset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /publications/{publicationId}/segments:
+    parameters:
+      - $ref: '#/components/parameters/publicationId'
+    get:
+      tags:
+        - Segments
+      summary: Index
+      operationId: Segments_getAll
+      description: >-
+        Retrieve information about all segments belonging to a specific
+        publication
+      parameters:
+        - $ref: '#/components/parameters/filterSegmentType'
+        - $ref: '#/components/parameters/filterSegmentStatus'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/segmentOrderBy'
+        - $ref: '#/components/parameters/direction'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SegmentsGetAllResponse'
+          headers:
+            RateLimit-Limit:
+              $ref: '#/components/headers/rate-limit-limit'
+            RateLimit-Remaining:
+              $ref: '#/components/headers/rate-limit-remaining'
+            RateLimit-Reset:
+              $ref: '#/components/headers/rate-limit-reset'
+        '400':
+          $ref: '#/components/responses/400'
+        '404':
+          $ref: '#/components/responses/404'
+        '429':
+          $ref: '#/components/responses/429'
+        '500':
+          $ref: '#/components/responses/500'
+  /publications/{publicationId}/segments/{segmentId}:
+    parameters:
+      - $ref: '#/components/parameters/publicationId'
+      - $ref: '#/components/parameters/segmentId'
+    get:
+      tags:
+        - Segments
+      summary: Show
+      operationId: Segments_getSingle
+      description: Retrieve a single segment belonging to a specific publication
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SegmentsGetSingleResponse'
+          headers:
+            RateLimit-Limit:
+              $ref: '#/components/headers/rate-limit-limit'
+            RateLimit-Remaining:
+              $ref: '#/components/headers/rate-limit-remaining'
+            RateLimit-Reset:
+              $ref: '#/components/headers/rate-limit-reset'
+        '400':
+          $ref: '#/components/responses/400'
+        '404':
+          $ref: '#/components/responses/404'
+        '429':
+          $ref: '#/components/responses/429'
+        '500':
+          $ref: '#/components/responses/500'
+    delete:
+      tags:
+        - Segments
+      summary: Delete
+      operationId: Segments_deleteSegment
+      description: >-
+        Delete a segment. Deleting the segment does not effect the subscriptions
+        in the segment.
+      responses:
+        '204':
+          description: No Content
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SegmentsDeleteSegmentResponse'
+          headers:
+            RateLimit-Limit:
+              $ref: '#/components/headers/rate-limit-limit'
+            RateLimit-Remaining:
+              $ref: '#/components/headers/rate-limit-remaining'
+            RateLimit-Reset:
+              $ref: '#/components/headers/rate-limit-reset'
+        '404':
+          description: Not Found
+          headers: {}
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          $ref: '#/components/responses/429'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /publications/{publicationId}/segments/{segmentId}/results:
+    parameters:
+      - $ref: '#/components/parameters/publicationId'
+      - $ref: '#/components/parameters/segmentId'
+    get:
+      tags:
+        - Segments
+      summary: Expand Results
+      operationId: Segments_getSubscriberIds
+      description: >-
+        List the Subscriber Ids from the most recent calculation of a specific
+        publication.
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/page'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SegmentsGetSubscriberIdsResponse'
+          headers:
+            RateLimit-Limit:
+              $ref: '#/components/headers/rate-limit-limit'
+            RateLimit-Remaining:
+              $ref: '#/components/headers/rate-limit-remaining'
+            RateLimit-Reset:
+              $ref: '#/components/headers/rate-limit-reset'
+        '400':
+          $ref: '#/components/responses/400'
+        '404':
+          $ref: '#/components/responses/404'
+        '429':
+          $ref: '#/components/responses/429'
+        '500':
+          $ref: '#/components/responses/500'
+  /publications/{publicationId}/email_blasts:
+    parameters:
+      - $ref: '#/components/parameters/publicationId'
+    get:
+      tags:
+        - Email Blasts
+      summary: Index
+      operationId: EmailBlasts_getAll
+      description: Retrieve all Email Blasts
+      parameters:
+        - $ref: '#/components/parameters/expandEmailBlast'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/direction'
+        - $ref: '#/components/parameters/emailBlastOrderBy'
+      responses:
+        '200':
+          description: OK
+          headers:
+            RateLimit-Limit:
+              $ref: '#/components/headers/rate-limit-limit'
+            RateLimit-Remaining:
+              $ref: '#/components/headers/rate-limit-remaining'
+            RateLimit-Reset:
+              $ref: '#/components/headers/rate-limit-reset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailBlastsGetAllResponse'
+        '400':
+          $ref: '#/components/responses/400'
+        '404':
+          $ref: '#/components/responses/404'
+        '429':
+          $ref: '#/components/responses/429'
+        '500':
+          $ref: '#/components/responses/500'
+  /publications/{publicationId}/email_blasts/{emailBlastId}:
+    parameters:
+      - $ref: '#/components/parameters/publicationId'
+      - $ref: '#/components/parameters/emailBlastId'
+    get:
+      tags:
+        - Email Blasts
+      summary: Show
+      operationId: EmailBlasts_getEmailBlast
+      description: Retrieve an Email Blast
+      parameters:
+        - $ref: '#/components/parameters/expandEmailBlast'
+      responses:
+        '200':
+          description: OK
+          headers:
+            RateLimit-Limit:
+              $ref: '#/components/headers/rate-limit-limit'
+            RateLimit-Remaining:
+              $ref: '#/components/headers/rate-limit-remaining'
+            RateLimit-Reset:
+              $ref: '#/components/headers/rate-limit-reset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailBlastsGetEmailBlastResponse'
+        '400':
+          $ref: '#/components/responses/400'
+        '404':
+          $ref: '#/components/responses/404'
+        '429':
+          $ref: '#/components/responses/429'
+        '500':
+          $ref: '#/components/responses/500'
+  /publications/{publicationId}/referral_program:
+    parameters:
+      - $ref: '#/components/parameters/publicationId'
+    get:
+      tags:
+        - Referral Program
+      summary: Show
+      operationId: ReferralProgram_detailsRetrieve
+      description: >-
+        Retrieve details about the publication's referral program, including
+        milestones and rewards.
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/page'
+      responses:
+        '200':
+          description: OK
+          headers:
+            RateLimit-Limit:
+              $ref: '#/components/headers/rate-limit-limit'
+            RateLimit-Remaining:
+              $ref: '#/components/headers/rate-limit-remaining'
+            RateLimit-Reset:
+              $ref: '#/components/headers/rate-limit-reset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReferralProgramDetailsRetrieveResponse'
+        '400':
+          $ref: '#/components/responses/400'
+        '404':
+          $ref: '#/components/responses/404'
+        '429':
+          $ref: '#/components/responses/429'
+        '500':
+          $ref: '#/components/responses/500'
+  /publications/{publicationId}/custom_fields:
+    parameters:
+      - description: The prefixed ID of the publication object
+        schema:
+          type: string
+        name: publicationId
+        in: path
+        required: true
+    get:
+      tags:
+        - Custom Fields
+      summary: Index
+      operationId: CustomFields_getAll
+      description: Retrieve all custom fields belonging to a specific publication
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomFieldsGetAllResponse'
+        '400':
+          $ref: '#/components/responses/400'
+        '404':
+          $ref: '#/components/responses/404'
+        '429':
+          $ref: '#/components/responses/429'
+        '500':
+          $ref: '#/components/responses/500'
+      x-stoplight:
+        id: ksq3i3er86jmw
+    post:
+      tags:
+        - Custom Fields
+      summary: Create
+      operationId: CustomFields_createPublicationCustomField
+      description: Create a custom field on a publication, for use in subscriptions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: >-
+                #/components/schemas/CustomFieldsCreatePublicationCustomFieldRequest
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/CustomFieldsCreatePublicationCustomFieldResponse
+        '400':
+          $ref: '#/components/responses/400'
+        '404':
+          $ref: '#/components/responses/404'
+        '429':
+          $ref: '#/components/responses/429'
+        '500':
+          $ref: '#/components/responses/500'
+      x-stoplight:
+        id: d99hkfb2ns67e
+  /publications/{publicationId}/custom_fields/{id}:
+    parameters:
+      - description: The prefixed ID of the publication object
+        schema:
+          type: string
+        name: publicationId
+        in: path
+        required: true
+      - description: The ID of the Custom Fields object
+        schema:
+          type: string
+        name: id
+        in: path
+        required: true
+    put:
+      tags:
+        - Custom Fields
+      summary: Update
+      operationId: CustomFields_updatePublicationCustomField
+      description: Update a custom field on a publication
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: >-
+                #/components/schemas/CustomFieldsUpdatePublicationCustomFieldRequest1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/CustomFieldsUpdatePublicationCustomField200Response
+        '400':
+          $ref: '#/components/responses/400'
+        '404':
+          $ref: '#/components/responses/404'
+        '429':
+          $ref: '#/components/responses/429'
+        '500':
+          $ref: '#/components/responses/500'
+      x-stoplight:
+        id: 9dz8q1w84wjjg
+    patch:
+      tags:
+        - Custom Fields
+      summary: Update
+      operationId: CustomFields_updatePublicationCustomField
+      description: Update a custom field on a publication
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: >-
+                #/components/schemas/CustomFieldsUpdatePublicationCustomFieldRequest
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/CustomFieldsUpdatePublicationCustomFieldResponse
+        '400':
+          $ref: '#/components/responses/400'
+        '404':
+          $ref: '#/components/responses/404'
+        '429':
+          $ref: '#/components/responses/429'
+        '500':
+          $ref: '#/components/responses/500'
+    delete:
+      tags:
+        - Custom Fields
+      summary: Delete
+      operationId: CustomFields_deletePublicationCustomField
+      description: Delete a custom field from a publication
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/CustomFieldsDeletePublicationCustomFieldResponse
+        '400':
+          $ref: '#/components/responses/400'
+        '404':
+          $ref: '#/components/responses/404'
+        '429':
+          $ref: '#/components/responses/429'
+        '500':
+          $ref: '#/components/responses/500'
+      x-stoplight:
+        id: smd0qte1wydk8
+    get:
+      tags:
+        - Custom Fields
+      summary: Show
+      operationId: CustomFields_showSpecific
+      description: View a specific custom field on a publication
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomFieldsShowSpecificResponse'
+        '400':
+          $ref: '#/components/responses/400'
+        '404':
+          $ref: '#/components/responses/404'
+        '429':
+          $ref: '#/components/responses/429'
+        '500':
+          $ref: '#/components/responses/500'
+      x-stoplight:
+        id: hm2wm7397xf3b
+  /publications/{publicationId}/bulk_subscription_updates:
+    parameters:
+      - description: The prefixed ID of the publication object
+        schema:
+          type: string
+        name: publicationId
+        in: path
+        required: true
+    get:
+      tags:
+        - Bulk Subscription Updates
+      summary: Index
+      operationId: BulkSubscriptionUpdates_listSubscriptionUpdates
+      description: Returns a list of Subscription Update objects for a publication
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/BulkSubscriptionUpdatesListSubscriptionUpdatesResponse
+        '400':
+          $ref: '#/components/responses/400'
+        '404':
+          $ref: '#/components/responses/404'
+        '429':
+          $ref: '#/components/responses/429'
+        '500':
+          $ref: '#/components/responses/500'
+      x-stoplight:
+        id: exabcp4mv3x8b
+  /publications/{publicationId}/bulk_subscription_updates/{id}:
+    parameters:
+      - description: The prefixed ID of the publication object
+        schema:
+          type: string
+        name: publicationId
+        in: path
+        required: true
+      - description: The ID of the Subscription Update object
+        schema:
+          type: string
+        name: id
+        in: path
+        required: true
+    get:
+      tags:
+        - Bulk Subscription Updates
+      summary: Show
+      operationId: BulkSubscriptionUpdates_getSingleUpdate
+      description: Returns a single Subscription Update object for a publication
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/BulkSubscriptionUpdatesGetSingleUpdateResponse
+        '400':
+          $ref: '#/components/responses/400'
+        '404':
+          $ref: '#/components/responses/404'
+        '429':
+          $ref: '#/components/responses/429'
+        '500':
+          $ref: '#/components/responses/500'
+      x-stoplight:
+        id: 6jnppj12wq33m
+  /publications/{publicationId}/automations/{automationId}/journeys:
+    parameters:
+      - $ref: '#/components/parameters/publicationId'
+      - $ref: '#/components/parameters/automationId'
+    post:
+      tags:
+        - Automation Journeys
+      summary: Create
+      operationId: AutomationJourneys_addExistingSubscription
+      description: >-
+        Add an existing subscription to an automation flow. Requires the
+        automation to have an active *Add by API* trigger.
+
+
+        The specified `email` or `subscription_id` will be matched against your
+        existing subscribers.
+
+        If an existing subscriber is found, they will be enrolled immediately.
+
+
+        Looking to enroll new subscribers? Use the **[Subscriptions
+        Create](https://beehiiv.stoplight.io/docs/v2/1a77a563675ee-create)**
+        endpoint instead and specify the `automation_ids` param.
+      requestBody:
+        description: >-
+          Required: specify at least one of the `email` or `subscription_id`
+          parameters.
+        content:
+          application/json:
+            schema:
+              $ref: >-
+                #/components/schemas/AutomationJourneysAddExistingSubscriptionRequest
+            examples:
+              Example 1:
+                value:
+                  subscription_email: example@example.com
+                  subscription_id: sub_00000000-0000-0000-0000-000000000000
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/AutomationJourneysAddExistingSubscriptionResponse
+        '400':
+          $ref: '#/components/responses/400'
+        '404':
+          $ref: '#/components/responses/404'
+        '429':
+          $ref: '#/components/responses/429'
+        '500':
+          $ref: '#/components/responses/500'
+      x-stoplight:
+        id: na2fbzu7ltfw7
+    get:
+      tags:
+        - Automation Journeys
+      summary: Index
+      operationId: AutomationJourneys_getAll
+      description: >-
+        Retrieve all automation journeys associated with an automation that
+        belongs to a specific publication
+      parameters:
+        - $ref: '#/components/parameters/filterAutomationJourneyStatus'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/filterAutomationJourneySubscriptionId'
+        - $ref: '#/components/parameters/filterAutomationJourneySubscriptionEmail'
+      responses:
+        '200':
+          description: OK
+          headers:
+            RateLimit-Limit:
+              $ref: '#/components/headers/rate-limit-limit'
+            RateLimit-Remaining:
+              $ref: '#/components/headers/rate-limit-remaining'
+            RateLimit-Reset:
+              $ref: '#/components/headers/rate-limit-reset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AutomationJourneysGetAllResponse'
+              examples: {}
+        '400':
+          $ref: '#/components/responses/400'
+        '404':
+          $ref: '#/components/responses/404'
+        '429':
+          $ref: '#/components/responses/429'
+        '500':
+          $ref: '#/components/responses/500'
+  /publications/{publicationId}/automations/{automationId}/journeys/{automationJourneyId}:
+    parameters:
+      - $ref: '#/components/parameters/publicationId'
+      - $ref: '#/components/parameters/automationId'
+      - $ref: '#/components/parameters/automationJourneyId'
+    get:
+      tags:
+        - Automation Journeys
+      summary: Show
+      operationId: AutomationJourneys_showJourneyDetails
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/AutomationJourneysShowJourneyDetailsResponse
+        '400':
+          $ref: '#/components/responses/400'
+        '404':
+          $ref: '#/components/responses/404'
+        '429':
+          $ref: '#/components/responses/429'
+        '500':
+          $ref: '#/components/responses/500'
+      x-stoplight:
+        id: 4vb2k1whqwnl5
+  /publications/{publicationId}/automations:
+    parameters:
+      - $ref: '#/components/parameters/publicationId'
+    get:
+      tags:
+        - Automations
+      summary: Index
+      operationId: Automations_index
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/page'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AutomationsIndexResponse'
+        '400':
+          $ref: '#/components/responses/400'
+        '404':
+          $ref: '#/components/responses/404'
+        '429':
+          $ref: '#/components/responses/429'
+        '500':
+          $ref: '#/components/responses/500'
+      x-stoplight:
+        id: 0v6ymt65zcu5p
+  /publications/{publicationId}/automations/{automationId}:
+    parameters:
+      - $ref: '#/components/parameters/publicationId'
+      - $ref: '#/components/parameters/automationId'
+    get:
+      tags:
+        - Automations
+      summary: Show
+      operationId: Automations_showDetails
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AutomationsShowDetailsResponse'
+        '400':
+          $ref: '#/components/responses/400'
+        '404':
+          $ref: '#/components/responses/404'
+        '429':
+          $ref: '#/components/responses/429'
+        '500':
+          $ref: '#/components/responses/500'
+      x-stoplight:
+        id: nj6rwamvddsga
+  /publications/{publicationId}/subscriptions/{subscriptionId}/tags:
+    parameters:
+      - schema:
+          type: string
+        name: publicationId
+        in: path
+        required: true
+      - schema:
+          type: string
+        name: subscriptionId
+        in: path
+        required: true
+    post:
+      tags:
+        - Subscription Tags
+      summary: Post
+      operationId: SubscriptionTags_createNew
+      description: >-
+        Create new subscription tags for a subscription. If the tag does not
+        exist on the publication, it will be created automatically.
+      requestBody:
+        description: >-
+          Tags are only added through the `create` action. If the tag already
+          exists, it will be ignored.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubscriptionTagsCreateNewRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionTagsCreateNewResponse'
+        '400':
+          $ref: '#/components/responses/400'
+        '404':
+          $ref: '#/components/responses/404'
+        '429':
+          $ref: '#/components/responses/429'
+        '500':
+          $ref: '#/components/responses/500'
+      x-stoplight:
+        id: yol8vozgcmtzp
+components:
+  parameters:
+    postId:
+      description: The prefixed ID of the post object
+      name: postId
+      in: path
+      required: true
+      schema:
+        type: string
+        pattern: ^(post_)
+        example: post_00000000-0000-0000-0000-000000000000
+    publicationId:
+      description: The prefixed ID of the publication object
+      name: publicationId
+      in: path
+      required: true
+      schema:
+        type: string
+        pattern: ^(pub_)
+        example: pub_00000000-0000-0000-0000-000000000000
+    subscriptionId:
+      description: The prefixed ID of the subscription object
+      name: subscriptionId
+      in: path
+      required: true
+      schema:
+        type: string
+        pattern: ^(sub_)
+        example: sub_00000000-0000-0000-0000-000000000000
+    subscriberId:
+      description: The ID of the subscriber object
+      name: subscriberId
+      in: path
+      required: true
+      schema:
+        type: string
+        example: 00000000-0000-0000-0000-000000000000
+    expandPost:
+      description: >-
+        Optional list of expandable objects.<br>`stats` - Returns statistics
+        about the post(s)<br> `free_web_content` - Returns the web HTML rendered
+        to a free reader<br> `free_email_content` - Returns the email HTML
+        rendered to a free reader<br> `free_rss_content` - Returns the RSS feed
+        HTML<br> `premium_web_content` - Returns the web HTML rendered to a
+        premium reader<br> `premium_email_content` - Returns the email HTML
+        rendered to a premium reader
+      name: expand[]
+      in: query
+      explode: true
+      style: form
+      required: false
+      example:
+        - stats
+        - free_web_content
+      schema:
+        type: array
+        uniqueItems: true
+        items:
+          type: string
+          enum:
+            - stats
+            - free_web_content
+            - free_email_content
+            - free_rss_content
+            - premium_web_content
+            - premium_email_content
+    expandPublication:
+      description: >-
+        Optional list of expandable objects.<br>`stats` - Returns all statistics
+        about the publication(s)<br>`stat_active_subscriptions` - Total number
+        of active free and premium
+        subscriptions<br>`stat_active_premium_subscriptions` - Total number of
+        active premium/paid subscriptions<br>`stat_active_free_subscriptions` -
+        Total number of active free subscriptions<br>`stat_average_open_rate` -
+        The publications historical average open
+        rate<br>`stat_average_click_rate` - The publications historical average
+        click through rate<br>`stat_total_sent` - Total number of emails
+        sent<br>`stat_total_unique_opened` - Total number of uniquely opened
+        emails. Only counts the first open for each
+        subscriber.<br>`stat_total_clicked` - The total number of links clicked
+        from emails.
+      name: expand[]
+      in: query
+      explode: true
+      style: form
+      required: false
+      example:
+        - stats
+      schema:
+        type: array
+        uniqueItems: true
+        items:
+          type: string
+          enum:
+            - stats
+    expandSubscription:
+      description: >-
+        Optional list of expandable objects.<br>`stats` - Returns statistics
+        about the subscription(s).<br>`custom_fields` - Returns an array of
+        custom field values that have been set on the
+        subscription.<br>`referrals` - Returns an array of subscriptions with
+        limited data - `id`, `email`, and `status`. These are the subscriptions
+        that were referred by this subscription.
+      name: expand[]
+      in: query
+      explode: true
+      style: form
+      required: false
+      example:
+        - stats
+        - custom_fields
+      schema:
+        type: array
+        uniqueItems: true
+        items:
+          type: string
+          enum:
+            - stats
+            - custom_fields
+            - referrals
+    filterSubscriptionsStatus:
+      description: Optionally filter the results by a status
+      name: status
+      in: query
+      required: false
+      schema:
+        type: string
+        default: all
+        enum:
+          - validating
+          - invalid
+          - pending
+          - active
+          - inactive
+          - all
+    filterPostAudience:
+      description: Optionally filter the results by audience
+      name: audience
+      in: query
+      required: false
+      schema:
+        type: string
+        enum:
+          - free
+          - premium
+          - all
+        default: all
+      example: all
+    filterPostPlatform:
+      description: >-
+        Optionally filter the results by platform.<br>`web` - Posts only
+        published to web.<br>`email` - Posts only published to email.<br>`both`
+        - Posts published to email and web.<br>`all` - Does not restrict results
+        by platform.
+      name: platform
+      in: query
+      required: false
+      schema:
+        type: string
+        enum:
+          - web
+          - email
+          - both
+          - all
+        default: all
+      example: all
+    filterPostStatus:
+      description: >-
+        Optionally filter the results by the status of the post.<br>`draft` -
+        not been scheduled.<br>`confirmed` - The post will be active after the
+        `scheduled_at`.<br>`archived` - The post is no longer active.<br>`all` -
+        Does not restrict results by status.
+      name: status
+      in: query
+      required: false
+      schema:
+        type: string
+        enum:
+          - draft
+          - confirmed
+          - archived
+          - all
+        default: all
+      example: all
+    filterSubscriptionsTier:
+      description: Optionally filter the results by a their tier
+      name: tier
+      in: query
+      required: false
+      schema:
+        type: string
+        enum:
+          - free
+          - premium
+          - all
+        default: all
+      example: all
+    segmentId:
+      description: The prefixed ID of the segment object
+      name: segmentId
+      in: path
+      required: true
+      schema:
+        type: string
+        pattern: ^(seg_)
+        example: seg_00000000-0000-0000-0000-000000000000
+    limit:
+      description: >-
+        A limit on the number of objects to be returned. The limit can range
+        between 1 and 100, and the default is 10.
+      name: limit
+      in: query
+      required: false
+      schema:
+        type: integer
+        default: 10
+    page:
+      description: >-
+        Pagination returns the results in pages. Each page contains the number
+        of results specified by the `limit` (default: 10).<br>If not specified,
+        results 1-10 from page 1 will be returned.
+      name: page
+      in: query
+      required: false
+      schema:
+        type: integer
+        default: 1
+    filterSegmentType:
+      description: Optionally filter the results by the segment's type.
+      name: type
+      in: query
+      required: false
+      schema:
+        type: string
+        enum:
+          - dynamic
+          - static
+          - manual
+          - all
+        example: dynamic
+        default: all
+    filterSegmentStatus:
+      description: Optionally filter the results by the segment's status.
+      name: status
+      in: query
+      required: false
+      schema:
+        type: string
+        enum:
+          - pending
+          - processing
+          - completed
+          - failed
+          - all
+        example: completed
+        default: all
+    email:
+      description: The ID of the subscriber object
+      name: email
+      in: path
+      required: true
+      schema:
+        type: string
+        example: work@example.com
+    emailBlastId:
+      description: The prefixed ID of the email blast object
+      name: emailBlastId
+      in: path
+      required: true
+      schema:
+        type: string
+        pattern: ^(blast_)
+        example: blast_00000000-0000-0000-0000-000000000000
+    expandEmailBlast:
+      description: >-
+        Optional list of expandable objects.<br>`stats` - Returns statistics
+        about the email blast(s)<br> `free_email_content` - Returns the email
+        HTML rendered to a free reader<br> `premium_email_content` - Returns the
+        email HTML rendered to a premium reader
+      name: expand[]
+      in: query
+      explode: true
+      style: form
+      required: false
+      example:
+        - stats
+      schema:
+        type: array
+        uniqueItems: true
+        items:
+          type: string
+          enum:
+            - stats
+            - free_email_content
+            - premium_email_content
+    filterPostContentTags:
+      description: >-
+        Optionally filter posts by content_tags. Adding a content tag will
+        return any post with that content tag associated to it.<br>Example:
+        Filtering for `content_tags: ["sales","closing"]` will return results of
+        posts that have *either* sales or closing content_tags.
+      name: content_tags[]
+      in: query
+      style: form
+      required: false
+      schema:
+        type: array
+        uniqueItems: true
+        items:
+          type: string
+    filterSubscriptionEmail:
+      description: >-
+        Optional email address to find a subscription.<br>This param must be an
+        exact match and is case insensitive.
+      name: email
+      in: query
+      required: false
+      schema:
+        type: string
+        format: email
+        example: clark@dailyplanet.com
+    direction:
+      description: >-
+        The direction that the results are sorted in. Defaults to asc<br> `asc`
+        - Ascending, sorts from smallest to largest.<br> `desc` - Descending,
+        sorts from largest to smallest.
+      name: direction
+      in: query
+      required: false
+      schema:
+        type: string
+        default: asc
+        enum:
+          - asc
+          - desc
+    publicationOrderBy:
+      description: >-
+        The field that the results are sorted by. Defaults to created<br>
+        `created` - The time in which the publication was first created.<br>
+        `name` - The name of the publication.
+      name: order_by
+      in: query
+      required: false
+      schema:
+        type: string
+        enum:
+          - created
+          - name
+        example: name
+        default: created
+    postOrderBy:
+      description: >-
+        The field that the results are sorted by. Defaults to created<br>
+        `created` - The time in which the post was first created.<br>
+        `publish_date` - The time the post was set to be published.<br>
+        `displayed_date` - The time displayed in place of the `publish_date`. If
+        no `displayed_date` was set, it will default to the `publish_date`
+      name: order_by
+      in: query
+      required: false
+      schema:
+        type: string
+        enum:
+          - created
+          - publish_date
+          - displayed_date
+        example: displayed_date
+        default: created
+    subscriptionOrderBy:
+      description: >-
+        The field that the results are sorted by. Defaults to created<br>
+        `created` - The time in which the subscription was first created.<br>
+        `email` - The email address of the subscription.
+      name: order_by
+      in: query
+      required: false
+      schema:
+        type: string
+        enum:
+          - created
+          - email
+        example: email
+        default: created
+    segmentOrderBy:
+      description: >-
+        The field that the results are sorted by. Defaults to created<br>
+        `created` - The time in which the segment was first created.<br>
+        `last_calculated` - The time that the segment last completed
+        calculation. Measured in seconds since the Unix epoch.
+      name: order_by
+      in: query
+      required: false
+      schema:
+        type: string
+        enum:
+          - created
+          - last_calculated
+        example: last_calculated
+        default: created
+    emailBlastOrderBy:
+      description: >-
+        The field that the results are sorted by. Defaults to created<br>
+        `created` - The time in which the segment was first created.<br>
+        `last_sent` - The time the blast was last sent. Measured in seconds
+        since the Unix epoch.
+      name: order_by
+      in: query
+      required: false
+      schema:
+        type: string
+        enum:
+          - created
+          - last_sent
+        example: last_sent
+        default: created
+    automationId:
+      description: The prefixed ID of the automation object
+      name: automationId
+      in: path
+      required: true
+      schema:
+        type: string
+        pattern: ^(aut_)
+        example: aut_00000000-0000-0000-0000-000000000000
+    automationJourneyId:
+      description: The prefixed automation journey id
+      name: automationJourneyId
+      in: path
+      required: true
+      schema:
+        type: string
+        pattern: ^(aj_)
+        example: aj_00000000-0000-0000-0000-000000000000
+    filterAutomationJourneyStatus:
+      description: Optionally filter the results by a status
+      name: status
+      in: query
+      schema:
+        type: string
+        enum:
+          - in_progress
+          - completed
+          - exited_early
+          - all
+        default: all
+        example: all
+      allowEmptyValue: true
+    filterAutomationJourneySubscriptionId:
+      description: Optionally filter the results by a subscription id
+      name: subscription_id
+      in: query
+      required: false
+      schema:
+        type: string
+        example: sub_00000000-0000-0000-0000-000000000000
+        pattern: ^(sub_)
+        format: regex
+    filterAutomationJourneySubscriptionEmail:
+      description: >-
+        Optionally filter the results by a subscription email address.<br>This
+        param must be an exact match and is case insensitive.
+      name: email
+      in: query
+      required: false
+      schema:
+        type: string
+        format: email
+        example: clark@dailyplanet.com
+    filterPostHiddenFromFeed:
+      description: >-
+        Optionally filter the results by the `hidden_from_feed` attribute of the
+        post.<br>`all` - Does not restrict results by
+        `hidden_from_feed`.<br>`true` - Only return posts hidden from the
+        feed.<br>`false` - Only return posts that are visible on the feed.
+      name: hidden_from_feed
+      in: query
+      required: false
+      schema:
+        type: string
+        enum:
+          - all
+          - 'true'
+          - 'false'
+        default: all
+  responses:
+    '400':
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      headers:
+        RateLimit-Limit:
+          $ref: '#/components/headers/rate-limit-limit'
+        RateLimit-Remaining:
+          $ref: '#/components/headers/rate-limit-remaining'
+        RateLimit-Reset:
+          $ref: '#/components/headers/rate-limit-reset'
+    '404':
+      description: Resource Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      headers:
+        RateLimit-Limit:
+          $ref: '#/components/headers/rate-limit-limit'
+        RateLimit-Remaining:
+          $ref: '#/components/headers/rate-limit-remaining'
+        RateLimit-Reset:
+          $ref: '#/components/headers/rate-limit-reset'
+    '429':
+      description: Rate Limit Exceeded
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      headers:
+        RateLimit-Limit:
+          $ref: '#/components/headers/rate-limit-limit'
+        RateLimit-Remaining:
+          $ref: '#/components/headers/rate-limit-remaining'
+        RateLimit-Reset:
+          $ref: '#/components/headers/rate-limit-reset'
+    '500':
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      headers:
+        RateLimit-Limit:
+          $ref: '#/components/headers/rate-limit-limit'
+        RateLimit-Remaining:
+          $ref: '#/components/headers/rate-limit-remaining'
+        RateLimit-Reset:
+          $ref: '#/components/headers/rate-limit-reset'
+  headers:
+    rate-limit-limit:
+      description: The total number of requests allowed in a 60 second period
+      schema:
+        nullable: true
+        type: integer
+        example: 60
+    rate-limit-remaining:
+      description: The number of requests remaining
+      schema:
+        nullable: true
+        type: integer
+        example: 59
+    rate-limit-reset:
+      description: >-
+        The time that the rate limit will be reset. Measured in seconds since
+        the Unix epoch
+      schema:
+        nullable: true
+        type: integer
+        example: 1666800076
+  securitySchemes:
+    bearerAuth:
+      description: >-
+        This Bearer token is the same as the API token created on your beehiiv
+        account.
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    CustomField:
+      title: CustomField
+      x-stoplight:
+        id: rk9nka45rfxj4
+      type: object
+      x-internal: false
+      properties:
+        name:
+          description: The name of the existing custom field
+          type: string
+        kind:
+          description: The type of value being stored in the custom field.
+          type: string
+          enum:
+            - string
+            - integer
+            - boolean
+            - date
+            - datetime
+        value:
+          description: The value stored for the subscription
+          type: string
+    CustomFieldValue:
+      title: CustomFieldValue
+      description: The object required for setting custom field values on a subscription
+      x-stoplight:
+        id: nt2bm5zdr2m0j
+      type: object
+      x-internal: false
+      properties:
+        name:
+          description: The name of the existing custom field
+          type: string
+          example: first_name
+        value:
+          description: The value stored for the subscription
+          type: string
+          example: Bruce
+    EmailBlast:
+      title: EmailBlast
+      x-stoplight:
+        id: a2yvd323rnl4u
+      type: object
+      properties:
+        id:
+          description: The prefixed email blast id
+          type: string
+          example: blast_00000000-0000-0000-0000-000000000000
+          pattern: ^(blast_)
+        created:
+          description: >-
+            The time the blast was created. Measured in seconds since the Unix
+            epoch
+          type: integer
+          example: 1666800076
+        last_sent:
+          description: >-
+            The time the blast was last sent. Measured in seconds since the Unix
+            epoch
+          type: integer
+          x-stoplight:
+            id: hpu58594krfo2
+          example: 1666800076
+        status:
+          description: >-
+            The status of the blast.<br>`inactive` - not been
+            scheduled.<br>`active` - The blast is scheduled to send.
+          type: string
+          enum:
+            - active
+            - inactive
+          default: inactive
+          example: active
+        subject_line:
+          description: The email subject line.
+          type: string
+          example: Check this out
+        preview_text:
+          description: The email preview text
+          type: string
+          example: More news on the horizon
+        stats:
+          $ref: '#/components/schemas/EmailBlastStats'
+        content:
+          $ref: '#/components/schemas/EmailBlastContent'
+      required:
+        - id
+        - created
+        - status
+        - subject_line
+        - preview_text
+        - last_sent
+    EmailBlastContent:
+      title: EmailBlastContent
+      description: >-
+        Optional html content for an email blast. Retrievable by including any
+        of `expand: [free_email_content, premium_email_content]` in the post
+        request body.
+
+
+        **Note:** Generating HTML is slow. We recommend only requesting the HTML
+        versions you need at the time.
+      x-stoplight:
+        id: sj2a3n6m8k2p0
+      type: object
+      properties:
+        email:
+          type: object
+          properties:
+            free:
+              type: string
+              example: <HTML><body><h1>New Email Blast</h1></body></HTML>
+            premium:
+              type: string
+              example: <HTML><body><h1>New Email Blast</h1></body></HTML>
+    EmailBlastStats:
+      title: EmailBlastStats
+      description: >-
+        Optional list of stats for an email blast. Retrievable by including
+        `expand: [stats]` in the email blast request body.
+      x-stoplight:
+        id: bdl7lkcvmkb35
+      type: object
+      properties:
+        email:
+          description: >-
+            Stats scoped only to email recipients. Not relevant for posts
+            published only to web
+          type: object
+          properties:
+            recipients:
+              description: Total number of email recipients
+              type: integer
+              example: 100
+              default: 0
+            opens:
+              description: Total number of email opens
+              type: integer
+              example: 50
+              default: 0
+            unique_opens:
+              description: Total number of unique email opens
+              type: integer
+              minimum: 0
+              default: 0
+              example: 45
+            open_rate:
+              description: The percentage of emails that have been opened
+              type: number
+              default: 0
+              minimum: 0
+              format: float
+            clicks:
+              description: Total number of email clicks
+              type: integer
+              example: 10
+              default: 0
+            unique_clicks:
+              description: Unique number of email clicks
+              type: integer
+              example: 8
+              default: 0
+            click_rate:
+              description: The percentage of emails that have been clicked
+              type: number
+              default: 0
+              format: float
+            unsubscribes:
+              description: Total number of email unsubscribes
+              type: integer
+              example: 1
+              default: 0
+            spam_reports:
+              description: The number of subscribers that reported this post email as spam
+              type: integer
+              minimum: 0
+              example: 1
+              default: 0
+        clicks:
+          description: An array of click statistics for each URL in the post
+          type: array
+          items:
+            type: object
+            properties:
+              url:
+                description: The URL the stats are for
+                type: string
+              total_clicks:
+                type: integer
+                example: 10
+              total_unique_clicks:
+                type: integer
+                example: 8
+              total_click_through_rate:
+                description: >-
+                  The percentage of clicks on the URL compared to the total
+                  number of recipients and web views
+                type: number
+                example: 30
+    Error:
+      title: Error
+      description: The top level error response.
+      x-stoplight:
+        id: ihtzzm7oqxiln
+      type: object
+      x-internal: false
+      x-examples:
+        example-1:
+          status: '400'
+          statusText: bad_request
+          errors:
+            - message: Email is invalid
+              code: INVALID_EMAIL
+      properties:
+        status:
+          type: string
+          example: '400'
+        statusText:
+          type: string
+          example: bad_request
+        errors:
+          type: array
+          items:
+            type: object
+            required:
+              - message
+              - code
+            properties:
+              message:
+                type: string
+                example: Email is invalid
+              code:
+                type: string
+                example: INVALID_EMAIL
+      required:
+        - status
+        - statusText
+        - errors
+    Milestone:
+      title: Milestone
+      description: The milestone object.
+      x-stoplight:
+        id: mxazfwtbrjrh6
+      type: object
+      properties:
+        id:
+          description: A unique prefixed id of the milestone.
+          type: string
+          pattern: ^(mile_)
+          example: mile_00000000-0000-0000-0000-000000000000
+        auto_fulfill:
+          description: >-
+            Only available with a promo code reward type. This indicates that an
+            email will automatically be sent when the milestone is reached
+            containing the reward promo code.
+          type: boolean
+        num_referrals:
+          description: The number of referrals needed to reach this milestone.
+          type: integer
+          minimum: 0
+        reward:
+          $ref: '#/components/schemas/MilestoneReward'
+      required:
+        - id
+        - auto_fulfill
+        - num_referrals
+        - reward
+    MilestoneReward:
+      title: MilestoneReward
+      description: The reward object.
+      x-stoplight:
+        id: vqhircw5tltzd
+      type: object
+      properties:
+        description:
+          description: The description given to the name at creation.
+          type: string
+        id:
+          description: A unique prefixed id of the reward.
+          type: string
+          pattern: ^(rew_)
+          example: rew_00000000-0000-0000-0000-000000000000
+        name:
+          description: The name given to the reward at creation.
+          type: string
+        image_url:
+          description: A URL of an image to be displayed with the reward.
+          type: string
+        type:
+          description: >-
+            What type of reward this is.<br>`physical` - A product which must be
+            sent to the subscriber.<br>`promo_code` - A code that is redeemable
+            for goods or services.
+          type: string
+          enum:
+            - physical
+            - promo_code
+      required:
+        - id
+        - name
+        - description
+        - image_url
+        - type
+    Subscription:
+      title: Subscription
+      description: The subscription object
+      x-stoplight:
+        id: aydgk4ov4a8qu
+      type: object
+      x-examples:
+        example-1:
+          id: sub_00000000-0000-0000-0000-000000000000
+          email: example@example.com
+          status: active
+          created: '1666793673'
+          subscription_tier: string
+          source: string
+          medium: string
+          channel: string
+          embed_name: string
+          referring_site: string
+          stats:
+            emails_received: string
+            open_rate: 0
+            click_through_rate: 0
+          custom_fields:
+            - name: string
+              type: string
+              value: string
+      properties:
+        id:
+          description: The prefixed subscription id
+          type: string
+          example: sub_00000000-0000-0000-0000-000000000000
+        email:
+          type: string
+          example: example@example.com
+          format: email
+        status:
+          description: >-
+            The status of the subscription.<br>`validating` - The email address
+            is being validated.<br>`invalid` - The email address is
+            invalid.<br>`pending` - The email address is valid, but the
+            subscription is pending double opt-in.<br>`active` - The email was
+            valid and the subscription is active.<br>`inactive` - The
+            subscription was made inactive, possibly due to an
+            unsubscribe.<br>`needs_attention` - The subscription requires
+            approval or denial.
+          type: string
+          example: active
+          enum:
+            - validating
+            - invalid
+            - pending
+            - active
+            - inactive
+            - needs_attention
+        created:
+          description: >-
+            The date the subscription was created. Measured in seconds since the
+            Unix epoch
+          type: integer
+          example: 1666800076
+        subscription_tier:
+          description: The current tier of the subscription.
+          type: string
+          enum:
+            - free
+            - premium
+          example: free
+        utm_source:
+          description: The acquisition source; where the subscriber came from
+          type: string
+          example: Twitter
+        utm_medium:
+          description: The acquisition medium; how the subscriber got to your publication
+          type: string
+          example: organic
+        utm_channel:
+          description: The acquisition channel
+          type: string
+          example: website
+          enum:
+            - ''
+            - website
+            - import
+            - embed
+            - api
+            - referral
+            - recommendation
+            - magic_link
+            - boost
+            - boost_send
+            - boost_direct_link
+        utm_campaign:
+          description: The acquisition campaign
+          type: string
+        referring_site:
+          description: The website that the subscriber was referred from
+          type: string
+          example: https://www.blog.com
+        referral_code:
+          description: >-
+            The code associated to this subscriber to refer others. When a new
+            subscription is created with this referral code, credit for the
+            referral goes to this subscription.
+          type: string
+        stripe_customer_id:
+          description: The Customer ID associated with this subscription in Stripe
+          type: string
+          x-stoplight:
+            id: z2832pkqve156
+      required:
+        - id
+        - email
+        - status
+        - created
+        - subscription_tier
+        - utm_source
+        - utm_medium
+        - utm_channel
+        - utm_campaign
+        - referring_site
+        - referral_code
+    SubscriptionExpandedTags:
+      title: Subscription
+      description: The subscription object
+      x-stoplight:
+        id: bwnc74sylov3m
+      type: object
+      x-examples:
+        example-1:
+          id: sub_00000000-0000-0000-0000-000000000000
+          email: example@example.com
+          status: active
+          created: '1666793673'
+          subscription_tier: string
+          source: string
+          medium: string
+          channel: string
+          embed_name: string
+          referring_site: string
+          stats:
+            emails_received: string
+            open_rate: 0
+            click_through_rate: 0
+          custom_fields:
+            - name: string
+              type: string
+              value: string
+      properties:
+        tags:
+          $ref: '#/components/schemas/SubscriptionTags'
+        id:
+          description: The prefixed subscription id
+          type: string
+          example: sub_00000000-0000-0000-0000-000000000000
+        email:
+          type: string
+          example: example@example.com
+          format: email
+        status:
+          description: >-
+            The status of the subscription.<br>`validating` - The email address
+            is being validated.<br>`invalid` - The email address is
+            invalid.<br>`pending` - The email address is valid, but the
+            subscription is pending double opt-in.<br>`active` - The email was
+            valid and the subscription is active.<br>`inactive` - The
+            subscription was made inactive, possibly due to an
+            unsubscribe.<br>`needs_attention` - The subscription requires
+            approval or denial.
+          type: string
+          example: active
+          enum:
+            - validating
+            - invalid
+            - pending
+            - active
+            - inactive
+            - needs_attention
+        created:
+          description: >-
+            The date the subscription was created. Measured in seconds since the
+            Unix epoch
+          type: integer
+          example: 1666800076
+        subscription_tier:
+          description: The current tier of the subscription.
+          type: string
+          enum:
+            - free
+            - premium
+          example: free
+        utm_source:
+          description: The acquisition source; where the subscriber came from
+          type: string
+          example: Twitter
+        utm_medium:
+          description: The acquisition medium; how the subscriber got to your publication
+          type: string
+          example: organic
+        utm_channel:
+          description: The acquisition channel
+          type: string
+          example: website
+          enum:
+            - ''
+            - website
+            - import
+            - embed
+            - api
+            - referral
+            - recommendation
+            - magic_link
+            - boost
+            - boost_send
+            - boost_direct_link
+        utm_campaign:
+          description: The acquisition campaign
+          type: string
+        referring_site:
+          description: The website that the subscriber was referred from
+          type: string
+          example: https://www.blog.com
+        referral_code:
+          description: >-
+            The code associated to this subscriber to refer others. When a new
+            subscription is created with this referral code, credit for the
+            referral goes to this subscription.
+          type: string
+        stripe_customer_id:
+          description: The Customer ID associated with this subscription in Stripe
+          type: string
+      required:
+        - id
+        - email
+        - status
+        - created
+        - subscription_tier
+        - utm_source
+        - utm_medium
+        - utm_channel
+        - utm_campaign
+        - referring_site
+        - referral_code
+    SubscriptionExpanded:
+      title: Subscription
+      description: The subscription object
+      x-stoplight:
+        id: qwmzttzpepf0w
+      type: object
+      x-examples:
+        example-1:
+          id: sub_00000000-0000-0000-0000-000000000000
+          email: example@example.com
+          status: active
+          created: '1666793673'
+          subscription_tier: string
+          source: string
+          medium: string
+          channel: string
+          embed_name: string
+          referring_site: string
+          stats:
+            emails_received: string
+            open_rate: 0
+            click_through_rate: 0
+          custom_fields:
+            - name: string
+              type: string
+              value: string
+      required:
+        - id
+        - email
+        - status
+        - created
+        - subscription_tier
+        - utm_source
+        - utm_medium
+        - utm_channel
+        - utm_campaign
+        - referring_site
+        - referral_code
+      properties:
+        tags:
+          $ref: '#/components/schemas/SubscriptionTags'
+          x-stoplight:
+            id: pxjb68anwzu3i
+        id:
+          description: The prefixed subscription id
+          type: string
+          example: sub_00000000-0000-0000-0000-000000000000
+        email:
+          type: string
+          example: example@example.com
+          format: email
+        status:
+          description: >-
+            The status of the subscription.<br>`validating` - The email address
+            is being validated.<br>`invalid` - The email address is
+            invalid.<br>`pending` - The email address is valid, but the
+            subscription is pending double opt-in.<br>`active` - The email was
+            valid and the subscription is active.<br>`inactive` - The
+            subscription was made inactive, possibly due to an
+            unsubscribe.<br>`needs_attention` - The subscription requires
+            approval or denial.
+          type: string
+          example: active
+          enum:
+            - validating
+            - invalid
+            - pending
+            - active
+            - inactive
+            - needs_attention
+        created:
+          description: >-
+            The date the subscription was created. Measured in seconds since the
+            Unix epoch
+          type: integer
+          example: 1666800076
+        subscription_tier:
+          description: The current tier of the subscription.
+          type: string
+          enum:
+            - free
+            - premium
+          example: free
+        utm_source:
+          description: The acquisition source; where the subscriber came from
+          type: string
+          example: Twitter
+        utm_medium:
+          description: The acquisition medium; how the subscriber got to your publication
+          type: string
+          example: organic
+        utm_channel:
+          description: The acquisition channel
+          type: string
+          example: website
+          enum:
+            - ''
+            - website
+            - import
+            - embed
+            - api
+            - referral
+            - recommendation
+            - magic_link
+            - boost
+            - boost_send
+            - boost_direct_link
+        utm_campaign:
+          description: The acquisition campaign
+          type: string
+        referring_site:
+          description: The website that the subscriber was referred from
+          type: string
+          example: https://www.blog.com
+        referral_code:
+          description: >-
+            The code associated to this subscriber to refer others. When a new
+            subscription is created with this referral code, credit for the
+            referral goes to this subscription.
+          type: string
+        custom_fields:
+          $ref: '#/components/schemas/SubscriptionCustomFields'
+        stats:
+          $ref: '#/components/schemas/SubscriptionStats'
+    SubscriptionCustomFields:
+      title: SubscriptionCustomFields
+      description: >-
+        Optional list of custom fields for a subscription. Retrievable by
+        including `expand: [custom_field]` in the request body.
+      x-stoplight:
+        id: tykiqw94yed5a
+      type: array
+      x-internal: false
+      items:
+        $ref: '#/components/schemas/CustomField'
+    SubscriptionStats:
+      title: SubscriptionStats
+      description: >-
+        Optional list of stats for a subscription. Retrievable by including
+        `expand: [stats]` in the request body.
+      x-stoplight:
+        id: trtodo6yec1t9
+      type: object
+      x-internal: false
+      properties:
+        emails_received:
+          description: The total number of emails that have been sent to this subscriber
+          type: integer
+          example: 25
+        open_rate:
+          description: The percentage of emails that the subscriber has opened
+          type: number
+          minimum: 0
+          maximum: 100
+          example: 60.1
+        click_through_rate:
+          description: The percentage of emails that the subscriber has clicked a link in
+          type: number
+          example: 25
+          minimum: 0
+          maximum: 100
+    SubscriptionTags:
+      title: SubscriptionTags
+      description: >-
+        Optional list of tags form a subscription. Retrievable by including
+        `expand: [tags]` in the request body.
+
+        Max limit of 100 unique tags per publication.
+      x-stoplight:
+        id: 2lfoiiactqerd
+      type: array
+      example:
+        - Premium
+        - Basic
+        - Active
+        - Engaged
+      items:
+        x-stoplight:
+          id: v7lwpr9quql15
+        type: string
+        example: Premium
+    Post:
+      title: Post
+      x-stoplight:
+        id: w4yo4wkzjdd1v
+      type: object
+      required:
+        - id
+        - subtitle
+        - title
+        - authors
+        - created
+        - status
+        - publish_date
+        - displayed_date
+        - split_tested
+        - subject_line
+        - preview_text
+        - slug
+        - thumbnail_url
+        - web_url
+        - audience
+        - platform
+        - content_tags
+        - hidden_from_feed
+      properties:
+        title:
+          description: The title displayed in web views
+          type: string
+          example: New Post Title
+        id:
+          description: The prefixed post id
+          type: string
+          example: post_00000000-0000-0000-0000-000000000000
+          pattern: ^(post_)
+        subtitle:
+          description: The subtitle displayed in web views
+          type: string
+          example: New post subtitle
+        authors:
+          description: An array of author names
+          type: array
+          uniqueItems: true
+          items:
+            type: string
+            example: Clark Kent
+        created:
+          description: >-
+            The time the post was created. Measured in seconds since the Unix
+            epoch
+          type: integer
+          example: 1666800076
+        status:
+          description: >-
+            The status of the post.<br>`draft` - not been
+            scheduled.<br>`confirmed` - The post will be active after the
+            `scheduled_at`.<br>`archived` - The post is no longer active.
+          type: string
+          enum:
+            - draft
+            - confirmed
+            - archived
+          default: draft
+          example: confirmed
+        publish_date:
+          description: >-
+            The time the post was set to be published. Measured in seconds since
+            the Unix epoch
+          type: integer
+          example: 1666800076
+          nullable: true
+        displayed_date:
+          description: >-
+            The time displayed in place of the `publish_date`. Measured in
+            seconds since the Unix epoch
+          type: integer
+          example: 1666800076
+          nullable: true
+        split_tested:
+          description: >-
+            A flag to indicate if a split test was done. Only applicable to
+            email posts.
+          type: boolean
+        subject_line:
+          description: >-
+            The email subject line. In cases of A/B Testing, this will be
+            adjusted to the winning subject line.
+          type: string
+          example: Check this out
+        preview_text:
+          description: The email preview text
+          type: string
+          example: More news on the horizon
+        slug:
+          description: The web slug where this post can be accessed.
+          type: string
+        thumbnail_url:
+          description: >-
+            The URL of the thumbnail. Defaults to the Publication logo if not
+            set.
+          type: string
+        web_url:
+          description: >-
+            The full URL where this post can be accessed on the web. Only
+            applicable if the platform is `web` or `both`.
+          type: string
+        audience:
+          description: >-
+            The audience that the post is available to on the web. Only
+            applicable if the platform is `web` or `both`.
+          type: string
+          enum:
+            - free
+            - premium
+            - both
+        platform:
+          description: The platform that the post is or will be published to.
+          type: string
+          enum:
+            - web
+            - email
+            - both
+        content_tags:
+          description: All content tags that were associated with the post.
+          type: array
+          items:
+            type: string
+        meta_default_description:
+          description: >-
+            Meta tag description for the post, called SEO Description in the
+            admin UI
+          type: string
+          example: A post with great content
+          nullable: true
+        meta_default_title:
+          description: meta tag title for the post, called SEO Title in the admin UI
+          type: string
+          example: My great post
+          nullable: true
+        content:
+          $ref: '#/components/schemas/PostContent'
+        stats:
+          $ref: '#/components/schemas/PostStats'
+        hidden_from_feed:
+          description: A flag to indicate if the post is hidden from the website feed.
+          type: boolean
+          x-stoplight:
+            id: peuj8ftkqndwz
+          default: false
+    PostClickStats:
+      title: ClickStats
+      description: Details about specific URL's click stats from a post.
+      x-stoplight:
+        id: 36my8246m0elw
+      type: object
+      x-internal: false
+      properties:
+        url:
+          description: The URL the stats are for
+          type: string
+        email:
+          description: >-
+            URL stats scoped only to email recipients. Not relevant for posts
+            published only to web
+          type: object
+          properties:
+            clicks:
+              type: integer
+              example: 10
+            unique_clicks:
+              type: integer
+              example: 8
+            click_through_rate:
+              description: >-
+                The percentage of email clicks on the URL compared to the total
+                number of recipients
+              type: number
+              example: 30
+        web:
+          description: >-
+            Stats scoped only to web views. Not relevant for posts published
+            only to email
+          type: object
+          properties:
+            clicks:
+              type: integer
+              example: 10
+            unique_clicks:
+              type: integer
+              example: 8
+            click_through_rate:
+              description: >-
+                The percentage of clicks on the URL compared to the total number
+                of web views
+              type: number
+              example: 30
+        total_clicks:
+          type: integer
+          example: 10
+        total_unique_clicks:
+          type: integer
+          example: 8
+        total_click_through_rate:
+          description: >-
+            The percentage of clicks on the URL compared to the total number of
+            recipients and web views
+          type: number
+          example: 30
+    PostContent:
+      title: PostContent
+      description: >-
+        Optional html content for a post. Retrievable by including any of
+        `expand: [free_web_content, free_email_content, free_rss_content,
+        premium_web_content, premium_email_content]` in the post request body.
+
+
+        **Note:** Generating HTML is slow. We recommend only requesting the HTML
+        versions you need at the time.
+      x-stoplight:
+        id: 8raevvy1qkjgq
+      type: object
+      x-internal: false
+      properties:
+        free:
+          description: The requested free post HTML. This HTML has paywalls enforced.
+          type: object
+          properties:
+            web:
+              description: The web HTML rendered to a free or annonomous reader.
+              type: string
+              example: <HTML><body><h1>New Post</h1></body></HTML>
+            email:
+              description: The email HTML rendered to a free reader.
+              type: string
+              example: <HTML><body><h1>New Post</h1></body></HTML>
+            rss:
+              description: The HTML that is rendered in RSS feeds.
+              type: string
+              example: <HTML><body><h1>New Post</h1></body></HTML>
+        premium:
+          description: >-
+            The requested premium post HTML. This HTML does not have paywalls
+            enforced.
+          type: object
+          properties:
+            web:
+              description: The website HTML rendered to a free reader
+              type: string
+              example: <HTML><body><h1>New Post</h1></body></HTML>
+            email:
+              description: The email HTML rendered to a premium reader
+              type: string
+              example: <HTML><body><h1>New Post</h1></body></HTML>
+    PostStats:
+      title: PostStats
+      description: >-
+        Optional list of stats for a post. Retrievable by including `expand:
+        [stats]` in the post request body.
+      x-stoplight:
+        id: 3ai4n60s897re
+      type: object
+      x-internal: false
+      properties:
+        email:
+          description: >-
+            Stats scoped only to email recipients. Not relevant for posts
+            published only to web
+          type: object
+          properties:
+            recipients:
+              description: Total number of email recipients
+              type: integer
+              example: 100
+              default: 0
+            opens:
+              description: Total number of email opens
+              type: integer
+              example: 50
+              default: 0
+            unique_opens:
+              description: Total number of unique email opens
+              type: integer
+              minimum: 0
+              default: 0
+              example: 45
+            open_rate:
+              description: The percentage of emails that have been opened
+              type: number
+              default: 0
+              minimum: 0
+              format: float
+            clicks:
+              description: Total number of email clicks
+              type: integer
+              example: 10
+              default: 0
+            unique_clicks:
+              description: Unique number of email clicks
+              type: integer
+              example: 8
+              default: 0
+            click_rate:
+              description: The percentage of emails that have been clicked
+              type: number
+              default: 0
+              format: float
+            unsubscribes:
+              description: Total number of email unsubscribes
+              type: integer
+              example: 1
+              default: 0
+            spam_reports:
+              description: The number of subscribers that reported this post email as spam
+              type: integer
+              minimum: 0
+              example: 1
+              default: 0
+        web:
+          description: >-
+            Stats scoped only to web views. Not relevant for posts published
+            only to email
+          type: object
+          properties:
+            views:
+              description: Total number of web views
+              type: integer
+              example: 200
+              default: 0
+            clicks:
+              description: Total number of web clicks
+              type: integer
+              example: 40
+              default: 0
+        clicks:
+          description: An array of click statistics for each URL in the post
+          type: array
+          items:
+            $ref: '#/components/schemas/PostClickStats'
+    Publication:
+      type: object
+      example:
+        id: pub_00000000-0000-0000-0000-000000000000
+        name: Example publication
+        referral_program_enabled: false
+        created: 1694198809
+      properties:
+        id:
+          description: A unique prefixed id of the publication
+          type: string
+          example: pub_00000000-0000-0000-0000-000000000000
+          format: regex
+          pattern: ^(pub_)
+        name:
+          description: The name of the publication
+          type: string
+          example: The Daily Letter
+        referral_program_enabled:
+          description: >-
+            A boolean field indicating whether the referral program is active
+            for this publication.
+          type: boolean
+        created:
+          description: >-
+            The time that the publication was created. Measured in seconds since
+            the Unix epoch
+          type: number
+          x-stoplight:
+            id: 3lggayd0zn3hg
+          example: 1694198809
+        stats:
+          $ref: '#/components/schemas/PublicationStats'
+      required:
+        - id
+        - name
+        - referral_program_enabled
+        - created
+    PublicationStats:
+      title: PublicationStats
+      description: >-
+        Optional list of stats for a publication. Retrievable by including an
+        `expand` array in the publication request body. Add `"stats"` to the
+        array to retrieve all, or add individual stats (prefaced with `stat_`)
+        to only retrieve specific ones.
+
+
+        Examples:
+
+        {
+          "expand": ["stats"]
+        }
+
+
+        {
+          "expand": ["stat_active_subscriptions", "stat_average_click_rate"]
+        }
+      x-stoplight:
+        id: 8efq99tljxgch
+      type: object
+      x-internal: false
+      properties:
+        active_subscriptions:
+          description: Total number of active free and premium subscriptions
+          type:
+            - integer
+            - boolean
+          example: 100
+        active_premium_subscriptions:
+          description: Total number of active premium/paid subscriptions
+          type:
+            - integer
+            - boolean
+          example: 20
+        active_free_subscriptions:
+          description: Total number of active free subscriptions
+          type:
+            - integer
+            - boolean
+          example: 80
+        average_open_rate:
+          description: The publications historical average open rate
+          type:
+            - number
+            - boolean
+          example: 60.1
+        average_click_rate:
+          description: The publications historical average click through rate
+          type:
+            - number
+            - boolean
+          example: 25
+        total_sent:
+          description: Total number of emails sent
+          type:
+            - integer
+            - boolean
+          example: 25000
+        total_unique_opened:
+          description: >-
+            Total number of uniquely opened emails. Only counts the first open
+            for each subscriber.
+          type:
+            - integer
+            - boolean
+          example: 15025
+        total_clicked:
+          description: The total number of links clicked from emails.
+          type:
+            - integer
+            - boolean
+          example: 6250
+    Segment:
+      title: Segment
+      description: The segment object. To expand results, see the results endpoint.
+      x-stoplight:
+        id: e2rieygnd511w
+      type: object
+      properties:
+        id:
+          description: The prefixed ID of the Segment object.
+          type: string
+          example: seg_00000000-0000-0000-0000-000000000000
+          pattern: ^(seg_)
+        name:
+          description: The name of the segment.
+          type: string
+        type:
+          description: >-
+            The type of segment.<br>`dynamic` - The segment is recalculated at
+            set intervals.<br>`static` - The segment is calculated once at
+            creation.<br>`manual` - The segment is not calculated at all. The
+            results are created via CSV.
+          type: string
+          enum:
+            - dynamic
+            - static
+            - manual
+          example: dynamic
+        last_calculated:
+          description: >-
+            The time the Segment was last calculated. Measured in seconds since
+            the Unix epoch
+          type: integer
+          example: 1666800076
+          nullable: true
+        total_results:
+          description: >-
+            The total number of subscriptions that belong in the segment from
+            the last calculation.
+          type: integer
+          example: 15
+        status:
+          description: >-
+            The status of the segment's most recent calculation.<br>`pending` -
+            The segment has not been calculated yet.<br>`processing` - The
+            calculation is in progress, and has not completed.<br>`completed` -
+            The calculation was successful.<br>`failed` - Something went wrong
+            during the calculation.
+          type: string
+          enum:
+            - pending
+            - processing
+            - completed
+            - failed
+          example: completed
+        active:
+          description: >-
+            Dynamic segments are marked inactive if they haven't been used in a
+            specific period of time. Inactive segments will not automatically be
+            recalculated.
+          type: boolean
+      required:
+        - id
+        - name
+        - type
+        - last_calculated
+        - total_results
+        - status
+        - active
+    Automation:
+      title: Automation
+      x-stoplight:
+        id: yzoyh47yxfabe
+      type: object
+      required:
+        - id
+        - status
+        - name
+      properties:
+        description:
+          type: string
+          x-stoplight:
+            id: 9cxbm2gsp5rs7
+          example: Sends 2 days after signing up
+          readOnly: true
+        id:
+          description: A unique prefixed id of the automation
+          type: string
+          x-stoplight:
+            id: t8f9ghq7awgc1
+          pattern: ^(aut_)
+          example: aut_00000000-0000-0000-0000-000000000000
+          format: regex
+          readOnly: true
+        status:
+          x-stoplight:
+            id: 9z10mue7z62mn
+          enum:
+            - running
+            - finishing
+            - inactive
+          readOnly: true
+          type: string
+        name:
+          type: string
+          x-stoplight:
+            id: gcmqw0herz7sj
+          example: Custom welcome series
+          readOnly: true
+    AutomationJourney:
+      title: AutomationJourney
+      description: A subscribers' journey through an automation flow.
+      x-stoplight:
+        id: 5mi355v7syqid
+      type: object
+      required:
+        - id
+        - automation_id
+        - subscription_id
+        - status
+      properties:
+        id:
+          description: The prefixed automation journey id
+          type: string
+          x-stoplight:
+            id: 55x0t7vx6e8bi
+          format: regex
+          pattern: ^(aj_)
+          example: aj_00000000-0000-0000-0000-000000000000
+          readOnly: true
+        automation_id:
+          description: |
+            The prefixed automation id
+          type: string
+          x-stoplight:
+            id: p02nikcuv5hd7
+          pattern: ^(aut_)
+          format: regex
+          readOnly: true
+        subscription_id:
+          description: The prefixed subscription id
+          type: string
+          x-stoplight:
+            id: vs55s7or62svd
+          pattern: ^(sub_)
+          format: regex
+          readOnly: true
+        status:
+          x-stoplight:
+            id: jpfc5uzxt2dx7
+          enum:
+            - initiated
+            - running
+            - completed
+            - failed
+          readOnly: true
+          type: string
+        started_at:
+          description: >-
+            The time that the subscriber started their flow through the
+            automation. Measured in seconds since the Unix epoch.
+          type: integer
+          x-stoplight:
+            id: zesvr00yamd92
+          example: 1706532562
+          readOnly: true
+        completed_at:
+          description: >-
+            The time that the subscriber finished their flow through the
+            automation. Measured in seconds since the Unix epoch.
+          type: integer
+          x-stoplight:
+            id: 82ignyptz7w44
+          example: 1706541627
+          readOnly: true
+    SubscriptionsBulkUpdateStatusRequest:
+      type: object
+      properties:
+        subscription_ids:
+          description: An array of prefixed subscription IDs
+          type: array
+          items:
+            type: string
+        new_status:
+          description: The new status value to apply to these subscription IDs
+          enum:
+            - active
+            - inactive
+          type: string
+      required:
+        - subscription_ids
+        - new_status
+    SubscriptionsCreateNewRequest:
+      type: object
+      example:
+        email: bruce.wayne@wayneenterprise.com
+        reactivate_existing: false
+        send_welcome_email: false
+        utm_source: WayneEnterprise
+        utm_campaign: fall_2022_promotion
+        utm_medium: organic
+        referring_site: www.wayneenterprise.com/blog
+        custom_fields:
+          - name: First Name
+            value: Bruce
+          - name: Last Name
+            value: Wayne
+      required:
+        - email
+      properties:
+        email:
+          description: The email address of the subscription.
+          type: string
+          format: email
+          example: bruce.wayne@wayneenterprise.com
+        reactivate_existing:
+          description: >-
+            Whether or not to reactivate the subscription if they have already
+            unsubscribed. This option should be used only if the subscriber is
+            knowingly resubscribing.
+          type: boolean
+          default: false
+        send_welcome_email:
+          type: boolean
+          default: false
+        utm_source:
+          description: The source of the subscription.
+          type: string
+          example: twitter
+        utm_medium:
+          description: The medium of the subscription
+          type: string
+          example: organic
+        utm_campaign:
+          description: The acquisition campaign of the subscription
+          type: string
+          example: fall_2022
+        referring_site:
+          description: The website that the subscriber was referred from
+          type: string
+          example: https://google.com
+        referral_code:
+          description: >-
+            This should be a subscribers referral_code. This gives referral
+            credit for the new subscription.
+          type: string
+        custom_fields:
+          description: >-
+            The custom fields must already exist for the publication. Any new
+            custom fields here will be discarded.
+          type: array
+          items:
+            $ref: '#/components/schemas/CustomFieldValue'
+        double_opt_override:
+          description: Override publication double-opt settings for this subscription.
+          x-stoplight:
+            id: 2f6ewbrexb1cn
+          enum:
+            - 'on'
+            - 'off'
+            - not_set
+          type: string
+        tier:
+          description: The tier for this subscription.
+          type: string
+          enum:
+            - free
+            - premium
+        stripe_customer_id:
+          description: The Stripe customer ID for this subscription.
+          type: string
+        automation_ids:
+          description: >-
+            Enroll the subscriber into automations after their subscription has
+            been created. Requires the automations to have an active *Add by
+            API* trigger.
+          type: array
+          x-stoplight:
+            id: u38luaheibmto
+          items:
+            x-stoplight:
+              id: a7h1jnxi796g8
+            type: string
+            format: regex
+            example: aut_00000000-0000-0000-0000-000000000000
+            pattern: ^(aut_)
+    SubscriptionsBulkUpdateStatusRequest1:
+      type: object
+      properties:
+        subscription_ids:
+          description: An array of prefixed subscription IDs
+          type: array
+          x-stoplight:
+            id: 7k5m1tzztoek6
+          items:
+            x-stoplight:
+              id: 2gdvxlnw5ifm1
+            type: string
+        new_status:
+          description: The new status value to apply to these subscription IDs
+          x-stoplight:
+            id: yzo26m9whbsex
+          enum:
+            - active
+            - inactive
+          type: string
+      required:
+        - subscription_ids
+        - new_status
+    SubscriptionsUpdateSubscriberRequest:
+      type: object
+      example:
+        tier: premium
+        stripe_customer_id: cus_AbcDef123987xY
+        unsubscribe: false
+        custom_fields:
+          - name: First Name
+            value: JOHN
+          - name: Birthday
+            delete: true
+      properties:
+        tier:
+          description: Optional parameter to set the tier for this subscription.
+          type: string
+          enum:
+            - free
+            - premium
+        stripe_customer_id:
+          description: >-
+            Optional parameter to set the Stripe customer ID on this
+            subscription.
+          type: string
+        unsubscribe:
+          description: >-
+            Optional parameter to unsubscribe the subscriber. If they are a
+            premium subscription, this will also end their billing.
+          type: boolean
+          default: false
+          example: false
+        custom_fields:
+          description: >-
+            The custom fields must already exist for the publication. Any new
+            custom fields here will be discarded.
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                description: The name of the existing custom field
+                type: string
+              value:
+                description: >-
+                  The value to stored for the subscription. Will be ignored if
+                  `delete: true` is included.
+                type: string
+              delete:
+                description: >-
+                  Optionally delete any value stored. If true, any passed in
+                  `value` attribute will be ignored.
+                type: boolean
+                default: false
+    SubscriptionsBulkUpdateFieldsRequest:
+      type: object
+      properties:
+        subscriptions:
+          description: An array of objects representing the subscriptions to be updated
+          type: array
+          x-stoplight:
+            id: 5lkkm715bdcq4
+          items:
+            x-stoplight:
+              id: 9waw25ks35mke
+            type: object
+            properties:
+              subscription_id:
+                description: The prefixed subscription ID
+                type: string
+                x-stoplight:
+                  id: hzticzv9wdqjh
+              tier:
+                description: The Tier of the Subscription (not required)
+                x-stoplight:
+                  id: o5x4hj5k7ljlp
+                enum:
+                  - free
+                  - premium
+                type: string
+              stripe_customer_id:
+                description: The Stripe Customer ID of the subscription (not required)
+                type: string
+                x-stoplight:
+                  id: alsqmitbaif1q
+              unsubscribe:
+                description: >-
+                  A boolean value specifying whether to unsubscribe this
+                  subscription from the publication (not required)
+                type: boolean
+                x-stoplight:
+                  id: zsglxmqfy45mk
+              custom_fields:
+                description: An array of custom field objects to update
+                type: array
+                x-stoplight:
+                  id: 6d9bhqiuvy3qy
+                items:
+                  x-stoplight:
+                    id: qx3j1qlz0o8pn
+                  type: object
+                  properties:
+                    display:
+                      description: The display value of the custom field
+                      type: string
+                      x-stoplight:
+                        id: 1fe6q183uswhb
+                    value:
+                      description: The value of the custom field
+                      type: string
+                      x-stoplight:
+                        id: dgzgi9u15rrr6
+                    delete:
+                      description: >-
+                        A boolean value to specify whether to delete this custom
+                        field entry from the subscription
+                      type: boolean
+                      x-stoplight:
+                        id: nrxynbhipzx5j
+            required:
+              - subscription_id
+    SubscriptionsBulkUpdateFieldsRequest1:
+      type: object
+      properties:
+        subscriptions:
+          description: An array of objects representing the subscriptions to be updated
+          type: array
+          x-stoplight:
+            id: s9y6xaxv7krdd
+          items:
+            x-stoplight:
+              id: ppp6qqxftqlrj
+            type: object
+            properties:
+              subscription_id:
+                description: The prefixed subscription ID
+                type: string
+                x-stoplight:
+                  id: dzuevcz6n6eka
+              tier:
+                description: The Tier of the Subscription (not required)
+                x-stoplight:
+                  id: bat4ia3t0j7na
+                enum:
+                  - free
+                  - premium
+                type: string
+              stripe_customer_id:
+                description: The Stripe Customer ID of the subscription (not required)
+                type: string
+                x-stoplight:
+                  id: 59ze7ad6zup94
+              unsubscribe:
+                description: >-
+                  A boolean value specifying whether to unsubscribe this
+                  subscription from the publication (not required)
+                type: boolean
+                x-stoplight:
+                  id: oxn0gpgtb1kie
+              custom_fields:
+                description: An array of custom field objects to update
+                type: array
+                x-stoplight:
+                  id: ugk6m5arzih3r
+                items:
+                  x-stoplight:
+                    id: 3hbu15odjkx7m
+                  type: object
+                  properties:
+                    display:
+                      description: The display value of the custom field
+                      type: string
+                      x-stoplight:
+                        id: fut7qxlkmvpn4
+                    value:
+                      description: The value of the custom field
+                      type: string
+                      x-stoplight:
+                        id: ypiajjjr46069
+                    delete:
+                      description: >-
+                        A boolean value to specify whether to delete this custom
+                        field entry from the subscription
+                      type: boolean
+                      x-stoplight:
+                        id: zda9gshmp0u4d
+            required:
+              - subscription_id
+    CustomFieldsCreatePublicationCustomFieldRequest:
+      type: object
+      properties:
+        kind:
+          x-stoplight:
+            id: tqnncf3dp1ak6
+          enum:
+            - string
+            - integer
+            - boolean
+            - date
+            - datetime
+          type: string
+        display:
+          type: string
+          x-stoplight:
+            id: p0975jdaqv2qi
+      required:
+        - kind
+        - display
+    CustomFieldsUpdatePublicationCustomFieldRequest:
+      type: object
+      properties:
+        display:
+          type: string
+    CustomFieldsUpdatePublicationCustomFieldRequest1:
+      type: object
+      properties:
+        display:
+          type: string
+          x-stoplight:
+            id: vystzvcwv5671
+    AutomationJourneysAddExistingSubscriptionRequest:
+      type: object
+      properties:
+        email:
+          description: The email address associated with the subscription
+          type: string
+          x-stoplight:
+            id: z9rgisym8lbx5
+          example: example@example.com
+        subscription_id:
+          description: The prefixed ID of the subscription
+          type: string
+          x-stoplight:
+            id: 5rupjfkjnq1ll
+          example: sub_00000000-0000-0000-0000-000000000000
+        double_opt_override:
+          description: Override publication double-opt settings for this subscription.
+          x-stoplight:
+            id: bh0p8rk02bh1e
+          enum:
+            - 'on'
+            - 'off'
+            - not_set
+          type: string
+    SubscriptionTagsCreateNewRequest:
+      type: object
+      properties:
+        tags:
+          description: Tags that can be used to group subscribers
+          type: array
+          x-stoplight:
+            id: rkvymu3epmdh2
+          example:
+            - Premium
+            - Basic
+            - Active
+            - Engaged
+          items:
+            x-stoplight:
+              id: ummnvdmw4stxe
+            type: string
+            example: Premium
+    PublicationsGetAllResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Publication'
+        limit:
+          description: >-
+            The limit placed on the results. If no limit was specified in the
+            request,this defaults to 10.
+          type: integer
+        page:
+          description: >-
+            The page number the results are from. If no page was specified in
+            the request, this defaults to page 1.
+          type: integer
+          default: 1
+          minimum: 0
+        total_results:
+          description: The total number of results from all pages.
+          type: integer
+        total_pages:
+          description: The total number of pages.
+          type: integer
+      required:
+        - data
+        - limit
+        - page
+        - total_results
+        - total_pages
+    PublicationsGetSingleResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/Publication'
+      required:
+        - data
+    PostsGetAllResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Post'
+        limit:
+          description: >-
+            The limit placed on the results. If no limit was specified in the
+            request,this defaults to 10.
+          type: integer
+        page:
+          description: >-
+            The page number the results are from. If no page was specified in
+            the request, this defaults to page 1.
+          type: integer
+          default: 1
+          minimum: 0
+        total_results:
+          description: The total number of results from all pages.
+          type: integer
+        total_pages:
+          description: The total number of pages.
+          type: integer
+      required:
+        - data
+        - limit
+        - page
+        - total_results
+        - total_pages
+    PostsDestroyPostResponse:
+      type: object
+      properties: {}
+    PostsGetSingleResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/Post'
+      required:
+        - data
+    SubscriptionsGetAllResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/SubscriptionExpanded'
+        limit:
+          description: >-
+            The limit placed on the results. If no limit was specified in the
+            request,this defaults to 10.
+          type: integer
+        page:
+          description: >-
+            The page number the results are from. If no page was specified in
+            the request, this defaults to page 1.
+          type: integer
+          default: 1
+          minimum: 0
+        total_results:
+          description: The total number of results from all pages.
+          type: integer
+        total_pages:
+          description: The total number of pages.
+          type: integer
+      required:
+        - data
+        - limit
+        - page
+        - total_results
+        - total_pages
+    SubscriptionsBulkUpdateStatusResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          required:
+            - subscription_update_id
+          properties:
+            subscription_update_id:
+              description: >-
+                The ID of the Subscription Update object responsible for
+                handling the update job
+              type: string
+      required:
+        - data
+    SubscriptionsCreateNewResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/Subscription'
+      required:
+        - data
+    SubscriptionsBulkUpdateStatus200Response:
+      type: object
+      properties:
+        data:
+          x-stoplight:
+            id: k57xx4p7cq6i3
+          type: object
+          required:
+            - subscription_update_id
+          properties:
+            subscription_update_id:
+              description: >-
+                The ID of the Subscription Update object responsible for
+                handling the update job
+              x-stoplight:
+                id: k98dvczd0e785
+              type: string
+      required:
+        - data
+    SubscriptionsDeleteSubscriptionResponse:
+      type: object
+      properties: {}
+      example: {}
+    SubscriptionsGetSingleResponse:
+      description: The requested subscription object
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/SubscriptionExpanded'
+      required:
+        - data
+    SubscriptionsUpdateSubscriberResponse:
+      description: The updated subscription object
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/Subscription'
+      required:
+        - data
+    SubscriptionsUpdateSubscriber200Response:
+      description: The updated subscription object
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/Subscription'
+      required:
+        - data
+    SubscriptionsShowSingleBySubscriberIdResponse:
+      description: The requested subscription object
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/SubscriptionExpanded'
+      required:
+        - data
+    SubscriptionsGetSingleByEmailResponse:
+      description: The requested subscription object
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/SubscriptionExpanded'
+      required:
+        - data
+    SubscriptionsBulkUpdateFieldsResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            subscription_update_id:
+              description: >-
+                The ID of the Subscription Update object responsible for
+                handling the update job
+              x-stoplight:
+                id: hbsrfcjhpldby
+              type: string
+      required:
+        - data
+    SubscriptionsBulkUpdateFields200Response:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            subscription_update_id:
+              description: >-
+                The ID of the Subscription Update object responsible for
+                handling the update job
+              x-stoplight:
+                id: 3wryi6tn9zd4q
+              type: string
+      required:
+        - data
+    SegmentsGetAllResponse:
+      type: object
+      properties:
+        data:
+          description: An array of all segments.
+          type: array
+          items:
+            $ref: '#/components/schemas/Segment'
+        limit:
+          description: >-
+            The limit placed on the results. If no limit was specified in the
+            request,this defaults to 10.
+          type: integer
+        page:
+          description: >-
+            The page number the results are from. If no page was specified in
+            the request, this defaults to page 1.
+          type: integer
+          default: 1
+          minimum: 0
+        total_results:
+          description: The total number of results from all pages.
+          type: integer
+        total_pages:
+          description: The total number of pages.
+          type: integer
+      required:
+        - data
+        - limit
+        - page
+        - total_results
+        - total_pages
+    SegmentsDeleteSegmentResponse:
+      type: object
+      properties: {}
+      example: {}
+    SegmentsGetSingleResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/Segment'
+      required:
+        - data
+    SegmentsGetSubscriberIdsResponse:
+      type: object
+      properties:
+        data:
+          description: An array of subscription ids
+          type: array
+          example:
+            - sub_00000000-0000-0000-0000-000000000000
+            - sub_00000000-1111-1111-1111-111111111111
+          items:
+            description: The prefixed subscription id
+            type: string
+            pattern: ^(sub_)
+        limit:
+          description: >-
+            The limit placed on the results. If no limit was specified in the
+            request,this defaults to 10.
+          type: integer
+        page:
+          description: >-
+            The page number the results are from. If no page was specified in
+            the request, this defaults to page 1.
+          type: integer
+          default: 1
+          minimum: 0
+        total_results:
+          description: The total number of results from all pages.
+          type: integer
+        total_pages:
+          description: The total number of pages.
+          type: integer
+      required:
+        - data
+        - limit
+        - page
+        - total_results
+        - total_pages
+    EmailBlastsGetAllResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/EmailBlast'
+        limit:
+          description: >-
+            The limit placed on the results. If no limit was specified in the
+            request,this defaults to 10.
+          type: integer
+        page:
+          description: >-
+            The page number the results are from. If no page was specified in
+            the request, this defaults to page 1.
+          type: integer
+          default: 1
+          minimum: 0
+        total_results:
+          description: The total number of results from all pages.
+          type: integer
+        total_pages:
+          description: The total number of pages.
+          type: integer
+      required:
+        - data
+        - limit
+        - page
+        - total_results
+        - total_pages
+    EmailBlastsGetEmailBlastResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/EmailBlast'
+      required:
+        - data
+    ReferralProgramDetailsRetrieveResponse:
+      type: object
+      properties:
+        data:
+          description: >-
+            A list of the milestones related to this publication's referral
+            program.
+          type: array
+          items:
+            $ref: '#/components/schemas/Milestone'
+        limit:
+          description: >-
+            The limit placed on the results. If no limit was specified in the
+            request,this defaults to 10.
+          type: integer
+        page:
+          description: >-
+            The page number the results are from. If no page was specified in
+            the request, this defaults to page 1.
+          type: integer
+          default: 1
+          minimum: 0
+        total_results:
+          description: The total number of results from all pages.
+          type: integer
+        total_pages:
+          description: The total number of pages.
+          type: integer
+      required:
+        - data
+        - limit
+        - page
+        - total_results
+        - total_pages
+    CustomFieldsGetAllResponse:
+      type: object
+      properties:
+        data:
+          x-stoplight:
+            id: xgqir8wmsgweu
+          type: array
+          items:
+            x-stoplight:
+              id: l9tbmy41je34n
+            type: object
+            properties:
+              id:
+                type: string
+                x-stoplight:
+                  id: dbt4deqvrucbh
+              kind:
+                x-stoplight:
+                  id: 44t4qsjaz6qt6
+                enum:
+                  - string
+                  - integer
+                  - boolean
+                  - date
+                  - datetime
+                type: string
+              display:
+                type: string
+                x-stoplight:
+                  id: rp06xgqs2vwzt
+              created:
+                type: integer
+                x-stoplight:
+                  id: hfn37l8waq65f
+    CustomFieldsCreatePublicationCustomFieldResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          x-stoplight:
+            id: 4romfiyvkx3ge
+          properties:
+            id:
+              type: string
+              x-stoplight:
+                id: sj09d7tyi314n
+            kind:
+              x-stoplight:
+                id: 8spknd648i56s
+              enum:
+                - string
+                - integer
+                - boolean
+                - date
+                - datetime
+              type: string
+            display:
+              type: string
+              x-stoplight:
+                id: n82zmtd49hjrz
+            created:
+              type: integer
+              x-stoplight:
+                id: ds98r91chqlop
+          required:
+            - id
+            - kind
+            - display
+            - created
+    CustomFieldsDeletePublicationCustomFieldResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          x-stoplight:
+            id: y9i4exziqmhyy
+    CustomFieldsShowSpecificResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          x-stoplight:
+            id: yxnx7ckirz6lh
+          properties:
+            id:
+              type: string
+              x-stoplight:
+                id: l3pcff8cpq5oz
+            display:
+              type: string
+              x-stoplight:
+                id: p8yaui0t620ey
+            kind:
+              x-stoplight:
+                id: kaovowm5r2n1c
+              enum:
+                - string
+                - integer
+                - boolean
+                - date
+                - datetime
+              type: string
+            created:
+              type: integer
+              x-stoplight:
+                id: rxqge0k9yvfg7
+    CustomFieldsUpdatePublicationCustomFieldResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            id:
+              type: string
+            display:
+              type: string
+            kind:
+              enum:
+                - string
+                - integer
+                - boolean
+                - date
+                - datetime
+              type: string
+            created:
+              type: integer
+    CustomFieldsUpdatePublicationCustomField200Response:
+      type: object
+      properties:
+        data:
+          type: object
+          x-stoplight:
+            id: etg6yofrt8pbc
+          properties:
+            id:
+              type: string
+              x-stoplight:
+                id: huepwawxj29qk
+            display:
+              type: string
+              x-stoplight:
+                id: 52mp1yl84nljs
+            kind:
+              x-stoplight:
+                id: xxeszbu9kbtm2
+              enum:
+                - string
+                - integer
+                - boolean
+                - date
+                - datetime
+              type: string
+            created:
+              type: integer
+              x-stoplight:
+                id: laf29u1fe818q
+    BulkSubscriptionUpdatesListSubscriptionUpdatesResponse:
+      type: object
+      properties:
+        data:
+          description: An array of Subscription Update objects
+          type: array
+          items:
+            x-stoplight:
+              id: 2hylp5cn6st6z
+            type: object
+            properties:
+              id:
+                description: The ID of the update object
+                type: string
+                x-stoplight:
+                  id: 81nj1bfmod87v
+              type:
+                description: The type of update (status or bulk)
+                x-stoplight:
+                  id: hvk3w4oqizjrt
+                enum:
+                  - status
+                  - bulk
+                type: string
+              params:
+                description: The parameters passed in for the update
+                type: string
+                x-stoplight:
+                  id: v9z0n1ihuc9nq
+              status:
+                description: The status of the update
+                x-stoplight:
+                  id: ho959em1j7sbn
+                enum:
+                  - pending
+                  - processing
+                  - complete
+                  - failed
+                type: string
+              publication_id:
+                description: The publication ID associated with this update
+                type: string
+                x-stoplight:
+                  id: aguqyix0i78tk
+              failure_reason:
+                description: >-
+                  If the job as a whole fails, this will detail the errors
+                  encountered
+                type:
+                  - string
+                x-stoplight:
+                  id: 9e84903h41jj8
+              completed:
+                description: The timestamp of the job's completion
+                type:
+                  - integer
+                x-stoplight:
+                  id: v34g2oimnp3mj
+              created:
+                description: The timestamp of the job's creation
+                type: integer
+                x-stoplight:
+                  id: xygdtlnbbf4ji
+              updated:
+                description: The timestamp of the job's update
+                type: integer
+                x-stoplight:
+                  id: qy2nzr2x7mvq1
+              error_log:
+                description: >-
+                  An array of errors encountered for individual updates within
+                  the job
+                type: array
+                x-stoplight:
+                  id: uk2ghw9lxa49i
+                items:
+                  x-stoplight:
+                    id: q7h55451iwxyt
+                  type: string
+    BulkSubscriptionUpdatesGetSingleUpdateResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          x-stoplight:
+            id: 5kldmu0lv1bxp
+          properties:
+            id:
+              description: The ID of the update object
+              type: string
+              x-stoplight:
+                id: 6e8qo09j7fr1e
+            type:
+              description: The type of update (status or bulk)
+              x-stoplight:
+                id: 93ul0uy0une2s
+              enum:
+                - bulk
+                - status
+              type: string
+            params:
+              description: The parameters passed in for the update
+              type: string
+              x-stoplight:
+                id: xh9fmwrxr8r22
+            status:
+              description: The status of the update
+              x-stoplight:
+                id: mtxjoaefx7y2o
+              enum:
+                - pending
+                - processing
+                - complete
+                - failed
+              type: string
+            publication_id:
+              description: The publication ID associated with this update
+              type: string
+              x-stoplight:
+                id: a8ec7kaw1es2g
+            failure_reason:
+              description: >-
+                If the job as a whole fails, this will detail the errors
+                encountered
+              type: string
+              x-stoplight:
+                id: ro5hb1r9u80fq
+            completed:
+              description: The timestamp of the job's completion
+              type: integer
+              x-stoplight:
+                id: m36gvnka9dhl8
+            created:
+              description: The timestamp of the job's creation
+              type: integer
+              x-stoplight:
+                id: fmt13c2ekhd1k
+            updated:
+              description: The timestamp of the job's update
+              type: integer
+              x-stoplight:
+                id: q96k4ev6qkxgn
+            error_log:
+              description: >-
+                An array of errors encountered for individual updates within the
+                job
+              type: array
+              x-stoplight:
+                id: b8pcvkbvkw8mn
+              items:
+                x-stoplight:
+                  id: l1xfspj0s0bg3
+                type: string
+    AutomationJourneysGetAllResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/AutomationJourney'
+        limit:
+          description: >-
+            The limit placed on the results. If no limit was specified in the
+            request,this defaults to 10.
+          type: integer
+        page:
+          description: >-
+            The page number the results are from. If no page was specified in
+            the request, this defaults to page 1.
+          type: integer
+          default: 1
+          minimum: 0
+        total_results:
+          description: The total number of results from all pages.
+          type: integer
+        total_pages:
+          description: The total number of pages.
+          type: integer
+      required:
+        - data
+        - limit
+        - page
+        - total_results
+        - total_pages
+    AutomationJourneysAddExistingSubscriptionResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/AutomationJourney'
+          x-stoplight:
+            id: ix2rjbjovitpy
+    AutomationJourneysShowJourneyDetailsResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/AutomationJourney'
+          x-stoplight:
+            id: ib4gb4w1iyqx9
+    AutomationsIndexResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          x-stoplight:
+            id: bxzhq3esdy3w5
+          items:
+            $ref: '#/components/schemas/Automation'
+            x-stoplight:
+              id: tuy24yfr54msa
+        limit:
+          description: >-
+            The limit placed on the results. If no limit was specified in the
+            request,this defaults to 10.
+          type: integer
+        page:
+          description: >-
+            The page number the results are from. If no page was specified in
+            the request, this defaults to page 1.
+          type: integer
+          default: 1
+          minimum: 0
+        total_results:
+          description: The total number of results from all pages.
+          type: integer
+        total_pages:
+          description: The total number of pages.
+          type: integer
+    AutomationsShowDetailsResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/Automation'
+          x-stoplight:
+            id: g31i1j8uubg2d
+    SubscriptionTagsCreateNewResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/SubscriptionExpandedTags'
+          x-stoplight:
+            id: uzkkps7tsduon
+  requestBodies:
+    CreateSubscription:
+      description: ''
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SubscriptionsCreateNewRequest'
+      required: true
+    UpdateSubscription:
+      description: ''
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SubscriptionsUpdateSubscriberRequest'
+      required: true
+security:
+  - bearerAuth: []
+x-stoplight:
+  id: o3elujhmkik1d
