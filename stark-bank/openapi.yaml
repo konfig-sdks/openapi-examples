@@ -1,0 +1,5077 @@
+openapi: 3.0.0
+info:
+  title: Stark Bank API
+  description: Stark Bank API for financial services in Brazil
+  version: v2
+  contact:
+    email: help@starkbank.com
+    name: Stark Bank Developers
+    url: https://starkbank.com
+  license:
+    name: Stark Bank License
+servers:
+  - url: https://sandbox.api.starkbank.com
+  - url: https://api.starkbank.com
+tags:
+  - name: invoice
+  - name: boleto
+  - name: brcodePayment
+  - name: boletoPayment
+  - name: utilityPayment
+  - name: transfer
+  - name: boletoHolmes
+  - name: deposit
+  - name: webhook
+  - name: event
+  - name: transaction
+  - name: workspace
+  - name: paymentRequest
+  - name: dictKey
+  - name: balance
+  - name: brcodePreview
+  - name: publicKey
+paths:
+  /transaction:
+    post:
+      tags:
+        - transaction
+      summary: Create transactions
+      operationId: Transaction_createNewTransaction
+      requestBody:
+        description: Transactions to be created
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Transactions'
+      responses:
+        '200':
+          description: Created transactions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transactions'
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+    get:
+      tags:
+        - transaction
+      summary: List transactions
+      operationId: Transaction_listTransactions
+      parameters:
+        - description: String used to get the next batch of results.
+          name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+            format: byte
+        - description: Number of results per cursor. Max = 100.
+          name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+        - description: List of strings to filter response JSON keys.
+          name: fields
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - description: Filter entities created after this date.
+          name: after
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - description: Filter entities created before this date.
+          name: before
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - description: Filter entities that contain the specified tags.
+          name: tags
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - description: List of strings to get specific entities by externalIds.
+          name: externalIds
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: A paged array of transactions and the next page cursor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transactions'
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+  /transaction/{transactionId}:
+    get:
+      tags:
+        - transaction
+      summary: Get transaction by ID
+      operationId: Transaction_getById
+      parameters:
+        - description: Transaction unique identifier.
+          name: transactionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: ^\d{16}$
+        - description: List of strings to filter response JSON keys.
+          name: fields
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: Updated transaction json
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionInfo'
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+  /balance:
+    get:
+      tags:
+        - balance
+      summary: List balances
+      operationId: Balance_getList
+      responses:
+        '200':
+          description: An array of balances and the next page cursor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Balances'
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+  /transfer:
+    post:
+      tags:
+        - transfer
+      summary: Create transfers
+      operationId: Transfer_createNewTransfer
+      requestBody:
+        description: Transfers to be created
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Transfers'
+      responses:
+        '200':
+          description: Created transfers
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transfers'
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+    get:
+      tags:
+        - transfer
+      summary: List transfers
+      operationId: Transfer_getList
+      parameters:
+        - description: String used to get the next batch of results.
+          name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+            format: byte
+        - description: Number of results per cursor. Max = 100.
+          name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+        - description: List of strings to filter response JSON keys.
+          name: fields
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - description: Filter entities created after this date.
+          name: after
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - description: Filter entities created before this date.
+          name: before
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - description: Filter entities that are linked to the specified transactions.
+          name: transactionIds
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - description: Filter boletos by the specified status.
+          name: status
+          in: query
+          required: false
+          schema:
+            type: string
+        - description: Filter transfers sent to the specified taxId.
+          name: taxId
+          in: query
+          required: false
+          schema:
+            type: string
+            pattern: >-
+              ^((\d{3}\.\d{3}\.\d{3}\-\d{2})|(\d{11})|(\d{2}\.\d{3}\.\d{3}\/\d{4}\-\d{2})|(\d{14}))$
+        - description: >-
+            Sort entities by the specified sort order. Options are "-created",
+            "created", "-updated", "updated".
+          name: sort
+          in: query
+          required: false
+          schema:
+            type: string
+        - description: Filter entities that contain the specified tags.
+          name: tags
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - description: List of strings to get specific entities by ids.
+          name: ids
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: A paged array of transfers and the next page cursor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transfers'
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+  /transfer/{transferId}:
+    get:
+      tags:
+        - transfer
+      summary: Get transfer by ID
+      operationId: Transfer_getById
+      parameters:
+        - description: Transfer unique identifier.
+          name: transferId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: ^\d{16}$
+        - description: List of strings to filter response JSON keys.
+          name: fields
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: Updated transfer json
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransferInfo'
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+  /transfer/{transferId}/pdf:
+    get:
+      tags:
+        - transfer
+      summary: Get transfer PDF receipt by ID
+      operationId: Transfer_getPdfReceiptById
+      parameters:
+        - description: Transfer unique identifier.
+          name: transferId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: ^\d{16}$
+        - description: List of strings to filter response JSON keys.
+          name: fields
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: Transfer PDF receipt blob
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransferGetPdfReceiptByIdResponse'
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+  /transfer/log:
+    get:
+      tags:
+        - transfer
+      summary: List transfer logs
+      operationId: Transfer_listLogs
+      parameters:
+        - description: String used to get the next batch of results.
+          name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+            format: byte
+        - description: Number of results per cursor. Max = 100.
+          name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+        - description: List of strings to filter response JSON keys.
+          name: fields
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - description: Filter entities created after this date.
+          name: after
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - description: Filter entities created before this date.
+          name: before
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - description: Filter logs by log types.
+          name: types
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - description: Array of transfer ids that are linked to the desired logs.
+          name: transferIds
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: A paged array of transfer logs and the next page cursor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransferLogs'
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+  /transfer/log/{logId}:
+    get:
+      tags:
+        - transfer
+      summary: Get transfer log by ID
+      operationId: Transfer_getLogById
+      parameters:
+        - description: Log unique identifier.
+          name: logId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: ^\d{16}$
+        - description: List of strings to filter response JSON keys.
+          name: fields
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: Updated transfer log json
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransferLogInfo'
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+  /invoice:
+    post:
+      tags:
+        - invoice
+      summary: Create invoices
+      operationId: Invoice_createNewInvoice
+      requestBody:
+        description: Invoices to be created
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Invoices'
+      responses:
+        '200':
+          description: Created invoices
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Invoices'
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+    get:
+      tags:
+        - invoice
+      summary: List invoices
+      operationId: Invoice_list
+      parameters:
+        - description: String used to get the next batch of results.
+          name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+            format: byte
+        - description: Number of results per cursor. Max = 100.
+          name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+        - description: List of strings to filter response JSON keys.
+          name: fields
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - description: Filter entities created after this date.
+          name: after
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - description: Filter entities created before this date.
+          name: before
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - description: Filter invoices by the specified status.
+          name: status
+          in: query
+          required: false
+          schema:
+            type: string
+        - description: Filter entities that contain the specified tags.
+          name: tags
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - description: List of strings to get specific entities by ids.
+          name: ids
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: A paged array of invoices and the next page cursor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Invoices'
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+  /invoice/{invoiceId}:
+    get:
+      tags:
+        - invoice
+      summary: Get invoice by ID
+      operationId: Invoice_getById
+      parameters:
+        - description: Invoice unique identifier.
+          name: invoiceId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: ^\d{16}$
+        - description: List of strings to filter response JSON keys.
+          name: fields
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: Updated invoice json
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvoiceInfo'
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+    patch:
+      tags:
+        - invoice
+      summary: Update or refund an invoice by ID
+      operationId: Invoice_updateRefundById
+      parameters:
+        - description: Invoice unique identifier.
+          name: invoiceId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: ^\d{16}$
+      requestBody:
+        description: Invoice fields to be patched
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InvoicePatch'
+      responses:
+        '200':
+          description: Updated invoice json
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvoiceInfo'
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+  /invoice/{invoiceId}/pdf:
+    get:
+      tags:
+        - invoice
+      summary: Get invoice PDF by ID
+      operationId: Invoice_generatePdfById
+      parameters:
+        - description: Invoice unique identifier.
+          name: invoiceId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: ^\d{16}$
+        - description: List of strings to filter response JSON keys.
+          name: fields
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: Invoice QR code
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvoiceGeneratePdfByIdResponse'
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+  /invoice/{invoiceId}/qrcode:
+    get:
+      tags:
+        - invoice
+      summary: Get invoice QR Code by ID
+      operationId: Invoice_getQrCodeById
+      parameters:
+        - description: Invoice unique identifier.
+          name: invoiceId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: ^\d{16}$
+        - description: List of strings to filter response JSON keys.
+          name: fields
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - description: output file format
+          name: format
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Invoice QR code
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvoiceGetQrCodeByIdResponse'
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+  /invoice/log:
+    get:
+      tags:
+        - invoice
+      summary: List invoice logs
+      operationId: Invoice_listLogs
+      parameters:
+        - description: String used to get the next batch of results.
+          name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+            format: byte
+        - description: Number of results per cursor. Max = 100.
+          name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+        - description: List of strings to filter response JSON keys.
+          name: fields
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - description: Filter entities created after this date.
+          name: after
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - description: Filter entities created before this date.
+          name: before
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - description: Filter logs by log types.
+          name: types
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - description: Array of invoice ids that are linked to the desired logs.
+          name: invoiceIds
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: A paged array of invoice logs and the next page cursor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvoiceLogs'
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+  /invoice/log/{logId}:
+    get:
+      tags:
+        - invoice
+      summary: Get invoice log by ID
+      operationId: Invoice_getByIdLog
+      parameters:
+        - description: Log unique identifier.
+          name: logId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: ^\d{16}$
+        - description: List of strings to filter response JSON keys.
+          name: fields
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: Updated invoice log json
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvoiceLogInfo'
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+  /deposit:
+    get:
+      tags:
+        - deposit
+      summary: List deposits
+      operationId: Deposit_list
+      parameters:
+        - description: String used to get the next batch of results.
+          name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+            format: byte
+        - description: Number of results per cursor. Max = 100.
+          name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+        - description: List of strings to filter response JSON keys.
+          name: fields
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - description: Filter entities created after this date.
+          name: after
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - description: Filter entities created before this date.
+          name: before
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - description: Filter deposits by the specified status.
+          name: status
+          in: query
+          required: false
+          schema:
+            type: string
+        - description: Filter entities that contain the specified tags.
+          name: tags
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - description: List of strings to get specific entities by ids.
+          name: ids
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - description: >-
+            Sort entities by the specified sort order. Options are "-created"
+            and "created".
+          name: sort
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A paged array of deposits and the next page cursor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Deposits'
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+  /deposit/{depositId}:
+    get:
+      tags:
+        - deposit
+      summary: Get deposit by ID
+      operationId: Deposit_getById
+      parameters:
+        - description: Deposit unique identifier.
+          name: depositId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: ^\d{16}$
+        - description: List of strings to filter response JSON keys.
+          name: fields
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: Updated deposit json
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DepositInfo'
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+  /deposit/log:
+    get:
+      tags:
+        - deposit
+      summary: List deposit logs
+      operationId: Deposit_listLogs
+      parameters:
+        - description: String used to get the next batch of results.
+          name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+            format: byte
+        - description: Number of results per cursor. Max = 100.
+          name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+        - description: List of strings to filter response JSON keys.
+          name: fields
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - description: Filter entities created after this date.
+          name: after
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - description: Filter entities created before this date.
+          name: before
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - description: Filter logs by log types.
+          name: types
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - description: Array of deposit ids that are linked to the desired logs.
+          name: depositIds
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: A paged array of deposit logs and the next page cursor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DepositLogs'
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+  /deposit/log/{logId}:
+    get:
+      tags:
+        - deposit
+      summary: Get deposit log by ID
+      operationId: Deposit_getByIdLog
+      parameters:
+        - description: Log unique identifier.
+          name: logId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: ^\d{16}$
+        - description: List of strings to filter response JSON keys.
+          name: fields
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: Updated deposit log json
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DepositLogInfo'
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+  /boleto:
+    post:
+      tags:
+        - boleto
+      summary: Create boletos
+      operationId: Boleto_createBoleto
+      requestBody:
+        description: Boletos to be created
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Boletos'
+      responses:
+        '200':
+          description: Created boletos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Boletos'
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+    get:
+      tags:
+        - boleto
+      summary: List boletos
+      operationId: Boleto_getList
+      parameters:
+        - description: String used to get the next batch of results.
+          name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+            format: byte
+        - description: Number of results per cursor. Max = 100.
+          name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+        - description: List of strings to filter response JSON keys.
+          name: fields
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - description: Filter entities created after this date.
+          name: after
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - description: Filter entities created before this date.
+          name: before
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - description: Filter boletos by the specified status.
+          name: status
+          in: query
+          required: false
+          schema:
+            type: string
+        - description: Filter entities that contain the specified tags.
+          name: tags
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - description: List of strings to get specific entities by ids.
+          name: ids
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: A paged array of boletos and the next page cursor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Boletos'
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+  /boleto/{boletoId}:
+    get:
+      tags:
+        - boleto
+      summary: Get boleto by ID
+      operationId: Boleto_getById
+      parameters:
+        - description: Boleto unique identifier.
+          name: boletoId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: ^\d{16}$
+        - description: List of strings to filter response JSON keys.
+          name: fields
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: Updated boleto json
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BoletoInfo'
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+    delete:
+      tags:
+        - boleto
+      summary: Cancel and delete a boleto by ID
+      operationId: Boleto_cancelById
+      parameters:
+        - description: Boleto unique identifier.
+          name: boletoId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: ^\d{16}$
+      responses:
+        '200':
+          description: Canceled/Deleted boleto json
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BoletoInfo'
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+  /boleto/{boletoId}/pdf:
+    get:
+      tags:
+        - boleto
+      summary: Get boleto PDF by ID
+      operationId: Boleto_getPdfById
+      parameters:
+        - description: Boleto unique identifier.
+          name: boletoId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: ^\d{16}$
+        - description: List of strings to filter response JSON keys.
+          name: fields
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: Boleto PDF blob
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BoletoGetPdfByIdResponse'
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+  /boleto/log:
+    get:
+      tags:
+        - boleto
+      summary: List boleto logs
+      operationId: Boleto_listLogs
+      parameters:
+        - description: String used to get the next batch of results.
+          name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+            format: byte
+        - description: Number of results per cursor. Max = 100.
+          name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+        - description: List of strings to filter response JSON keys.
+          name: fields
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - description: Filter entities created after this date.
+          name: after
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - description: Filter entities created before this date.
+          name: before
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - description: Filter logs by log types.
+          name: types
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - description: Array of boleto ids that are linked to the desired logs.
+          name: boletoIds
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: A paged array of boleto logs and the next page cursor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BoletoLogs'
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+  /boleto/log/{logId}:
+    get:
+      tags:
+        - boleto
+      summary: Get boleto log by ID
+      operationId: Boleto_getLogById
+      parameters:
+        - description: Log unique identifier.
+          name: logId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: ^\d{16}$
+        - description: List of strings to filter response JSON keys.
+          name: fields
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: Updated boleto log json
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BoletoLogInfo'
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+  /boleto-holmes:
+    post:
+      tags:
+        - boletoHolmes
+      summary: Create boleto holmes
+      operationId: BoletoHolmes_createNewHolmes
+      requestBody:
+        description: Holmes to be created
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BoletoHolmes'
+      responses:
+        '200':
+          description: Created boleto holmes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BoletoHolmes'
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+    get:
+      tags:
+        - boletoHolmes
+      summary: List boleto holmes
+      operationId: BoletoHolmes_list
+      parameters:
+        - description: String used to get the next batch of results.
+          name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+            format: byte
+        - description: Number of results per cursor. Max = 100.
+          name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+        - description: List of strings to filter response JSON keys.
+          name: fields
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - description: Filter entities created after this date.
+          name: after
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - description: Filter entities created before this date.
+          name: before
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - description: Filter entities that contain the specified tags.
+          name: tags
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - description: List of strings to get specific entities by ids.
+          name: ids
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - description: Filter holmes by the specified status.
+          name: status
+          in: query
+          required: false
+          schema:
+            type: string
+        - description: Filter holmes by the specified boleto.
+          name: boletoId
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A paged array of holmes and the next page cursor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BoletoHolmes'
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+  /boleto-holmes/{holmesId}:
+    get:
+      tags:
+        - boletoHolmes
+      summary: Get boleto holmes by ID
+      operationId: BoletoHolmes_getById
+      parameters:
+        - description: Holmes unique identifier.
+          name: holmesId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: ^\d{16}$
+        - description: List of strings to filter response JSON keys.
+          name: fields
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: Updated holmes json
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BoletoHolmesInfo'
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+  /boleto-holmes/log:
+    get:
+      tags:
+        - boletoHolmes
+      summary: List boleto holmes logs
+      operationId: BoletoHolmes_listLogs
+      parameters:
+        - description: String used to get the next batch of results.
+          name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+            format: byte
+        - description: Number of results per cursor. Max = 100.
+          name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+        - description: List of strings to filter response JSON keys.
+          name: fields
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - description: Filter entities created after this date.
+          name: after
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - description: Filter entities created before this date.
+          name: before
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - description: Filter logs by log types.
+          name: types
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - description: Array of holmes ids that are linked to the desired logs.
+          name: holmesIds
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: A paged array of holmes logs and the next page cursor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BoletoHolmesLogs'
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+  /boleto-holmes/log/{logId}:
+    get:
+      tags:
+        - boletoHolmes
+      summary: Get boleto holmes log by ID
+      operationId: BoletoHolmes_getLogById
+      parameters:
+        - description: Log unique identifier.
+          name: logId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: ^\d{16}$
+        - description: List of strings to filter response JSON keys.
+          name: fields
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: Updated holmes log json
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BoletoHolmesLogInfo'
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+  /brcode-preview:
+    get:
+      tags:
+        - brcodePreview
+      summary: Process BR Codes before creating BrcodePayments
+      operationId: BrcodePreview_processBeforeCreate
+      parameters:
+        - description: List of strings to filter response JSON keys.
+          name: fields
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - description: List of BR Codes to be processed.
+          name: brcodes
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: A paged array of previews
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrcodePreviews'
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+  /brcode-payment:
+    post:
+      tags:
+        - brcodePayment
+      summary: Create BR Code payments
+      operationId: BrcodePayment_create
+      requestBody:
+        description: Payments to be created
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BrcodePayments'
+      responses:
+        '200':
+          description: Created BR Code payments
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrcodePayments'
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+    get:
+      tags:
+        - brcodePayment
+      summary: List BR Code payments
+      operationId: BrcodePayment_list
+      parameters:
+        - description: String used to get the next batch of results.
+          name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+            format: byte
+        - description: Number of results per cursor. Max = 100.
+          name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+        - description: List of strings to filter response JSON keys.
+          name: fields
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - description: Filter entities created after this date.
+          name: after
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - description: Filter entities created before this date.
+          name: before
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - description: Filter entities that contain the specified tags.
+          name: tags
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - description: List of strings to get specific entities by ids.
+          name: ids
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - description: Filter payments by the specified status.
+          name: status
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A paged array of payments and the next page cursor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrcodePayments'
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+  /brcode-payment/{paymentId}:
+    get:
+      tags:
+        - brcodePayment
+      summary: Get BR Code payment by ID
+      operationId: BrcodePayment_getById
+      parameters:
+        - description: Payment unique identifier.
+          name: paymentId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: ^\d{16}$
+        - description: List of strings to filter response JSON keys.
+          name: fields
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: Updated payment json
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrcodePaymentInfo'
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+    patch:
+      tags:
+        - brcodePayment
+      summary: Update a BR Code payment by ID
+      operationId: BrcodePayment_updatePaymentById
+      parameters:
+        - description: Payment unique identifier.
+          name: paymentId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: ^\d{16}$
+      requestBody:
+        description: Payment fields to be patched
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BrcodePaymentPatch'
+      responses:
+        '200':
+          description: Updated payment json
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrcodePaymentInfo'
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+  /brcode-payment/{paymentId}/pdf:
+    get:
+      tags:
+        - brcodePayment
+      summary: Get BR Code payment PDF receipt by payment ID
+      operationId: BrcodePayment_getPdfReceiptByPaymentId
+      parameters:
+        - description: Payment unique identifier.
+          name: paymentId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: ^\d{16}$
+        - description: List of strings to filter response JSON keys.
+          name: fields
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: BR Code payment PDF blob
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/BrcodePaymentGetPdfReceiptByPaymentIdResponse
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+  /brcode-payment/log:
+    get:
+      tags:
+        - brcodePayment
+      summary: List BR Code payment logs
+      operationId: BrcodePayment_getLogs
+      parameters:
+        - description: String used to get the next batch of results.
+          name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+            format: byte
+        - description: Number of results per cursor. Max = 100.
+          name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+        - description: List of strings to filter response JSON keys.
+          name: fields
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - description: Filter entities created after this date.
+          name: after
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - description: Filter entities created before this date.
+          name: before
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - description: Filter logs by log types.
+          name: types
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - description: Array of payment ids that are linked to the desired logs.
+          name: paymentIds
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: A paged array of payment logs and the next page cursor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrcodePaymentLogs'
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+  /brcode-payment/log/{logId}:
+    get:
+      tags:
+        - brcodePayment
+      summary: Get BR Code payment log by ID
+      operationId: BrcodePayment_getLogById
+      parameters:
+        - description: Log unique identifier.
+          name: logId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: ^\d{16}$
+        - description: List of strings to filter response JSON keys.
+          name: fields
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: Updated payment log json
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrcodePaymentLogInfo'
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+  /boleto-payment:
+    post:
+      tags:
+        - boletoPayment
+      summary: Create boleto payments
+      operationId: BoletoPayment_createPayment
+      requestBody:
+        description: Payments to be created
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BoletoPayments'
+      responses:
+        '200':
+          description: Created boleto payments
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BoletoPayments'
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+    get:
+      tags:
+        - boletoPayment
+      summary: List boleto payments
+      operationId: BoletoPayment_listPayments
+      parameters:
+        - description: String used to get the next batch of results.
+          name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+            format: byte
+        - description: Number of results per cursor. Max = 100.
+          name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+        - description: List of strings to filter response JSON keys.
+          name: fields
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - description: Filter entities created after this date.
+          name: after
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - description: Filter entities created before this date.
+          name: before
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - description: Filter entities that contain the specified tags.
+          name: tags
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - description: List of strings to get specific entities by ids.
+          name: ids
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - description: Filter payments by the specified status.
+          name: status
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A paged array of payments and the next page cursor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BoletoPayments'
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+  /boleto-payment/{paymentId}:
+    get:
+      tags:
+        - boletoPayment
+      summary: Get boleto payment by ID
+      operationId: BoletoPayment_getById
+      parameters:
+        - description: Payment unique identifier.
+          name: paymentId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: ^\d{16}$
+        - description: List of strings to filter response JSON keys.
+          name: fields
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: Updated payment json
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BoletoPaymentInfo'
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+    delete:
+      tags:
+        - boletoPayment
+      summary: Cancel and delete a boleto payment by ID
+      operationId: BoletoPayment_cancelById
+      parameters:
+        - description: Payment unique identifier.
+          name: paymentId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: ^\d{16}$
+      responses:
+        '200':
+          description: Canceled/Deleted payment json
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BoletoPaymentInfo'
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+  /boleto-payment/{paymentId}/pdf:
+    get:
+      tags:
+        - boletoPayment
+      summary: Get boleto payment PDF receipt by payment ID
+      operationId: BoletoPayment_getPdfReceiptByPaymentId
+      parameters:
+        - description: Payment unique identifier.
+          name: paymentId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: ^\d{16}$
+        - description: List of strings to filter response JSON keys.
+          name: fields
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: Boleto payment PDF blob
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/BoletoPaymentGetPdfReceiptByPaymentIdResponse
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+  /boleto-payment/log:
+    get:
+      tags:
+        - boletoPayment
+      summary: List boleto payment logs
+      operationId: BoletoPayment_getLogs
+      parameters:
+        - description: String used to get the next batch of results.
+          name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+            format: byte
+        - description: Number of results per cursor. Max = 100.
+          name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+        - description: List of strings to filter response JSON keys.
+          name: fields
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - description: Filter entities created after this date.
+          name: after
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - description: Filter entities created before this date.
+          name: before
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - description: Filter logs by log types.
+          name: types
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - description: Array of payment ids that are linked to the desired logs.
+          name: paymentIds
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: A paged array of payment logs and the next page cursor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BoletoPaymentLogs'
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+  /boleto-payment/log/{logId}:
+    get:
+      tags:
+        - boletoPayment
+      summary: Get boleto payment log by ID
+      operationId: BoletoPayment_getLogById
+      parameters:
+        - description: Log unique identifier.
+          name: logId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: ^\d{16}$
+        - description: List of strings to filter response JSON keys.
+          name: fields
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: Updated payment log json
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BoletoPaymentLogInfo'
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+  /utility-payment:
+    post:
+      tags:
+        - utilityPayment
+      summary: Create utility payments
+      operationId: UtilityPayment_createPayment
+      requestBody:
+        description: Payments to be created
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UtilityPayments'
+      responses:
+        '200':
+          description: Created utility payments
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UtilityPayments'
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+    get:
+      tags:
+        - utilityPayment
+      summary: List utility payments
+      operationId: UtilityPayment_listPayments
+      parameters:
+        - description: String used to get the next batch of results.
+          name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+            format: byte
+        - description: Number of results per cursor. Max = 100.
+          name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+        - description: List of strings to filter response JSON keys.
+          name: fields
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - description: Filter entities created after this date.
+          name: after
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - description: Filter entities created before this date.
+          name: before
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - description: Filter entities that contain the specified tags.
+          name: tags
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - description: List of strings to get specific entities by ids.
+          name: ids
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - description: Filter payments by the specified status.
+          name: status
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A paged array of payments and the next page cursor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UtilityPayments'
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+  /utility-payment/{paymentId}:
+    get:
+      tags:
+        - utilityPayment
+      summary: Get utility payment by ID
+      operationId: UtilityPayment_getById
+      parameters:
+        - description: Payment unique identifier.
+          name: paymentId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: ^\d{16}$
+        - description: List of strings to filter response JSON keys.
+          name: fields
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: Updated payment json
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UtilityPaymentInfo'
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+    delete:
+      tags:
+        - utilityPayment
+      summary: Cancel and delete a utility payment by ID
+      operationId: UtilityPayment_cancelById
+      parameters:
+        - description: Payment unique identifier.
+          name: paymentId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: ^\d{16}$
+      responses:
+        '200':
+          description: Canceled/Deleted payment json
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UtilityPaymentInfo'
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+  /utility-payment/{paymentId}/pdf:
+    get:
+      tags:
+        - utilityPayment
+      summary: Get utility payment PDF receipt by payment ID
+      operationId: UtilityPayment_getPdfReceiptByPaymentId
+      parameters:
+        - description: Payment unique identifier.
+          name: paymentId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: ^\d{16}$
+        - description: List of strings to filter response JSON keys.
+          name: fields
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: Utility payment PDF receipt blob
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/UtilityPaymentGetPdfReceiptByPaymentIdResponse
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+  /utility-payment/log:
+    get:
+      tags:
+        - utilityPayment
+      summary: List utility payment logs
+      operationId: UtilityPayment_listLogs
+      parameters:
+        - description: String used to get the next batch of results.
+          name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+            format: byte
+        - description: Number of results per cursor. Max = 100.
+          name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+        - description: List of strings to filter response JSON keys.
+          name: fields
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - description: Filter entities created after this date.
+          name: after
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - description: Filter entities created before this date.
+          name: before
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - description: Filter logs by log types.
+          name: types
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - description: Array of payment ids that are linked to the desired logs.
+          name: paymentIds
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: A paged array of payment logs and the next page cursor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UtilityPaymentLogs'
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+  /utility-payment/log/{logId}:
+    get:
+      tags:
+        - utilityPayment
+      summary: Get utility payment log by ID
+      operationId: UtilityPayment_getLogById
+      parameters:
+        - description: Log unique identifier.
+          name: logId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: ^\d{16}$
+        - description: List of strings to filter response JSON keys.
+          name: fields
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: Updated payment log json
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UtilityPaymentLogInfo'
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+  /payment-request:
+    post:
+      tags:
+        - paymentRequest
+      summary: Create payment requests
+      operationId: PaymentRequest_createNewRequest
+      requestBody:
+        description: Requests to be created
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentRequests'
+      responses:
+        '200':
+          description: Created payment requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentRequests'
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+    get:
+      tags:
+        - paymentRequest
+      summary: List payment requests
+      operationId: PaymentRequest_list
+      parameters:
+        - description: Cost center ID that contains the desired PaymentRequests.
+          name: centerId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: byte
+        - description: String used to get the next batch of results.
+          name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+            format: byte
+        - description: Number of results per cursor. Max = 100.
+          name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+        - description: List of strings to filter response JSON keys.
+          name: fields
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - description: Filter entities created after this date.
+          name: after
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - description: Filter entities created before this date.
+          name: before
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - description: >-
+            Sort entities by the specified sort order. Options are "-created"
+            and "-due".
+          name: sort
+          in: query
+          required: false
+          schema:
+            type: string
+        - description: Filter entities that contain the specified tags.
+          name: tags
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - description: List of strings to get specific entities by ids.
+          name: ids
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - description: Filter payments by the specified status.
+          name: status
+          in: query
+          required: false
+          schema:
+            type: string
+        - description: >-
+            Filter payments by the specified payment type. Options are
+            "transfer", "brcode-payment", ...
+          name: type
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A paged array of payment requests and the next page cursor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentRequests'
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+  /webhook:
+    post:
+      tags:
+        - webhook
+      summary: Create a webhook
+      operationId: Webhook_create
+      requestBody:
+        description: Webhook to be created
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Webhook'
+      responses:
+        '200':
+          description: Created webhook
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Webhook'
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+    get:
+      tags:
+        - webhook
+      summary: List webhooks
+      operationId: Webhook_listWebhooks
+      parameters:
+        - description: String used to get the next batch of results.
+          name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+            format: byte
+        - description: Number of results per cursor. Max = 100.
+          name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+        - description: List of strings to filter response JSON keys.
+          name: fields
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: A paged array of webhooks and the next page cursor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Webhooks'
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+  /webhook/{webhookId}:
+    get:
+      tags:
+        - webhook
+      summary: Get webhook by ID
+      operationId: Webhook_getById
+      parameters:
+        - description: Webhook unique identifier.
+          name: webhookId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: ^\d{16}$
+        - description: List of strings to filter response JSON keys.
+          name: fields
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: Updated webhook json
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookInfo'
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+    delete:
+      tags:
+        - webhook
+      summary: Delete a webhook by ID
+      operationId: Webhook_deleteById
+      parameters:
+        - description: Webhook unique identifier.
+          name: webhookId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: ^\d{16}$
+      responses:
+        '200':
+          description: Deleted webhook json
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookInfo'
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+  /event:
+    get:
+      tags:
+        - event
+      summary: List webhook events
+      operationId: Event_webhookEventsList
+      parameters:
+        - description: String used to get the next batch of results.
+          name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+            format: byte
+        - description: Number of results per cursor. Max = 100.
+          name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+        - description: List of strings to filter response JSON keys.
+          name: fields
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: A paged array of events and the next page cursor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Events'
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+  /event/{eventId}:
+    get:
+      tags:
+        - event
+      summary: Get event by ID
+      operationId: Event_getById
+      parameters:
+        - description: Event unique identifier.
+          name: eventId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: ^\d{16}$
+        - description: List of strings to filter response JSON keys.
+          name: fields
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: Updated event json
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventInfo'
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+    patch:
+      tags:
+        - event
+      summary: Update a webhook event by ID
+      operationId: Event_updateById
+      parameters:
+        - description: Event unique identifier.
+          name: eventId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: ^\d{16}$
+      requestBody:
+        description: Event fields to be patched
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventPatch'
+      responses:
+        '200':
+          description: Deleted event payment json
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventInfo'
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+    delete:
+      tags:
+        - event
+      summary: Delete a webhook event by ID
+      operationId: Event_deleteById
+      parameters:
+        - description: Event unique identifier.
+          name: eventId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: ^\d{16}$
+      responses:
+        '200':
+          description: Deleted event json
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventInfo'
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+  /dict-key:
+    get:
+      tags:
+        - dictKey
+      summary: List the DICT (Pix) keys associated with your Stark Bank Workspace
+      operationId: DictKey_listPixKeys
+      parameters:
+        - description: String used to get the next batch of results.
+          name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+            format: byte
+        - description: Number of results per cursor. Max = 100.
+          name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+        - description: Filter entities created after this date.
+          name: after
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - description: Filter entities created before this date.
+          name: before
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - description: List of strings to get specific entities by ids.
+          name: ids
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - description: Filter DictKeys by the specified status.
+          name: status
+          in: query
+          required: false
+          schema:
+            type: string
+        - description: >-
+            Filter DictKeys by the specified type. Options are "cpf", "cnpj",
+            "email", "phone" and "evp"
+          name: type
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A paged array of keys and the next page cursor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DictKeys'
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+  /dict-key/{keyId}:
+    get:
+      tags:
+        - dictKey
+      summary: Get DictKey by ID
+      operationId: DictKey_getById
+      parameters:
+        - description: DICT key unique identifier.
+          name: keyId
+          in: path
+          required: true
+          schema:
+            type: string
+        - description: List of strings to filter response JSON keys.
+          name: fields
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: Updated DICT key json
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DictKeyInfo'
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+  /workspace:
+    post:
+      tags:
+        - workspace
+      summary: Create a workspace
+      operationId: Workspace_createNewWorkspace
+      requestBody:
+        description: Workspace to be created
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Workspace'
+      responses:
+        '200':
+          description: Created workspace
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Workspace'
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+    get:
+      tags:
+        - workspace
+      summary: List workspaces that your user has access to
+      operationId: Workspace_listUserWorkspaces
+      parameters:
+        - description: String used to get the next batch of results.
+          name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+            format: byte
+        - description: Number of results per cursor. Max = 100.
+          name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+        - description: List of strings to filter response JSON keys.
+          name: fields
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - description: Workspace username to be searched.
+          name: username
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - description: Workspace ids to be searched.
+          name: ids
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: A paged array of workspaces and the next page cursor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Workspaces'
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+  /workspace/{workspaceId}:
+    get:
+      tags:
+        - workspace
+      summary: Get workspace by ID
+      operationId: Workspace_getById
+      parameters:
+        - description: Workspace unique identifier.
+          name: workspaceId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: ^\d{16}$
+        - description: List of strings to filter response JSON keys.
+          name: fields
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: Updated workspace json
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkspaceInfo'
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+  /public-key:
+    get:
+      tags:
+        - publicKey
+      summary: List the public keys Stark Bank uses to sign webhooks and receipts
+      operationId: PublicKey_getList
+      parameters:
+        - description: String used to get the next batch of results.
+          name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+            format: byte
+        - description: Number of results per cursor. Max = 100.
+          name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+      responses:
+        '200':
+          description: A paged array of keys and the next page cursor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicKeys'
+        '400':
+          description: Input error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Errors'
+        default:
+          description: Unexpected error
+components:
+  schemas:
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+          readOnly: true
+        message:
+          type: string
+          readOnly: true
+    Errors:
+      type: object
+      properties:
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/Error'
+    Transaction:
+      type: object
+      required:
+        - amount
+        - receiverId
+        - description
+        - externalId
+      properties:
+        tags:
+          items:
+            type: string
+        description:
+          type: string
+        id:
+          type: string
+          readOnly: true
+        amount:
+          type: integer
+          minimum: 0
+        receiverId:
+          type: string
+        externalId:
+          type: string
+        senderId:
+          type: string
+          readOnly: true
+        balance:
+          type: integer
+          readOnly: true
+        source:
+          type: string
+          readOnly: true
+        fee:
+          type: integer
+          readOnly: true
+        created:
+          type: string
+          format: date
+          readOnly: true
+    TransactionInfo:
+      type: object
+      properties:
+        transaction:
+          $ref: '#/components/schemas/Transaction'
+    Transactions:
+      type: object
+      properties:
+        transactions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Transaction'
+    Balance:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        amount:
+          type: integer
+          readOnly: true
+        currency:
+          type: string
+          readOnly: true
+        updated:
+          type: string
+          format: date
+          readOnly: true
+    Balances:
+      type: object
+      properties:
+        balances:
+          type: array
+          items:
+            $ref: '#/components/schemas/Balance'
+    Transfer:
+      type: object
+      required:
+        - amount
+        - name
+        - taxId
+        - bankCode
+        - branchCode
+        - accountNumber
+      properties:
+        tags:
+          items:
+            type: string
+        id:
+          type: string
+          readOnly: true
+        amount:
+          type: integer
+          minimum: 0
+        name:
+          type: string
+        taxId:
+          type: string
+          pattern: >-
+            ^((\d{3}\.\d{3}\.\d{3}\-\d{2})|(\d{11})|(\d{2}\.\d{3}\.\d{3}\/\d{4}\-\d{2})|(\d{14}))$
+        bankCode:
+          type: string
+          pattern: ˆ^\d{1,8}$
+        branchCode:
+          type: string
+          pattern: ˆ^\d{4}(\-\d{1})?$
+        accountNumber:
+          type: string
+          pattern: ˆ^\d{1,20}$|^\d{1,19}-\d{1}$
+        accountType:
+          type: string
+        externalId:
+          type: string
+        scheduled:
+          type: string
+          format: datetime
+        fee:
+          type: integer
+          readOnly: true
+        transactionIds:
+          type: array
+          readOnly: true
+          items:
+            type: string
+        status:
+          type: string
+          readOnly: true
+        created:
+          type: string
+          format: date
+          readOnly: true
+        updated:
+          type: string
+          format: date
+          readOnly: true
+    TransferInfo:
+      type: object
+      properties:
+        transfer:
+          $ref: '#/components/schemas/Transfer'
+    Transfers:
+      type: object
+      properties:
+        transfers:
+          type: array
+          items:
+            $ref: '#/components/schemas/Transfer'
+    TransferLog:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        created:
+          type: string
+          readOnly: true
+        type:
+          type: string
+          readOnly: true
+        errors:
+          type: array
+          readOnly: true
+          items:
+            type: string
+        transfer:
+          $ref: '#/components/schemas/Transfer'
+    TransferLogInfo:
+      type: object
+      properties:
+        log:
+          $ref: '#/components/schemas/TransferLog'
+    TransferLogs:
+      type: object
+      properties:
+        logs:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransferLog'
+    InvoiceDiscount:
+      type: object
+      required:
+        - due
+        - percentage
+      properties:
+        due:
+          type: string
+          format: datetime
+        percentage:
+          type: number
+    InvoiceDiscounts:
+      type: array
+      items:
+        $ref: '#/components/schemas/InvoiceDiscount'
+    InvoiceDescription:
+      type: object
+      required:
+        - key
+        - value
+      properties:
+        key:
+          type: string
+        value:
+          type: string
+    InvoiceDescriptions:
+      type: array
+      items:
+        $ref: '#/components/schemas/InvoiceDescription'
+    Invoice:
+      type: object
+      required:
+        - amount
+        - taxId
+        - name
+      properties:
+        tags:
+          items:
+            type: string
+        id:
+          type: string
+          readOnly: true
+        name:
+          type: string
+        taxId:
+          type: string
+          pattern: >-
+            ^((\d{3}\.\d{3}\.\d{3}\-\d{2})|(\d{11})|(\d{2}\.\d{3}\.\d{3}\/\d{4}\-\d{2})|(\d{14}))$
+        amount:
+          type: integer
+        due:
+          type: string
+          format: datetime
+        expiration:
+          type: integer
+          minimum: 0
+          default: 5097600
+        fine:
+          type: number
+          minimum: 0
+          maximum: 99.9
+          default: 2
+        interest:
+          type: number
+          minimum: 0
+          maximum: 99.9
+          default: 1
+        discounts:
+          $ref: '#/components/schemas/InvoiceDiscounts'
+        descriptions:
+          $ref: '#/components/schemas/InvoiceDescriptions'
+        status:
+          type: string
+          readOnly: true
+        fee:
+          type: integer
+          readOnly: true
+        created:
+          type: string
+          format: date
+          readOnly: true
+        updated:
+          type: string
+          format: date
+          readOnly: true
+    InvoiceInfo:
+      type: object
+      properties:
+        deposit:
+          $ref: '#/components/schemas/Invoice'
+    Invoices:
+      type: object
+      properties:
+        invoices:
+          type: array
+          items:
+            $ref: '#/components/schemas/Invoice'
+    InvoicePatch:
+      type: object
+      properties:
+        status:
+          type: string
+        amount:
+          type: integer
+        due:
+          type: string
+          format: datetime
+        expiration:
+          type: integer
+    InvoiceLog:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        created:
+          type: string
+          readOnly: true
+        type:
+          type: string
+          readOnly: true
+        errors:
+          type: array
+          readOnly: true
+          items:
+            type: string
+        invoice:
+          $ref: '#/components/schemas/Invoice'
+    InvoiceLogInfo:
+      type: object
+      properties:
+        log:
+          $ref: '#/components/schemas/InvoiceLog'
+    InvoiceLogs:
+      type: object
+      properties:
+        logs:
+          type: array
+          items:
+            $ref: '#/components/schemas/InvoiceLog'
+    Deposit:
+      type: object
+      properties:
+        tags:
+          readOnly: true
+          items:
+            type: string
+        id:
+          type: string
+          readOnly: true
+        amount:
+          readOnly: true
+          type: integer
+          minimum: 0
+        name:
+          readOnly: true
+          type: string
+        taxId:
+          readOnly: true
+          type: string
+          pattern: >-
+            ^((\d{3}\.\d{3}\.\d{3}\-\d{2})|(\d{11})|(\d{2}\.\d{3}\.\d{3}\/\d{4}\-\d{2})|(\d{14}))$
+        bankCode:
+          readOnly: true
+          type: string
+          pattern: ˆ^\d{1,8}$
+        branchCode:
+          readOnly: true
+          type: string
+          pattern: ˆ^\d{4}(\-\d{1})?$
+        accountNumber:
+          readOnly: true
+          type: string
+          pattern: ˆ^\d{1,20}$|^\d{1,19}-\d{1}$
+        accountType:
+          readOnly: true
+          type: string
+        type:
+          readOnly: true
+          type: string
+        fee:
+          type: integer
+          readOnly: true
+        transactionIds:
+          type: array
+          readOnly: true
+          items:
+            type: string
+        status:
+          type: string
+          readOnly: true
+        created:
+          type: string
+          format: date
+          readOnly: true
+        updated:
+          type: string
+          format: date
+          readOnly: true
+    DepositInfo:
+      type: object
+      properties:
+        deposit:
+          $ref: '#/components/schemas/Deposit'
+    Deposits:
+      type: object
+      properties:
+        Deposits:
+          type: array
+          items:
+            $ref: '#/components/schemas/Deposit'
+    DepositLog:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        created:
+          type: string
+          readOnly: true
+        type:
+          type: string
+          readOnly: true
+        errors:
+          type: array
+          readOnly: true
+          items:
+            type: string
+        Deposit:
+          $ref: '#/components/schemas/Deposit'
+    DepositLogInfo:
+      type: object
+      properties:
+        log:
+          $ref: '#/components/schemas/DepositLog'
+    DepositLogs:
+      type: object
+      properties:
+        logs:
+          type: array
+          items:
+            $ref: '#/components/schemas/DepositLog'
+    Boleto:
+      type: object
+      required:
+        - amount
+        - name
+        - taxId
+        - streetLine1
+        - streetLine2
+        - disctrict
+        - city
+        - stateCode
+        - zipCode
+      properties:
+        tags:
+          items:
+            type: string
+        id:
+          type: string
+          readOnly: true
+        amount:
+          type: integer
+          minimum: 200
+          maximum: 999999999
+        name:
+          type: string
+        taxId:
+          type: string
+          pattern: >-
+            ^((\d{3}\.\d{3}\.\d{3}\-\d{2})|(\d{11})|(\d{2}\.\d{3}\.\d{3}\/\d{4}\-\d{2})|(\d{14}))$
+        streetLine1:
+          type: string
+        streetLine2:
+          type: string
+        disctrict:
+          type: string
+        city:
+          type: string
+        stateCode:
+          type: string
+        zipCode:
+          type: string
+        due:
+          type: string
+          format: date
+          default: today + 2
+        fine:
+          type: number
+          minimum: 0
+          maximum: 99.9
+          default: 2
+        interest:
+          type: number
+          minimum: 0
+          maximum: 99.9
+          default: 1
+        overdueLimit:
+          type: integer
+          minimum: 0
+          maximum: 59
+          default: 59
+        receiverName:
+          type: string
+          default: ownerName
+        receiverTaxId:
+          type: string
+          pattern: >-
+            ^((\d{3}\.\d{3}\.\d{3}\-\d{2})|(\d{11})|(\d{2}\.\d{3}\.\d{3}\/\d{4}\-\d{2})|(\d{14}))$
+          default: ownerTaxId
+        descriptions:
+          $ref: '#/components/schemas/BoletoDescriptions'
+        discounts:
+          $ref: '#/components/schemas/BoletoDiscounts'
+        status:
+          type: string
+          readOnly: true
+        created:
+          type: string
+          format: date
+          readOnly: true
+    BoletoDescription:
+      type: object
+      required:
+        - text
+      properties:
+        text:
+          type: string
+        amount:
+          type: integer
+          minimum: 0
+    BoletoDescriptions:
+      type: array
+      items:
+        $ref: '#/components/schemas/BoletoDescription'
+    BoletoDiscount:
+      type: object
+      required:
+        - date
+        - percentage
+      properties:
+        date:
+          type: string
+        percentage:
+          type: number
+    BoletoDiscounts:
+      type: array
+      items:
+        $ref: '#/components/schemas/BoletoDiscount'
+    BoletoInfo:
+      type: object
+      properties:
+        boleto:
+          $ref: '#/components/schemas/Boleto'
+    Boletos:
+      type: object
+      properties:
+        boletos:
+          type: array
+          items:
+            $ref: '#/components/schemas/Boleto'
+    BoletoLog:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        created:
+          type: string
+          readOnly: true
+        type:
+          type: string
+          readOnly: true
+        errors:
+          type: array
+          readOnly: true
+          items:
+            type: string
+        boleto:
+          $ref: '#/components/schemas/Boleto'
+    BoletoLogInfo:
+      type: object
+      properties:
+        log:
+          $ref: '#/components/schemas/BoletoLog'
+    BoletoLogs:
+      type: object
+      properties:
+        logs:
+          type: array
+          items:
+            $ref: '#/components/schemas/BoletoLog'
+    BoletoSherlock:
+      type: object
+      required:
+        - boletoId
+      properties:
+        tags:
+          items:
+            type: string
+        id:
+          type: string
+          readOnly: true
+        boletoId:
+          type: string
+        result:
+          type: string
+          readOnly: true
+        status:
+          type: string
+          readOnly: true
+        created:
+          type: string
+          format: date
+          readOnly: true
+        updated:
+          type: string
+          format: date
+          readOnly: true
+    BoletoHolmesInfo:
+      type: object
+      properties:
+        holmes:
+          $ref: '#/components/schemas/BoletoSherlock'
+    BoletoHolmes:
+      type: object
+      properties:
+        holmes:
+          type: array
+          items:
+            $ref: '#/components/schemas/BoletoSherlock'
+    BoletoHolmesLog:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        created:
+          type: string
+          format: date
+          readOnly: true
+        updated:
+          type: string
+          format: date
+          readOnly: true
+        type:
+          type: string
+          readOnly: true
+        errors:
+          type: array
+          readOnly: true
+          items:
+            type: string
+        holmes:
+          $ref: '#/components/schemas/BoletoSherlock'
+    BoletoHolmesLogInfo:
+      type: object
+      properties:
+        log:
+          $ref: '#/components/schemas/BoletoHolmesLog'
+    BoletoHolmesLogs:
+      type: object
+      properties:
+        logs:
+          type: array
+          items:
+            $ref: '#/components/schemas/BoletoHolmesLog'
+    BrcodePreview:
+      type: object
+      required:
+        - brcode
+        - taxId
+        - description
+      properties:
+        id:
+          type: string
+          readOnly: true
+        name:
+          type: string
+          readOnly: true
+        taxId:
+          type: string
+          pattern: >-
+            ^((\d{3}\.\d{3}\.\d{3}\-\d{2})|(\d{11})|(\d{2}\.\d{3}\.\d{3}\/\d{4}\-\d{2})|(\d{14}))$
+          readOnly: true
+        bankCode:
+          type: string
+          readOnly: true
+        branchCode:
+          type: string
+          readOnly: true
+        accountNumber:
+          type: string
+          readOnly: true
+        accountType:
+          type: string
+          readOnly: true
+        allowChange:
+          type: boolean
+          readOnly: true
+        amount:
+          type: integer
+          readOnly: true
+        reconciliationId:
+          type: string
+          readOnly: true
+    BrcodePreviews:
+      type: object
+      properties:
+        previews:
+          type: array
+          items:
+            $ref: '#/components/schemas/BrcodePreview'
+    BrcodePayment:
+      type: object
+      required:
+        - brcode
+        - taxId
+        - description
+      properties:
+        tags:
+          items:
+            type: string
+        description:
+          type: string
+        id:
+          type: string
+          readOnly: true
+        brcode:
+          type: string
+        taxId:
+          type: string
+          pattern: >-
+            ^((\d{3}\.\d{3}\.\d{3}\-\d{2})|(\d{11})|(\d{2}\.\d{3}\.\d{3}\/\d{4}\-\d{2})|(\d{14}))$
+        amount:
+          type: integer
+        scheduled:
+          type: string
+          format: date
+        name:
+          type: string
+          readOnly: true
+        status:
+          type: string
+          readOnly: true
+        type:
+          type: string
+          readOnly: true
+        fee:
+          type: integer
+          readOnly: true
+        transactionIds:
+          type: array
+          items:
+            type: string
+          readOnly: true
+        created:
+          type: string
+          format: date
+          readOnly: true
+        updated:
+          type: string
+          format: date
+          readOnly: true
+    BrcodePaymentInfo:
+      type: object
+      properties:
+        payment:
+          $ref: '#/components/schemas/BrcodePayment'
+    BrcodePayments:
+      type: object
+      properties:
+        payments:
+          type: array
+          items:
+            $ref: '#/components/schemas/BrcodePayment'
+    BrcodePaymentPatch:
+      type: object
+      properties:
+        status:
+          type: string
+    BrcodePaymentLog:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        created:
+          type: string
+          readOnly: true
+        type:
+          type: string
+          readOnly: true
+        errors:
+          type: array
+          readOnly: true
+          items:
+            type: string
+        payment:
+          $ref: '#/components/schemas/BrcodePayment'
+    BrcodePaymentLogInfo:
+      type: object
+      properties:
+        log:
+          $ref: '#/components/schemas/BrcodePaymentLog'
+    BrcodePaymentLogs:
+      type: object
+      properties:
+        logs:
+          type: array
+          items:
+            $ref: '#/components/schemas/BrcodePaymentLog'
+    BoletoPayment:
+      type: object
+      required:
+        - taxId
+        - description
+      properties:
+        tags:
+          items:
+            type: string
+        description:
+          type: string
+        id:
+          type: string
+          readOnly: true
+        amount:
+          type: integer
+          readOnly: true
+        taxId:
+          type: string
+          pattern: >-
+            ^((\d{3}\.\d{3}\.\d{3}\-\d{2})|(\d{11})|(\d{2}\.\d{3}\.\d{3}\/\d{4}\-\d{2})|(\d{14}))$
+        line:
+          type: string
+          pattern: ^\d{5}\.\d{5}\s\d{5}\.\d{6}\s\d{5}\.\d{6}\s\d{1}\s\d{14}$
+        barCode:
+          type: string
+          pattern: ^\d{44}$
+        scheduled:
+          type: string
+          format: date
+        fee:
+          type: integer
+          readOnly: true
+        transactionIds:
+          type: array
+          items:
+            type: string
+          readOnly: true
+        status:
+          type: string
+          readOnly: true
+        created:
+          type: string
+          format: date
+          readOnly: true
+    BoletoPaymentInfo:
+      type: object
+      properties:
+        payment:
+          $ref: '#/components/schemas/BoletoPayment'
+    BoletoPayments:
+      type: object
+      properties:
+        payments:
+          type: array
+          items:
+            $ref: '#/components/schemas/BoletoPayment'
+    BoletoPaymentLog:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        created:
+          type: string
+          readOnly: true
+        type:
+          type: string
+          readOnly: true
+        errors:
+          type: array
+          readOnly: true
+          items:
+            type: string
+        payment:
+          $ref: '#/components/schemas/BoletoPayment'
+    BoletoPaymentLogInfo:
+      type: object
+      properties:
+        log:
+          $ref: '#/components/schemas/BoletoPaymentLog'
+    BoletoPaymentLogs:
+      type: object
+      properties:
+        logs:
+          type: array
+          items:
+            $ref: '#/components/schemas/BoletoPaymentLog'
+    UtilityPayment:
+      type: object
+      required:
+        - taxId
+        - description
+      properties:
+        tags:
+          items:
+            type: string
+        description:
+          type: string
+        id:
+          type: string
+          readOnly: true
+        amount:
+          type: integer
+          readOnly: true
+        line:
+          type: string
+          pattern: ^\d{5}\.\d{5}\s\d{5}\.\d{6}\s\d{5}\.\d{6}\s\d{1}\s\d{14}$
+        barCode:
+          type: string
+          pattern: ^\d{44}$
+        scheduled:
+          type: string
+          format: date
+        fee:
+          type: integer
+          readOnly: true
+        transactionIds:
+          type: array
+          items:
+            type: string
+          readOnly: true
+        status:
+          type: string
+          readOnly: true
+        created:
+          type: string
+          format: date
+          readOnly: true
+    UtilityPaymentInfo:
+      type: object
+      properties:
+        payment:
+          $ref: '#/components/schemas/UtilityPayment'
+    UtilityPayments:
+      type: object
+      properties:
+        payments:
+          type: array
+          items:
+            $ref: '#/components/schemas/UtilityPayment'
+    UtilityPaymentLog:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        created:
+          type: string
+          readOnly: true
+        type:
+          type: string
+          readOnly: true
+        errors:
+          type: array
+          readOnly: true
+          items:
+            type: string
+        payment:
+          $ref: '#/components/schemas/UtilityPayment'
+    UtilityPaymentLogInfo:
+      type: object
+      properties:
+        log:
+          $ref: '#/components/schemas/UtilityPaymentLog'
+    UtilityPaymentLogs:
+      type: object
+      properties:
+        logs:
+          type: array
+          items:
+            $ref: '#/components/schemas/UtilityPaymentLog'
+    PaymentRequestAction:
+      type: object
+      properties:
+        action:
+          type: string
+          readOnly: true
+        type:
+          type: string
+          readOnly: true
+        id:
+          type: string
+          readOnly: true
+        name:
+          type: string
+          readOnly: true
+        pictureUrl:
+          type: string
+          readOnly: true
+        email:
+          type: string
+          readOnly: true
+    PaymentRequest:
+      type: object
+      required:
+        - centerId
+        - type
+        - payment
+      properties:
+        tags:
+          items:
+            type: string
+        id:
+          type: string
+          readOnly: true
+        centerId:
+          type: string
+        type:
+          type: string
+        payment:
+          type: object
+        due:
+          type: string
+          format: date
+        amount:
+          type: integer
+          readOnly: true
+        actions:
+          type: array
+          items:
+            $ref: '#/components/schemas/PaymentRequestAction'
+          readOnly: true
+        status:
+          type: string
+          readOnly: true
+        created:
+          type: string
+          format: date
+          readOnly: true
+        updated:
+          type: string
+          format: date
+          readOnly: true
+    PaymentRequests:
+      type: object
+      properties:
+        requests:
+          type: array
+          items:
+            $ref: '#/components/schemas/PaymentRequest'
+    Webhook:
+      type: object
+      required:
+        - url
+        - subscriptions
+      properties:
+        id:
+          type: string
+          readOnly: true
+        url:
+          type: string
+        subscriptions:
+          type: array
+          items:
+            type: string
+    WebhookInfo:
+      type: object
+      properties:
+        webhook:
+          $ref: '#/components/schemas/Webhook'
+    Webhooks:
+      type: object
+      properties:
+        webhooks:
+          type: array
+          items:
+            $ref: '#/components/schemas/Webhook'
+    Event:
+      type: object
+      required:
+        - url
+        - subscriptions
+      properties:
+        id:
+          type: string
+          readOnly: true
+        isDelivered:
+          type: boolean
+        subscription:
+          type: string
+          readOnly: true
+        created:
+          type: string
+          readOnly: true
+        log:
+          type: object
+          readOnly: true
+          oneOf:
+            - $ref: '#/components/schemas/BoletoLog'
+            - $ref: '#/components/schemas/TransferLog'
+            - $ref: '#/components/schemas/BoletoPaymentLog'
+            - $ref: '#/components/schemas/UtilityPaymentLog'
+    EventInfo:
+      type: object
+      properties:
+        event:
+          $ref: '#/components/schemas/Event'
+    Events:
+      type: object
+      properties:
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/Event'
+    EventPatch:
+      type: object
+      properties:
+        isDelivered:
+          type: boolean
+    DictKey:
+      type: object
+      properties:
+        id:
+          type: string
+          readOnly: true
+        name:
+          type: string
+          readOnly: true
+        taxId:
+          type: string
+          readOnly: true
+        ownerType:
+          type: string
+          readOnly: true
+        ispb:
+          type: string
+          pattern: ˆ^\d{1,8}$
+          readOnly: true
+        branchCode:
+          type: string
+          pattern: ˆ^\d{4}(\-\d{1})?$
+          readOnly: true
+        accountNumber:
+          type: string
+          pattern: ˆ^\d{1,20}$|^\d{1,19}-\d{1}$
+          readOnly: true
+        accountType:
+          type: string
+          readOnly: true
+        status:
+          type: string
+          readOnly: true
+        account_created:
+          type: string
+          format: date
+          readOnly: true
+        owned:
+          type: string
+          format: date
+          readOnly: true
+        created:
+          type: string
+          format: date
+          readOnly: true
+    DictKeyInfo:
+      type: object
+      properties:
+        key:
+          $ref: '#/components/schemas/DictKey'
+    DictKeys:
+      type: object
+      properties:
+        keys:
+          type: array
+          items:
+            $ref: '#/components/schemas/DictKey'
+    Workspace:
+      type: object
+      required:
+        - username
+        - name
+      properties:
+        id:
+          type: string
+          readOnly: true
+        username:
+          type: string
+        name:
+          type: string
+    WorkspaceInfo:
+      type: object
+      properties:
+        workspace:
+          $ref: '#/components/schemas/Workspace'
+    Workspaces:
+      type: object
+      properties:
+        workspaces:
+          type: array
+          items:
+            $ref: '#/components/schemas/Workspace'
+    PublicKey:
+      type: object
+      required:
+        - url
+        - subscriptions
+      properties:
+        content:
+          type: string
+          readOnly: true
+        created:
+          type: string
+          readOnly: true
+    PublicKeys:
+      type: object
+      properties:
+        publicKeys:
+          type: array
+          items:
+            $ref: '#/components/schemas/PublicKey'
+    TransferGetPdfReceiptByIdResponse:
+      type: string
+      format: binary
+    InvoiceGeneratePdfByIdResponse:
+      type: string
+      format: binary
+    InvoiceGetQrCodeByIdResponse:
+      type: string
+      format: binary
+    BoletoGetPdfByIdResponse:
+      type: string
+      format: binary
+    BrcodePaymentGetPdfReceiptByPaymentIdResponse:
+      type: string
+      format: binary
+    BoletoPaymentGetPdfReceiptByPaymentIdResponse:
+      type: string
+      format: binary
+    UtilityPaymentGetPdfReceiptByPaymentIdResponse:
+      type: string
+      format: binary
+externalDocs:
+  description: StarkBank API documentation
+  url: https://starkbank.com/docs/api
