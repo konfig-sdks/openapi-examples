@@ -4,7 +4,7 @@
 
 Text Request is the business texting platform built to ignite customer engagement. We've crafted plug-and-play messaging solutions to your everyday communication problems, so you can cut through the noise and connect with customers anytime, anywhere.
 
-Text Request is designed to scale with you, from one person handling a few conversations, to thousands of employees sending millions of messages, to custom solutions built on our API. 
+Text Request is designed to scale with you, from one person handling a few conversations, to thousands of employees sending millions of messages, to custom solutions built on our API.
 
 Learn more about how we help busy business leaders like you with conversational texting and customer engagement at textrequest.com.
 
