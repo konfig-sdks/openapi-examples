@@ -1,0 +1,4092 @@
+openapi: 3.0.0
+info:
+  title: Version 4 of the BL.INK API
+  description: >-
+    # Introduction
+
+    This is version 4 of the BL.INK API. It follows common REST patterns.
+    [Download a Postman file](https://blink.engineer/postman) to help you get
+    gain knowledge of our API. Learn more about [Postman Desktop
+    App](https://www.postman.com/downloads/).
+
+    **NOTE: This version of tha API is exactly like v3 with responses that are
+    more consistent.
+
+    Docs for v3 can be found at: https://developers.bl.ink/api-v3.html
+
+    Endpoints that have changed include Get Link, Create Link, and Update Link,
+    and Validate Link, and Create Tag.
+     Please test the responses before using in production systems.**
+
+    API PRIMARY BASE URL
+
+
+    https://app.bl.ink/api/v4
+
+
+    Note: Enterprise customers must use the admin panel domain in place of
+    https://app.bl.ink.
+
+    Please use SSL (https) for all requests.
+
+    All API calls are subject to a rate limit of 5 connections per second per IP
+    address. All requests exceeding that limitation will receive an HTTP 533,
+    HTTP 544, or HTTP 503 (Service Temporarily Unavailable).
+
+    # Authentication
+
+    All endpoints require a valid access token for authentication:
+
+    1. Invoke the ```POST /access_token``` endpoint to get a new access_token
+
+    1. Add the following header to all endpoint requests:
+     ```Authorization: Bearer <access_token>```
+    If you see a refresh token in your BL.INK UI, use that to get a new
+    access_token
+
+
+    There are two types of tokens, access and refresh token. An access token is
+    used with each api call to verify the user. A user requests an access token
+    with either their username and password, or their username and their refresh
+    token. An access token expires after 24 hours. Our api end point to retrieve
+    an access token will always return a valid access token so the user doesn't
+    need to keep track of expiration.
+
+
+    If you would rather not supply your password to receive an access token, you
+    may use the refresh token instead..
+
+    # Client
+
+    To generate client SDK code:
+
+
+    1. Download the OpenApi specification file (above)
+
+    1. Follow these instructions: [Swagger Code
+    Generation](https://swagger.io/docs/swagger-tools/#swagger-codegen-documentation-9)
+  version: 4.0.0
+  contact:
+    name: API Support
+    url: https://help.bl.ink
+    email: help@bl.ink
+  x-logo:
+    url: /includes/img/blink-60.png
+  x-api-status-urls: false
+  x-konfig-ignore:
+    object-with-no-properties: true
+servers:
+  - url: https://{instance}.bl.ink/api/v4
+    variables:
+      instance:
+        description: Subdomain that an instance of BL.INK has been installed on.
+        default: app
+tags:
+  - name: Tags
+  - description: Validate Customer Login Credentials
+    name: Validate Login
+  - description: Create Access Token
+    name: Access Token
+  - description: List Users
+    name: List Users
+  - description: Create Branded Link or BL.INK Link
+    name: Create Link
+  - description: Update Link
+    name: Update Link
+  - description: List Links
+    name: List Links
+  - description: List Clicked Links
+    name: List Clicked Links
+  - description: Searches to find a link with a given alias.
+    name: Get Link By Alias
+  - description: Once a link is created you may retrieve it in the form of a QR code.
+    name: Retrieve QR Code
+  - description: List Domains
+    name: List Domains
+  - description: Get Domain by ID
+    name: Get Domain by ID
+  - description: Create Domain
+    name: Create Domain
+  - description: Update Domain
+    name: Update Domain
+  - description: Delete Domain
+    name: Delete Domain
+  - description: List UTM Templates
+    name: List UTM Templates
+  - description: List Groups
+    name: List Groups
+  - description: List link count per day
+    name: Domain Click Count Per Day
+  - description: List link count per country
+    name: Domain Click Count Per Country
+  - description: List link count per region
+    name: Domain Click Count Per Region
+  - description: List link count per city
+    name: Domain Click Count Per City
+  - description: List link count per device
+    name: Domain Click Count Per Device
+  - description: List link count per referrer
+    name: Domain Click Count Per Referrer
+  - description: List link count(s)
+    name: Link Click Count
+  - description: List link count per hour
+    name: Link Click Count Per Hour
+  - description: List link count per day
+    name: Link Click Count Per Day
+  - description: List link count per country
+    name: Link Click Count Per Country
+  - description: List link count per region
+    name: Link Click Count Per Region
+  - description: List link count per city
+    name: Link Click Count Per City
+  - description: List link count per device
+    name: Link Click Count Per Device
+  - description: List link count per referrer
+    name: Link Click Count Per Referrer
+  - description: List link raw clicks
+    name: Link Raw Clicks
+  - description: List of all the error codes that can be returned
+    name: Error Codes
+  - name: Validate Link
+  - name: Get Link
+  - name: Get Domain by Domain Name
+  - description: Authentication
+    name: Authentication
+  - description: Links
+    name: Links
+  - description: Domains
+    name: Domains
+  - description: UTM Templates
+    name: UTM Templates
+  - description: Groups
+    name: Groups
+  - description: Miscellaneous
+    name: Misc
+paths:
+  /validate_login:
+    post:
+      tags:
+        - Validate Login
+      summary: Validates login information
+      operationId: ValidateLogin_information
+      description: Validates login information
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CredentialsEmailPassword'
+      responses:
+        '200':
+          description: Successfully validated that the username and password are correct
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidateLoginInformationResponse'
+        '401':
+          description: The input auth data was invalid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidAuthError'
+  /access_token:
+    post:
+      tags:
+        - Access Token
+      summary: Returns a valid authentication token
+      operationId: AccessToken_generateToken
+      description: |2-
+         Returns a valid authentication token. When requesting a token it will return an existing not-expired token. If an existing expired token exists, it will generate a new token and return that.
+        This will accept either a password for the account or a refresh token.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccessTokenGenerateTokenRequest'
+      responses:
+        '200':
+          description: A valid token should have been returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessTokenGenerateTokenResponse'
+        '401':
+          description: The input auth data was invalid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidAuthError'
+  /users:
+    get:
+      tags:
+        - List Users
+      summary: >-
+        Returns the users in an account for those who have account admin
+        authorization.
+      operationId: ListUsers_byAccountAdmin
+      responses:
+        '200':
+          description: Successfully return total clicks per referrer for a given domain.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListUsersByAccountAdminResponse'
+  /{domain_id}/links:
+    parameters:
+      - name: domain_id
+        in: path
+        required: true
+        schema:
+          type: integer
+    post:
+      tags:
+        - Create Link
+      summary: Will take the passed in URL and create a new shortened link.
+      operationId: CreateLink_shortenedUrl
+      description: >-
+        Will take the passed in URL and create a new shortened link based on the
+        parameters that are passed in.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateLinkShortenedUrlRequest'
+      responses:
+        '200':
+          description: Successfully created the short link using passed in parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateLinkShortenedUrlResponse'
+          links:
+            GetDomainByDomainId:
+              $ref: '#/components/links/GetDomainByDomainId'
+        '400':
+          description: The input data was invalid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidDataError'
+    get:
+      tags:
+        - List Links
+      summary: Returns a list of user's links filtering by query params
+      operationId: ListLinks_byQueryParams
+      description: >-
+        Searches for all links matching the query parameters that belong to the
+        API user
+      parameters:
+        - description: The UTC unix timestamp, query returns values after this date.
+          name: from_unix
+          in: query
+          required: false
+          schema:
+            type: integer
+        - description: >-
+            The UTC unix timestamp, query returns values before this date.
+            Required if from_unix is specified.
+          name: to_unix
+          in: query
+          required: false
+          schema:
+            type: integer
+        - description: Search links by tag
+          name: tag
+          in: query
+          required: false
+          schema:
+            type: string
+        - description: Search link alias, notes, and redirect url for keyword
+          name: keyword
+          in: query
+          schema:
+            type: string
+        - description: Page number
+          name: page
+          in: query
+          schema:
+            type: integer
+        - description: long URL to search links by
+          name: url
+          in: query
+          schema:
+            type: string
+        - description: >-
+            Orders results differently. Possible values 'oldest' or 'latest'. 
+            Defaults to 'oldest'
+          name: order
+          in: query
+          schema:
+            type: string
+        - description: Search links by group_id
+          name: group_id
+          in: query
+          schema:
+            type: integer
+        - description: >-
+            A flag for privileged users (domain admins or account admins) to
+            specify returning all links  from corresponding domain instead of
+            just links they created. Example users=all
+          name: users
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successfully return a list of links
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListLinksByQueryParamsResponse'
+        '400':
+          description: The input data was invalid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidDataError'
+  /{domain_id}/links/clicked?tag={tag}:
+    get:
+      tags:
+        - List Clicked Links
+      summary: >-
+        Returns links clicked on within a specified time range as well as the
+        number of clicks (lifetime and within range)
+      operationId: ListClickedLinks_withinTimeframe
+      description: >-
+        (**Team, Business, and Enterprise Only**) This endpoint retrieves the
+        links that have been clicked within a specified timeframe. A user with
+        elevated privileges automatically queries all user's links under the
+        domain and must use the 'from_user'  flag to specify themselves. See
+        request parameters. A user without these privileges will only be able to
+        query their own links. A domain ID must be specified in the URL. You may
+        provide a timestamp range as well as a page number. The timestamp is
+        assumed to be in UTC format and follow unix standards. The max time
+        period  allowed to query is a year. If no timestamp range is set, the
+        output will return any links clicked from a week ago til today. If only
+        the starting timestamp is set, the result will be the  clicked links
+        from a year ahead of starting timestamp. The ending timestamp cannot be
+        specified on  its own without a starting timestamp. The range cannot
+        exceed a year at a time. The page  defaults to 1 with a max number of
+        results set to a predefined number 50. **The click count  is retrieved
+        from a cached instance and therefore does not represent the real-time
+        total**. Results are sorted by most clicked.
+      parameters:
+        - description: The unique domain identifier.
+          name: domain_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - description: The UTC unix timestamp, query returns values after this date.
+          name: from_unix
+          in: query
+          required: false
+          schema:
+            type: integer
+        - description: >-
+            The UTC unix timestamp, query returns values before this date.
+            Required if from_unix is specified.
+          name: to_unix
+          in: query
+          required: false
+          schema:
+            type: integer
+        - description: >-
+            An optional parameter. Valid value 'me' is allowed to only query for
+            your links.
+          name: from_user
+          in: query
+          required: false
+          schema:
+            - type: string
+        - description: Search link alias, notes, and redirect url for keyword
+          name: keyword
+          in: query
+          schema:
+            type: string
+        - description: >-
+            The page of to query the values from the paginated results. Defaults
+            to 1.
+          name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+        - description: Search links by tag
+          name: tag
+          in: query
+          required: false
+          schema:
+            type: string
+        - description: Search links by group_id
+          name: group_id
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successfully return total clicks per referrer for a given domain.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListClickedLinksWithinTimeframeResponse'
+  /links/validate:
+    post:
+      tags:
+        - Validate Link
+      summary: Will take the passed in URL and validate it.
+      operationId: ValidateLink_url
+      description: Will take the passed in URL and validate it.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ValidateLinkUrlRequest'
+      responses:
+        '200':
+          description: The URL is valid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidateLinkUrlResponse'
+        '400':
+          description: The input data was invalid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidDataError'
+  /{domain_id}/links/{link_id}:
+    parameters:
+      - name: domain_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      - name: link_id
+        in: path
+        required: true
+        schema:
+          type: integer
+    get:
+      tags:
+        - Get Link
+      summary: Returns a short link
+      operationId: GetLink_shortenedLink
+      description: >-
+        Returns a short link. Each short link has a corresponding domain it
+        belongs to and and individual id.
+      responses:
+        '200':
+          description: Successfully returned a short link.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetLinkShortenedLinkResponse'
+    patch:
+      tags:
+        - Update Link
+      summary: Takes a series of change operations and applies them to the link
+      operationId: UpdateLink_withChanges
+      description: >-
+        Will take an array of objects defining operations to be performed. This
+        is based on the JSON patch format as defined in [RFC
+        6902](https://tools.ietf.org/html/rfc6902).
+
+
+        # Supported Operations:
+
+        - replace
+
+
+        # Supported paths:
+
+        - /alias
+
+        - /url
+
+        - /notes
+
+        - /notify_on_click
+
+        - /delete_on
+
+        - /archive_on
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateLinkWithChangesRequest'
+      responses:
+        '200':
+          description: Successfully modified the link
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateLinkWithChangesResponse'
+        '400':
+          description: The input data was invalid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidDataError'
+  /{domain_id}/links/exists?alias={alias}:
+    parameters:
+      - name: domain_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      - name: alias
+        in: query
+        required: true
+        schema:
+          type: string
+    get:
+      tags:
+        - Get Link By Alias
+      summary: Returns a short link by the given alias
+      operationId: GetLinkByAlias_shortenedUrl
+      description: >-
+        Returns a short link. Each short link has a corresponding domain it
+        belongs to and the provided.
+      responses:
+        '200':
+          description: Successfully returned a short link.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetLinkByAliasShortenedUrlResponse'
+  /{domain_id}/links/{link_id}/qr:
+    parameters:
+      - name: domain_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      - name: link_id
+        in: path
+        required: true
+        schema:
+          type: integer
+      - description: png (default), eps, svg
+        name: format
+        in: query
+        required: false
+        schema:
+          type: string
+    get:
+      tags:
+        - Retrieve QR Code
+      summary: Retrieve link in QR form
+      operationId: RetrieveQrCode_forLink
+      description: >-
+        Returns QR data for specified link, domain in the specified format. The
+        API will return the image data in binary format.
+      responses:
+        '200':
+          description: Successfully returned a short link.
+          content:
+            image/png:
+              schema:
+                $ref: '#/components/schemas/RetrieveQrCodeForLinkResponse'
+            image/svg:
+              schema:
+                $ref: '#/components/schemas/RetrieveQrCodeForLink200Response'
+            image/eps:
+              schema:
+                $ref: '#/components/schemas/RetrieveQrCodeForLink200Response'
+        '400':
+          description: The input data was invalid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidDataError'
+        '401':
+          description: The input auth data was invalid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedError'
+  /{domain_id}/clicks/daily:
+    get:
+      tags:
+        - Domain Click Count Per Day
+      summary: Returns the domain click count for each day.
+      operationId: DomainClickCountPerDay_getCountByDay
+      description: >-
+        (**Team, Business, and Enterprise Only**) This endpoint retrieves the
+        total clicks made on a domain grouped by days. A domain ID must be
+        specified in the URL. Optionally, you may provide a timestamp range as
+        well as a page number. The timestamp is assumed to be in UTC format and
+        follow unix standards. The max time period allowed to query is a year.
+        If no  timestamp range is set, the output will be the total count from a
+        week ago til today. If only  the starting timestamp is set, the result
+        will be the counts from a year ahead of starting  timestamp. The ending
+        timestamp cannot be specified on its own without a starting timestamp. 
+        The range cannot exceed a year at a time. The page defaults to 1 with a
+        max number of results set to a predefined number 50. The counts are
+        retrieved from a cached instance and therefore does not  represent the
+        real-time total but comes close. Result are sorted by day.
+      parameters:
+        - description: The unique domain identifier.
+          name: domain_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - description: The UTC unix timestamp, query returns values after this date.
+          name: from_unix
+          in: query
+          required: false
+          schema:
+            type: integer
+        - description: >-
+            The UTC unix timestamp, query returns values before this date.
+            Required if from_unix is specified.
+          name: to_unix
+          in: query
+          required: false
+          schema:
+            type: integer
+        - description: >-
+            An optional parameter containing the user's ID to query. Elevated
+            privileges are required to specify another. Defaults to current
+            user. Valid value 'all' is allowed for users of elevated privileges.
+          name: user_id
+          in: query
+          required: false
+          schema:
+            oneOf:
+              - type: string
+              - type: integer
+        - description: An optional parameter containing the label's ID to query.
+          name: label_id
+          in: query
+          required: false
+          schema:
+            oneOf:
+              - type: string
+              - type: integer
+        - description: Search link alias, notes, and redirect url for keyword
+          name: keyword
+          in: query
+          schema:
+            type: string
+        - description: The page of to query the values from the paginated results.
+          name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successfully return the daily total clicks for a given domain.
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/DomainClickCountPerDayGetCountByDayResponse
+  /{domain_id}/clicks/country:
+    get:
+      tags:
+        - Domain Click Count Per Country
+      summary: Returns the total click count per country.
+      operationId: DomainClickCountPerCountry_getTotalCountsByCountry
+      description: >-
+        (**Team, Business, and Enterprise Only**) This endpoint retrieves the
+        total clicks made on a domain grouped by country. A  domain ID must be
+        specified in the url with the option to set a timestamp range  and a
+        page to retrieve the paginated results. If the timestamp range exceeds a
+        day the hour  The timestamp is assumed to be in UTC format and follow
+        unix standards. The max time period  allowed to query is a year. If no
+        timestamp range is set, the output will be the total count  from a week
+        ago til today. If only the starting timestamp is set, the result will be
+        the  counts from a year ahead of starting timestamp. The ending
+        timestamp cannot be specified on  its own without a starting timestamp.
+        The range cannot exceed a year at a time. The page  defaults to 1 with a
+        max number of results set to a predefined number 50. The count  is
+        retrieved from a cached instance and therefore does not represent the
+        real-time total. Results are sorted by popularity then by country.
+      parameters:
+        - description: The unique domain identifier.
+          name: domain_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - description: The UTC unix timestamp, query returns values after this date.
+          name: from_unix
+          in: query
+          required: false
+          schema:
+            type: integer
+        - description: >-
+            The UTC unix timestamp, query returns values before this date.
+            Required if from_unix is specified.
+          name: to_unix
+          in: query
+          required: false
+          schema:
+            type: integer
+        - description: >-
+            An optional parameter containing the user's ID to query. Elevated
+            privileges are required to specify another. Defaults to current
+            user. Valid value 'all' is allowed for users of elevated privileges.
+          name: user_id
+          in: query
+          required: false
+          schema:
+            oneOf:
+              - type: string
+              - type: integer
+        - description: An optional parameter containing the label's ID to query.
+          name: label_id
+          in: query
+          required: false
+          schema:
+            oneOf:
+              - type: string
+              - type: integer
+        - description: Search link alias, notes, and redirect url for keyword
+          name: keyword
+          in: query
+          schema:
+            type: string
+        - description: The country to query the values
+          name: country
+          in: query
+          required: false
+          schema:
+            type: string
+        - description: The page of to query the values from the paginated results.
+          name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successfully return total clicks per country for a given domain.
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/DomainClickCountPerCountryGetTotalCountsByCountryResponse
+  /{domain_id}/clicks/region:
+    get:
+      tags:
+        - Domain Click Count Per Region
+      summary: Returns the total click count per region.
+      operationId: DomainClickCountPerRegion_getByRegion
+      description: >-
+        (**Team, Business, and Enterprise Only**) This endpoint retrieves the
+        total clicks made on a domain grouped by region. A  domain ID must be
+        specified in the url with the option to set a timestamp range  and a
+        page to retrieve the paginated results. If the timestamp range exceeds a
+        day the hour  The timestamp is assumed to be in UTC format and follow
+        unix standards. The max time period  allowed to query is a year. If no
+        timestamp range is set, the output will be the total count  from a week
+        ago til today. If only the starting timestamp is set, the result will be
+        the  counts from a year ahead of starting timestamp. The ending
+        timestamp cannot be specified on  its own without a starting timestamp.
+        The range cannot exceed a year at a time. TThe page  defaults to 1 with
+        a max number of results set to a predefined number 50. The count  is
+        retrieved from a cached instance and therefore does not represent the
+        real-time total. Results are sorted by popularity then by country and
+        region.
+      parameters:
+        - description: The unique domain identifier.
+          name: domain_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - description: The UTC unix timestamp, query returns values after this date.
+          name: from_unix
+          in: query
+          required: false
+          schema:
+            type: integer
+        - description: >-
+            The UTC unix timestamp, query returns values before this date.
+            Required if from_unix is specified.
+          name: to_unix
+          in: query
+          required: false
+          schema:
+            type: integer
+        - description: >-
+            An optional parameter containing the user's ID to query. Elevated
+            privileges are required to specify another. Defaults to current
+            user. Valid value 'all' is allowed for users of elevated privileges.
+          name: user_id
+          in: query
+          required: false
+          schema:
+            oneOf:
+              - type: string
+              - type: integer
+        - description: An optional parameter containing the label's ID to query.
+          name: label_id
+          in: query
+          required: false
+          schema:
+            oneOf:
+              - type: string
+              - type: integer
+        - description: Search link alias, notes, and redirect url for keyword
+          name: keyword
+          in: query
+          schema:
+            type: string
+        - description: The country to query the values
+          name: country
+          in: query
+          required: false
+          schema:
+            type: string
+        - description: The region to query the values
+          name: region
+          in: query
+          required: false
+          schema:
+            type: string
+        - description: The page of to query the values from the paginated results.
+          name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successfully return total clicks per region for a given domain.
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/DomainClickCountPerRegionGetByRegionResponse
+  /{domain_id}/clicks/city:
+    get:
+      tags:
+        - Domain Click Count Per City
+      summary: Returns the total click count per city.
+      operationId: DomainClickCountPerCity_getTotalClickCountPerCity
+      description: >-
+        (**Team, Business, and Enterprise Only**) This endpoint retrieves the
+        total clicks made on a domain grouped by city. A domain ID must be
+        specified in the url with the option to set a timestamp range  and a
+        page to retrieve the paginated results. If the timestamp range exceeds a
+        day the hour  The timestamp is assumed to be in UTC format and follow
+        unix standards. The max time period  allowed to query is a year. If no
+        timestamp range is set, the output will be the total count  from a week
+        ago til today. If only the starting timestamp is set, the result will be
+        the  counts from a year ahead of starting timestamp. The ending
+        timestamp cannot be specified on  its own without a starting timestamp.
+        The range cannot exceed a year at a time. The page  defaults to 1 with a
+        max number of results set to a predefined number 50. The count  is
+        retrieved from a cached instance and therefore does not represent the
+        real-time total. Results are sorted by popularity then by country,
+        region, and city.
+      parameters:
+        - description: The unique domain identifier.
+          name: domain_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - description: The UTC unix timestamp, query returns values after this date.
+          name: from_unix
+          in: query
+          required: false
+          schema:
+            type: integer
+        - description: >-
+            The UTC unix timestamp, query returns values before this date.
+            Required if from_unix is specified.
+          name: to_unix
+          in: query
+          required: false
+          schema:
+            type: integer
+        - description: >-
+            An optional parameter containing the user's ID to query. Elevated
+            privileges are required to specify another. Defaults to current
+            user. Valid value 'all' is allowed for users of elevated privileges.
+          name: user_id
+          in: query
+          required: false
+          schema:
+            oneOf:
+              - type: string
+              - type: integer
+        - description: An optional parameter containing the label's ID to query.
+          name: label_id
+          in: query
+          required: false
+          schema:
+            oneOf:
+              - type: string
+              - type: integer
+        - description: Search link alias, notes, and redirect url for keyword
+          name: keyword
+          in: query
+          schema:
+            type: string
+        - description: The country to query the values
+          name: country
+          in: query
+          required: false
+          schema:
+            type: string
+        - description: The region to query the values
+          name: region
+          in: query
+          required: false
+          schema:
+            type: string
+        - description: The city to query the values
+          name: city
+          in: query
+          required: false
+          schema:
+            type: string
+        - description: The page of to query the values from the paginated results.
+          name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successfully return total clicks per city for a given domain.
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/DomainClickCountPerCityGetTotalClickCountPerCityResponse
+  /{domain_id}/clicks/device:
+    get:
+      tags:
+        - Domain Click Count Per Device
+      summary: Returns the total click count per device.
+      operationId: DomainClickCountPerDevice_getTotalClicksPerDevice
+      description: >-
+        (**Team, Business, and Enterprise Only**) This endpoint retrieves the
+        total clicks made on a domain grouped by device. A  domain ID must be
+        specified in the url with the option to set a timestamp range  and a
+        page to retrieve the paginated results. If the timestamp range exceeds a
+        day the hour  The timestamp is assumed to be in UTC format and follow
+        unix standards. The max time period  allowed to query is a year. If no
+        timestamp range is set, the output will be the total count  from a week
+        ago til today. If only the starting timestamp is set, the result will be
+        the  counts from a year ahead of starting timestamp. The ending
+        timestamp cannot be specified on  its own without a starting timestamp.
+        The range cannot exceed a year at a time. The page  defaults to 1 with a
+        max number of results set to a predefined number 50. The count  is
+        retrieved from a cached instance and therefore does not represent the
+        real-time total. Results are sorted by popularity then by device.
+      parameters:
+        - description: The unique domain identifier.
+          name: domain_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - description: The UTC unix timestamp, query returns values after this date.
+          name: from_unix
+          in: query
+          required: false
+          schema:
+            type: integer
+        - description: >-
+            The UTC unix timestamp, query returns values before this date.
+            Required if from_unix is specified.
+          name: to_unix
+          in: query
+          required: false
+          schema:
+            type: integer
+        - description: >-
+            An optional parameter containing the user's ID to query. Elevated
+            privileges are required to specify another. Defaults to current
+            user. Valid value 'all' is allowed for users of elevated privileges.
+          name: user_id
+          in: query
+          required: false
+          schema:
+            oneOf:
+              - type: string
+              - type: integer
+        - description: An optional parameter containing the label's ID to query.
+          name: label_id
+          in: query
+          required: false
+          schema:
+            oneOf:
+              - type: string
+              - type: integer
+        - description: Search link alias, notes, and redirect url for keyword
+          name: keyword
+          in: query
+          schema:
+            type: string
+        - description: The device to query the values
+          name: device
+          in: query
+          required: false
+          schema:
+            type: string
+        - description: The page of to query the values from the paginated results.
+          name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successfully return total clicks per device for a given domain.
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/DomainClickCountPerDeviceGetTotalClicksPerDeviceResponse
+  /{domain_id}/clicks/referrer:
+    get:
+      tags:
+        - Domain Click Count Per Referrer
+      summary: Returns the total click count per referrer.
+      operationId: DomainClickCountPerReferrer_totalClickPerReferrer
+      description: >-
+        (**Team, Business, and Enterprise Only**) This endpoint retrieves the
+        total clicks made on a domain grouped by referrer. A domain ID must be
+        specified in the url with the option to set a timestamp range  and a
+        page to retrieve the paginated results. If the timestamp range exceeds a
+        day the hour  The timestamp is assumed to be in UTC format and follow
+        unix standards. The max time period  allowed to query is a year. If no
+        timestamp range is set, the output will be the total count  from a week
+        ago til today. If only the starting timestamp is set, the result will be
+        the  counts from a year ahead of starting timestamp. The ending
+        timestamp cannot be specified on  its own without a starting timestamp.
+        The range cannot exceed a year at a time. The page  defaults to 1 with a
+        max number of results set to a predefined number 50. The count  is
+        retrieved from a cached instance and therefore does not represent the
+        real-time total. Results are sorted by popularity then by referrer.
+      parameters:
+        - description: The unique domain identifier.
+          name: domain_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - description: The unique link identifier.
+          name: link_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - description: The UTC unix timestamp, query returns values after this date.
+          name: from_unix
+          in: query
+          required: false
+          schema:
+            type: integer
+        - description: >-
+            The UTC unix timestamp, query returns values before this date.
+            Required if from_unix is specified.
+          name: to_unix
+          in: query
+          required: false
+          schema:
+            type: integer
+        - description: >-
+            An optional parameter containing the user's ID to query. Elevated
+            privileges are required to specify another. Defaults to current
+            user. Valid value 'all' is allowed for users of elevated privileges.
+          name: user_id
+          in: query
+          required: false
+          schema:
+            oneOf:
+              - type: string
+              - type: integer
+        - description: An optional parameter containing the label's ID to query.
+          name: label_id
+          in: query
+          required: false
+          schema:
+            oneOf:
+              - type: string
+              - type: integer
+        - description: Search link alias, notes, and redirect url for keyword
+          name: keyword
+          in: query
+          schema:
+            type: string
+        - description: The referrer to query the values
+          name: referrer
+          in: query
+          required: false
+          schema:
+            type: string
+        - description: >-
+            The page of to query the values from the paginated results. Defaults
+            to 1.
+          name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successfully return total clicks per referrer for a given domain.
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/DomainClickCountPerReferrerTotalClickPerReferrerResponse
+  /{domain_id}/links/{link_id}/clicks:
+    get:
+      tags:
+        - Link Click Count
+      summary: >-
+        Returns the total and total unique click counts without filters or the
+        time-based filtered count.
+      operationId: LinkClickCount_getTotalClickCounts
+      description: >-
+        This endpoint retrieves the total and total unique clicks made on a
+        link. A unique click is a click that comes from an individual IP
+        address. If a person clicks twice from the same internet device  that
+        has a corresponding IP address the latter click will not be counted in
+        the total unique clicks  result. The total count and the total unique
+        count are only displayed when no filter is applied,  however the
+        filtered count is only present when a timestamp is set. A link ID and
+        domain ID must  be specified in the url parameters with the option to
+        set a timestamp range. The timestamp is  assumed to be in UTC format and
+        follow unix standards. The max time period allowed to query is a  year.
+        If no timestamp range is set, the output will be the total unique and
+        total counts. If only  the starting timestamp is set, the result will be
+        the counts from a year ahead of starting timestamp.  The ending
+        timestamp cannot be specified on its own without a starting timestamp.
+        The range cannot  exceed a year at a time.
+      parameters:
+        - description: The unique domain identifier.
+          name: domain_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - description: The unique link identifier.
+          name: link_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - description: The UTC unix timestamp, query returns values after this date.
+          name: from_unix
+          in: query
+          required: false
+          schema:
+            type: integer
+        - description: >-
+            The UTC unix timestamp, query returns values before this date.
+            Required if from_unix is specified.
+          name: to_unix
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successfully return the unique and total clicks for a given link.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LinkClickCountGetTotalClickCountsResponse'
+  /{domain_id}/links/{link_id}/clicks/daily:
+    get:
+      tags:
+        - Link Click Count Per Day
+      summary: Returns the link click count for each day.
+      operationId: LinkClickCountPerDay_getTotalCountsByDay
+      description: >-
+        (**Team, Business, and Enterprise Only**) This endpoint retrieves the
+        total clicks made on a domain link grouped by days. A domain ID and link
+        ID must be specified in the URL. Optionally, you may provide a timestamp
+        range as well as a page number. The timestamp is assumed to be in UTC
+        format and follow unix standards. The max time period allowed to query
+        is a year. If no  timestamp range is set, the output will be the total
+        count from a week ago til today. If only  the starting timestamp is set,
+        the result will be the counts from a year ahead of starting  timestamp.
+        The ending timestamp cannot be specified on its own without a starting
+        timestamp.  The range cannot exceed a year at a time. The page defaults
+        to 1 with a max number of results set to a predefined number 50. The
+        counts are retrieved from a cached instance and therefore does not 
+        represent the real-time total but comes close. Result are sorted by day.
+      parameters:
+        - description: The unique domain identifier.
+          name: domain_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - description: The unique link identifier.
+          name: link_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - description: The UTC unix timestamp, query returns values after this date.
+          name: from_unix
+          in: query
+          required: false
+          schema:
+            type: integer
+        - description: >-
+            The UTC unix timestamp, query returns values before this date.
+            Required if from_unix is specified.
+          name: to_unix
+          in: query
+          required: false
+          schema:
+            type: integer
+        - description: >-
+            An optional parameter containing the user's ID to query. Elevated
+            privileges are required to specify another. Defaults to current
+            user. Valid value 'all' is allowed for users of elevated privileges.
+          name: user_id
+          in: query
+          required: false
+          schema:
+            oneOf:
+              - type: string
+              - type: integer
+        - description: An optional parameter containing the label's ID to query.
+          name: label_id
+          in: query
+          required: false
+          schema:
+            oneOf:
+              - type: string
+              - type: integer
+        - description: Search link alias, notes, and redirect url for keyword
+          name: keyword
+          in: query
+          schema:
+            type: string
+        - description: The page of to query the values from the paginated results.
+          name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successfully return the daily total clicks for a given domain.
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/LinkClickCountPerDayGetTotalCountsByDayResponse
+  /{domain_id}/links/{link_id}/clicks/hourly:
+    get:
+      tags:
+        - Link Click Count Per Hour
+      summary: Returns the link click count for each hour.
+      operationId: LinkClickCountPerHour_getTotalClicksByHour
+      description: >-
+        (**Team, Business, and Enterprise Only**) This endpoint retrieves the
+        total clicks made on a link grouped by hours. The hours are in the 
+        military time range from 0 - 23. Over a span of days this response
+        reports the total clicks on a link for each hour. For example if a link
+        has 5 clicks yesterday at 5pm and 2 clicks at 5pm  today and if the
+        range is set for only those days. The report for hour:17 is 7 clicks;
+        the sum  of the clicks for that hour between the two days. A link ID and
+        domain ID must be specified in  the url parameters with the option to
+        set a timestamp range. The timestamp is assumed to be in  UTC format and
+        follow unix standards. The max time period allowed to query is a year.
+        If no  timestamp range is set, the output will be the total count from a
+        week ago til today. If only  the starting timestamp is set, the result
+        will be the counts from a year ahead of starting  timestamp. The ending
+        timestamp cannot be specified on its own without a starting timestamp. 
+        The range cannot exceed a year at a time. Result are sorted by hour.
+      parameters:
+        - description: The unique domain identifier.
+          name: domain_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - description: The unique link identifier.
+          name: link_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - description: The UTC unix timestamp, query returns values after this date.
+          name: from_unix
+          in: query
+          required: false
+          schema:
+            type: integer
+        - description: >-
+            The UTC unix timestamp, query returns values before this date.
+            Required if from_unix is specified.
+          name: to_unix
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successfully return the unique and total clicks for a given link.
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/LinkClickCountPerHourGetTotalClicksByHourResponse
+  /{domain_id}/links/{link_id}/clicks/country:
+    get:
+      tags:
+        - Link Click Count Per Country
+      summary: Returns the total click count per country.
+      operationId: LinkClickCountPerCountry_totalClicksByCountry
+      description: >-
+        (**Team, Business, and Enterprise Only**) This endpoint retrieves the
+        total clicks made on a link grouped by country. A link ID and  domain ID
+        must be specified in the url parameters with the option to set a
+        timestamp range  and a page to retrieve the paginated results. If the
+        timestamp range exceeds a day the hour  The timestamp is assumed to be
+        in UTC format and follow unix standards. The max time period  allowed to
+        query is a year. If no timestamp range is set, the output will be the
+        total count  from a week ago til today. If only the starting timestamp
+        is set, the result will be the  counts from a year ahead of starting
+        timestamp. The ending timestamp cannot be specified on  its own without
+        a starting timestamp. The range cannot exceed a year at a time. The
+        page  defaults to 1 with a max number of results set to a predefined
+        number 50. The count  is retrieved from a cached instance and therefore
+        does not represent the real-time total. Results are sorted by popularity
+        then by country.
+      parameters:
+        - description: The unique domain identifier.
+          name: domain_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - description: The unique link identifier.
+          name: link_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - description: The UTC unix timestamp, query returns values after this date.
+          name: from_unix
+          in: query
+          required: false
+          schema:
+            type: integer
+        - description: >-
+            The UTC unix timestamp, query returns values before this date.
+            Required if from_unix is specified.
+          name: to_unix
+          in: query
+          required: false
+          schema:
+            type: integer
+        - description: >-
+            An optional parameter containing the user's ID to query. Elevated
+            privileges are required to specify another. Defaults to current
+            user. Valid value 'all' is allowed for users of elevated privileges.
+          name: user_id
+          in: query
+          required: false
+          schema:
+            oneOf:
+              - type: string
+              - type: integer
+        - description: An optional parameter containing the label's ID to query.
+          name: label_id
+          in: query
+          required: false
+          schema:
+            oneOf:
+              - type: string
+              - type: integer
+        - description: Search link alias, notes, and redirect url for keyword
+          name: keyword
+          in: query
+          schema:
+            type: string
+        - description: The country to query the values
+          name: country
+          in: query
+          required: false
+          schema:
+            type: string
+        - description: The page of to query the values from the paginated results.
+          name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successfully return total clicks per country for a given link.
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/LinkClickCountPerCountryTotalClicksByCountryResponse
+  /{domain_id}/links/{link_id}/clicks/region:
+    get:
+      tags:
+        - Link Click Count Per Region
+      summary: Returns the total click count per region.
+      operationId: LinkClickCountPerRegion_totalByRegion
+      description: >-
+        (**Team, Business, and Enterprise Only**) This endpoint retrieves the
+        total clicks made on a link grouped by region. A link ID and  domain ID
+        must be specified in the url parameters with the option to set a
+        timestamp range  and a page to retrieve the paginated results. If the
+        timestamp range exceeds a day the hour  The timestamp is assumed to be
+        in UTC format and follow unix standards. The max time period  allowed to
+        query is a year. If no timestamp range is set, the output will be the
+        total count  from a week ago til today. If only the starting timestamp
+        is set, the result will be the  counts from a year ahead of starting
+        timestamp. The ending timestamp cannot be specified on  its own without
+        a starting timestamp. The range cannot exceed a year at a time. TThe
+        page  defaults to 1 with a max number of results set to a predefined
+        number 50. The count  is retrieved from a cached instance and therefore
+        does not represent the real-time total. Results are sorted by popularity
+        then by country and region.
+      parameters:
+        - description: The unique domain identifier.
+          name: domain_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - description: The unique link identifier.
+          name: link_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - description: The UTC unix timestamp, query returns values after this date.
+          name: from_unix
+          in: query
+          required: false
+          schema:
+            type: integer
+        - description: >-
+            The UTC unix timestamp, query returns values before this date.
+            Required if from_unix is specified.
+          name: to_unix
+          in: query
+          required: false
+          schema:
+            type: integer
+        - description: >-
+            An optional parameter containing the user's ID to query. Elevated
+            privileges are required to specify another. Defaults to current
+            user. Valid value 'all' is allowed for users of elevated privileges.
+          name: user_id
+          in: query
+          required: false
+          schema:
+            oneOf:
+              - type: string
+              - type: integer
+        - description: An optional parameter containing the label's ID to query.
+          name: label_id
+          in: query
+          required: false
+          schema:
+            oneOf:
+              - type: string
+              - type: integer
+        - description: Search link alias, notes, and redirect url for keyword
+          name: keyword
+          in: query
+          schema:
+            type: string
+        - description: The country to query the values
+          name: country
+          in: query
+          required: false
+          schema:
+            type: string
+        - description: The region to query the values
+          name: region
+          in: query
+          required: false
+          schema:
+            type: string
+        - description: The page of to query the values from the paginated results.
+          name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successfully return total clicks per region for a given link.
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/LinkClickCountPerRegionTotalByRegionResponse
+  /{domain_id}/links/{link_id}/clicks/city:
+    get:
+      tags:
+        - Link Click Count Per City
+      summary: Returns the total click count per city.
+      operationId: LinkClickCountPerCity_totalCountByCity
+      description: >-
+        (**Team, Business, and Enterprise Only**) This endpoint retrieves the
+        total clicks made on a link grouped by city. A link ID and  domain ID
+        must be specified in the url parameters with the option to set a
+        timestamp range  and a page to retrieve the paginated results. If the
+        timestamp range exceeds a day the hour  The timestamp is assumed to be
+        in UTC format and follow unix standards. The max time period  allowed to
+        query is a year. If no timestamp range is set, the output will be the
+        total count  from a week ago til today. If only the starting timestamp
+        is set, the result will be the  counts from a year ahead of starting
+        timestamp. The ending timestamp cannot be specified on  its own without
+        a starting timestamp. The range cannot exceed a year at a time. The
+        page  defaults to 1 with a max number of results set to a predefined
+        number 50. The count  is retrieved from a cached instance and therefore
+        does not represent the real-time total. Results are sorted by popularity
+        then by country, region, and city.
+      parameters:
+        - description: The unique domain identifier.
+          name: domain_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - description: The unique link identifier.
+          name: link_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - description: The UTC unix timestamp, query returns values after this date.
+          name: from_unix
+          in: query
+          required: false
+          schema:
+            type: integer
+        - description: >-
+            The UTC unix timestamp, query returns values before this date.
+            Required if from_unix is specified.
+          name: to_unix
+          in: query
+          required: false
+          schema:
+            type: integer
+        - description: >-
+            An optional parameter containing the user's ID to query. Elevated
+            privileges are required to specify another. Defaults to current
+            user. Valid value 'all' is allowed for users of elevated privileges.
+          name: user_id
+          in: query
+          required: false
+          schema:
+            oneOf:
+              - type: string
+              - type: integer
+        - description: An optional parameter containing the label's ID to query.
+          name: label_id
+          in: query
+          required: false
+          schema:
+            oneOf:
+              - type: string
+              - type: integer
+        - description: Search link alias, notes, and redirect url for keyword
+          name: keyword
+          in: query
+          schema:
+            type: string
+        - description: The country to query the values
+          name: country
+          in: query
+          required: false
+          schema:
+            type: string
+        - description: The region to query the values
+          name: region
+          in: query
+          required: false
+          schema:
+            type: string
+        - description: The city to query the values
+          name: city
+          in: query
+          required: false
+          schema:
+            type: string
+        - description: The page of to query the values from the paginated results.
+          name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successfully return total clicks per city for a given link.
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/LinkClickCountPerCityTotalCountByCityResponse
+  /{domain_id}/links/{link_id}/clicks/device:
+    get:
+      tags:
+        - Link Click Count Per Device
+      summary: Returns the total click count per device.
+      operationId: LinkClickCountPerDevice_getTotalClicksByDevice
+      description: >-
+        (**Team, Business, and Enterprise Only**) This endpoint retrieves the
+        total clicks made on a link grouped by device. A link ID and  domain ID
+        must be specified in the url parameters with the option to set a
+        timestamp range  and a page to retrieve the paginated results. If the
+        timestamp range exceeds a day the hour  The timestamp is assumed to be
+        in UTC format and follow unix standards. The max time period  allowed to
+        query is a year. If no timestamp range is set, the output will be the
+        total count  from a week ago til today. If only the starting timestamp
+        is set, the result will be the  counts from a year ahead of starting
+        timestamp. The ending timestamp cannot be specified on  its own without
+        a starting timestamp. The range cannot exceed a year at a time. The
+        page  defaults to 1 with a max number of results set to a predefined
+        number 50. The count  is retrieved from a cached instance and therefore
+        does not represent the real-time total. Results are sorted by popularity
+        then by device.
+      parameters:
+        - description: The unique domain identifier.
+          name: domain_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - description: The unique link identifier.
+          name: link_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - description: The UTC unix timestamp, query returns values after this date.
+          name: from_unix
+          in: query
+          required: false
+          schema:
+            type: integer
+        - description: >-
+            The UTC unix timestamp, query returns values before this date.
+            Required if from_unix is specified.
+          name: to_unix
+          in: query
+          required: false
+          schema:
+            type: integer
+        - description: >-
+            An optional parameter containing the user's ID to query. Elevated
+            privileges are required to specify another. Defaults to current
+            user. Valid value 'all' is allowed for users of elevated privileges.
+          name: user_id
+          in: query
+          required: false
+          schema:
+            oneOf:
+              - type: string
+              - type: integer
+        - description: An optional parameter containing the label's ID to query.
+          name: label_id
+          in: query
+          required: false
+          schema:
+            oneOf:
+              - type: string
+              - type: integer
+        - description: Search link alias, notes, and redirect url for keyword
+          name: keyword
+          in: query
+          schema:
+            type: string
+        - description: The device to query the values
+          name: device
+          in: query
+          required: false
+          schema:
+            type: string
+        - description: The page of to query the values from the paginated results.
+          name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successfully return total clicks per device for a given link.
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/LinkClickCountPerDeviceGetTotalClicksByDeviceResponse
+  /{domain_id}/links/{link_id}/clicks/referrer:
+    get:
+      tags:
+        - Link Click Count Per Referrer
+      summary: Returns the total click count per referrer.
+      operationId: LinkClickCountPerReferrer_totalClicksByReferrer
+      description: >-
+        (**Team, Business, and Enterprise Only**) This endpoint retrieves the
+        total clicks made on a link grouped by referrer. A link ID and  domain
+        ID must be specified in the url parameters with the option to set a
+        timestamp range  and a page to retrieve the paginated results. If the
+        timestamp range exceeds a day the hour  The timestamp is assumed to be
+        in UTC format and follow unix standards. The max time period  allowed to
+        query is a year. If no timestamp range is set, the output will be the
+        total count  from a week ago til today. If only the starting timestamp
+        is set, the result will be the  counts from a year ahead of starting
+        timestamp. The ending timestamp cannot be specified on  its own without
+        a starting timestamp. The range cannot exceed a year at a time. The
+        page  defaults to 1 with a max number of results set to a predefined
+        number 50. The count  is retrieved from a cached instance and therefore
+        does not represent the real-time total. Results are sorted by popularity
+        then by referrer.
+      parameters:
+        - description: The unique domain identifier.
+          name: domain_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - description: The unique link identifier.
+          name: link_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - description: The UTC unix timestamp, query returns values after this date.
+          name: from_unix
+          in: query
+          required: false
+          schema:
+            type: integer
+        - description: >-
+            The UTC unix timestamp, query returns values before this date.
+            Required if from_unix is specified.
+          name: to_unix
+          in: query
+          required: false
+          schema:
+            type: integer
+        - description: >-
+            An optional parameter containing the user's ID to query. Elevated
+            privileges are required to specify another. Defaults to current
+            user. Valid value 'all' is allowed for users of elevated privileges.
+          name: user_id
+          in: query
+          required: false
+          schema:
+            oneOf:
+              - type: string
+              - type: integer
+        - description: An optional parameter containing the label's ID to query.
+          name: label_id
+          in: query
+          required: false
+          schema:
+            oneOf:
+              - type: string
+              - type: integer
+        - description: Search link alias, notes, and redirect url for keyword
+          name: keyword
+          in: query
+          schema:
+            type: string
+        - description: The referrer to query the values
+          name: referrer
+          in: query
+          required: false
+          schema:
+            type: string
+        - description: >-
+            The page of to query the values from the paginated results. Defaults
+            to 1.
+          name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successfully return total clicks per referrer for a given link.
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/LinkClickCountPerReferrerTotalClicksByReferrerResponse
+  /{domain_id}/links/{link_id}/rawclicks:
+    get:
+      tags:
+        - Link Raw Clicks
+      summary: Returns a list of clicks and their information based on the parameters.
+      operationId: LinkRawClicks_getClicksInfo
+      description: 'This endpoint retrieves a list of the clicks made on a link. '
+      parameters:
+        - description: The unique domain identifier.
+          name: domain_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - description: The unique link identifier.
+          name: link_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successfully return the list of clicks for a given link.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LinkRawClicksGetClicksInfoResponse'
+  /tags:
+    get:
+      tags:
+        - Tags
+      summary: Returns a list of tags.
+      operationId: Tags_listByDomainId
+      description: Returns a list of tags. domain_id is required
+      parameters:
+        - description: Domain ID to query by
+          name: domain_id
+          in: query
+          required: true
+          schema:
+            type: integer
+        - description: Tag name to query by
+          name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successfully return a list of tags
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TagsListByDomainIdResponse'
+    post:
+      tags:
+        - Tags
+      summary: Creates a new tag
+      operationId: Tags_createNewTag
+      description: Creates a new tag
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TagsCreateNewTagRequest'
+      responses:
+        '200':
+          description: Successfully create a new tag.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TagsCreateNewTagResponse'
+        '400':
+          description: The input data was invalid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidDataError'
+  /domains:
+    get:
+      tags:
+        - List Domains
+      summary: Returns a list of the user's active domains
+      operationId: ListDomains_getActiveList
+      description: Returns a list of the user's active domains
+      parameters:
+        - description: Page number
+          name: page
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: >-
+            Successfully returned a list of active domains.
+
+            # `type` field
+
+            When set to `shared-readonly` it denotes that the domain is a BL.INK
+            domain
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/domains'
+    post:
+      tags:
+        - Create Domain
+      summary: Creates a new domain on the user's account
+      operationId: CreateDomain_newDomain
+      description: Creates a domain and returns the domain object as part of the response
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDomainNewDomainRequest'
+      responses:
+        '200':
+          description: >-
+            Successfully created and returned a new domain.
+
+            url_404 in the response object denotes the address the client will
+            be redirected to in the case of a 404 error. homepage in the
+            response object denotes the address the client will be redirected to
+            when visiting the domain without an alias.
+
+            both url_404 and homepage have defaults if none are provided
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/domains'
+  /domains?domain_name={domain_name}:
+    get:
+      tags:
+        - Get Domain by Domain Name
+      summary: Returns a list of the user's requested domain
+      operationId: GetDomainByDomainName_userRequestedDomainList
+      description: Returns a list of the user's requested domain
+      parameters:
+        - name: domain_name
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successfully returned a list of requested domains.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/domains'
+        '400':
+          description: The input data was invalid or missing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidDataError'
+  /domains/{domain_id}:
+    get:
+      tags:
+        - Get Domain by ID
+      summary: Returns a list of the user's requested domain
+      operationId: GetDomainById_userRequestedDomain
+      description: Returns a list of the user's requested domain
+      parameters:
+        - name: domain_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successfully returned a list of requested domains.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/domains'
+    patch:
+      tags:
+        - Update Domain
+      summary: Updates the domain in question
+      operationId: UpdateDomain_objectAsPartOfResponse
+      description: Creates a domain and returns the domain object as part of the response
+      parameters:
+        - name: domain_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateDomainObjectAsPartOfResponseRequest'
+      responses:
+        '200':
+          description: >-
+            Successfully created and returned a new domain
+
+            url_404 in the response object denotes the address the client will
+            be redirected to in the case of a 404 error. homepage in the
+            response object denotes the address the client will be redirected to
+            when visiting the domain without an alias.
+
+            both url_404 and homepage have defaults if none are provided. When
+            provided, they must be a valid URL including protocol e.g. https://
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/domains'
+    delete:
+      tags:
+        - Delete Domain
+      summary: Delete the domain in question including all its links
+      operationId: DeleteDomain_andLinks
+      description: Deletes a domain and all its links
+      parameters:
+        - name: domain_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Deletes a domain and all its links
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeleteDomainAndLinksResponse'
+  /utm_templates:
+    get:
+      tags:
+        - List UTM Templates
+      summary: Returns a list of available UTM templates
+      operationId: ListUtmTemplates_getAll
+      description: Returns a list of available UTM templates
+      parameters:
+        - description: Domain ID to query by
+          name: domain_id
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: >-
+            Successfully returns a list of UTM templates available to the user
+            on the domain passed in through query.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListUtmTemplatesGetAllResponse'
+  /groups:
+    get:
+      tags:
+        - List Groups
+      summary: Returns a list of available groups
+      operationId: ListGroups_getAll
+      description: Returns a list of available groups
+      parameters:
+        - description: Domain ID to query by
+          name: domain_id
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: >-
+            Successfully returns a list of groups available to the user on the
+            domain passed in through query.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListGroupsGetAllResponse'
+  /error_codes:
+    get:
+      tags:
+        - Error Codes
+      summary: List Error Codes
+      operationId: ErrorCodes_listErrorCodes
+      description: >-
+        Returns a list of available error codes. The code is guaranteed to stay
+        the same. The message and description may change.
+      responses:
+        '200':
+          description: >-
+            Successfully returns a list of error codes that can be returned as
+            part of error responses
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCodesListErrorCodesResponse'
+components:
+  schemas:
+    InvalidDataError:
+      type: object
+      properties:
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              code:
+                type: integer
+                minimum: 10000
+                maximum: 10999
+              message:
+                type: string
+    InvalidAuthError:
+      type: object
+      properties:
+        success:
+          type: integer
+          example: 0
+        error_code:
+          type: integer
+          example: 401
+        error_message:
+          type: string
+          example: Not valid
+    UnauthorizedError:
+      type: object
+      properties:
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              code:
+                type: integer
+                example: 10003
+              message:
+                type: string
+                example: Unauthorized
+    CredentialsEmailPassword:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: bud@smartlinker.email
+        password:
+          type: string
+          format: password
+    CredentialsEmailRefreshToken:
+      type: object
+      required:
+        - email
+        - refresh_token
+      properties:
+        email:
+          type: string
+          format: email
+          example: bud@smartlinker.email
+        refresh_token:
+          type: string
+          format: string
+          example: sdafkjsdfhkwerohfkdsfhgkjhdsgfk
+    domains:
+      type: object
+      properties:
+        objects:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              domain:
+                type: string
+              created:
+                type: integer
+              modified:
+                type: integer
+              default:
+                type: boolean
+              type:
+                type: string
+              url_404:
+                type: string
+              homepage:
+                type: string
+              has_ssl:
+                type: boolean
+        meta:
+          type: object
+          properties:
+            current_page:
+              type: integer
+            previous_page:
+              type: integer
+            next_page:
+              type: integer
+            last_page:
+              type: integer
+            from:
+              type: integer
+            to:
+              type: integer
+            per_page:
+              type: integer
+            total:
+              type: integer
+            path:
+              type: string
+    AccessTokenGenerateTokenRequest:
+      oneOf:
+        - $ref: '#/components/schemas/CredentialsEmailPassword'
+        - $ref: '#/components/schemas/CredentialsEmailRefreshToken'
+    CreateLinkShortenedUrlRequest:
+      type: object
+      required:
+        - url
+      properties:
+        tags:
+          description: Array of objects defining tags to be attached to the link
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                description: The tag name
+                type: string
+              shared:
+                description: Indicates if this tag is shared with other users
+                type: boolean
+        url:
+          description: The long link. The URL protocol is optional.
+          type: string
+        alias:
+          description: >-
+            Short string that will be used at the end of the domain to build
+            your short link. Alias
+          type: string
+        rand_alias_length:
+          description: >-
+            The length of the randomly generated alias when one is not
+            specified. It is ignored when an alias is specified.
+          type: integer
+        dupe_check:
+          description: >-
+            When set to 1, BL.INK will search for BL.INKs matching the url to be
+            shortened. If one or more existing BL.INKs exist BL.INK will return
+            the first already existing BL.INK. Otherwise it will create and
+            return a new BL.INK
+          type: integer
+        notes:
+          description: Notes to attach onto the link.
+          type: string
+        notify_on_click:
+          description: >-
+            When set to 1, the user will be notified by email when this link has
+            been clicked. The default is 0 no notification
+          type: integer
+        override_404_check:
+          description: >-
+            When set to 1, creation will proceed without checking that the long
+            URL returns a 404 response
+          type: integer
+        utm_template_id:
+          type: integer
+        utm_fields:
+          description: Object defining key-value pairs for builder fields
+          type: object
+          example:
+            field_1: value1
+            field_2: value2
+            field_3: value c
+        archive_on:
+          description: GMT Unix timestamp defining the date to archive the link
+          type: integer
+        delete_on:
+          description: GMT Unix timestamp defining the date to delete the link
+          type: integer
+        redirect_type:
+          type: integer
+          enum:
+            - 301
+            - 307
+    ValidateLinkUrlRequest:
+      type: object
+      required:
+        - url
+      properties:
+        url:
+          description: URL encoded URL. It's a URL
+          type: string
+    UpdateLinkWithChangesRequest:
+      type: array
+      items:
+        type: object
+        properties:
+          op:
+            type: string
+            default: replace
+            enum:
+              - replace
+          path:
+            description: >-
+              The path property accepts string values for all paths with the
+              exception of notify_on_click  which accepts only a 0 or 1.
+              However, for the archive on and delete on paths a unix timestamp 
+              integer value can be accepted as an integer or string.
+            type: string
+            enum:
+              - /alias
+              - /notes
+              - /notify_on_click
+              - /url
+              - /delete_on
+              - /archive_on
+          value:
+            oneOf:
+              - type: string
+              - type: integer
+    TagsCreateNewTagRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        domain_id:
+          type: integer
+        shared:
+          type: boolean
+        notes:
+          type: string
+    CreateDomainNewDomainRequest:
+      type: object
+      required:
+        - domain
+      properties:
+        domain:
+          description: the domain name
+          type: string
+        default:
+          description: >-
+            boolean denoting whether this domain should be the user's default
+            domain
+          type: boolean
+        url_404:
+          description: >-
+            The address you would like 404 errors to redirect to. Must be a
+            valid URL including protocol e.g. 'https://'
+          type: string
+        homepage:
+          description: >-
+            The address you would like to redirect users to when they visit your
+            domain without an alias. Must be a valid URL including protocol e.g.
+            'https://'
+          type: string
+    UpdateDomainObjectAsPartOfResponseRequest:
+      type: object
+      properties:
+        op:
+          description: The operation to be performed. Currently only replace is supported
+          type: string
+          enum:
+            - replace
+        path:
+          description: Path or property you want updated
+          type: string
+          enum:
+            - status
+            - homepage
+            - url_404
+        value:
+          description: >-
+            The new value you want the path/property to take.
+
+            When path is status, only 'active' and 'disabled' are permitted.
+
+            When path is homepage or url_404, they must be a valid URL including
+            protocol e.g. 'https://'
+          type: string
+    ValidateLoginInformationResponse:
+      type: object
+      properties:
+        success:
+          type: integer
+          example: 1
+        user:
+          type: object
+          properties:
+            user_id:
+              type: integer
+              example: 2
+            nickname:
+              type: string
+              example: Bud
+            email:
+              type: string
+              format: email
+              example: bud@smartlinker.email
+    AccessTokenGenerateTokenResponse:
+      type: object
+      properties:
+        success:
+          type: integer
+          example: 1
+        user:
+          type: object
+          properties:
+            user_id:
+              type: integer
+              example: 2
+            nickname:
+              type: string
+              example: Bud
+            email:
+              type: string
+              format: email
+              example: bud@smartlinker.email
+        access_token:
+          type: string
+          example: 8Am4WSbKTBvZtDRq48f7
+        expires:
+          description: GMT Unix timestamp defining the date when the access_token expires
+          type: integer
+          example: 1918085162
+    ListUsersByAccountAdminResponse:
+      type: object
+      properties:
+        first_name:
+          description: The user's first name
+          type: string
+        last_name:
+          description: The user's last name
+          type: string
+        email_address:
+          description: The user's email
+          type: string
+        domains:
+          type: object
+          properties:
+            name:
+              description: The domain name belonging to the user.
+              type: string
+            role:
+              description: The access level for the user and domain.
+              type: string
+    ListLinksByQueryParamsResponse:
+      type: object
+      properties:
+        total:
+          description: Total number of links found by query
+          type: integer
+        count:
+          description: Number of links returned in the `objects` array
+          type: integer
+        click_count:
+          description: >-
+            Total number of clicks for all links found not just the ones
+            returned.
+          type: integer
+        objects:
+          type: array
+          items:
+            type: object
+            properties:
+              tags:
+                description: Array of objects defining tags to be attached to the link
+                type: array
+                items:
+                  type: object
+                  properties:
+                    name:
+                      description: The tag name
+                      type: string
+                    shared:
+                      description: Indicates if this tag is shared with other users
+                      type: boolean
+              id:
+                description: >-
+                  This is the link's id, and corresponds to the {link_id} in
+                  other API endpoints
+                type: integer
+              url:
+                type: string
+              alias:
+                description: >-
+                  The URI portion of the short link. Will be autogenerated if
+                  not defined by client
+                type: string
+              short_link:
+                type: string
+              redirect_url:
+                type: string
+              created:
+                type: integer
+              modified:
+                type: integer
+              user_id:
+                type: integer
+              domain_id:
+                type: integer
+              click_count:
+                type: integer
+              notify_on_click:
+                type: string
+              notes:
+                type: string
+              redirect_type:
+                type: integer
+              status:
+                type: string
+              template_id:
+                type: integer
+              delete_on:
+                type: integer
+              archive_on:
+                type: integer
+        meta:
+          description: >-
+            A set of meta data unrelated to the query but useful in various API
+            scenarios.
+          type: object
+          properties:
+            current_page:
+              description: The current page number.
+              type: integer
+            previous_page:
+              description: The previous page number, can be null if on first page.
+              type: integer
+            next_page:
+              description: The next page number, can be null if on last page.
+              type: integer
+            last_page:
+              description: The last page number.
+              type: integer
+            from:
+              description: The first record of the current page
+              type: integer
+            to:
+              description: The last record of the current page
+              type: integer
+            per_page:
+              description: The items per page
+              type: integer
+            total:
+              description: >-
+                The total number of records in all pages. Unrelated to count or
+                sum queries.
+              type: integer
+            path:
+              description: The base API endpoint for the current request.
+              type: string
+    CreateLinkShortenedUrlResponse:
+      type: object
+      properties:
+        objects:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                description: >-
+                  This is the link's id, and corresponds to the {link_id} in
+                  other API endpoints
+                type: integer
+              url:
+                type: string
+              alias:
+                description: >-
+                  The URI portion of the short link. Will be autogenerated if
+                  not defined by client
+                type: string
+              short_link:
+                type: string
+              redirect_url:
+                type: string
+              created:
+                type: integer
+              modified:
+                type: integer
+              user_id:
+                type: integer
+              domain_id:
+                type: integer
+              click_count:
+                type: integer
+              notify_on_click:
+                type: string
+              notes:
+                type: string
+              redirect_type:
+                type: integer
+              status:
+                type: string
+              template_id:
+                type: integer
+              delete_on:
+                type: integer
+              archive_on:
+                type: integer
+        new_link:
+          type: int
+    ListClickedLinksWithinTimeframeResponse:
+      type: object
+      properties:
+        objects:
+          type: array
+          items:
+            type: object
+            properties:
+              tags:
+                description: Array of objects defining tags to be attached to the link
+                type: array
+                items:
+                  type: object
+                  properties:
+                    name:
+                      description: The tag name
+                      type: string
+                    shared:
+                      description: Indicates if this tag is shared with other users
+                      type: boolean
+              id:
+                description: >-
+                  This is the link's id, and corresponds to the {link_id} in
+                  other API endpoints
+                type: integer
+              url:
+                type: string
+              alias:
+                description: >-
+                  The URI portion of the short link. Will be autogenerated if
+                  not defined by client
+                type: string
+              short_link:
+                type: string
+              redirect_url:
+                type: string
+              created:
+                type: integer
+              modified:
+                type: integer
+              user_id:
+                type: integer
+              domain_id:
+                type: integer
+              click_count:
+                type: integer
+              notes:
+                type: string
+              redirect_type:
+                type: integer
+              status:
+                type: string
+              template_id:
+                type: integer
+              delete_on:
+                type: integer
+              archive_on:
+                type: integer
+              lifetime_count:
+                type: integer
+              last_clicked:
+                type: string
+        links:
+          type: object
+          properties:
+            first:
+              description: The link to the first page.
+              type: string
+            last:
+              description: The link to the last page.
+              type: string
+            previous:
+              description: The link to the previous page, can be null if on first page.
+              type: string
+            next:
+              description: The link to the next page, can be null if on last page.
+              type: string
+        meta:
+          description: >-
+            A set of meta data unrelated to the query but useful in various API
+            scenarios.
+          type: object
+          properties:
+            current_page:
+              description: The current page number.
+              type: integer
+            previous_page:
+              description: The previous page number, can be null if on first page.
+              type: integer
+            next_page:
+              description: The next page number, can be null if on last page.
+              type: integer
+            last_page:
+              description: The last page number.
+              type: integer
+            from:
+              description: The first record of the current page
+              type: integer
+            to:
+              description: The last record of the current page
+              type: integer
+            per_page:
+              description: The items per page
+              type: integer
+            total:
+              description: >-
+                The total number of records in all pages. Unrelated to count or
+                sum queries.
+              type: integer
+            path:
+              description: The base API endpoint for the current request.
+              type: string
+    ValidateLinkUrlResponse:
+      type: object
+      properties:
+        objects:
+          type: array
+          items:
+            type: object
+            properties:
+              url:
+                type: string
+    GetLinkShortenedLinkResponse:
+      type: object
+      properties:
+        objects:
+          type: array
+          items:
+            type: object
+            properties:
+              tags:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                    shared:
+                      type: boolean
+              id:
+                type: integer
+              url:
+                type: string
+              alias:
+                type: string
+              short_link:
+                type: string
+              redirect_url:
+                type: string
+              created:
+                type: integer
+              modified:
+                type: integer
+              user_id:
+                type: integer
+              domain_id:
+                type: integer
+              click_count:
+                type: integer
+              notify_on_click:
+                type: string
+              notes:
+                type: string
+              redirect_type:
+                type: integer
+              status:
+                type: string
+              template_id:
+                type: integer
+              delete_on:
+                type: integer
+              archive_on:
+                type: integer
+              groups:
+                type: array
+                items:
+                  type: integer
+              redirect_url_domain:
+                description: Redirect URL's Fully Qualified Domain Name (FQDN)
+                type: string
+              redirect_url_path:
+                description: Redirect URL's path
+                type: string
+    UpdateLinkWithChangesResponse:
+      type: object
+      properties:
+        objects:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                description: >-
+                  This is the link's id, and corresponds to the {link_id} in
+                  other API endpoints
+                type: integer
+              url:
+                type: string
+              alias:
+                description: >-
+                  The URI portion of the short link. Will be autogenerated if
+                  not defined by client
+                type: string
+              short_link:
+                type: string
+              redirect_url:
+                type: string
+              created:
+                type: integer
+              modified:
+                type: integer
+              user_id:
+                type: integer
+              domain_id:
+                type: integer
+              click_count:
+                type: integer
+              notify_on_click:
+                type: string
+              notes:
+                type: string
+              redirect_type:
+                type: integer
+              status:
+                type: string
+              template_id:
+                type: integer
+              delete_on:
+                type: integer
+              archive_on:
+                type: integer
+    GetLinkByAliasShortenedUrlResponse:
+      type: object
+      properties:
+        objects:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              url:
+                type: string
+              alias:
+                type: string
+              short_link:
+                type: string
+              redirect_url:
+                type: string
+              created:
+                type: integer
+              modified:
+                type: integer
+              user_id:
+                type: integer
+              domain_id:
+                type: integer
+              click_count:
+                type: integer
+              notify_on_click:
+                type: string
+              notes:
+                type: string
+              redirect_type:
+                type: integer
+              status:
+                type: string
+              template_id:
+                type: integer
+              delete_on:
+                type: integer
+              archive_on:
+                type: integer
+    RetrieveQrCodeForLinkResponse:
+      type: string
+      format: binary
+    RetrieveQrCodeForLink200Response:
+      type: string
+      format: binary
+    DomainClickCountPerDayGetCountByDayResponse:
+      type: object
+      properties:
+        objects:
+          type: array
+          items:
+            type: object
+            properties:
+              date:
+                description: The UTC date in YYYY-MM-DD format
+                type: string
+              unix_date:
+                description: The UTC unix timestamp of the start of the date
+                type: integer
+              count:
+                description: The count associated with the date.
+                type: integer
+              scan_count:
+                description: The scan count associated with the date.
+                type: integer
+        links:
+          type: object
+          properties:
+            first:
+              description: The link to the first page.
+              type: string
+            last:
+              description: The link to the last page.
+              type: string
+            previous:
+              description: The link to the previous page, can be null if on first page.
+              type: string
+            next:
+              description: The link to the next page, can be null if on last page.
+              type: string
+        meta:
+          description: >-
+            A set of meta data unrelated to the query but useful in various API
+            scenarios.
+          type: object
+          properties:
+            current_page:
+              description: The current page number.
+              type: integer
+            previous_page:
+              description: The previous page number, can be null if on first page.
+              type: integer
+            next_page:
+              description: The next page number, can be null if on last page.
+              type: integer
+            last_page:
+              description: The last page number.
+              type: integer
+            from:
+              description: The first record of the current page
+              type: integer
+            to:
+              description: The last record of the current page
+              type: integer
+            per_page:
+              description: The items per page
+              type: integer
+            total:
+              description: >-
+                The total number of records in all pages. Unrelated to count or
+                sum queries.
+              type: integer
+            path:
+              description: The base API endpoint for the current request.
+              type: string
+    DomainClickCountPerCountryGetTotalCountsByCountryResponse:
+      type: object
+      properties:
+        objects:
+          type: array
+          items:
+            type: object
+            properties:
+              country:
+                type: string
+              count:
+                type: integer
+        links:
+          type: object
+          properties:
+            first:
+              description: The link to the first page.
+              type: string
+            last:
+              description: The link to the last page.
+              type: string
+            previous:
+              description: The link to the previous page, can be null if on first page.
+              type: string
+            next:
+              description: The link to the next page, can be null if on last page.
+              type: string
+        meta:
+          description: >-
+            A set of meta data unrelated to the query but useful in various API
+            scenarios.
+          type: object
+          properties:
+            current_page:
+              description: The current page number.
+              type: integer
+            previous_page:
+              description: The previous page number, can be null if on first page.
+              type: integer
+            next_page:
+              description: The next page number, can be null if on last page.
+              type: integer
+            last_page:
+              description: The last page number.
+              type: integer
+            from:
+              description: The first record of the current page
+              type: integer
+            to:
+              description: The last record of the current page
+              type: integer
+            per_page:
+              description: The items per page
+              type: integer
+            total:
+              description: >-
+                The total number of records in all pages. Unrelated to count or
+                sum queries.
+              type: integer
+            path:
+              description: The base API endpoint for the current request.
+              type: string
+    DomainClickCountPerRegionGetByRegionResponse:
+      type: object
+      properties:
+        objects:
+          type: array
+          items:
+            type: object
+            properties:
+              country:
+                type: string
+              region:
+                type: string
+              count:
+                type: integer
+        links:
+          type: object
+          properties:
+            first:
+              description: The link to the first page.
+              type: string
+            last:
+              description: The link to the last page.
+              type: string
+            previous:
+              description: The link to the previous page, can be null if on first page.
+              type: string
+            next:
+              description: The link to the next page, can be null if on last page.
+              type: string
+        meta:
+          description: >-
+            A set of meta data unrelated to the query but useful in various API
+            scenarios.
+          type: object
+          properties:
+            current_page:
+              description: The current page number.
+              type: integer
+            previous_page:
+              description: The previous page number, can be null if on first page.
+              type: integer
+            next_page:
+              description: The next page number, can be null if on last page.
+              type: integer
+            last_page:
+              description: The last page number.
+              type: integer
+            from:
+              description: The first record of the current page
+              type: integer
+            to:
+              description: The last record of the current page
+              type: integer
+            per_page:
+              description: The items per page
+              type: integer
+            total:
+              description: >-
+                The total number of records in all pages. Unrelated to count or
+                sum queries.
+              type: integer
+            path:
+              description: The base API endpoint for the current request.
+              type: string
+    DomainClickCountPerCityGetTotalClickCountPerCityResponse:
+      type: object
+      properties:
+        objects:
+          type: array
+          items:
+            type: object
+            properties:
+              country:
+                type: string
+              region:
+                type: string
+              city:
+                type: string
+              count:
+                type: integer
+        links:
+          type: object
+          properties:
+            first:
+              description: The link to the first page.
+              type: string
+            last:
+              description: The link to the last page.
+              type: string
+            previous:
+              description: The link to the previous page, can be null if on first page.
+              type: string
+            next:
+              description: The link to the next page, can be null if on last page.
+              type: string
+        meta:
+          description: >-
+            A set of meta data unrelated to the query but useful in various API
+            scenarios.
+          type: object
+          properties:
+            current_page:
+              description: The current page number.
+              type: integer
+            previous_page:
+              description: The previous page number, can be null if on first page.
+              type: integer
+            next_page:
+              description: The next page number, can be null if on last page.
+              type: integer
+            last_page:
+              description: The last page number.
+              type: integer
+            from:
+              description: The first record of the current page
+              type: integer
+            to:
+              description: The last record of the current page
+              type: integer
+            per_page:
+              description: The items per page
+              type: integer
+            total:
+              description: >-
+                The total number of records in all pages. Unrelated to count or
+                sum queries.
+              type: integer
+            path:
+              description: The base API endpoint for the current request.
+              type: string
+    DomainClickCountPerDeviceGetTotalClicksPerDeviceResponse:
+      type: object
+      properties:
+        objects:
+          type: array
+          items:
+            type: object
+            properties:
+              device:
+                type: string
+              count:
+                type: integer
+        links:
+          type: object
+          properties:
+            first:
+              description: The link to the first page.
+              type: string
+            last:
+              description: The link to the last page.
+              type: string
+            previous:
+              description: The link to the previous page, can be null if on first page.
+              type: string
+            next:
+              description: The link to the next page, can be null if on last page.
+              type: string
+        meta:
+          description: >-
+            A set of meta data unrelated to the query but useful in various API
+            scenarios.
+          type: object
+          properties:
+            current_page:
+              description: The current page number.
+              type: integer
+            previous_page:
+              description: The previous page number, can be null if on first page.
+              type: integer
+            next_page:
+              description: The next page number, can be null if on last page.
+              type: integer
+            last_page:
+              description: The last page number.
+              type: integer
+            from:
+              description: The first record of the current page
+              type: integer
+            to:
+              description: The last record of the current page
+              type: integer
+            per_page:
+              description: The items per page
+              type: integer
+            total:
+              description: >-
+                The total number of records in all pages. Unrelated to count or
+                sum queries.
+              type: integer
+            path:
+              description: The base API endpoint for the current request.
+              type: string
+    DomainClickCountPerReferrerTotalClickPerReferrerResponse:
+      type: object
+      properties:
+        objects:
+          type: array
+          items:
+            type: object
+            properties:
+              referrer:
+                type: string
+              count:
+                type: integer
+        links:
+          type: object
+          properties:
+            first:
+              description: The link to the first page.
+              type: string
+            last:
+              description: The link to the last page.
+              type: string
+            previous:
+              description: The link to the previous page, can be null if on first page.
+              type: string
+            next:
+              description: The link to the next page, can be null if on last page.
+              type: string
+        meta:
+          description: >-
+            A set of meta data unrelated to the query but useful in various API
+            scenarios.
+          type: object
+          properties:
+            current_page:
+              description: The current page number.
+              type: integer
+            previous_page:
+              description: The previous page number, can be null if on first page.
+              type: integer
+            next_page:
+              description: The next page number, can be null if on last page.
+              type: integer
+            last_page:
+              description: The last page number.
+              type: integer
+            from:
+              description: The first record of the current page
+              type: integer
+            to:
+              description: The last record of the current page
+              type: integer
+            per_page:
+              description: The items per page
+              type: integer
+            total:
+              description: >-
+                The total number of records in all pages. Unrelated to count or
+                sum queries.
+              type: integer
+            path:
+              description: The base API endpoint for the current request.
+              type: string
+    LinkClickCountGetTotalClickCountsResponse:
+      type: object
+      properties:
+        total:
+          type: integer
+        unique:
+          type: integer
+        scan_count:
+          type: integer
+    LinkClickCountPerDayGetTotalCountsByDayResponse:
+      type: object
+      properties:
+        objects:
+          type: array
+          items:
+            type: object
+            properties:
+              date:
+                description: The UTC date in YYYY-MM-DD format
+                type: string
+              unix_date:
+                description: The UTC unix timestamp of the start of the date
+                type: integer
+              count:
+                description: The count associated with the date.
+                type: integer
+              scan_count:
+                description: The count associated with the date.
+                type: integer
+        links:
+          type: object
+          properties:
+            first:
+              description: The link to the first page.
+              type: string
+            last:
+              description: The link to the last page.
+              type: string
+            previous:
+              description: The link to the previous page, can be null if on first page.
+              type: string
+            next:
+              description: The link to the next page, can be null if on last page.
+              type: string
+        meta:
+          description: >-
+            A set of meta data unrelated to the query but useful in various API
+            scenarios.
+          type: object
+          properties:
+            current_page:
+              description: The current page number.
+              type: integer
+            previous_page:
+              description: The previous page number, can be null if on first page.
+              type: integer
+            next_page:
+              description: The next page number, can be null if on last page.
+              type: integer
+            last_page:
+              description: The last page number.
+              type: integer
+            from:
+              description: The first record of the current page
+              type: integer
+            to:
+              description: The last record of the current page
+              type: integer
+            per_page:
+              description: The items per page
+              type: integer
+            total:
+              description: >-
+                The total number of records in all pages. Unrelated to count or
+                sum queries.
+              type: integer
+            path:
+              description: The base API endpoint for the current request.
+              type: string
+    LinkClickCountPerHourGetTotalClicksByHourResponse:
+      type: object
+      properties:
+        objects:
+          type: object
+          properties:
+            hour:
+              type: integer
+            count:
+              type: integer
+            scan_count:
+              description: The scan count associated with the hour.
+              type: integer
+    LinkClickCountPerCountryTotalClicksByCountryResponse:
+      type: object
+      properties:
+        objects:
+          type: array
+          items:
+            type: object
+            properties:
+              country:
+                type: string
+              count:
+                type: integer
+        links:
+          type: object
+          properties:
+            first:
+              description: The link to the first page.
+              type: string
+            last:
+              description: The link to the last page.
+              type: string
+            previous:
+              description: The link to the previous page, can be null if on first page.
+              type: string
+            next:
+              description: The link to the next page, can be null if on last page.
+              type: string
+        meta:
+          description: >-
+            A set of meta data unrelated to the query but useful in various API
+            scenarios.
+          type: object
+          properties:
+            current_page:
+              description: The current page number.
+              type: integer
+            previous_page:
+              description: The previous page number, can be null if on first page.
+              type: integer
+            next_page:
+              description: The next page number, can be null if on last page.
+              type: integer
+            last_page:
+              description: The last page number.
+              type: integer
+            from:
+              description: The first record of the current page
+              type: integer
+            to:
+              description: The last record of the current page
+              type: integer
+            per_page:
+              description: The items per page
+              type: integer
+            total:
+              description: >-
+                The total number of records in all pages. Unrelated to count or
+                sum queries.
+              type: integer
+            path:
+              description: The base API endpoint for the current request.
+              type: string
+    LinkClickCountPerRegionTotalByRegionResponse:
+      type: object
+      properties:
+        objects:
+          type: array
+          items:
+            type: object
+            properties:
+              country:
+                type: string
+              region:
+                type: string
+              count:
+                type: integer
+        links:
+          type: object
+          properties:
+            first:
+              description: The link to the first page.
+              type: string
+            last:
+              description: The link to the last page.
+              type: string
+            previous:
+              description: The link to the previous page, can be null if on first page.
+              type: string
+            next:
+              description: The link to the next page, can be null if on last page.
+              type: string
+        meta:
+          description: >-
+            A set of meta data unrelated to the query but useful in various API
+            scenarios.
+          type: object
+          properties:
+            current_page:
+              description: The current page number.
+              type: integer
+            previous_page:
+              description: The previous page number, can be null if on first page.
+              type: integer
+            next_page:
+              description: The next page number, can be null if on last page.
+              type: integer
+            last_page:
+              description: The last page number.
+              type: integer
+            from:
+              description: The first record of the current page
+              type: integer
+            to:
+              description: The last record of the current page
+              type: integer
+            per_page:
+              description: The items per page
+              type: integer
+            total:
+              description: >-
+                The total number of records in all pages. Unrelated to count or
+                sum queries.
+              type: integer
+            path:
+              description: The base API endpoint for the current request.
+              type: string
+    LinkClickCountPerCityTotalCountByCityResponse:
+      type: object
+      properties:
+        objects:
+          type: array
+          items:
+            type: object
+            properties:
+              country:
+                type: string
+              region:
+                type: string
+              city:
+                type: city
+              count:
+                type: integer
+        links:
+          type: object
+          properties:
+            first:
+              description: The link to the first page.
+              type: string
+            last:
+              description: The link to the last page.
+              type: string
+            previous:
+              description: The link to the previous page, can be null if on first page.
+              type: string
+            next:
+              description: The link to the next page, can be null if on last page.
+              type: string
+        meta:
+          description: >-
+            A set of meta data unrelated to the query but useful in various API
+            scenarios.
+          type: object
+          properties:
+            current_page:
+              description: The current page number.
+              type: integer
+            previous_page:
+              description: The previous page number, can be null if on first page.
+              type: integer
+            next_page:
+              description: The next page number, can be null if on last page.
+              type: integer
+            last_page:
+              description: The last page number.
+              type: integer
+            from:
+              description: The first record of the current page
+              type: integer
+            to:
+              description: The last record of the current page
+              type: integer
+            per_page:
+              description: The items per page
+              type: integer
+            total:
+              description: >-
+                The total number of records in all pages. Unrelated to count or
+                sum queries.
+              type: integer
+            path:
+              description: The base API endpoint for the current request.
+              type: string
+    LinkClickCountPerDeviceGetTotalClicksByDeviceResponse:
+      type: object
+      properties:
+        objects:
+          type: array
+          items:
+            type: object
+            properties:
+              device:
+                type: string
+              count:
+                type: integer
+        links:
+          type: object
+          properties:
+            first:
+              description: The link to the first page.
+              type: string
+            last:
+              description: The link to the last page.
+              type: string
+            previous:
+              description: The link to the previous page, can be null if on first page.
+              type: string
+            next:
+              description: The link to the next page, can be null if on last page.
+              type: string
+        meta:
+          description: >-
+            A set of meta data unrelated to the query but useful in various API
+            scenarios.
+          type: object
+          properties:
+            current_page:
+              description: The current page number.
+              type: integer
+            previous_page:
+              description: The previous page number, can be null if on first page.
+              type: integer
+            next_page:
+              description: The next page number, can be null if on last page.
+              type: integer
+            last_page:
+              description: The last page number.
+              type: integer
+            from:
+              description: The first record of the current page
+              type: integer
+            to:
+              description: The last record of the current page
+              type: integer
+            per_page:
+              description: The items per page
+              type: integer
+            total:
+              description: >-
+                The total number of records in all pages. Unrelated to count or
+                sum queries.
+              type: integer
+            path:
+              description: The base API endpoint for the current request.
+              type: string
+    LinkClickCountPerReferrerTotalClicksByReferrerResponse:
+      type: object
+      properties:
+        objects:
+          type: array
+          items:
+            type: object
+            properties:
+              referrer:
+                type: string
+              count:
+                type: integer
+        links:
+          type: object
+          properties:
+            first:
+              description: The link to the first page.
+              type: string
+            last:
+              description: The link to the last page.
+              type: string
+            previous:
+              description: The link to the previous page, can be null if on first page.
+              type: string
+            next:
+              description: The link to the next page, can be null if on last page.
+              type: string
+        meta:
+          description: >-
+            A set of meta data unrelated to the query but useful in various API
+            scenarios.
+          type: object
+          properties:
+            current_page:
+              description: The current page number.
+              type: integer
+            previous_page:
+              description: The previous page number, can be null if on first page.
+              type: integer
+            next_page:
+              description: The next page number, can be null if on last page.
+              type: integer
+            last_page:
+              description: The last page number.
+              type: integer
+            from:
+              description: The first record of the current page
+              type: integer
+            to:
+              description: The last record of the current page
+              type: integer
+            per_page:
+              description: The items per page
+              type: integer
+            total:
+              description: >-
+                The total number of records in all pages. Unrelated to count or
+                sum queries.
+              type: integer
+            path:
+              description: The base API endpoint for the current request.
+              type: string
+    LinkRawClicksGetClicksInfoResponse:
+      type: object
+      properties:
+        total:
+          description: Total number of links found by query
+          type: integer
+        count:
+          description: Number of links returned in the `objects` array
+          type: integer
+        click_count:
+          description: >-
+            Total number of clicks for all links found not just the ones
+            returned.
+          type: integer
+        objects:
+          type: array
+          items:
+            type: object
+            properties:
+              created:
+                type: integer
+              type:
+                type: string
+              device:
+                type: string
+              referrer:
+                type: string
+              city:
+                type: string
+              country:
+                type: string
+              region:
+                type: string
+              engagement_id:
+                type: string
+        meta:
+          description: >-
+            A set of meta data unrelated to the query but useful in various API
+            scenarios.
+          type: object
+          properties:
+            current_page:
+              description: The current page number.
+              type: integer
+            previous_page:
+              description: The previous page number, can be null if on first page.
+              type: integer
+            next_page:
+              description: The next page number, can be null if on last page.
+              type: integer
+            last_page:
+              description: The last page number.
+              type: integer
+            from:
+              description: The first record of the current page
+              type: integer
+            to:
+              description: The last record of the current page
+              type: integer
+            per_page:
+              description: The items per page
+              type: integer
+            total:
+              description: >-
+                The total number of records in all pages. Unrelated to count or
+                sum queries.
+              type: integer
+            path:
+              description: The base API endpoint for the current request.
+              type: string
+    TagsListByDomainIdResponse:
+      type: object
+      properties:
+        objects:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              user_id:
+                type: integer
+              domain_id:
+                type: integer
+              name:
+                type: string
+              created:
+                type: integer
+              modified:
+                type: integer
+              shared:
+                type: boolean
+              notes:
+                type: string
+    TagsCreateNewTagResponse:
+      type: object
+      properties:
+        objects:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              user_id:
+                type: integer
+              domain_id:
+                type: integer
+              name:
+                type: string
+              created:
+                type: integer
+              modified:
+                type: integer
+              shared:
+                type: boolean
+              notes:
+                type: string
+    DeleteDomainAndLinksResponse:
+      type: object
+      properties: {}
+      example: {}
+    ListUtmTemplatesGetAllResponse:
+      type: object
+      properties:
+        objects:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              name:
+                type: string
+              fields:
+                description: >-
+                  Contains a list of fields that the parent UTM template
+                  contains.
+                type: array
+                items:
+                  type: object
+                  properties:
+                    label:
+                      type: string
+                    field_code:
+                      type: string
+                    type:
+                      type: string
+                    required:
+                      type: boolean
+    ListGroupsGetAllResponse:
+      type: object
+      properties:
+        objects:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              created:
+                type: integer
+              modified:
+                type: integer
+              domain_id:
+                type: integer
+              user_id:
+                type: integer
+              is_global:
+                type: string
+              users:
+                type: array
+                items:
+                  description: >-
+                    WARNING: Missing items property in array schema. Missing
+                    items property has been filled with this AnyType schema.
+    ErrorCodesListErrorCodesResponse:
+      type: object
+      properties:
+        objects:
+          type: array
+          items:
+            type: object
+            properties:
+              description:
+                type: string
+              code:
+                type: integer
+              message:
+                type: string
+          example:
+            - description: auth invalid token
+              code: 10000
+              message: invalid token
+            - description: auth user may not be registered
+              code: 10001
+              message: '%1$s may not be registered'
+            - description: link url invalid
+              code: 10100
+              message: url is invalid
+            - description: link domain id invalid
+              code: 10101
+              message: domain_id is invalid
+            - description: link alias invalid
+              code: 10102
+              message: alias is invalid
+            - description: link alias too long
+              code: 10103
+              message: alias too long
+            - description: link alias not allowed
+              code: 10104
+              message: alias is not allowed
+            - description: link notes invalid
+              code: 10105
+              message: notes invalid
+            - description: link notes too long
+              code: 10106
+              message: notes too long
+            - description: link tags invalid
+              code: 10107
+              message: One or more of your tags are invalid
+            - description: link utm template id invalid
+              code: 10108
+              message: utm_template_id is invalid
+            - description: link utm template not found
+              code: 10109
+              message: UTM template not found
+            - description: link utm template item invalid
+              code: 10110
+              message: One or more of your utm field keys/values are invalid
+            - description: link delete on invalid
+              code: 10111
+              message: delete_on is invalid
+            - description: link delete on in the past
+              code: 10112
+              message: delete_on must be after current time
+            - description: link archive on invalid
+              code: 10113
+              message: archive_on is invalid
+            - description: link archive on in the past
+              code: 10114
+              message: archive_on must be after current time
+            - description: link redirect type invalid
+              code: 10115
+              message: redirect_type is invalid
+            - description: link archive on and delete on mutually exclusive
+              code: 10116
+              message: setting both archive_on and delete_on is not allowed
+            - description: link search page invalid
+              code: 10120
+              message: page is invalid
+            - description: link search keyword invalid
+              code: 10121
+              message: keyword is invalid
+            - description: link search url invalid
+              code: 10122
+              message: url is invalid
+            - description: link search order invalid
+              code: 10123
+              message: order is invalid
+            - description: link modify operation invalid
+              code: 10130
+              message: Operation %1$s not supported
+            - description: link modify path invalid
+              code: 10131
+              message: Modifying path %1$s not supported
+            - description: link modify url invalid
+              code: 10132
+              message: /url value invalid
+            - description: link modify alias invalid
+              code: 10133
+              message: /alias value invalid
+            - description: link modify notes invalid
+              code: 10134
+              message: /notes value invalid
+            - description: link modify notes too long
+              code: 10135
+              message: /notes value too long
+            - description: link modify alias not available
+              code: 10140
+              message: '%1$s'
+            - description: link modify save failed
+              code: 10141
+              message: '%1$s'
+            - description: link create save failed
+              code: 10142
+              message: '%1$s'
+            - description: link suggestions not found
+              code: 10143
+              message: '%1$s'
+            - description: >-
+                You have exhausted the maximum number of Links, Dynamic Links,
+                or Pages you can create on your current plan.
+              code: 10144
+              message: You have exhausted the limits of your current plan
+            - description: utm domain id missing
+              code: 10200
+              message: domain_id is required
+            - description: utm domain id invalid
+              code: 10201
+              message: domain_id is invalid
+            - description: tags domain id missing
+              code: 10300
+              message: domain_id is required
+            - description: tags domain id invalid
+              code: 10301
+              message: domain_id is invalid
+            - description: tags search parameter invalid
+              code: 10302
+              message: search parameter is invalid
+            - description: tags name missing
+              code: 10303
+              message: tag name is required
+            - description: tags name invalid
+              code: 10304
+              message: tag name is invalid
+            - description: tags shared invalid
+              code: 10305
+              message: shared is invalid
+            - description: tags notes invalid
+              code: 10306
+              message: notes is invalid
+            - description: tags notes too long
+              code: 10307
+              message: notes too long
+            - description: tags name already exists
+              code: 10308
+              message: tag name already exists
+  links:
+    GetDomainByDomainId:
+      operationId: getUser
+      description: >
+        The `id` value returned in the response can be used as the `domain_id`
+        parameter in `GET /{domain_id}/links`.
+      parameters:
+        userId: $response.body#/id
+x-tagGroups:
+  - tags:
+      - Validate Login
+      - Access Token
+    name: Authentication
+  - tags:
+      - List Users
+    name: Users
+  - tags:
+      - List Domains
+      - Get Domain by ID
+      - Get Domain by Domain Name
+      - Create Domain
+      - Update Domain
+      - Delete Domain
+    name: Domains
+  - tags:
+      - Get Link
+      - Create Link
+      - Update Link
+      - Validate Link
+      - List Links
+      - List Clicked Links
+      - Get Link By Alias
+      - Retrieve QR Code
+    name: Links
+  - tags:
+      - List UTM Templates
+    name: UTM Templates
+  - tags:
+      - List Groups
+    name: Groups
+  - tags:
+      - Domain Click Count Per Day
+      - Domain Click Count Per Country
+      - Domain Click Count Per Region
+      - Domain Click Count Per City
+      - Domain Click Count Per Device
+      - Domain Click Count Per Referrer
+    name: Domain Analytics
+  - tags:
+      - Link Click Count
+      - Link Click Count Per Hour
+      - Link Click Count Per Day
+      - Link Click Count Per Country
+      - Link Click Count Per Region
+      - Link Click Count Per City
+      - Link Click Count Per Device
+      - Link Click Count Per Referrer
+      - Link Raw Clicks
+    name: Link Analytics
+  - tags:
+      - Error Codes
+    name: Misc
