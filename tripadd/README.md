@@ -2,7 +2,7 @@
 
 # [TripAdd](https://tripadd.com)
 
-Tripadd is a global travel ancillary product marketplace powered by AI. 
+Tripadd is a global travel ancillary product marketplace powered by AI.
 
 Boost your sales with ancillary products from around the world. Seamlessly integrate thousands of products through a single API into your checkout path with personalization for every customer.
 

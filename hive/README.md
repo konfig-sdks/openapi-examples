@@ -2,7 +2,7 @@
 
 # [Hive](https://hive.com)
 
-We help teams move faster. Hive's best-in-class project management platform includes all of the tools you need and want - and if not, we will build them for you. With flexible project views and endless customizations, Hive offers project management on your terms, success guaranteed. 
+We help teams move faster. Hive's best-in-class project management platform includes all of the tools you need and want - and if not, we will build them for you. With flexible project views and endless customizations, Hive offers project management on your terms, success guaranteed.
 
 Hive is used by thousands of fast-moving teams to help with:
 - Project management
@@ -10,9 +10,9 @@ Hive is used by thousands of fast-moving teams to help with:
 - Resourcing
 - Time-Tracking
 - Proofing and approvals
-- Note Taking 
+- Note Taking
 - Task management
-- Reporting and analytics 
+- Reporting and analytics
 
 Want to see what it's all about? Start using Hive for free: app.hive.com/join
 
