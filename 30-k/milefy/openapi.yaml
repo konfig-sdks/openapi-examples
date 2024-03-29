@@ -1,0 +1,3820 @@
+openapi: 3.0.0
+info:
+  title: Milefy API
+  description: >
+    ## Introduction
+
+
+    Welcome to the 30K Milefy API documentation!
+
+
+    #### What does the Milefy API do?
+
+
+    You can use it to:
+
+    1. Calculate **mileage earnings** for specific flights,
+
+    2. Learn which flights are eligible for **upgrades to a higher cabin**, e.g.
+    from Economy to Business,
+
+    3. Get a list of all **status benefits** that apply for each flight based on
+    the travelers’s frequent flyer program status tier.
+
+    4. Get a full list of **fare attributes** including seat selection, checked
+    baggage, changeability and others.
+
+    5. Track traveler frequent flyer accounts.
+
+
+    Milefy API is a REST service using HTTPS protocol and JSON format to encode
+    both request and response data.
+
+
+    #### Request headers
+
+
+    To enforce proper request encoding and its compression you should always set
+    following headers:
+
+
+    ##### Data format
+
+    We use JSON format enchanced with <a
+    href="http://stateless.co/hal_specification.html" target="_blank"
+    title="Learn more about HAL and hypermedia">HAL hypermedia type</a>.
+
+
+    Header: ```Accept: application/hal+json```
+
+
+    ##### Character encoding
+
+
+    Header: ```Content-Type: application/json;charset=UTF-8```
+
+
+    ##### API version
+
+
+    Since version 2.5, we require the setting of an additional request header,
+    which indicates which version of Milefy API you want to use. In case header
+    is absent, version 2.4 will be used by default (not recommended).
+
+
+    Header: ```X-Api-Version: v3.0```
+
+
+    ## Performance
+
+
+    #### Large flight result sets
+
+
+    When working with large flight result sets processed by [Calculate
+    attributes & benefits](http://milefy-api-docs.30k.com) method, it’s
+    recommended to **divide them into smaller batches and send them in
+    simultaneous requests**. When received, the multiple responses should then
+    be remerged into a single result set. For example, instead of sending a
+    single request containing a result set of 1,000 different flights, you can
+    send 5 smaller requests simultaneously, each consisting of 200 flights.
+
+
+    All divided requests for the same result set are billed as only one request.
+    In order to assure that, you only need to fulfill the following two
+    conditions:
+
+
+    1. All requests need to be send almost at the same time (we need to receive
+    them within a frame of less than 30 seconds),
+
+    2. The flights need to be split into chunks of 50-200 flights.
+
+
+    ## Used constants
+
+
+    Lists of constant values used in API and their definitions (click to
+    expand):
+
+
+    1. [Status tiers](http://milefy-api-docs.30k.com), used for example in [Get
+    program](http://milefy-api-docs.30k.com) method.
+
+    2. [Types of miles](http://milefy-api-docs.30k.com), used for example in
+    [Get program](http://milefy-api-docs.30k.com) method.
+
+    3. [Airline alliances](http://milefy-api-docs.30k.com), used for example in
+    [Get program](http://milefy-api-docs.30k.com) method.
+
+    4. [Cabin classes](http://milefy-api-docs.30k.com), used for example in
+    [Calculate attributes & benefits](http://milefy-api-docs.30k.com) method.
+
+    5. [Status benefits](http://milefy-api-docs.30k.com), used for example in
+    [Get status benefit type](http://milefy-api-docs.30k.com) method.
+
+    6. [Fare attributes](http://milefy-api-docs.30k.com), used for example in
+    [Get fare attribute type](http://milefy-api-docs.30k.com) method.
+
+    7. [Error codes](http://milefy-api-docs.30k.com), used across all methods.
+  version: '3.0'
+  contact:
+    email: support@30k.com
+    url: http://www.30k.com/
+  license:
+    name: All rights reserverd.
+  x-logo:
+    url: logo.png
+    backgroundColor: '#e1f5f5'
+  x-konfig-ignore:
+    potential-incorrect-type: true
+servers:
+  - description: Production environment
+    url: milefy-api.30k.com
+  - description: Testing environment
+    url: milefy-api-test.30k.com
+tags:
+  - description: >-
+      Methods to get lists of supported frequent flyer programs and status
+      benefits. You can **cache this information locally** for about 1 day since
+      this data doesn't change frequently.
+    name: Static data
+  - description: Methods to create and manage traveler's profiles.
+    name: Travelers
+  - description: Methods to create and manage traveler's frequent flyer memberships.
+    name: Memberships
+  - description: Methods used to calculate frequent flyer data for flight search results.
+    name: Flights
+paths:
+  /programs:
+    get:
+      tags:
+        - Static data
+      summary: Get program collection
+      operationId: StaticData_getFrequentFlyerPrograms
+      description: >
+        Returns a list of all supported frequent flyer programs. You can use
+        this data to:
+
+        1. Build a user dashboard (a mileage wallet), allowing user to [manage
+        his frequent flyer memberships](http://milefy-api-docs.30k.com),
+
+        2. Display frequent flyer miles, cabin upgrades and status benefits when
+        combined with [Calculate attributes &
+        benefits](http://milefy-api-docs.30k.com) method.
+      parameters:
+        - description: Filter programs based on supported authentication method(s)
+          name: authentication
+          in: query
+          required: false
+          example: simple,none
+          schema:
+            type: string
+            items:
+              type: string
+              enum:
+                - simple
+                - none
+                - oauth
+            pattern: ^(?:simple|none|oauth)(?:,(?:simple|none|oauth))*$
+      responses:
+        '200':
+          description: Program collection returned
+          content:
+            application/hal+json:
+              schema:
+                $ref: >-
+                  #/components/schemas/StaticDataGetFrequentFlyerProgramsResponse
+  /programs/{code}:
+    get:
+      tags:
+        - Static data
+      summary: Get program
+      operationId: StaticData_getFrequentFlyerProgram
+      description: |
+        Returns requested frequent flyer program.
+      parameters:
+        - $ref: '#/components/parameters/programCode'
+      responses:
+        '200':
+          description: Program
+          content:
+            application/hal+json:
+              schema:
+                $ref: '#/components/schemas/Program'
+        '400':
+          $ref: '#/components/responses/InvalidProgramCode'
+        '404':
+          description: Not found
+  /benefits:
+    get:
+      tags:
+        - Static data
+      summary: Get status benefit type collection
+      operationId: StaticData_getStatusBenefitTypeCollection
+      description: >
+        Returns the list of status benefit types such as: lounge access,
+        priority check-in or extra baggage. The list is ordered by name.
+      responses:
+        '200':
+          description: Benefit collection returned
+          content:
+            application/hal+json:
+              schema:
+                $ref: >-
+                  #/components/schemas/StaticDataGetStatusBenefitTypeCollectionResponse
+  /benefits/{code}:
+    get:
+      tags:
+        - Static data
+      summary: Get status benefit type
+      operationId: StaticData_getStatusBenefitType
+      description: >
+        Returns requested status benefit type such as: lounge access, priority
+        check-in or extra baggage.
+      parameters:
+        - description: Status benefit type code
+          name: code
+          in: path
+          required: true
+          example: CMPCHG
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Status benefit type
+          content:
+            application/hal+json:
+              schema:
+                $ref: '#/components/schemas/BenefitType'
+        '400':
+          description: Invalid benefit type code
+        '404':
+          description: Not found
+  /attributes:
+    get:
+      tags:
+        - Static data
+      summary: Get fare attribute type collection
+      operationId: StaticData_getFareAttributeTypes
+      description: >
+        Returns the list of fare attribute types such as: changeability or
+        baggage allowance. The list is ordered by name.
+      responses:
+        '200':
+          description: Fare attribute collection returned
+          content:
+            application/hal+json:
+              schema:
+                $ref: '#/components/schemas/StaticDataGetFareAttributeTypesResponse'
+  /attributes/{code}:
+    get:
+      tags:
+        - Static data
+      summary: Get fare attribute type
+      operationId: StaticData_getFareAttributeType
+      description: >
+        Returns requested fare attribute type such as: changeability or baggage
+        allowance.
+      parameters:
+        - description: Fare attribute type code
+          name: code
+          in: path
+          required: true
+          example: XTRBGG
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Fare attribute type
+          content:
+            application/hal+json:
+              schema:
+                $ref: '#/components/schemas/FareAttributeType'
+        '400':
+          description: Invalid fare attribute type code
+        '404':
+          description: Not found
+  /calculate:
+    post:
+      tags:
+        - Flights
+      summary: Calculate attributes & benefits
+      operationId: Flights_calculateAttributesBenefits
+      description: >
+        Returns a subset of features, selectable between the mileage earnings,
+        cabin upgrades and status benefits for all flights in a request.
+
+
+        Results are **personalized** for specified traveler and his frequent
+        flyer memberships. 
+
+
+        If traveler has no memberships, results will be calculated based on
+        frequent flyer program of the **marketing carrier** of each flight. For
+        example if marketing carrier is Delta, frequent flyer information will
+        be returned for Delta SkyMiles program.
+      parameters:
+        - $ref: '#/components/parameters/fields'
+        - description: >
+            [Traveler](http://milefy-api-docs.30k.com) ID for the flight results
+            personalization.
+          name: traveler
+          in: query
+          required: true
+          example: abc111
+          schema:
+            type: string
+        - description: >
+            If not specified, ```memberships``` is assumed as default value,
+            which results in calculations returned for traveler's memberships.
+            Alternatively you can use ```memberships_and_default_program```
+            value to get calculations for both: traveler's memberships and
+            default program of marketing airline in case none of memberships
+            apply for a particular flight.
+          name: scope
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - memberships
+              - memberships_and_default_program
+        - description: Client ID for statistical purposes
+          name: sourceClientId
+          in: query
+          required: false
+          example: source-client-abc-111
+          schema:
+            type: string
+      requestBody:
+        description: Collection of flights to calculate frequent flyer data for.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FlightsCalculateAttributesBenefitsRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful calculation
+          content:
+            application/hal+json:
+              schema:
+                $ref: >-
+                  #/components/schemas/FlightsCalculateAttributesBenefitsResponse
+        '400':
+          description: Invalid request
+          content:
+            application/hal+json:
+              schema:
+                $ref: >-
+                  #/components/schemas/FlightsCalculateAttributesBenefits400Response
+  /fare-attributes:
+    post:
+      tags:
+        - Flights
+      summary: Calculate fare attributes
+      operationId: Flights_calculateFareAttributes
+      description: Returns fare family attributes for specified flight legs.
+      parameters:
+        - title: Calculation scope
+          description: >
+            Scope of calculation: ```attributes``` to return only fare
+            attributes and ```attributes_and_mileage``` to return both fare
+            attributes and mileage earnings.
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - attributes
+              - attributes_and_mileage
+            default: attributes
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FlightsCalculateFareAttributesRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful calculation
+          content:
+            application/hal+json:
+              schema:
+                $ref: '#/components/schemas/FlightsCalculateFareAttributesResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/hal+json:
+              schema:
+                $ref: '#/components/schemas/FlightsCalculateFareAttributes400Response'
+  /travelers:
+    post:
+      tags:
+        - Travelers
+      summary: Create traveler
+      operationId: Travelers_createProfile
+      description: >
+        Creates a traveler profile for [frequent flyer info
+        calculations](http://milefy-api-docs.30k.com). The profile should be
+        re-used with traveler ID stored as browser **cookie**, in
+        **localStorage** or native app equivalent until persistent user account
+        in database is created with embedded traveler ID.
+      requestBody:
+        $ref: '#/components/requestBodies/createTravelerTraveler'
+      responses:
+        '201':
+          description: Traveler created
+          content:
+            application/hal+json:
+              schema:
+                $ref: '#/components/schemas/Traveler'
+        '400':
+          $ref: '#/components/responses/InvalidTraveler'
+    get:
+      tags:
+        - Travelers
+      summary: Get traveler collection
+      operationId: Travelers_listCollection
+      description: >-
+        Returns collection of all created travelers. For larger collections you
+        need to use **pagination** links.
+      parameters:
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/limit'
+      responses:
+        '200':
+          description: Traveler collection returned
+          content:
+            application/hal+json:
+              schema:
+                $ref: '#/components/schemas/TravelersListCollectionResponse'
+  /travelers/{id}:
+    get:
+      tags:
+        - Travelers
+      summary: Get traveler
+      operationId: Travelers_getProfile
+      description: Returns requested traveler's profile.
+      parameters:
+        - $ref: '#/components/parameters/travelerId'
+      responses:
+        '200':
+          description: Traveler returned
+          content:
+            application/hal+json:
+              schema:
+                $ref: '#/components/schemas/Traveler'
+        '404':
+          $ref: '#/components/responses/TravelerNotFound'
+    put:
+      tags:
+        - Travelers
+      summary: Edit traveler
+      operationId: Travelers_updateProfile
+      description: Edit an existing traveler's profile.
+      parameters:
+        - $ref: '#/components/parameters/travelerId'
+      requestBody:
+        $ref: '#/components/requestBodies/createTravelerTraveler'
+      responses:
+        '200':
+          description: Traveler edited successfully
+          content:
+            application/hal+json:
+              schema:
+                $ref: '#/components/schemas/Traveler'
+        '400':
+          $ref: '#/components/responses/InvalidTraveler'
+        '404':
+          $ref: '#/components/responses/TravelerNotFound'
+    delete:
+      tags:
+        - Travelers
+      summary: Delete traveler
+      operationId: Travelers_removeProfile
+      description: Deletes traveler's profile
+      parameters:
+        - $ref: '#/components/parameters/travelerId'
+      responses:
+        '204':
+          description: Traveler deleted
+        '404':
+          $ref: '#/components/responses/TravelerNotFound'
+  /travelers/{id}/memberships:
+    post:
+      tags:
+        - Memberships
+      summary: Create membership
+      operationId: Memberships_createFrequentFlyerProgramMembership
+      description: >-
+        Creates a frequent flyer program membership for a particular traveler's
+        profile.
+      parameters:
+        - $ref: '#/components/parameters/travelerId'
+      requestBody:
+        $ref: '#/components/requestBodies/createMembershipMembership'
+      responses:
+        '201':
+          description: Membership created
+          content:
+            application/hal+json:
+              schema:
+                $ref: '#/components/schemas/Membership'
+        '400':
+          $ref: '#/components/responses/InvalidMembership'
+        '404':
+          $ref: '#/components/responses/TravelerNotFound'
+        '409':
+          description: Conflict (such membership already exists)
+    get:
+      tags:
+        - Memberships
+      summary: Get membership collection
+      operationId: Memberships_getList
+      description: Returns list of memberships, that belongs to the specified traveler.
+      parameters:
+        - $ref: '#/components/parameters/travelerId'
+      responses:
+        '200':
+          $ref: '#/components/responses/MembershipCollection'
+        '404':
+          $ref: '#/components/responses/TravelerNotFound'
+  /travelers/{id}/memberships/{code}:
+    get:
+      tags:
+        - Memberships
+      summary: Get membership
+      operationId: Memberships_getMembershipByCode
+      description: >-
+        Returns requested traveler's membership based on its frequent flyer
+        program code.
+      parameters:
+        - $ref: '#/components/parameters/travelerId'
+        - $ref: '#/components/parameters/programCode'
+      responses:
+        '200':
+          description: Membership returned
+          content:
+            application/hal+json:
+              schema:
+                $ref: '#/components/schemas/Membership'
+        '404':
+          $ref: '#/components/responses/TravelerOrMembershipNotFound'
+    put:
+      tags:
+        - Memberships
+      summary: Edit membership
+      operationId: Memberships_editTravelerMembership
+      description: >
+        Edit requested traveler's membership based on its frequent flyer program
+        code. 
+      parameters:
+        - $ref: '#/components/parameters/travelerId'
+        - $ref: '#/components/parameters/programCode'
+      requestBody:
+        $ref: '#/components/requestBodies/createMembershipMembership'
+      responses:
+        '200':
+          description: Membership edited
+          content:
+            application/hal+json:
+              schema:
+                $ref: '#/components/schemas/Membership'
+        '400':
+          $ref: '#/components/responses/InvalidMembership'
+        '404':
+          $ref: '#/components/responses/TravelerOrMembershipNotFound'
+        '409':
+          $ref: '#/components/responses/InvalidMembershipAuthentication'
+    delete:
+      tags:
+        - Memberships
+      summary: Delete membership
+      operationId: Memberships_deleteMembership
+      description: >-
+        Deletes requested traveler's membership based on its frequent flyer
+        program code.
+      parameters:
+        - $ref: '#/components/parameters/travelerId'
+        - $ref: '#/components/parameters/programCode'
+      responses:
+        '204':
+          description: Membership deleted
+        '404':
+          $ref: '#/components/responses/TravelerOrMembershipNotFound'
+components:
+  parameters:
+    version:
+      description: API version
+      name: X-Api-Version
+      in: header
+      schema:
+        type: string
+        default: '3.0'
+    programCode:
+      description: Frequent flyer program code
+      name: code
+      in: path
+      required: true
+      example: BAC
+      schema:
+        type: string
+        pattern: ^[A-Z]{3}$
+    fields:
+      description: >
+        Used to select returned properties and optimize the processing time of
+        the request. Based on XPath queries. [Learn
+        more](http://milefy-api-docs.30k.com).
+      name: fields
+      in: query
+      required: false
+      example: id,flights(id,programs(code,statusTiers(mileageEarnings)))
+      schema:
+        type: string
+    travelerId:
+      description: Traveler ID
+      name: id
+      in: path
+      required: true
+      example: abc111
+      schema:
+        type: string
+    offset:
+      description: Number of items skipped from the beginning of the collection.
+      name: offset
+      in: query
+      example: 100
+      schema:
+        type: integer
+    limit:
+      description: Maximum number of items to return.
+      name: limit
+      in: query
+      schema:
+        type: integer
+        default: 100
+    encoding:
+      description: Requested compression
+      name: Accept-Encoding
+      in: header
+      schema:
+        type: string
+        default: gzip
+    contentType:
+      description: Requested content type
+      name: Accept
+      in: header
+      schema:
+        type: string
+        default: application/hal+json;q=1, application/json;q=0.8
+    charset:
+      description: Requested charset
+      name: Accept-Charset
+      in: header
+      schema:
+        type: string
+        default: utf-8
+  responses:
+    MembershipCollection:
+      description: Membership collection returned
+      content:
+        application/hal+json:
+          schema:
+            $ref: '#/components/schemas/MembershipsGetListResponse'
+    InvalidProgramCode:
+      description: Invalid program code
+    InvalidTraveler:
+      description: Invalid request
+      content:
+        application/hal+json:
+          schema:
+            $ref: '#/components/schemas/TravelersCreateProfileResponse'
+    InvalidMembership:
+      description: Invalid request
+      content:
+        application/hal+json:
+          schema:
+            $ref: >-
+              #/components/schemas/MembershipsCreateFrequentFlyerProgramMembershipResponse
+    InvalidMembershipAuthentication:
+      description: Authentication method conflict
+      content:
+        application/hal+json:
+          schema:
+            $ref: '#/components/schemas/MembershipsEditTravelerMembershipResponse'
+    TravelerNotFound:
+      description: Not found
+    MembershipInvalidEncryptionKey:
+      description: Bad request (including invalid credentials encryption)
+    TravelerOrMembershipNotFound:
+      description: Not found
+      content:
+        application/hal+json:
+          schema:
+            $ref: '#/components/schemas/MembershipsDeleteMembershipResponse'
+    TravelerOrMembershipOrAuthNotFound:
+      description: Not found
+      content:
+        application/hal+json:
+          schema:
+            title: Error
+            type: object
+            required:
+              - code
+              - message
+            properties:
+              code:
+                title: Error code
+                description: >-
+                  Check [the meaning of all possible
+                  values](http://milefy-api-docs.30k.com).
+                type: string
+                enum:
+                  - TRVNF
+                  - MBPNF
+                  - MBNATH
+                example: TRVNF
+              message:
+                title: Human-readable message
+                description: Only for debugging purposes and not for the end-user benefit.
+                type: string
+                example: Traveler not found
+    MembershipTimeout:
+      description: Connection timeout (traveler's account can't be accessed).
+    MembershipAuthImpossible:
+      description: Forbidden (membership doesn't have stored credentials)
+    MembershipBadGateway:
+      description: Bad gateway
+      content:
+        application/hal+json:
+          schema:
+            title: Error
+            type: object
+            required:
+              - code
+              - message
+            properties:
+              code:
+                title: Error code
+                description: >
+                  Check [the meaning of all error
+                  codes](http://milefy-api-docs.30k.com).
+                type: string
+                enum:
+                  - MBINV
+                  - MBLKD
+                example: MBINV
+              message:
+                title: Human-readable message
+                description: Only for debugging purposes and not for the end-user benefit.
+                type: string
+                example: Invalid membership authentication credentials
+  requestBodies:
+    createMembershipMembership:
+      description: Frequent flyer membership of a particular traveler.
+      content:
+        application/json:
+          schema:
+            $ref: >-
+              #/components/schemas/MembershipsCreateFrequentFlyerProgramMembershipRequest
+      required: true
+    createTravelerTraveler:
+      description: Traveler profile
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TravelersCreateProfileRequest'
+  securitySchemes:
+    apiKey:
+      description: >
+        We use SSL to transmit data from client to our service. You must
+        authenticate client with provided API key passed as parameter in query
+        string. [Don't have API key?](mailto:support@30k.com)
+
+
+        #### URL example
+
+
+        ```https://milefy-api.30k.com/travelers?apiKey=eW91cmxvZ2luOnlvd```
+      name: apiKey
+      type: apiKey
+      in: query
+  schemas:
+    Traveler:
+      type: object
+      required:
+        - id
+        - _links
+      properties:
+        _links:
+          title: Links wrapper
+          description: >
+            Links according to <a
+            href="http://stateless.co/hal_specification.html" title="Learn more"
+            target="_blank">HAL specification</a>.
+          type: object
+          required:
+            - self
+            - thirtyk:memberships
+          properties:
+            self:
+              title: Self-reference
+              description: Link to the same resource
+              type: object
+              required:
+                - href
+              properties:
+                href:
+                  type: string
+                  example: /travelers/abc111
+            thirtyk:memberships:
+              title: Get membership collection
+              description: Link to get traveler's list of memberships
+              type: object
+              required:
+                - href
+              properties:
+                href:
+                  type: string
+                  example: /travelers/abc111/memberships
+            index:
+              title: Get traveler collection
+              description: Link to get list of all travelers
+              type: object
+              required:
+                - href
+              properties:
+                href:
+                  type: string
+                  example: /travelers
+            curies:
+              $ref: '#/components/schemas/Curies'
+        id:
+          title: Traveler ID
+          description: Traveler ID
+          example: abc111
+          type: string
+        country:
+          title: Country code
+          description: IATA country code for traveler residence country.
+          type: string
+          pattern: '[A-Z]{2}'
+          example: DE
+    SimpleAuth:
+      type: object
+      required:
+        - _links
+        - formInputs
+        - storedCredentials
+      properties:
+        _links:
+          title: Links wrapper
+          description: >
+            Links according to <a
+            href="http://stateless.co/hal_specification.html" title="Learn more"
+            target="_blank">HAL specification</a>.
+          type: object
+          required:
+            - self
+            - thirtyk:membership
+          properties:
+            self:
+              title: Self-reference
+              description: Link to the same resource
+              type: object
+              required:
+                - href
+              properties:
+                href:
+                  type: string
+                  example: /travelers/abc123/memberships/BAC/authentication/simple
+            thirtyk:membership:
+              title: Get membership
+              description: |
+                Link to get a membership
+              type: object
+              required:
+                - href
+              properties:
+                href:
+                  type: string
+                  example: /travelers/abc123/memberships/BAC
+            curies:
+              $ref: '#/components/schemas/Curies'
+        storedCredentials:
+          title: Are all credentials stored?
+          description: >
+            Having all credentials stored, allows to autoamtically update
+            membership's mileage earnings using [Update
+            membership](http://milefy-api-docs.30k.com) method.
+          type: boolean
+          example: true
+        formInputs:
+          $ref: '#/components/schemas/FormInputs'
+    Membership:
+      type: object
+      required:
+        - _links
+        - program
+        - authentication
+        - awardMilesExpire
+      properties:
+        _links:
+          title: Links wrapper
+          description: >
+            Links according to <a
+            href="http://stateless.co/hal_specification.html" title="Learn more"
+            target="_blank">HAL specification</a>.
+          type: object
+          required:
+            - self
+            - thirtyk:traveler
+            - thirtyk:program
+          properties:
+            self:
+              title: Self-reference
+              description: Link to the same resource
+              type: object
+              required:
+                - href
+              properties:
+                href:
+                  type: string
+                  example: /travelers/abc123/memberships/BAC
+            thirtyk:traveler:
+              title: Get traveler
+              description: Link to get a traveler, that is assigned to the membership
+              type: object
+              required:
+                - href
+              properties:
+                href:
+                  type: string
+                  example: /travelers/abc123
+            thirtyk:simpleauth:
+              title: Get authentication
+              description: Link to get simple membership authentication information
+              type: object
+              required:
+                - href
+              properties:
+                href:
+                  type: string
+                  example: /travelers/abc123/memberships/BAC/authentication/simple
+            index:
+              title: Get membership collection
+              description: Link to get membership collection for the same traveler
+              type: object
+              required:
+                - href
+              properties:
+                href:
+                  type: string
+                  example: /travelers/abc123/memberships
+            thirtyk:program:
+              title: Get program
+              description: Link to get program of the membership
+              type: object
+              required:
+                - href
+              properties:
+                href:
+                  type: string
+                  example: /programs/BAC
+            curies:
+              $ref: '#/components/schemas/Curies'
+        program:
+          title: Program code
+          description: >-
+            Three-letter frequent flyer program code, that the membership
+            belongs to.
+          type: string
+          pattern: '[A-Z]{3}'
+          example: BAC
+        memberNumber:
+          title: Membership number
+          description: Traveler ID as recognized in particular frequent flyer program.
+          type: string
+          example: '5345436'
+        memberName:
+          title: Member name
+          description: Member name as registered in frequent flyer program membership.
+          type: string
+          example: Mr. Smith
+        authentication:
+          title: Type of authentication
+          description: Type of authentication of the membership
+          type: object
+          required:
+            - method
+            - storedCredentials
+          properties:
+            method:
+              title: Used authentication method
+              description: >-
+                Type of authentication used to connect to membership and
+                retrieve traveler's data.
+              type: string
+              enum:
+                - oauth
+                - simple
+                - none
+              example: none
+            storedCredentials:
+              title: Are all credentials stored?
+              description: >
+                Stored credentials allow to automatically retrieve traveler's
+                data using [Update membership](http://milefy-api-docs.30k.com)
+                method.
+              type: boolean
+              example: false
+        awardMilesExpire:
+          title: Do award miles expire?
+          description: >
+            Set true if [award miles](http://milefy-api-docs.30k.com) ever
+            expire.
+          type: boolean
+          example: true
+        awardMilesExpDate:
+          title: Award miles expiration date
+          description: |
+            Date when [award miles](http://milefy-api-docs.30k.com) will expire.
+          type: string
+          format: date-time
+          example: '2020-12-31T23:59:60Z'
+        milesUpdatedAt:
+          title: Last mileage update
+          description: >
+            Time of last update of mileage earnings (either manually or
+            [automatically](http://milefy-api-docs.30k.com)).
+          type: string
+          format: date-time
+          example: '2018-12-31T23:59:60Z'
+        mileageEarnings:
+          title: Mileage earnings
+          description: >
+            Mileage earnings for every [mile
+            type](http://milefy-api-docs.30k.com) supported in the program.
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/Miles'
+        statusTier:
+          title: Status tier code
+          description: >
+            See [the meaning of all possible
+            values](http://milefy-api-docs.30k.com).
+          type: integer
+          enum:
+            - 0
+            - 1
+            - 8
+            - 16
+            - 24
+            - 32
+            - 33
+            - 34
+            - 35
+          example: 8
+        nextStatusTier:
+          title: Next status tier code
+          description: >
+            See [the meaning of all possible
+            values](http://milefy-api-docs.30k.com).
+          type: integer
+          enum:
+            - 0
+            - 1
+            - 8
+            - 16
+            - 24
+            - 32
+            - 33
+            - 34
+            - 35
+          example: 16
+        nextStatusTierQualificationType:
+          title: Type of next status qualification
+          description: Type of qualification to the next status tier.
+          type: string
+          enum:
+            - qualification
+            - requalification
+            - none
+        nextStatusTierQualification:
+          $ref: '#/components/schemas/Qualification'
+    BenefitType:
+      type: object
+      required:
+        - _links
+        - code
+        - name
+      properties:
+        description:
+          title: Benefit description
+          type: string
+          example: Complimentary same day flight changes to earlier or later flights
+        _links:
+          title: Links wrapper
+          description: >
+            Links according to <a
+            href="http://stateless.co/hal_specification.html" title="Learn more"
+            target="_blank">HAL specification</a>.
+          type: object
+          required:
+            - self
+          properties:
+            self:
+              title: Self-reference
+              description: Link to the same resource
+              type: object
+              required:
+                - href
+              properties:
+                href:
+                  type: string
+                  example: /benefits/PFDSTG
+            index:
+              title: Get status benefit type collection
+              description: Link to get the list of status benefit types
+              type: object
+              required:
+                - href
+              properties:
+                href:
+                  type: string
+                  example: /benefits
+        code:
+          title: Benefit code
+          description: >
+            Check [the meaning of all possible
+            values](http://milefy-api-docs.30k.com).
+          type: string
+          pattern: ^[A-Z0-9_]+$
+          example: CMPCHG
+        name:
+          title: Benefit name
+          type: string
+          example: Complimentary flight change
+    FareAttributeType:
+      type: object
+      required:
+        - _links
+        - code
+        - name
+      properties:
+        description:
+          title: Fare attribute description
+          type: string
+          example: >-
+            Baggage allowance including maximum number of pieces, weight and
+            dimensions.
+        _links:
+          title: Links wrapper
+          description: >
+            Links according to <a
+            href="http://stateless.co/hal_specification.html" title="Learn more"
+            target="_blank">HAL specification</a>.
+          type: object
+          required:
+            - self
+          properties:
+            self:
+              title: Self-reference
+              description: Link to the same resource
+              type: object
+              required:
+                - href
+              properties:
+                href:
+                  type: string
+                  example: /attributes/XTRBGG
+            index:
+              title: Get fare attribute type collection
+              description: Link to get the list of fare attribute types
+              type: object
+              required:
+                - href
+              properties:
+                href:
+                  type: string
+                  example: /attributes
+        code:
+          title: Fare attribute type code
+          description: >
+            Check [the meaning of all possible
+            values](http://milefy-api-docs.30k.com).
+          type: string
+          pattern: ^[A-Z0-9_]+$
+          example: XTRBGG
+        name:
+          title: Fare attribute name
+          type: string
+          example: Baggage allowance
+    CalculateFlight:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          title: Flight ID
+          description: Flight ID as specified in request
+          type: string
+          example: flight-1
+        fareAttributes:
+          title: Fare attributes
+          description: >-
+            Applicable fare attributes such as refundability or baggage
+            allowance.
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/FareAttribute'
+        programs:
+          title: Applicable programs
+          description: >-
+            List of applicable frequent flyer programs (one flight may earn
+            miles to many programs)
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items:
+            type: object
+            required:
+              - code
+              - statusTiers
+            properties:
+              code:
+                title: Program code
+                description: Frequent flyer program 3-letter code
+                type: string
+                pattern: ^[A-Z]{3}$
+                example: BAC
+              statusTiers:
+                title: Applicable status tiers
+                description: >-
+                  List of applicable status tiers within the program. Reflects
+                  traveler's membership list. If traveler has no memberships,
+                  always single, basic status tier is returned.
+                type: array
+                minItems: 1
+                uniqueItems: true
+                items:
+                  type: object
+                  properties:
+                    code:
+                      title: Status tier code
+                      description: >
+                        Check the meaning of all <a
+                        href="#appendix-status-tiers" title="Learn
+                        more">possible values</a>
+                      type: integer
+                      enum:
+                        - 0
+                        - 1
+                        - 8
+                        - 16
+                        - 24
+                        - 32
+                        - 33
+                        - 34
+                        - 35
+                      example: 8
+                    mileageEarnings:
+                      title: Mileage earnings
+                      description: Traveler's mileage earnings
+                      type: array
+                      minItems: 1
+                      uniqueItems: true
+                      items:
+                        $ref: '#/components/schemas/Miles'
+                    upgrades:
+                      title: Cabin upgrades
+                      description: Eligible cabin upgrades and their cost
+                      type: array
+                      minItems: 1
+                      uniqueItems: true
+                      items:
+                        $ref: '#/components/schemas/Upgrades'
+                    statusBenefits:
+                      title: Status benefits
+                      description: >
+                        Benefits for applicable status tier traveler holds such
+                        as lounge access or baggage allowance. These have
+                        priority over ```fareAttributes``` if sharing the same
+                        ```code```.
+                      type: array
+                      minItems: 1
+                      uniqueItems: true
+                      items:
+                        $ref: '#/components/schemas/Benefit'
+    Upgrades:
+      type: object
+      required:
+        - cabinClass
+        - cost
+        - details
+      properties:
+        cabinClass:
+          title: Cabin class code
+          description: >
+            Code of upgrade to specified cabin class. Check [the meaning of the
+            possible values](http://milefy-api-docs.30k.com).
+          type: integer
+          enum:
+            - 0
+            - 8
+            - 16
+            - 24
+            - 32
+            - 40
+            - 48
+            - 52
+            - 56
+            - 64
+          example: 8
+        cost:
+          title: Total cost
+          description: >
+            Total cost of all upgrades specified in ```details``` in [award
+            miles](http://milefy-api-docs.30k.com).
+          type: number
+          format: float
+          example: 33500
+        details:
+          title: Upgrade details
+          description: List of upgrades related to particular flight leg or segment.
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items:
+            type: object
+            required:
+              - target
+              - targetType
+            properties:
+              target:
+                title: Flight segment or leg ID
+                description: Segment or leg ID as specified in request
+                type: string
+                example: BA169
+              targetType:
+                title: Type of upgrade
+                description: Differentiates upgrade of segment and entire leg
+                type: string
+                enum:
+                  - segment
+                  - leg
+                example: leg
+              cost:
+                title: Cost of upgrade
+                description: >
+                  Cost of upgrade in [award
+                  miles](http://milefy-api-docs.30k.com)
+                type: number
+                format: float
+                example: 33500
+    IndustrySubCodes:
+      title: Industry Sub Codes
+      description: >
+        Optional Services Industry Sub Codes as defined in the [ATPCO
+        specification](https://www.atpco.net/sites/default/files/Notifications/B17141A.pdf).
+      type: object
+      required:
+        - subCode
+        - group
+      properties:
+        subCode:
+          title: Sub code
+          description: Three character long identifier of an optional service.
+          type: string
+          pattern: ^[A-Z0-6]{3}$
+          example: '0E1'
+        group:
+          title: Group
+          description: Two character long identifier of an optional service group.
+          type: string
+          pattern: ^[A-Z0-9]{2}$
+          example: BG
+        subGroup:
+          title: Sub group
+          description: Two character long identifier of an optional service sub group.
+          type: string
+          pattern: ^[A-Z0-9]{2}$
+          example: XS
+        description1:
+          title: Primary description
+          description: Two character long description of an optional service.
+          type: string
+          pattern: ^[A-Z0-9]{2}$
+          example: '05'
+        description2:
+          title: Secondary description
+          description: Two character long description of an optional service.
+          type: string
+          pattern: ^[A-Z0-9]{2}$
+          example: 4U
+    Benefit:
+      title: Status benefit
+      description: Status benefit such as lounge access or priority check-in.
+      type: object
+      required:
+        - target
+        - targetType
+        - code
+        - name
+      properties:
+        target:
+          title: Flight leg or segment ID
+          description: Segment or leg ID as specified in request
+          type: string
+          example: segment-1
+        targetType:
+          title: Target type
+          description: Differentiates benefit applicable for segment and entire leg
+          type: string
+          enum:
+            - segment
+            - leg
+          example: segment
+        code:
+          title: Benefit code
+          description: >
+            Benefit code can be used e.g. to display relevant icon. See [Get
+            benefit type collection](http://milefy-api-docs.30k.com) method or
+            check [the meaning of all possible
+            values](http://milefy-api-docs.30k.com).
+          type: string
+          enum:
+            - CMPCHG
+            - LNGACS
+            - PFDSTG
+            - PRMBRG
+            - PTYBDG
+            - PTYBDO
+            - PTYCHK
+            - PTYDSK
+            - PTYIMM
+            - PTYSTY
+            - XTRBGG
+            - XTRLRM
+            - XTRCBN
+            - SPCBGG
+            - WVDBGF
+          example: XTRBGG
+        name:
+          title: Benefit name
+          description: Program-specific status benefit name
+          type: string
+          example: Baggage allowance
+        conditions:
+          title: List of conditions
+          description: List of conditions and restrictions
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items:
+            title: Condition
+            type: object
+            required:
+              - message
+              - type
+            properties:
+              type:
+                title: Type of condition
+                description: Different types have different set of properties.
+                type: string
+                enum:
+                  - regular
+                  - extra_passengers
+                  - lounge_access
+                  - baggage
+                  - cost
+                example: baggage
+              message:
+                title: Condition text
+                description: >-
+                  Condition message for the end user combining all available
+                  properties (if any).
+                type: string
+                example: >
+                  2 pieces of baggage, each weighing maximum 23 kg and
+                  dimensions up to 90 x 75 x 43 cm
+              properties:
+                title: Condition properties
+                description: Raw condition properties used to construct the message.
+                type: object
+                properties:
+                  limit:
+                    title: Limit of extra passengers
+                    description: >
+                      Only for ```extra_passengers``` condition type. Limit of
+                      extra passengers, that can use the benefit along with the
+                      traveler.
+                    type: integer
+                    minimum: 0
+                    example: 2
+                  familyOnly:
+                    title: Only family members allowed
+                    description: >
+                      Only for ```extra_passengers``` condition type. Determines
+                      whether extra passengers need to belong to traveler's
+                      closest family.
+                    type: boolean
+                    example: true
+                  airportCode:
+                    title: Airport code
+                    description: >
+                      Only for ```lounge_access``` condition type. Airport IATA
+                      code on which lounge is available.
+                    type: string
+                    pattern: ^[A-Z]{3}$
+                    example: LHR
+                  airportName:
+                    title: Airport name
+                    description: >
+                      Only for ```lounge_access``` condition type. Airport name
+                      on which lounge is available.
+                    type: string
+                    example: London Heathrow
+                  pieces:
+                    title: Number of pieces
+                    description: >
+                      Only for ```baggage``` condition type. Number of allowed
+                      (extra) pieces of baggage.
+                    type: integer
+                    minimum: 1
+                    example: 2
+                  weightUnit:
+                    title: Unit of weight
+                    description: >
+                      Only for ```baggage``` condition type. Unit of weight used
+                      to measure the baggage.
+                    type: string
+                    enum:
+                      - kg
+                      - lb
+                    example: kg
+                  weightPerPiece:
+                    title: Weight per piece
+                    description: >
+                      Only for ```baggage``` condition type. Maximum weight of
+                      one piece of baggage.
+                    type: number
+                    format: integer
+                    minimum: 0
+                    example: 23
+                  totalWeight:
+                    title: Total weight
+                    description: >
+                      Only for ```baggage``` condition type. Maximum total
+                      weight of the baggage.
+                    type: number
+                    format: integer
+                    minimum: 0
+                    example: 32
+                  lengthUnit:
+                    title: Unit of length
+                    description: >
+                      Only for ```baggage``` condition type. Unit of length used
+                      to measure the baggage.
+                    type: string
+                    enum:
+                      - cm
+                      - in
+                    example: cm
+                  width:
+                    title: Maximum width
+                    description: >
+                      Only for ```baggage``` condition type. Maximum width of
+                      one piece of baggage.
+                    minimum: 0
+                    type: number
+                    format: integer
+                    example: 75
+                  height:
+                    title: Maximum height
+                    description: >
+                      Only for ```baggage``` condition type. Maximum height of
+                      one piece of baggage.
+                    minimum: 0
+                    type: number
+                    format: integer
+                    example: 90
+                  length:
+                    title: Maximum length
+                    description: >
+                      Only for ```baggage``` condition type. Maximum length of
+                      one piece of baggage.
+                    minimum: 0
+                    type: number
+                    format: integer
+                    example: 43
+                  sumOfDimensions:
+                    title: Maximum sum of dimensions
+                    description: >
+                      Only for ```baggage``` condition type. Maximum sum of
+                      baggage dimensions (length + width + height).
+                    minimum: 0
+                    type: number
+                    format: integer
+                    example: 208
+                  baggageType:
+                    title: Type of baggage
+                    description: >
+                      Only for ```baggage``` condition type. Used to
+                      differeniate regular baggage from sport equipment or
+                      musical instrument.
+                    type: string
+                    enum:
+                      - regular
+                      - sport
+                      - music
+                    example: regular
+                  costType:
+                    title: Cost type
+                    description: >
+                      Only for ```cost``` condition type. Type of fee paid by
+                      the traveler.
+                    type: string
+                    enum:
+                      - free
+                      - fee
+                  fee:
+                    title: Fee
+                    description: >
+                      Only for ```cost``` condition type. Fee paid by the
+                      traveler.
+                    type: number
+                    format: float
+                    example: 150
+                  currency:
+                    title: Currency code
+                    description: >
+                      Only for ```cost``` condition type. ISO-4217 currency
+                      code.
+                    type: string
+                    pattern: ^[A-Z]{3}$
+                    example: USD
+    FareAttribute:
+      title: Fare attribute
+      description: Fare attribute such as baggage allowance or changeability.
+      type: object
+      required:
+        - target
+        - targetType
+        - code
+        - name
+        - applicability
+      properties:
+        target:
+          title: Flight leg or segment ID
+          description: Segment or leg ID as specified in request
+          type: string
+          example: leg-1
+        targetType:
+          title: Target type
+          description: Differentiates benefit applicable for segment and entire leg
+          type: string
+          enum:
+            - segment
+            - leg
+          example: leg
+        code:
+          title: Fare attribute code
+          description: >
+            Fare attribute type code can be used e.g. to display relevant icon.
+            See [Get fare attribute type
+            collection](http://milefy-api-docs.30k.com) method or check [the
+            meaning of all possible values](http://milefy-api-docs.30k.com).
+          type: string
+          example: XTRBGG
+        name:
+          title: Fare attribute name
+          description: Fare attribute name
+          type: string
+          example: Baggage allowance
+        industrySubCodes:
+          $ref: '#/components/schemas/IndustrySubCodes'
+        applicability:
+          title: Applicability
+          description: >-
+            Applicability of the fare attribute (is it included, excluded in the
+            fare or for additional fee).
+          type: string
+          enum:
+            - included
+            - excluded
+            - paid
+        conditions:
+          title: List of conditions
+          description: List of conditions and restrictions
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items:
+            title: Condition
+            type: object
+            required:
+              - message
+              - type
+            properties:
+              type:
+                title: Type of condition
+                description: Different types have different set of properties.
+                type: string
+                enum:
+                  - regular
+                  - baggage
+                  - cost
+                  - ticket_changes
+                  - lounge_access
+                  - meals
+                example: baggage
+              message:
+                title: Condition text
+                description: >-
+                  Condition message for the end user combining all available
+                  properties (if any).
+                type: string
+                example: >
+                  2 pieces of baggage, each weighing maximum 23 kg and
+                  dimensions up to 90 x 75 x 43 cm
+              properties:
+                title: Condition properties
+                description: Raw condition properties used to construct the message.
+                type: object
+                properties:
+                  pieces:
+                    title: Number of pieces
+                    description: >
+                      Only for ```baggage``` condition type. Number of allowed
+                      (extra) pieces of baggage.
+                    type: integer
+                    minimum: 1
+                    example: 1
+                  weightUnit:
+                    title: Unit of weight
+                    description: >
+                      Only for ```baggage``` condition type. Unit of weight used
+                      to measure the baggage.
+                    type: string
+                    enum:
+                      - kg
+                      - lb
+                    example: kg
+                  weightPerPiece:
+                    title: Weight per piece
+                    description: >
+                      Only for ```baggage``` condition type. Maximum weight of
+                      one piece of baggage.
+                    type: number
+                    format: integer
+                    minimum: 0
+                    example: 23
+                  totalWeight:
+                    title: Total weight
+                    description: >
+                      Only for ```baggage``` condition type. Maximum total
+                      weight of the baggage.
+                    type: number
+                    format: integer
+                    minimum: 0
+                    example: 32
+                  lengthUnit:
+                    title: Unit of length
+                    description: >
+                      Only for ```baggage``` condition type. Unit of length used
+                      to measure the baggage.
+                    type: string
+                    enum:
+                      - cm
+                      - in
+                    example: cm
+                  width:
+                    title: Maximum width
+                    description: >
+                      Only for ```baggage``` condition type. Maximum width of
+                      one piece of baggage.
+                    minimum: 0
+                    type: number
+                    format: integer
+                    example: 75
+                  height:
+                    title: Maximum height
+                    description: >
+                      Only for ```baggage``` condition type. Maximum height of
+                      one piece of baggage.
+                    minimum: 0
+                    type: number
+                    format: integer
+                    example: 90
+                  length:
+                    title: Maximum length
+                    description: >
+                      Only for ```baggage``` condition type. Maximum length of
+                      one piece of baggage.
+                    minimum: 0
+                    type: number
+                    format: integer
+                    example: 43
+                  sumOfDimensions:
+                    title: Maximum sum of dimensions
+                    description: >
+                      Only for ```baggage``` condition type. Maximum sum of
+                      baggage dimensions (length + width + height).
+                    minimum: 0
+                    type: number
+                    format: integer
+                    example: 208
+                  baggageType:
+                    title: Type of baggage
+                    description: >
+                      Only for ```baggage``` condition type. Used to
+                      differeniate regular baggage from sport equipment or
+                      musical instrument.
+                    type: string
+                    enum:
+                      - regular
+                      - sport
+                      - music
+                    example: regular
+                  costType:
+                    title: Cost type
+                    description: >
+                      Only for ```cost``` condition type. Type of fee paid by
+                      the traveler.
+                    type: string
+                    enum:
+                      - free
+                      - fee
+                      - fee_plus_fare_difference
+                    example: fee
+                  fee:
+                    title: Fee
+                    description: >
+                      Only for ```cost``` condition type. Fee paid by the
+                      traveler.
+                    type: number
+                    format: float
+                    example: 150
+                  currency:
+                    title: Currency code
+                    description: >
+                      Only for ```cost``` condition type. ISO-4217 currency
+                      code.
+                    type: string
+                    pattern: ^[A-Z]{3}$
+                    example: USD
+                  airportCode:
+                    title: Airport code
+                    description: >
+                      Only for ```lounge_access``` condition type. Airport IATA
+                      code on which lounge is available.
+                    type: string
+                    pattern: ^[A-Z]{3}$
+                    example: LHR
+                  airportName:
+                    title: Airport name
+                    description: >
+                      Only for ```lounge_access``` condition type. Airport name
+                      on which lounge is available.
+                    type: string
+                    example: London Heathrow
+                  hoursBeforeDeparture:
+                    title: Hours before departure
+                    description: >
+                      Only for ```ticket_changes``` condition type. Number of
+                      hours before departure, that change to the ticket is
+                      possible.
+                    type: integer
+                    example: 48
+                  meals:
+                    title: Complimentary meals
+                    description: >
+                      Only for ```meals``` condition type. List of complimentary
+                      meals.
+                    type: array
+                    minItems: 1
+                    unique: true
+                    items:
+                      type: string
+                      enum:
+                        - snack
+                        - alcohol
+                        - soft_drink
+                        - meal
+    LegFareAttribute:
+      title: Fare attribute
+      description: Fare attribute such as baggage allowance or changeability.
+      type: object
+      required:
+        - code
+        - name
+        - applicability
+      properties:
+        code:
+          title: Fare attribute code
+          description: >
+            Fare attribute type code can be used e.g. to display relevant icon.
+            See [Get fare attribute type
+            collection](http://milefy-api-docs.30k.com) method or check [the
+            meaning of all possible values](http://milefy-api-docs.30k.com).
+          type: string
+          example: XTRBGG
+        name:
+          title: Fare attribute name
+          description: Fare attribute name
+          type: string
+          example: Baggage allowance
+        industrySubCodes:
+          $ref: '#/components/schemas/IndustrySubCodes'
+        applicability:
+          title: Applicability
+          description: >-
+            Applicability of the fare attribute (is it included, excluded in the
+            fare or for additional fee).
+          type: string
+          enum:
+            - included
+            - excluded
+            - paid
+          example: paid
+        conditions:
+          title: List of conditions
+          description: List of conditions and restrictions
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items:
+            title: Condition
+            type: object
+            required:
+              - message
+              - type
+            properties:
+              type:
+                title: Type of condition
+                description: Different types have different set of properties.
+                type: string
+                enum:
+                  - regular
+                  - baggage
+                  - cost
+                  - lounge_access
+                  - ticket_changes
+                  - meals
+                example: baggage
+              message:
+                title: Condition text
+                description: >-
+                  Condition message for the end user combining all available
+                  properties (if any).
+                type: string
+                example: >
+                  2 pieces of baggage, each weighing maximum 32 kg and
+                  dimensions up to 30 x 70 x 80 cm
+              properties:
+                title: Condition properties
+                description: Raw condition properties used to construct the message.
+                type: object
+                properties:
+                  pieces:
+                    title: Number of pieces
+                    description: >
+                      Only for ```baggage``` condition type. Number of allowed
+                      (extra) pieces of baggage.
+                    type: integer
+                    minimum: 1
+                    example: 1
+                  weightUnit:
+                    title: Unit of weight
+                    description: >
+                      Only for ```baggage``` condition type. Unit of weight used
+                      to measure the baggage.
+                    type: string
+                    enum:
+                      - kg
+                      - lb
+                    example: kg
+                  weightPerPiece:
+                    title: Weight per piece
+                    description: >
+                      Only for ```baggage``` condition type. Maximum weight of
+                      one piece of baggage.
+                    type: number
+                    format: integer
+                    minimum: 0
+                    example: 23
+                  totalWeight:
+                    title: Total weight
+                    description: >
+                      Only for ```baggage``` condition type. Maximum total
+                      weight of the baggage.
+                    type: number
+                    format: integer
+                    minimum: 0
+                    example: 32
+                  lengthUnit:
+                    title: Unit of length
+                    description: >
+                      Only for ```baggage``` condition type. Unit of length used
+                      to measure the baggage.
+                    type: string
+                    enum:
+                      - cm
+                      - in
+                    example: cm
+                  width:
+                    title: Maximum width
+                    description: >
+                      Only for ```baggage``` condition type. Maximum width of
+                      one piece of baggage.
+                    minimum: 0
+                    type: number
+                    format: integer
+                    example: 75
+                  height:
+                    title: Maximum height
+                    description: >
+                      Only for ```baggage``` condition type. Maximum height of
+                      one piece of baggage.
+                    minimum: 0
+                    type: number
+                    format: integer
+                    example: 90
+                  length:
+                    title: Maximum length
+                    description: >
+                      Only for ```baggage``` condition type. Maximum length of
+                      one piece of baggage.
+                    minimum: 0
+                    type: number
+                    format: integer
+                    example: 43
+                  sumOfDimensions:
+                    title: Maximum sum of dimensions
+                    description: >
+                      Only for ```baggage``` condition type. Maximum sum of
+                      baggage dimensions (length + width + height).
+                    minimum: 0
+                    type: number
+                    format: integer
+                    example: 208
+                  baggageType:
+                    title: Type of baggage
+                    description: >
+                      Only for ```baggage``` condition type. Used to
+                      differeniate regular baggage from sport equipment or
+                      musical instrument.
+                    type: string
+                    enum:
+                      - regular
+                      - sport
+                      - music
+                    example: regular
+                  costType:
+                    title: Cost type
+                    description: >
+                      Only for ```cost``` condition type. Type of fee paid by
+                      the traveler.
+                    type: string
+                    enum:
+                      - free
+                      - fee
+                      - fee_plus_fare_difference
+                    example: fee
+                  fee:
+                    title: Fee
+                    description: >
+                      Only for ```cost``` condition type. Fee paid by the
+                      traveler.
+                    type: number
+                    format: float
+                    example: 150
+                  currency:
+                    title: Currency code
+                    description: >
+                      Only for ```cost``` condition type. ISO-4217 currency
+                      code.
+                    type: string
+                    pattern: ^[A-Z]{3}$
+                    example: USD
+                  airportCode:
+                    title: Airport code
+                    description: >
+                      Only for ```lounge_access``` condition type. Airport IATA
+                      code on which lounge is available.
+                    type: string
+                    pattern: ^[A-Z]{3}$
+                    example: LHR
+                  airportName:
+                    title: Airport name
+                    description: >
+                      Only for ```lounge_access``` condition type. Airport name
+                      on which lounge is available.
+                    type: string
+                    example: London Heathrow
+                  hoursBeforeDeparture:
+                    title: Hours before departure
+                    description: >
+                      Only for ```ticket_changes``` condition type. Number of
+                      hours before departure, that change to the ticket is
+                      possible.
+                    type: integer
+                    example: 48
+                  meals:
+                    title: Complimentary meals
+                    description: >
+                      Only for ```meals``` condition type. List of complimentary
+                      meals.
+                    type: array
+                    minItems: 1
+                    unique: true
+                    items:
+                      type: string
+                      enum:
+                        - snack
+                        - alcohol
+                        - soft_drink
+                        - meal
+    Flight:
+      type: object
+      required:
+        - id
+        - legs
+        - price
+      properties:
+        id:
+          title: Flight ID
+          description: Unique flight ID within one result set
+          type: string
+          example: flight-1
+        bookingChannel:
+          title: Booking channel
+          description: |
+            Channel where actual booking occurs. Default: ```airline```.
+          type: string
+          enum:
+            - airline
+            - ota
+          example: airline
+        price:
+          $ref: '#/components/schemas/PriceBreakdown'
+        legs:
+          title: Flight legs
+          description: >-
+            Collection of flight legs. Flight leg may contain a few flight
+            segments separated by layovers. Round-trip flight consists of two
+            flight legs.
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/FlightLeg'
+    FlightLeg:
+      type: object
+      required:
+        - id
+        - segments
+      properties:
+        id:
+          title: Flight leg ID
+          description: Unique id of a flight leg within one flight
+          type: string
+          example: leg-1
+        segments:
+          title: Flight segments
+          description: >-
+            Collection of flight segments. Flight segment is characterized by
+            single takeoff and landing.
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/FlightSegment'
+    FlightSegment:
+      type: object
+      required:
+        - id
+        - marketingAirline
+        - operatingAirline
+        - departureAirport
+        - arrivalAirport
+        - departureDate
+        - bookingClass
+        - flightNumber
+      properties:
+        id:
+          title: Flight segment ID
+          description: Unique ID of a flight segment within one flight leg
+          type: string
+          example: segment-1
+        marketingAirline:
+          title: Marketing airline code
+          description: Marketing airline IATA code
+          type: string
+          pattern: ^[A-Z0-9]{2}$
+          example: BA
+        operatingAirline:
+          title: Operating airline code
+          description: Operating airline IATA code
+          type: string
+          pattern: ^[A-Z0-9]{2}$
+          example: BA
+        departureAirport:
+          title: Departure airport code
+          description: Departure airport IATA code
+          type: string
+          pattern: ^[A-Z]{3}$
+          example: LHR
+        arrivalAirport:
+          title: Arrival airport code
+          description: Arrival airport IATA code
+          type: string
+          pattern: ^[A-Z]{3}$
+          example: PVG
+        departureDate:
+          title: Departure date
+          description: |
+            Date in ISO-8601 e.g. ```YYYY-MM-DD```
+          type: string
+          format: date
+          example: '2019-10-31'
+        cabin:
+          title: Cabin class if known
+          type: string
+          example: Economy
+          enum:
+            - Economy
+            - PremiumEconomy
+            - Business
+            - First
+        bookingClass:
+          title: Booking class
+          description: >
+            Also known as fare code or <abbr title="Reservation Booking
+            Designator">RBD</abbr>
+          type: string
+          pattern: ^[A-Z]$
+          example: V
+        fareBasisCode:
+          title: Fare basis code
+          type: string
+          example: DS434KXM
+        fareFamilyName:
+          title: Name of fare family
+          description: |
+            Specify only if fare basis code is not available
+          type: string
+          example: Economy Basic
+        flightNumber:
+          title: Flight number
+          description: Flight number without airline code
+          type: number
+          format: integer
+          example: 169
+        distance:
+          title: Distance in miles
+          description: >
+            Flown distance in land miles. **Recommended** to ensure best
+            accuracy. If omitted, <a
+            href="https://en.wikipedia.org/wiki/Great-circle_distance"
+            title="Learn more" target="_blank">shortest distance between two
+            airports</a> will be calculated.
+          type: number
+          format: integer
+          example: 9820
+    PriceBreakdown:
+      description: Price breakdown
+      type: object
+      required:
+        - currency
+        - total
+      properties:
+        currency:
+          title: Currency code
+          description: Three-letter ISO-4217 currency code
+          type: string
+          pattern: ^[A-Z]{3}$
+          example: USD
+        baseFare:
+          title: Base fare
+          description: >
+            **Recommended** to ensure best accuracy for revenue-based frequent
+            flyer programs.
+          type: number
+          format: float
+          example: 234.5
+        total:
+          title: Total price
+          description: Total fare price for including taxes, fees, surcharges etc.
+          type: number
+          format: float
+          example: 334.5
+        airlineSurcharges:
+          title: Airline surcharges
+          description: >
+            **Recommended** to ensure best accuracy for revenue-based frequent
+            flyer programs.
+          type: number
+          format: float
+          example: 40
+        taxes:
+          title: Taxes
+          description: >
+            **Recommended** to ensure best accuracy for revenue-based frequent
+            flyer programs.
+          type: number
+          format: float
+          example: 60
+    Program:
+      title: Program
+      description: Frequent flyer program
+      type: object
+      required:
+        - _links
+        - code
+        - name
+        - nameWithAirline
+        - type
+        - alliance
+        - authentication
+        - mileTypes
+        - statusTiers
+        - airlines
+      properties:
+        _links:
+          title: Links wrapper
+          description: >
+            Links according to <a
+            href="http://stateless.co/hal_specification.html" title="Learn more"
+            target="_blank">HAL specification</a>.
+          type: object
+          required:
+            - self
+          properties:
+            self:
+              title: Self-reference
+              description: Link to the same resource
+              type: object
+              required:
+                - href
+              properties:
+                href:
+                  type: string
+                  example: /programs/BAC
+            index:
+              title: Get program collection
+              description: Link to get all supported frequent flyer programs
+              type: object
+              required:
+                - href
+              properties:
+                href:
+                  type: string
+                  example: /programs
+        code:
+          title: Program code
+          description: Frequent flyer program 3-letter code
+          type: string
+          pattern: ^[A-Z]{3}$
+          example: BAC
+        name:
+          title: Short name
+          description: Frequent flyer program name **without** owning airline's name
+          type: string
+          example: Executive Club
+        nameWithAirline:
+          title: Long name
+          description: Program name **with** default owning airline name
+          type: string
+          example: British Airways Executive Club
+        type:
+          title: Program type
+          description: >-
+            Type to distinguish between corporate and individual frequent flyer
+            programs.
+          type: string
+          enum:
+            - corporate
+            - individual
+          example: individual
+        passwordRecoveryUrl:
+          title: Password recovery link
+          description: URL to the password recovery page on program's website
+          type: string
+          format: url
+          example: https://www.britishairways.com/travel/forgottendetails/public/en_gb
+        websiteUrl:
+          title: Program's website
+          description: URL to the home page of program's website
+          type: string
+          format: url
+          example: https://www.britishairways.com/en-gb/executive-club
+        signUpUrl:
+          title: Program's sign up page
+          description: URL to sign up page on program's website
+          type: string
+          format: url
+          example: https://www.britishairways.com/travel/execenrol/public/en_gb
+        alliance:
+          title: Code of alliance
+          description: >-
+            Code of an airline alliance. Check [the meaning of all possible
+            values](http://milefy-api-docs.30k.com).
+          type: integer
+          enum:
+            - 0
+            - 1
+            - 2
+            - 3
+            - 4
+          example: 2
+        mileTypes:
+          title: Types of miles
+          description: |
+            [Types of miles](http://milefy-api-docs.30k.com) used in the program
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/MileType'
+        statusTiers:
+          title: Available status tiers
+          description: Status tiers to achieve in the program.
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/StatusTier'
+        airlines:
+          title: Affiliated airlines
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/Airline'
+        authentication:
+          title: Authentication info
+          type: object
+          required:
+            - methods
+          properties:
+            methods:
+              title: Authentication methods
+              description: Available authentication methods
+              type: array
+              minItems: 0
+              uniqueItems: true
+              items:
+                type: string
+                enum:
+                  - none
+                  - simple
+                  - oauth
+            simple:
+              title: Simple authentication
+              description: Simple authentication configuration used to build sign in form.
+              type: object
+              required:
+                - formInputs
+              properties:
+                formInputs:
+                  title: Form input collection
+                  description: >-
+                    List of required inputs in the sign in form used to
+                    authenticate traveler's membership.
+                  type: array
+                  minItems: 1
+                  uniqueItems: true
+                  items:
+                    $ref: '#/components/schemas/FormInputConfig'
+    MileType:
+      type: object
+      required:
+        - code
+        - name
+      properties:
+        code:
+          title: Code of mile type
+          description: >
+            Check the meaning of the <a href="#appendix-mile-types" title="Learn
+            more">possible values</a>.
+          type: integer
+          enum:
+            - 1
+            - 2
+            - 3
+            - 4
+            - 5
+          example: 2
+        name:
+          title: Name of mile type
+          description: Name of mile type specific for the program.
+          type: string
+          example: Tier Points
+    StatusTier:
+      type: object
+      required:
+        - code
+        - name
+      properties:
+        code:
+          title: Code of status tier
+          description: >-
+            Check [the meaning of all possible
+            values](http://milefy-api-docs.30k.com).
+          type: integer
+          enum:
+            - 0
+            - 1
+            - 8
+            - 16
+            - 24
+            - 32
+            - 33
+            - 34
+            - 35
+          example: 8
+        name:
+          title: Name of status tier
+          description: Branded name of the status tier in the program
+          type: string
+          example: Silver
+        qualification:
+          $ref: '#/components/schemas/Qualification'
+        requalification:
+          $ref: '#/components/schemas/Qualification'
+    Airline:
+      type: object
+      required:
+        - code
+        - name
+      properties:
+        code:
+          title: Airline code
+          description: Airline IATA code consisting two alphanumeric characters
+          type: string
+          pattern: ^[A-Z0-9]{2}$
+          example: BA
+        name:
+          title: Airline name
+          type: string
+          example: British Airways
+    Miles:
+      type: object
+      required:
+        - code
+        - value
+      properties:
+        code:
+          title: Code of mile type
+          description: >
+            Check the meaning of the <a href="#appendix-mile-types" title="Learn
+            more">possible values</a>.
+          type: integer
+          enum:
+            - 1
+            - 2
+            - 3
+            - 4
+            - 5
+          example: 2
+        value:
+          title: Number of miles
+          type: number
+          format: float
+          example: 1500
+    Qualification:
+      title: Qualification or re-qualification conditions
+      description: Next status tier qualification or re-qualification requirements.
+      type: object
+      required:
+        - options
+        - defaultOption
+      properties:
+        defaultOption:
+          title: Default qualification option
+          description: >
+            Qualification option ID, that is most likley **the easiest to
+            achieve** by the traveler.
+          type: integer
+          minimum: 1
+        options:
+          title: Options of qualification
+          description: >
+            **Alternative** options to qualify (or re-qualify) to the next
+            status tier
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items:
+            type: object
+            required:
+              - id
+              - mileThresholds
+            properties:
+              id:
+                title: Option ID
+                description: Qualification option ID
+                type: integer
+                minimum: 1
+              disclaimer:
+                title: Disclaimer collection
+                description: Collection of restrictions for the qualification option.
+                type: array
+                minItems: 1
+                uniqueItems: true
+                items:
+                  title: Disclaimer
+                  type: string
+                  example: >-
+                    Requires to take at least two flights marketed by Turkish
+                    Airlines
+              excludedCountries:
+                title: List of excluded countries
+                description: >
+                  List of countries in which this option **doesn't apply**. It
+                  means the country of traveler's residence.
+                type: array
+                minItems: 1
+                uniqueItems: true
+                items:
+                  title: Country code
+                  description: IATA country code consisting of two letters
+                  type: string
+                  pattern: ^[A-Z]{2}$
+                  example: DE
+              limitedToCountries:
+                title: List of applicable countries
+                description: >
+                  List of countries in which this option **applies**. It means
+                  the country of traveler's residence.
+                type: array
+                minItems: 1
+                uniqueItems: true
+                items:
+                  title: Country code
+                  description: IATA country code consisting of two letters
+                  type: string
+                  pattern: ^[A-Z]{2}$
+                  example: FR
+              mileThresholds:
+                title: Required mileage thresholds
+                description: >-
+                  Required thresholds of mileage earnings to qualify (or
+                  re-qualify) for the next status tier.
+                type: array
+                minItems: 1
+                uniqueItems: true
+                items:
+                  $ref: '#/components/schemas/Miles'
+    FormInputs:
+      title: Membership credentials
+      description: Mamebership authentication credentials
+      type: array
+      minItems: 2
+      items:
+        type: object
+        required:
+          - name
+          - value
+        properties:
+          name:
+            title: Input name
+            description: >
+              Input name as in [program
+              configuration](http://milefy-api-docs.30k.com).
+            type: string
+            enum:
+              - login
+              - password
+              - other
+            example: login
+          value:
+            title: Input value
+            description: >
+              Input value with traveler credentials [**encrypted using
+              AES**](http://milefy-api-docs.30k.com).
+            type: string
+            example: 88NO43274
+          stored:
+            title: Is value stored?
+            description: >
+              With all credentials being stored, membership can be updated
+              automatically using [Update
+              membership](http://milefy-api-docs.30k.com) method.
+            type: boolean
+            default: true
+    FormInputConfig:
+      title: Input settings
+      description: Input settings to create the user interface.
+      type: object
+      required:
+        - type
+        - name
+        - order
+        - label
+      properties:
+        type:
+          title: Input type
+          description: >
+            Type of the input (as an analogy to HTML input types and
+            ```select``` element)
+          type: string
+          enum:
+            - text
+            - email
+            - password
+            - date
+            - select
+          example: text
+        label:
+          title: Input label
+          type: string
+          example: Member ID
+        name:
+          title: Input name
+          description: >-
+            Identifies the input when submitted using [Create simple
+            authentication](http://milefy-api-docs.30k.com) method.
+          type: string
+          enum:
+            - login
+            - password
+            - other
+          example: login
+        pattern:
+          title: Regular expression for validation
+          description: Regular expression to validate input on front-end
+          type: string
+          example: ^[a-zA-Z0-9]{6,}$
+        hint:
+          title: Hint for the traveler
+          type: string
+          example: At least 8 characters
+        order:
+          title: Field order
+          description: >-
+            Suggested order of field. Field with the highest number should be
+            displayed as first one.
+          type: integer
+          example: 64
+        options:
+          title: Options to select from
+          description: >-
+            Collection of allowed values. Only for the field ```type```, that
+            equals ```select```.
+          type: array
+          minItems: 2
+          uniqueItems: true
+          items:
+            type: object
+            required:
+              - value
+              - label
+            properties:
+              value:
+                title: Option value
+                description: Submitted value of the field option
+                type: string
+                example: opt-19
+              label:
+                title: Option label
+                description: Label to display for the traveler
+                type: string
+                example: Germany
+    Curies:
+      title: CURIE object
+      description: >
+        Describes <a
+        href="https://tools.ietf.org/html/draft-kelly-json-hal-08#section-8.2"
+        title="Learn more" target="_blank">resource relations</a> in HAL
+        specification.
+      type: array
+      minItems: 1
+      uniqueItems: true
+      items:
+        type: object
+        required:
+          - name
+          - href
+          - templated
+        properties:
+          name:
+            title: CURIE namespace
+            type: string
+            example: thirtyk
+          href:
+            type: string
+            format: uri
+            example: http://meta.api.30k.com/relations/{rel}
+          templated:
+            title: Uses template?
+            description: >
+              Is it an <a href="https://tools.ietf.org/html/rfc6570"
+              title="Learn more" target="_blank">URI template</a>?
+            type: boolean
+            example: true
+    FlightsCalculateAttributesBenefitsRequest:
+      type: object
+      required:
+        - flights
+      properties:
+        flights:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/Flight'
+    FlightsCalculateFareAttributesRequest:
+      type: object
+      required:
+        - legs
+      properties:
+        legs:
+          description: Flight legs defined as departure and final arrival airports.
+          name: Flight legs
+          type: array
+          uniqueItems: true
+          minItems: 1
+          items:
+            title: Flight leg
+            type: object
+            required:
+              - id
+              - departureAirport
+              - arrivalAirport
+              - airline
+              - fares
+            properties:
+              id:
+                title: Flight leg ID
+                description: Flight leg ID to match with response.
+                type: string
+                example: leg-1
+              departureAirport:
+                title: Departure airport code
+                description: Departure airport IATA code
+                type: string
+                pattern: ^[A-Z]{3}$
+                example: LHR
+              arrivalAirport:
+                title: Arrival airport code
+                description: Arrival airport IATA code
+                type: string
+                pattern: ^[A-Z]{3}$
+                example: PVG
+              airline:
+                title: Airline code
+                description: Airline IATA code
+                type: string
+                pattern: ^[A-Z0-9]{2}$
+                example: BA
+              layovers:
+                title: Layover airports
+                description: >
+                  List of IATA airport codes for all layovers. Required if
+                  ```scope``` query parameter is set to
+                  ```attributes_and_mileage```.
+                type: array
+                items:
+                  title: Layover airport
+                  description: Layover airport as IATA code.
+                  type: string
+                  pattern: ^[A-Z]{3}$
+                  example: CDG
+              fares:
+                title: Fares
+                description: Collection of fares to compare.
+                type: array
+                minItems: 1
+                uniqueItems: true
+                items:
+                  title: Fare
+                  description: Fare definition
+                  type: object
+                  required:
+                    - id
+                  properties:
+                    id:
+                      title: Fare ID
+                      description: >-
+                        Fare ID unique for the flight leg used as reference in
+                        the response.
+                      type: string
+                      example: fare-1
+                    fareBasisCode:
+                      title: Fare basis code
+                      description: >
+                        Ideally both, but at least one of fields is required:
+                        ```fareBasisCode``` or ```fareFamilyName```.
+                      type: string
+                      example: DS434KXM
+                    fareFamilyName:
+                      title: Name of fare family
+                      description: >
+                        Ideally both, but at least one of fields is required:
+                        ```fareBasisCode``` or ```fareFamilyName```.
+                      type: string
+                      example: Economy Basic
+    TravelersCreateProfileRequest:
+      type: object
+      properties:
+        country:
+          title: Country code
+          description: Country of traveler's residence as IATA code
+          type: string
+          pattern: '[A-Z]{2}'
+          example: DE
+    MembershipsCreateFrequentFlyerProgramMembershipRequest:
+      type: object
+      required:
+        - program
+      properties:
+        program:
+          title: Program code
+          description: >-
+            Three-letter frequent flyer program code, that the membership
+            belongs to.
+          type: string
+          pattern: '[A-Z]{3}'
+          example: BAC
+        memberNumber:
+          title: Membership number
+          description: >-
+            Traveler's membership number as recognized in particular frequent
+            flyer program.
+          type: string
+          example: '5345436'
+        memberName:
+          title: Member name
+          description: Traveler name as registered in particular frequent flyer program.
+          type: string
+          example: Mr. Smith
+        mileageEarnings:
+          title: Mileage earnings
+          description: Traveler's accumulated mileage earnings.
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/Miles'
+        statusTier:
+          title: Status tier code
+          description: >-
+            Traveler's status tier. See [the meaning of all possible
+            values](http://milefy-api-docs.30k.com).
+          type: integer
+          enum:
+            - 0
+            - 1
+            - 8
+            - 16
+            - 24
+            - 32
+            - 33
+            - 34
+            - 35
+            - 36
+          example: 8
+    StaticDataGetFrequentFlyerProgramsResponse:
+      type: object
+      required:
+        - _links
+        - _embedded
+        - count
+        - total
+      properties:
+        _links:
+          title: Links wrapper
+          description: >
+            Links according to <a
+            href="http://stateless.co/hal_specification.html" title="Learn more"
+            target="_blank">HAL specification</a>.
+          type: object
+          required:
+            - self
+            - thirtyk:find
+          properties:
+            self:
+              title: Self-reference
+              description: Link to the same resource
+              type: object
+              required:
+                - href
+              properties:
+                href:
+                  type: string
+                  example: /programs
+            thirtyk:find:
+              title: Get program
+              description: Link to get a particular frequent flyer program
+              type: object
+              required:
+                - href
+              properties:
+                href:
+                  type: string
+                  example: /programs/{code}
+                templated:
+                  title: Uses template?
+                  description: >
+                    Is it an <a href="https://tools.ietf.org/html/rfc6570"
+                    title="Learn more" target="_blank">URI template</a>?
+                  type: boolean
+                  default: true
+            curies:
+              $ref: '#/components/schemas/Curies'
+        _embedded:
+          title: Embedded resources
+          description: >
+            Embedded resources according to <a
+            href="http://stateless.co/hal_specification.html" title="Learn more"
+            target="_blank">HAL specification</a>.
+          type: object
+          required:
+            - programs
+          properties:
+            programs:
+              type: array
+              uniqueItems: true
+              items:
+                $ref: '#/components/schemas/Program'
+        total:
+          title: Total number of programs
+          type: integer
+          example: 90
+        count:
+          title: Number of programs in response
+          type: integer
+          example: 90
+    StaticDataGetStatusBenefitTypeCollectionResponse:
+      type: object
+      required:
+        - _links
+        - _embedded
+        - total
+        - count
+      properties:
+        _links:
+          title: Links wrapper
+          description: >
+            Links according to <a
+            href="http://stateless.co/hal_specification.html" title="Learn more"
+            target="_blank">HAL specification</a>.
+          type: object
+          required:
+            - self
+            - thirtyk:find
+          properties:
+            self:
+              title: Self-reference
+              description: Link to the same resource
+              type: object
+              required:
+                - href
+              properties:
+                href:
+                  type: string
+                  example: /benefits
+            thirtyk:find:
+              title: Get status benefit type
+              description: Link to get particular status benefit type
+              type: object
+              required:
+                - href
+                - templated
+              properties:
+                href:
+                  type: string
+                  example: /benefits/{code}
+                templated:
+                  title: Uses template?
+                  description: >
+                    Is it an <a href="https://tools.ietf.org/html/rfc6570"
+                    title="Learn more" target="_blank">URI template</a>?
+                  type: boolean
+                  default: true
+            curies:
+              $ref: '#/components/schemas/Curies'
+        _embedded:
+          title: Embedded resources
+          description: >
+            Embedded resources according to <a
+            href="http://stateless.co/hal_specification.html" title="Learn more"
+            target="_blank">HAL specification</a>.
+          type: object
+          required:
+            - benefits
+          properties:
+            benefits:
+              type: array
+              uniqueItems: true
+              items:
+                $ref: '#/components/schemas/BenefitType'
+        total:
+          title: Total number of status benefit types
+          type: integer
+          example: 13
+        count:
+          title: Number of status benefit types in response
+          type: integer
+          example: 13
+    StaticDataGetFareAttributeTypesResponse:
+      type: object
+      required:
+        - _links
+        - _embedded
+        - total
+        - count
+      properties:
+        _links:
+          title: Links wrapper
+          description: >
+            Links according to <a
+            href="http://stateless.co/hal_specification.html" title="Learn more"
+            target="_blank">HAL specification</a>.
+          type: object
+          required:
+            - self
+            - thirtyk:find
+          properties:
+            self:
+              title: Self-reference
+              description: Link to the same resource
+              type: object
+              required:
+                - href
+              properties:
+                href:
+                  type: string
+                  example: /attributes
+            thirtyk:find:
+              title: Get fare attribute type
+              description: Link to get particular fare attribute type
+              type: object
+              required:
+                - href
+                - templated
+              properties:
+                href:
+                  type: string
+                  example: /attributes/{code}
+                templated:
+                  title: Uses template?
+                  description: >
+                    Is it an <a href="https://tools.ietf.org/html/rfc6570"
+                    title="Learn more" target="_blank">URI template</a>?
+                  type: boolean
+                  default: true
+            curies:
+              $ref: '#/components/schemas/Curies'
+        _embedded:
+          title: Embedded resources
+          description: >
+            Embedded resources according to <a
+            href="http://stateless.co/hal_specification.html" title="Learn more"
+            target="_blank">HAL specification</a>.
+          type: object
+          required:
+            - attributes
+          properties:
+            attributes:
+              type: array
+              uniqueItems: true
+              items:
+                $ref: '#/components/schemas/FareAttributeType'
+        total:
+          title: Total number of status fare attribute types
+          type: integer
+          example: 17
+        count:
+          title: Number of fare attribute types in response
+          type: integer
+          example: 17
+    FlightsCalculateAttributesBenefitsResponse:
+      type: object
+      required:
+        - _links
+        - _embedded
+        - id
+        - flights
+      properties:
+        _links:
+          title: Links wrapper
+          description: >
+            Links according to <a
+            href="http://stateless.co/hal_specification.html" title="Learn more"
+            target="_blank">HAL specification</a>.
+          type: object
+          required:
+            - self
+            - thirtyk:booking
+          properties:
+            self:
+              title: Self-reference
+              description: Link to the same resource
+              type: object
+              required:
+                - href
+              properties:
+                href:
+                  type: string
+                  example: /calculate?traveler=abc123
+            thirtyk:booking:
+              title: Create booking
+              description: Link to create a booking event
+              type: object
+              required:
+                - href
+                - templated
+              properties:
+                href:
+                  type: string
+                  example: /booking?calculation=abc123&flight={flight}
+                templated:
+                  title: Uses template?
+                  description: >
+                    Is it an <a href="https://tools.ietf.org/html/rfc6570"
+                    title="Learn more" target="_blank">URI template</a>?
+                  type: boolean
+                  default: true
+            curies:
+              $ref: '#/components/schemas/Curies'
+        _embedded:
+          title: Embedded resources
+          description: >
+            Embedded resources according to <a
+            href="http://stateless.co/hal_specification.html" title="Learn more"
+            target="_blank">HAL specification</a>.
+          type: object
+          required:
+            - programs
+          properties:
+            programs:
+              description: All frequent flyer programs used in the response
+              type: array
+              uniqueItems: true
+              items:
+                type: object
+                required:
+                  - _links
+                  - code
+                properties:
+                  _links:
+                    title: Links wrapper
+                    description: >
+                      Links according to <a
+                      href="http://stateless.co/hal_specification.html"
+                      title="Learn more" target="_blank">HAL specification</a>.
+                    type: object
+                    required:
+                      - self
+                    properties:
+                      self:
+                        title: Self-reference
+                        description: Link to the same resource
+                        type: object
+                        required:
+                          - href
+                        properties:
+                          href:
+                            type: string
+                            example: /programs/BAC
+                      thirtyk:membership:
+                        title: Get membership
+                        description: >-
+                          Get traveler's frequent flyer membership. Link is
+                          available only if such membership exists.
+                        type: object
+                        required:
+                          - href
+                        properties:
+                          href:
+                            type: string
+                            example: /travelers/abc123/memberships/BAC
+                      curies:
+                        $ref: '#/components/schemas/Curies'
+                  code:
+                    title: Program code
+                    type: string
+                    pattern: ^[A-Z]{3}$
+                    example: BAC
+        id:
+          title: Unique calculate response ID
+          type: string
+          example: 5d5322df-e873-4665-9c36-ef5ba166a0e8
+        flights:
+          title: Flights with frequent flyer data
+          description: Flights with calculated frequent flyer information
+          type: array
+          minItems: 0
+          items:
+            $ref: '#/components/schemas/CalculateFlight'
+    FlightsCalculateAttributesBenefits400Response:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          title: Error code
+          description: >
+            See list of [all possible error
+            codes](http://milefy-api-docs.30k.com).
+          type: string
+          enum:
+            - FLINV
+            - TRVLR
+            - FLDIV
+          example: TRVLR
+        message:
+          title: Human-readable message
+          description: Only for debugging purposes and not for the end-user benefit.
+          type: string
+          example: Specified traveler doesn't exist or his ID is not specified
+        errors:
+          title: List of errors
+          description: List of specific errors in the request body.
+          type: array
+          uniqueItems: true
+          minItems: 1
+          items:
+            title: Error
+            description: Error in the request body
+            type: object
+            required:
+              - message
+              - path
+            properties:
+              message:
+                title: Human-readable message
+                description: Only for debugging purposes and not for the end-user benefit.
+                type: string
+                example: The airline code must be a valid IATA code
+              path:
+                title: Request body path
+                description: Path in the request body to the invalid property.
+                type: string
+                example: flights[0].legs[0].segments[0].marketingAirline
+    FlightsCalculateFareAttributesResponse:
+      type: object
+      required:
+        - legs
+      properties:
+        legs:
+          title: Flight legs
+          type: array
+          minItems: 1
+          items:
+            title: Flight leg
+            type: object
+            required:
+              - id
+              - fares
+            properties:
+              id:
+                title: Flight leg ID
+                description: Flight leg ID matching request.
+                type: string
+                example: leg-1
+              fares:
+                title: Fares
+                description: Collection of fares to compare.
+                type: array
+                minItems: 1
+                uniqueItems: true
+                items:
+                  title: Fare
+                  type: object
+                  required:
+                    - id
+                    - cabin
+                    - fareFamilyName
+                    - fareAttributes
+                  properties:
+                    id:
+                      title: Fare ID
+                      description: Fare ID unique for the flight leg used in a request.
+                      type: string
+                      example: fare-1
+                    cabin:
+                      title: Cabin
+                      description: The cabin to which matched branded fare corresponds
+                      type: string
+                      enum:
+                        - UNKNOWN
+                        - ECONOMY
+                        - PREMIUMECONOMY
+                        - BUSINESS
+                        - FIRST
+                      example: ECONOMY
+                    fareFamilyName:
+                      title: Fare Family Name
+                      description: Name of the matched branded fare
+                      type: string
+                      example: Economy Basic
+                    fareAttributes:
+                      title: Fare attributes
+                      description: >-
+                        Applicable fare attributes such as refundability or
+                        baggage allowance.
+                      type: array
+                      minItems: 1
+                      uniqueItems: true
+                      items:
+                        $ref: '#/components/schemas/LegFareAttribute'
+                    programs:
+                      title: Applicable programs
+                      description: >-
+                        List of applicable frequent flyer programs (one flight
+                        may earn miles to many programs). Returned only if
+                        ```scope``` query parameter equals
+                        ```attributes_and_mileage```.
+                      type: array
+                      minItems: 1
+                      uniqueItems: true
+                      items:
+                        type: object
+                        required:
+                          - code
+                          - mileageEarnings
+                        properties:
+                          code:
+                            title: Program code
+                            description: Frequent flyer program 3-letter code
+                            type: string
+                            pattern: ^[A-Z]{3}$
+                            example: BAC
+                          mileageEarnings:
+                            title: Mileage earnings
+                            description: Traveler's mileage earnings
+                            type: array
+                            minItems: 1
+                            uniqueItems: true
+                            items:
+                              $ref: '#/components/schemas/Miles'
+    FlightsCalculateFareAttributes400Response:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          title: Error code
+          description: >
+            See list of [all possible error
+            codes](http://milefy-api-docs.30k.com).
+          type: string
+          enum:
+            - FLINV
+          example: TRVLR
+        message:
+          title: Human-readable message
+          description: Only for debugging purposes and not for the end-user benefit.
+          type: string
+          example: Departure airport is missing
+        errors:
+          title: List of errors
+          description: List of specific errors in the request body.
+          type: array
+          uniqueItems: true
+          minItems: 1
+          items:
+            title: Error
+            description: Error in the request body
+            type: object
+            required:
+              - message
+              - path
+            properties:
+              message:
+                title: Human-readable message
+                description: Only for debugging purposes and not for the end-user benefit.
+                type: string
+                example: The airline code must be a valid IATA code
+              path:
+                title: Request body path
+                description: Path in the request body to the invalid property.
+                type: string
+                example: legs[0].airline
+    TravelersListCollectionResponse:
+      type: object
+      required:
+        - _embedded
+        - _links
+      properties:
+        _links:
+          title: Links wrapper
+          description: >
+            Links according to <a
+            href="http://stateless.co/hal_specification.html" title="Learn more"
+            target="_blank">HAL specification</a>.
+          type: object
+          required:
+            - self
+            - thirtyk:find
+            - first
+            - last
+          properties:
+            self:
+              title: Self-reference
+              description: Link to the same resource
+              type: object
+              required:
+                - href
+              properties:
+                href:
+                  type: string
+                  example: /travelers
+            thirtyk:find:
+              title: Get traveler
+              description: Link to get a particular traveler
+              type: object
+              required:
+                - href
+                - templated
+              properties:
+                href:
+                  type: string
+                  example: /travelers/{id}
+                templated:
+                  title: Uses template?
+                  description: >
+                    Is it an <a href="https://tools.ietf.org/html/rfc6570"
+                    title="Learn more" target="_blank">URI template</a>?
+                  type: boolean
+                  default: true
+            next:
+              title: Get next page
+              description: Link to get next page of travelers collection
+              type: object
+              required:
+                - href
+              properties:
+                href:
+                  type: string
+                  example: /travelers?offset=100&limit=100
+            prev:
+              title: Get previous page
+              description: Link to get previous page of travelers collection
+              type: object
+              required:
+                - href
+              properties:
+                href:
+                  type: string
+                  example: /travelers?offset=0&limit=100
+            first:
+              title: Get first page
+              description: Link to get first page of travelers collection
+              type: object
+              required:
+                - href
+              properties:
+                href:
+                  type: string
+                  example: /travelers
+            last:
+              title: Get last page
+              description: Link to get last page of travelers collection
+              type: object
+              required:
+                - href
+              properties:
+                href:
+                  type: string
+                  example: /travelers?offset=500&limit=100
+            curies:
+              $ref: '#/components/schemas/Curies'
+        _embedded:
+          title: Embedded resources
+          description: >
+            Embedded resources according to <a
+            href="http://stateless.co/hal_specification.html" title="Learn more"
+            target="_blank">HAL specification</a>.
+          type: object
+          required:
+            - travelers
+          properties:
+            travelers:
+              title: Collection of travelers
+              type: array
+              uniqueItems: true
+              items:
+                $ref: '#/components/schemas/Traveler'
+        total:
+          title: Total number of travelers
+          type: integer
+          example: 523
+        count:
+          title: Number of travelers in the response
+          type: integer
+          example: 100
+    TravelersCreateProfileResponse:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          title: Error code
+          description: >
+            Check [the meaning for all possible
+            values](http://milefy-api-docs.30k.com)
+          type: string
+          enum:
+            - CCINV
+          example: CCINV
+        message:
+          title: Human-readable message
+          description: Only for debugging purposes and not for the end-user benefit.
+          type: string
+          example: Invalid IATA country code
+    MembershipsGetListResponse:
+      type: object
+      required:
+        - _links
+        - _embedded
+        - total
+        - count
+      properties:
+        _links:
+          title: Links wrapper
+          description: >
+            Links according to <a
+            href="http://stateless.co/hal_specification.html" title="Learn more"
+            target="_blank">HAL specification</a>.
+          type: object
+          required:
+            - self
+            - thirtyk:traveler
+          properties:
+            self:
+              title: Self-reference
+              description: Link to the same resource
+              type: object
+              required:
+                - href
+              properties:
+                href:
+                  type: string
+                  example: /traveler/abc123/memberships
+            thirtyk:traveler:
+              title: Get traveler
+              description: Link to get the associated traveler
+              type: object
+              required:
+                - href
+              properties:
+                href:
+                  type: string
+                  example: /traveler/abc123
+            curies:
+              $ref: '#/components/schemas/Curies'
+        _embedded:
+          title: Embedded resources
+          description: >
+            Embedded resources according to <a
+            href="http://stateless.co/hal_specification.html" title="Learn more"
+            target="_blank">HAL specification</a>.
+          type: object
+          required:
+            - memberships
+          properties:
+            memberships:
+              title: Membership collection
+              description: List of traveler's memberships
+              type: array
+              uniqueItems: true
+              items:
+                $ref: '#/components/schemas/Membership'
+        total:
+          title: Total number of memberships
+          type: integer
+          example: 1
+        count:
+          title: Number of memberships in the response
+          type: integer
+          example: 1
+        errors:
+          title: Error collection
+          description: >
+            Collection of errors, that may occur during opeartion of [bulk
+            memberships update](http://milefy-api-docs.30k.com).
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items:
+            title: Error
+            type: object
+            required:
+              - code
+              - message
+              - program
+            properties:
+              program:
+                title: Program code
+                description: Frequent flyer program code to identify the membership.
+                type: string
+                pattern: ^[A-Z]{3}$
+                example: BAC
+              code:
+                title: Error code
+                description: >-
+                  Check [the meaning of all possible error
+                  codes](http://milefy-api-docs.30k.com).
+                type: string
+                enum:
+                  - MBINV
+                  - MBLKD
+                  - MBINVKY
+                example: MBINV
+              message:
+                title: Human-readable message
+                description: Only for debugging purposes and not for the end-user benefit.
+                type: string
+                example: Invalid membership authentication credentials
+    MembershipsCreateFrequentFlyerProgramMembershipResponse:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          title: Error code
+          description: >-
+            See the meaning of [all error
+            codes](http://milefy-api-docs.30k.com).
+          type: string
+          enum:
+            - MBPRG
+            - MBNSP
+            - MBIMT
+            - MBIST
+          example: MBIST
+        message:
+          title: Human-readable message
+          description: Only for debugging purposes and not for the end-user benefit.
+          type: string
+          example: Invalid status tier code
+    MembershipsDeleteMembershipResponse:
+      title: Error
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          title: Error code
+          description: >
+            Check [the meaning of all error
+            codes](http://milefy-api-docs.30k.com).
+          type: string
+          enum:
+            - TRVNF
+            - MBPNF
+        message:
+          title: Human-readable message
+          description: Only for debugging purposes and not for the end-user benefit.
+          type: string
+          example: Traveler not found
+    MembershipsEditTravelerMembershipResponse:
+      title: Error
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          title: Error code
+          description: >-
+            See the meaning of [all error
+            codes](http://milefy-api-docs.30k.com).
+          type: string
+          enum:
+            - MBNATH
+          example: MBNATH
+        message:
+          title: Human-readable message
+          description: Only for debugging purposes and not for the end-user benefit.
+          type: string
+          example: Membership is authenticated and cannot be edited manually
+security:
+  - apiKey: []
+x-tagGroups:
+  - tags:
+      - Flights
+      - Travelers
+      - Memberships
+      - Static data
+    name: Methods
+x-ignoredHeaderParameters:
+  - Accept-Encoding
+  - Accept
+  - Accept-Charset
