@@ -1,0 +1,5068 @@
+openapi: 3.0.0
+info:
+  title: REST API Reference
+  description: >-
+    By using the REST API, you can integrate our Co-browsing technology into 
+    your own application or build a thin layer around our technology. You can 
+    completely customize Surfly and automate the management of client and agent
+    creation through the REST API.
+
+
+    The Surfly REST API allows you to integrate the functionality of our
+    dashboard in a programmatic manner. With our API you can do the following
+    things:
+
+    * **Agents** - Manage your agents
+
+    * **Sessions** - Get an overview of all your sessions
+
+    * **Screenshots** - Create screenshots of your co-browsing sessions
+
+    * **Clients** - Create new clients *(reseller only)*
+
+    * **Servers** - Get a list of all available Surfly public cloud servers
+
+    * **History** - Get an overview of sessions history
+
+    * **Webhooks** - Manage your webhooks
+
+
+    Below you can find detailed code examples illustrating how to make the REST
+    calls. You will need your REST API key (which can be found in the
+    integration panel, just below the widget code).
+
+
+    > The rate limit for making REST API calls is 100 req/min/IP address
+  version: '2.0'
+  x-konfig-ignore:
+    potential-incorrect-type: true
+servers:
+  - url: https://surfly.com/v2
+    variables:
+      defaultHost:
+        default: www.example.com
+tags:
+  - description: >-
+      > (2018-03-19) `RESELLER_KEY` is deprecated. In order to make old API
+      calls compatible, we replaced the placeholder with the keyword `all`
+    name: Clients
+  - description: ''
+    name: Agents
+  - description: ''
+    name: Sessions
+  - description: ''
+    name: Webhooks
+  - description: ''
+    name: Company
+  - description: ''
+    name: Screenshots
+  - description: ''
+    name: History
+  - description: ''
+    name: Servers
+paths:
+  /agents/?api_key={API_KEY}:
+    get:
+      tags:
+        - Agents
+      summary: List
+      operationId: Agents_getList
+      security:
+        - api_key: []
+      description: List all agents
+      parameters:
+        - description: >-
+            Agents that are ready to take a call. Depends on `available` field
+            value and online status.
+          name: free
+          in: query
+          style: form
+          explode: true
+          schema:
+            type: boolean
+            example: true
+      responses:
+        '200':
+          description: Successful request
+          headers: {}
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentsGetListResponse'
+              example:
+                - agent_id: 1
+                  agent_name: Peter Pan
+                  agent_email: peter@neverland.net
+                  last_login: '2020-02-03T11:03:39.323310Z'
+                  role: agent
+                  available: true
+    post:
+      tags:
+        - Agents
+      summary: Create
+      operationId: Agents_registerNewAgent
+      security:
+        - api_key: []
+      description: Create a new AGENT
+      parameters: []
+      requestBody:
+        description: ''
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentsRegisterNewAgentRequest'
+            example:
+              username: Peter Pan
+              agent_email: peter@neverland.net
+              password: Pass@123
+              role: admin
+        required: true
+      responses:
+        '200':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentsRegisterNewAgentResponse'
+              example:
+                agent_id: '1'
+  /agents/{AGENT_ID}/?api_key={API_KEY}:
+    get:
+      tags:
+        - Agents
+      summary: Get by id
+      operationId: Agents_getById
+      description: Get information about a certain AGENT by `AGENT_ID`
+      parameters:
+        - name: API_KEY
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 3b57bd2db21c46d2875508b982968d26
+        - name: AGENT_ID
+          in: path
+          required: true
+          schema:
+            type: string
+            example: '2'
+      responses:
+        '200':
+          description: Successful response
+          headers: {}
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentsGetByIdResponse'
+              example:
+                agent_id: 2
+                agent_name: John Doe
+                agent_email: john.doe@example.com
+                last_login: '2020-02-03T11:03:39.323310Z'
+                role: agent
+                available: true
+    put:
+      tags:
+        - Agents
+      summary: Update
+      operationId: Agents_updateAgent
+      security:
+        - api_key: []
+      description: Update an AGENT by `AGENT_ID`
+      parameters:
+        - description: Id of the agent to update
+          name: AGENT_ID
+          in: path
+          required: true
+          schema:
+            type: string
+            example: '2'
+      requestBody:
+        description: ''
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentsUpdateAgentRequest'
+            example:
+              username: Peter
+              available: true
+        required: true
+      responses:
+        '200':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentsUpdateAgentResponse'
+              example:
+                agent_name: Peter
+                agent_id: 2
+                agent_email: peter@neverland.com
+                available: true
+    delete:
+      tags:
+        - Agents
+      summary: Delete
+      operationId: Agents_removeAgent
+      security:
+        - api_key: []
+      description: Remove an AGENT by `AGENT_ID`
+      parameters:
+        - description: ''
+          name: AGENT_ID
+          in: path
+          required: true
+          schema:
+            type: string
+            example: '2'
+      responses:
+        '200':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentsRemoveAgentResponse'
+              example:
+                response: Agent has been removed successfully
+  /agents/access-token/?api_key={API_KEY}:
+    post:
+      tags:
+        - Agents
+      summary: Generate an access token
+      operationId: Agents_generateAccessToken
+      security:
+        - api_key: []
+      description: >-
+        Generate a temporary access token for a given agent.
+
+        Surfly generates a unique access token for the specified user and
+        returns it in a response. The token expires automatically **24 hours**
+        after it is first created. Within that period, it can be used to
+        construct [Embed API](/embed.html) links, but after that a new token has
+        to be generated. Note that unless `force_new` parameter is set, Surfly
+        will try to return an existing token. If the existing token is due to
+        expire in less than 5 minutes, the new token will be generated even if
+        `force_new` is set to false.
+
+
+        Note that 24 hours expiration time is mainly for performance
+        optimization: the integrating app doesn't have to generate a token on
+        each page load. Instead, it can generate it (for example) when user logs
+        in, and cache it for a day.
+      parameters: []
+      requestBody:
+        description: ''
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentsGenerateAccessTokenRequest'
+            example:
+              email: agent@neverland.net
+              name: Ethan Hunt
+              role: agent
+        required: true
+      responses:
+        '200':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentsGenerateAccessTokenResponse'
+              example:
+                user_created: true
+                agent_token: t0aae2b2454c64b9a87b83ec09647dd9e
+                expires_in: 86400
+                agent_id: 1337
+                agent_role: agent
+        '404':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentsGenerateAccessToken404Response'
+              example:
+                errors:
+                  agent_id:
+                    - Agent was not found
+  /sessions/?api_key={API_KEY}:
+    get:
+      tags:
+        - Sessions
+      summary: List
+      operationId: Sessions_getAll
+      security:
+        - api_key: []
+      description: List all sessions
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionsGetAllResponse'
+              example:
+                - tags: []
+                  id: fvFkrL4saf52nuFh4GP9oQw
+                  session_id: fvFkrL4saf52nuFh4GP9oQw
+                  formatted_id: 123-123-123
+                  agent_id: null
+                  follower_link: https://surfly.com/123-123-123
+                  cobro_server_name: session.surfly.com
+                  start_time: '2017-04-21T13:55:08.251918Z'
+                  duration: null
+                  participant_num: 0
+                  end_time: null
+                  successful_start: null
+                  queue_id: 0
+                  pin: null
+                  queued: false
+                  waiting_time: null
+                  start_url: >-
+                    https://surfly.com.com/test/widget/?widget_key=3b57bd2db21c46d2875508b982968d26&hide_support_button_when_unavailable=false&hide_until_agent_joins=false
+                  meta: '{}'
+                  opentok_archive_id: null
+                  space: null
+                  options:
+                    sounds_enabled: true
+                    videochat: true
+                    allowlist: '[]'
+                    anyone_can_deactivate_space: false
+                    session_autorestore_enabled: true
+                    cookie_transfer_enabled: true
+                    cookie_transfer_scopes: []
+                    widget_key: 0
+                    cookie_transfer_proxying: false
+                    chat_logs_enabled: false
+                    host_switching_allowed: true
+                    start_muted: false
+                    format_session_id: true
+                    end_redirect_enabled: false
+                    cookie_transfer_urls: []
+                    start_with_invite_modal: true
+                    theme_font_size: 14
+                    theme_font_color: '#FFFFFF'
+                    verbose_console: false
+                    new_urls_allowed: true
+                    end_of_session_popup_url: ''
+                    start_with_chat_open: false
+                    hide_support_button_when_unavailable: false
+                    white_label: false
+                    blocklist: '[]'
+                    support_button_position: bottomleft
+                    filesharing_enabled: true
+                    hide_until_agent_joins: false
+                    hidden: false
+                    original_file_download_allowed: false
+                    hide_session_ui: false
+                    invitations_allowed: true
+                    auto_start: false
+                    theme_font_background: '#cc0000'
+                    block_until_agent_joins: false
+                    follower_redirect_url: ''
+                    embedded_sessions_only: false
+                    key_combo_to_start: true
+                    leader_redirect_url: ''
+    post:
+      tags:
+        - Sessions
+      summary: Create
+      operationId: Sessions_generateNewSession
+      security:
+        - api_key: []
+      description: Create a new session
+      parameters: []
+      requestBody:
+        description: ''
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SessionsGenerateNewSessionRequest'
+            example:
+              tags:
+                - tag1
+                - tag2
+              url: http://www.surfly.com/
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionsGenerateNewSessionResponse'
+              example:
+                tags: []
+                id: fvFkrL4saf52nuFh4GP9oQwX
+                session_id: fvFkrL4saf52nuFh4GP9oQw
+                formatted_id: 123-123-123
+                agent_id: null
+                follower_link: https://surfly.com/123-123-123
+                leader_link: https://surfly.com/mUBRJyslQStVXPEwUwFyQ
+                cobro_server_name: session.surfly.com
+                start_time: '2017-04-21T13:55:08.251918Z'
+                duration: null
+                end_time: null
+                queue_id: 0
+                pin: null
+                queued: false
+                waiting_time: null
+                start_url: https://example.com
+                meta: '{}'
+                options:
+                  sounds_enabled: true
+                  videochat: true
+                  allowlist: '[]'
+                  anyone_can_deactivate_space: false
+                  session_autorestore_enabled: true
+                  cookie_transfer_enabled: true
+                  cookie_transfer_scopes: []
+                  widget_key: 0
+                  cookie_transfer_proxying: false
+                  chat_logs_enabled: false
+                  host_switching_allowed: true
+                  start_muted: false
+                  format_session_id: true
+                  end_redirect_enabled: false
+                  cookie_transfer_urls: []
+                  start_with_invite_modal: true
+                  theme_font_size: 14
+                  theme_font_color: '#FFFFFF'
+                  verbose_console: false
+                  new_urls_allowed: true
+                  end_of_session_popup_url: ''
+                  start_with_chat_open: false
+                  hide_support_button_when_unavailable: false
+                  white_label: false
+                  blocklist: '[]'
+                  support_button_position: bottomleft
+                  filesharing_enabled: true
+                  hide_until_agent_joins: false
+                  hidden: false
+                  original_file_download_allowed: false
+                  hide_session_ui: false
+                  invitations_allowed: true
+                  auto_start: false
+                  theme_font_background: '#cc0000'
+                  block_until_agent_joins: false
+                  follower_redirect_url: ''
+                  embedded_sessions_only: false
+                  key_combo_to_start: true
+                  leader_redirect_url: ''
+  /sessions/?api_key={api_key}&active_session={active_session}&agent_id={agent_id}&year={year}&month={month}&pin={pin}&tags={tags}:
+    get:
+      tags:
+        - Sessions
+      summary: Filter
+      operationId: Sessions_filter
+      security:
+        - api_key: []
+      description: Filter session. For example, list all active sessions
+      parameters:
+        - description: Filter active or inactive sessions
+          name: active_session
+          in: query
+          required: true
+          schema:
+            type: boolean
+            example: true
+        - description: Filter by ID of the agent who joined/started a session
+          name: agent_id
+          in: query
+          required: true
+          schema:
+            type: number
+            format: double
+            example: 1
+        - description: Filter by year
+          name: year
+          in: query
+          required: true
+          schema:
+            type: number
+            format: double
+            example: 2020
+        - description: Filter by month
+          name: month
+          in: query
+          required: true
+          schema:
+            type: number
+            format: double
+            example: 10
+        - description: Filter by PIN number (useful in combination with `active_session`)
+          name: pin
+          in: query
+          required: true
+          schema:
+            type: number
+            format: double
+            example: 1234
+        - description: Filter by tag. Supports multiple comma separated tags at once
+          name: tags
+          in: query
+          required: true
+          schema:
+            type: string
+            example: tag1,tag2
+      responses:
+        '200':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionsFilterResponse'
+              example:
+                - tags: []
+                  id: fvFkrL4saf52nuFh4GP9oQwX
+                  session_id: fvFkrL4saf52nuFh4GP9oQw
+                  formatted_id: 123-123-123
+                  agent_id: null
+                  follower_link: https://surfly.com/123-123-123
+                  cobro_server_name: session.surfly.com
+                  start_time: '2017-04-21T13:55:08.251918Z'
+                  duration: null
+                  participant_num: 0
+                  end_time: null
+                  successful_start: null
+                  queue_id: 0
+                  pin: null
+                  queued: false
+                  waiting_time: null
+                  start_url: https://example.com
+                  meta: '{}'
+                  opentok_archive_id: null
+                  options:
+                    sounds_enabled: true
+                    videochat: true
+                    allowlist: '[]'
+                    anyone_can_deactivate_space: false
+                    session_autorestore_enabled: true
+                    cookie_transfer_enabled: true
+                    cookie_transfer_scopes: []
+                    widget_key: 0
+                    cookie_transfer_proxying: false
+                    chat_logs_enabled: false
+                    host_switching_allowed: true
+                    start_muted: false
+                    format_session_id: true
+                    end_redirect_enabled: false
+                    cookie_transfer_urls: []
+                    start_with_invite_modal: true
+                    theme_font_size: 14
+                    theme_font_color: '#FFFFFF'
+                    verbose_console: false
+                    new_urls_allowed: true
+                    end_of_session_popup_url: ''
+                    start_with_chat_open: false
+                    hide_support_button_when_unavailable: false
+                    white_label: false
+                    blocklist: '[]'
+                    support_button_position: bottomleft
+                    filesharing_enabled: true
+                    hide_until_agent_joins: false
+                    hidden: false
+                    original_file_download_allowed: false
+                    hide_session_ui: false
+                    invitations_allowed: true
+                    auto_start: false
+                    theme_font_background: '#cc0000'
+                    block_until_agent_joins: false
+                    follower_redirect_url: ''
+                    embedded_sessions_only: false
+                    key_combo_to_start: true
+                    leader_redirect_url: ''
+  /sessions/{ID}/?api_key={API_KEY}:
+    get:
+      tags:
+        - Sessions
+      summary: Get by id
+      operationId: Sessions_getById
+      security:
+        - api_key: []
+      description: Get information about a session by `ID`.
+      parameters:
+        - description: >-
+            Id of the session. Can be a formatted ID (e.g. 123-123-123), or an
+            unformatted ID (e.g. fuSHr0sRQ1usugvheahwQ)
+          name: ID
+          in: path
+          required: true
+          schema:
+            type: string
+            example: fuSHr0sRQ1usugvheahwQ
+      responses:
+        '200':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionsGetByIdResponse'
+              example:
+                tags: []
+                id: fvFkrL4saf52nuFh4GP9oQwX
+                session_id: fvFkrL4saf52nuFh4GP9oQw
+                formatted_id: 123-123-123
+                agent_id: 1
+                follower_link: https://surfly.com/123-123-123
+                cobro_server_name: session.surfly.com
+                start_time: '2017-04-21T13:55:08.251918Z'
+                duration: null
+                participant_num: 3
+                end_time: null
+                successful_start: null
+                queue_id: 0
+                pin: null
+                queued: false
+                waiting_time: null
+                start_url: https://example.com
+                meta: '{}'
+                opentok_archive_id: null
+                options:
+                  sounds_enabled: true
+                  videochat: true
+                  allowlist: '[]'
+                  anyone_can_deactivate_space: false
+                  session_autorestore_enabled: true
+                  cookie_transfer_enabled: true
+                  cookie_transfer_scopes: []
+                  widget_key: 0
+                  cookie_transfer_proxying: false
+                  chat_logs_enabled: false
+                  host_switching_allowed: true
+                  start_muted: false
+                  format_session_id: true
+                  end_redirect_enabled: false
+                  cookie_transfer_urls: []
+                  start_with_invite_modal: true
+                  theme_font_size: 14
+                  theme_font_color: '#FFFFFF'
+                  verbose_console: false
+                  new_urls_allowed: true
+                  end_of_session_popup_url: ''
+                  start_with_chat_open: false
+                  hide_support_button_when_unavailable: false
+                  white_label: false
+                  blocklist: '[]'
+                  support_button_position: bottomleft
+                  filesharing_enabled: true
+                  hide_until_agent_joins: false
+                  hidden: false
+                  original_file_download_allowed: false
+                  hide_session_ui: false
+                  invitations_allowed: true
+                  auto_start: false
+                  theme_font_background: '#cc0000'
+                  block_until_agent_joins: false
+                  follower_redirect_url: ''
+                  embedded_sessions_only: false
+                  key_combo_to_start: true
+                  leader_redirect_url: ''
+  /sessions/{ID}/end/?api_key={API_KEY}:
+    post:
+      tags:
+        - Sessions
+      summary: End
+      operationId: Sessions_endById
+      security:
+        - api_key: []
+      description: End a session by Id
+      parameters:
+        - name: ID
+          in: path
+          required: true
+          schema:
+            type: string
+            example: fuSHr0sRQ1usugvheahwQ
+      responses:
+        '200':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionsEndByIdResponse'
+              example:
+                tags: []
+                id: fvFkrL4saf52nuFh4GP9oQwX
+                session_id: fvFkrL4saf52nuFh4GP9oQw
+                formatted_id: 123-123-123
+                agent_id: 1
+                follower_link: https://surfly.com/123-123-123
+                cobro_server_name: session.surfly.com
+                start_time: '2017-04-21T13:55:08.251918Z'
+                duration: 10
+                participant_num: 3
+                end_time: '2017-04-21T13:55:18.251918Z'
+                successful_start: false
+                queue_id: 0
+                pin: null
+                queued: false
+                waiting_time: null
+                start_url: https://example.com
+                meta: '{}'
+                opentok_archive_id: null
+                options:
+                  sounds_enabled: true
+                  videochat: true
+                  allowlist: '[]'
+                  anyone_can_deactivate_space: false
+                  session_autorestore_enabled: true
+                  cookie_transfer_enabled: true
+                  cookie_transfer_scopes: []
+                  widget_key: 0
+                  cookie_transfer_proxying: false
+                  chat_logs_enabled: false
+                  host_switching_allowed: true
+                  start_muted: false
+                  native_dialogs_enabled: 0
+                  format_session_id: true
+                  end_redirect_enabled: false
+                  cookie_transfer_urls: []
+                  start_with_invite_modal: true
+                  theme_font_size: 14
+                  theme_font_color: '#FFFFFF'
+                  verbose_console: false
+                  new_urls_allowed: true
+                  end_of_session_popup_url: ''
+                  start_with_chat_open: false
+                  hide_support_button_when_unavailable: false
+                  white_label: false
+                  blocklist: '[]'
+                  support_button_position: bottomleft
+                  filesharing_enabled: true
+                  hide_until_agent_joins: false
+                  hidden: false
+                  original_file_download_allowed: false
+                  hide_session_ui: false
+                  invitations_allowed: true
+                  auto_start: false
+                  session_start_confirmation: 0
+                  theme_font_background: '#cc0000'
+                  block_until_agent_joins: false
+                  follower_redirect_url: ''
+                  embedded_sessions_only: false
+                  key_combo_to_start: true
+                  leader_redirect_url: ''
+  /company/options/?api_key={api_key}:
+    get:
+      tags:
+        - Company
+      summary: Get default options
+      operationId: Company_getDefaultOptions
+      security:
+        - api_key: []
+      description: >-
+        Get company options. A list of all available options is available
+        [here](https://docs.surfly.com). Returns an object with default session
+        options. Plan limitations are taken into account
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompanyGetDefaultOptionsResponse'
+              example:
+                sounds_enabled: true
+                videochat: true
+                allowlist: '[]'
+    post:
+      tags:
+        - Company
+      summary: Post options
+      operationId: Company_postOptions
+      security:
+        - api_key: []
+      description: >-
+        List of all available options is available
+        [here](https://docs.surfly.com). Sets new default options. **If any
+        option is missing in the request body, its value is reset to default**.
+        If you need to update only certain options and leave the other intact,
+        consider the `PATCH` method instead.
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompanyPostOptionsResponse'
+              example:
+                sounds_enabled: true
+                videochat: true
+                allowlist: '[]'
+    patch:
+      tags:
+        - Company
+      summary: Update default options
+      operationId: Company_updateDefaultOptions
+      security:
+        - api_key: []
+      description: >-
+        List of all available options is available
+        [here](https://docs.surfly.com). Updates values of options specified in
+        the request body. Other options are left intact
+
+
+        ```
+
+        curl -X PATCH --header "Content-Type: application/json" -d
+        '{"start_with_chat_open": true}'
+        'https://surfly.com/v2/company/options/?api_key=API_KEY'
+
+        ```
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompanyUpdateDefaultOptionsResponse'
+              example:
+                sounds_enabled: true
+                videochat: true
+                allowlist: '[]'
+    delete:
+      tags:
+        - Company
+      summary: Reset default options
+      operationId: Company_resetDefaultOptions
+      security:
+        - api_key: []
+      description: >-
+        List of all available options is available
+        [here](https://docs.surfly.com). Resets all session options to their
+        default values
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          headers: {}
+          content: {}
+  /sessions/{ID}/screenshots/latest/?api_key={API_KEY}:
+    get:
+      tags:
+        - Screenshots
+      summary: Latest Screenshot
+      operationId: Screenshots_getLatest
+      security:
+        - api_key: []
+      description: Get latest screenshot for session by its `ID`.
+      parameters:
+        - name: ID
+          in: path
+          required: true
+          schema:
+            type: string
+            example: fuSHr0sRQ1usugvheahwQ
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScreenshotsGetLatestResponse'
+              example:
+                url: http://surfly-screenshots.s3.amazonaws.com/screenshot-ID.webp
+  /sessions/{ID}/screenshots/create/?api_key={API_KEY}:
+    post:
+      tags:
+        - Screenshots
+      summary: Create Screenshot
+      operationId: Screenshots_startGeneration
+      security:
+        - api_key: []
+      description: >-
+        Start generation of screenshots. The screenshots will be created as long
+        as you keep getting the latest screenshots using the get latest
+        screenshot API, that is to stop the creation of screenshot you just have
+        to stop requesting the latest screenshot. There will be a new screenshot
+        after a set interval second. The interval will be adjusted if the given
+        value is lower than 5 secs. The max size of the screenshot will be
+        adjusted in case the requested size is more than the window size.
+      parameters:
+        - name: ID
+          in: path
+          required: true
+          schema:
+            type: string
+            example: fEapBPiwxSouiLcAgb2OXQ1
+      requestBody:
+        description: ''
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScreenshotsStartGenerationRequest'
+            example:
+              size: 1024
+              interval: 30
+        required: true
+      responses:
+        '200':
+          description: >-
+            The response message will be one of the following:
+
+
+            * GENERATION-STARTED (screenshot generation process started)
+
+            * ALREADY-RUNNING (screenshot generation process already running)
+
+            * FAILED-INTERNALLY (screenshot generation process failed
+            internally)
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/ScreenshotsStartGenerationResponse'
+              example: '"GENERATION-STARTED"'
+  /clients/all/?api_key={API_KEY}:
+    get:
+      tags:
+        - Clients
+      summary: List
+      operationId: Clients_getAll
+      security:
+        - api_key: []
+      description: Return all clients of a reseller account
+      parameters: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientsGetAllResponse'
+              example:
+                - company_name: Neverland
+                  company_plan_name: pro
+                  client_key: AOEUaoeuntsPDe
+                  agent_count: 15
+                  widget_key: 24d1414c71a94cbf9f205ed4fc4999b5
+                  rest_key: 3b57bd2db21c46d2875508b982968d26
+                  domains: example.com, *.example.com
+                - company_name: DefaultCompany
+                  company_plan_name: free
+                  client_key: b05b45b8d4df42ba96
+                  agent_count: 2
+                  widget_key: c6a1333308a843cc9fb6aee2e42941d6
+                  rest_key: 767dd31a038c4ee798c72abb4b568ade
+                  domains: '*'
+    post:
+      tags:
+        - Clients
+      summary: Create
+      operationId: Clients_addNewClient
+      security:
+        - api_key: []
+      description: Add a new client
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClientsAddNewClientRequest'
+            example:
+              company_name: Neverland
+              domains: '*'
+              agent_email: peter@mail.com
+              agent_name: Peter Pan
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientsAddNewClientResponse'
+              example:
+                company_name: Neverland
+                client_key: fOBg4dXAPTHSoil6LywgfYA
+                rest_key: 22c0f77e5ca54d8fa6748f7cec4732c5
+                widget_key: 92cdd920f4e345768f6717b02f15dae8
+  /clients/all/{CLIENT_KEY}/?api_key={API_KEY}:
+    get:
+      tags:
+        - Clients
+      summary: Get by Id
+      operationId: Clients_infoById
+      security:
+        - api_key: []
+      description: Get information about a specific client by `CLIENT_KEY`
+      parameters:
+        - name: CLIENT_KEY
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 63668234b4aa19dd436e6a76ab8ae000
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientsInfoByIdResponse'
+              example:
+                company_name: Neverland
+                company_plan_name: pro
+                client_key: AOEUaoeuntsPDe
+                agent_count: 15
+                widget_key: 24d1414c71a94cbf9f205ed4fc4999b5
+                rest_key: 3b57bd2db21c46d2875508b982968d26
+                domains: example.com, *.example.com
+    post:
+      tags:
+        - Clients
+      summary: Set Client Domain List
+      operationId: Clients_setDomainList
+      security:
+        - api_key: []
+      description: Set Client Domain List
+      parameters:
+        - name: CLIENT_KEY
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 63668234b4aa19dd436e6a76ab8ae000
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClientsSetDomainListRequest'
+            example:
+              domains: example.com, *.example.com
+        required: true
+      responses:
+        '200':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientsSetDomainListResponse'
+              example:
+                domains: example.com, *.example.com
+    put:
+      tags:
+        - Clients
+      summary: Update
+      operationId: Clients_updateClient
+      security:
+        - api_key: []
+      description: Update a client
+      parameters:
+        - name: CLIENT_KEY
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 63668234b4aa19dd436e6a76ab8ae000
+      requestBody:
+        description: ''
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClientsUpdateClientRequest'
+            example:
+              company_name: Peter Pan
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientsUpdateClientResponse'
+              example:
+                agent_count: 15
+                company_name: Peter Pan
+                client_key: AOEUaoeuntsPDe
+    delete:
+      tags:
+        - Clients
+      summary: Delete
+      operationId: Clients_deleteClient
+      security:
+        - api_key: []
+      description: Delete a Client
+      parameters:
+        - name: CLIENT_KEY
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 63668234b4aa19dd436e6a76ab8ae000
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientsDeleteClientResponse'
+              example:
+                response: Client has been removed Successfully
+  /sessions/?api_key={API_KEY}&clientkey={CLIENT_KEY}&active_session=true&year=2015&month=01:
+    get:
+      tags:
+        - Clients
+      summary: List Active Sessions for Reseller's Client
+      operationId: Clients_listActiveSessionsForResellerClient
+      security:
+        - api_key: []
+      description: List all ACTIVE sessions for a certain `CLIENT`, `year`, `month`
+      parameters:
+        - name: CLIENT_KEY
+          in: query
+          required: true
+          schema:
+            type: string
+            example: 00063668234b4aa19dd436e6a76ab8ae
+        - name: active_session
+          in: query
+          schema:
+            type: boolean
+            default: false
+        - name: year
+          in: query
+          schema:
+            type: integer
+            format: int32
+        - name: month
+          in: query
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/ClientsListActiveSessionsForResellerClientResponse
+              example:
+                - session_id: fOBg4dXAPTHSoil6LywgfYA
+                  agent_id: 2
+                  follower_link: https://session.surfly.com/fwqcOuuMwTty7ii3kcA8Q
+                  start_time: '2016-08-11T13:44:58.025358Z'
+                  duration: 123
+  /history/?api_key={API_KEY}:
+    get:
+      tags:
+        - History
+      summary: List
+      operationId: History_getAllSessions
+      security:
+        - api_key: []
+      description: List history of all sessions
+      parameters: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listsessionhistoryresponse'
+  /history/?api_key={api_key}&active_session={active_session}&agent_id={agent_id}&pin={pin}&tags={tags}&min_duration={min_duration}&max_duration={max_duration}&min_date={min_date}&max_date={max_date}:
+    get:
+      tags:
+        - History
+      summary: Filter session history
+      operationId: History_filterSessionHistory
+      security:
+        - api_key: []
+      description: >-
+        Filter session history results with query params.
+
+        All filters are stackable like this:
+
+
+        ```
+
+        https://app.surfly.com/v2/history/?api_key=3b57bd2db21c46d2875508b982968d26&&tags=tag1&tags=null
+
+        ```
+
+
+        When filtering by pin, you might want to filter on active sessions by
+        adding `&active_session=true`.
+
+        Pins are generated to be unique for active sessions, so in case you are
+        looking for a running session via pin, please use `active_session`
+        filter as well:
+
+
+        ```
+
+        https://app.surfly.com/v2/history/?api_key=3b57bd2db21c46d2875508b982968d26&pin=1234&active_session=true
+
+        ```
+
+
+        Range of min_date and max_date is `[min, max)`. So to get results from
+        2020-04-21:
+
+
+        ```
+
+        https://app.surfly.com/v2/history/?api_key=3b57bd2db21c46d2875508b982968d26&min_date=2020-04-21T12:30-02:00&max_date=2020-04-22T12:30-02:00
+
+        ```
+
+
+        **cURL example:**
+
+
+        ```
+
+        curl --include \
+
+        'https://surfly.com/v2/history/?api_key=3b57bd2db21c46d2875508b982968d26&tags=tag1'
+
+        ```
+      parameters:
+        - description: Filter active or inactive sessions. Takes `true` or `false`.
+          name: active_session
+          in: query
+          required: true
+          schema:
+            type: boolean
+            example: false
+        - description: >-
+            Filter by ID of the agent who joined/started a session. Can take
+            `null` as a value.
+          name: agent_id
+          in: query
+          required: true
+          schema:
+            type: string
+            example: 'null'
+        - description: Filter by session pin. Can take `null` as a value.
+          name: pin
+          in: query
+          required: true
+          schema:
+            type: string
+            example: '1234'
+        - description: Filter by session tag. Can take `null` as a value.
+          name: tags
+          in: query
+          required: true
+          schema:
+            type: string
+            example: tag1
+        - description: Filter by minimum duration of a session.
+          name: min_duration
+          in: query
+          required: true
+          schema:
+            type: number
+            format: double
+            example: 120
+        - description: Filter by maximum duration of a session.
+          name: max_duration
+          in: query
+          required: true
+          schema:
+            type: number
+            format: double
+            example: 120
+        - description: >-
+            Filter by earlist start date/time. Accepts a timestamp in iso8601
+            format. Make sure to take the timezone into account
+          name: min_date
+          in: query
+          required: true
+          schema:
+            type: string
+            example: '2020-05-06T00:00:00.000000Z'
+        - description: >-
+            Filter by latest start date/time. Accepts a timestamp in iso8601
+            format. Make sure to take the timezone into account
+          name: max_date
+          in: query
+          required: true
+          schema:
+            type: string
+            example: '2020-05-06T00:00:00.000000Z'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HistoryFilterSessionHistoryResponse'
+              example:
+                next: null
+                previous: null
+                results:
+                  - tags:
+                      - tag1
+                    id: fuSHr0sRQ1usugvheahwQ
+                    session_id: fuSHr0sRQ1usugvheahwQ
+                    formatted_id: 737-464-923
+                    cobro_server_name: session.sitesupport.net
+                    agent_id: null
+                    follower_link: https://sitesupport.net/fuSHr0sRQ1usugvheahwQ
+                    start_time: '2020-05-06T10:42:44.940708Z'
+                    duration: 120
+                    end_time: null
+                    successful_start: false
+                    queue_id: 8359
+                    pin: '8359'
+                    queued: false
+                    start_url: http://www.surfly.com/
+                    meta: '{}'
+                    participant_num: 0
+                    options:
+                      sounds_enabled: true
+                      audit_logs_enabled: false
+                      password_required: false
+                      videochat: true
+                      download_trigger_enabled: true
+                      allowlist: '[]'
+                      orphan_redirect_url: ''
+                      support_button_position: bottomleft
+                      follower_drawing_selector: ''
+                      hide_element_by_selector: ''
+                      session_autorestore_enabled: true
+                      branding_primary_color: '#e54747'
+                      cookie_transfer_enabled: true
+                      cookie_transfer_scopes: []
+                      pause_enabled: false
+                      widget_key: ''
+                      branding_primary_text_color: '#ffffff'
+                      start_with_loading_screen: true
+                      hide_cursors: false
+                      chat_logs_enabled: false
+                      host_switching_allowed: true
+                      branding_logo_url: ''
+                      start_muted: false
+                      format_session_id: false
+                      private_session: false
+                      soft_end_filter: []
+                      start_with_invite_modal: false
+                      theme_font_size: 14
+                      branding_logo_link: ''
+                      chat_integration: disabled
+                      hidden: false
+                      cookie_transfer_proxying: false
+                      theme_font_color: '#FFFFFF'
+                      verbose_console: false
+                      end_of_session_popup_url: ''
+                      new_urls_allowed: true
+                      end_redirect_enabled: false
+                      cookie_transfer_urls: []
+                      start_with_chat_open: true
+                      hide_support_button_when_unavailable: false
+                      anyone_can_deactivate_space: false
+                      white_label: false
+                      blocklist: '[]'
+                      branding_secondary_text_color: '#ffffff'
+                      dashboard_background_url: ''
+                      filesharing_enabled: true
+                      hide_until_agent_joins: false
+                      soft_session_end: false
+                      auto_start: false
+                      original_file_download_allowed: false
+                      language: en
+                      session_start_confirmation: false
+                      branding_secondary_color: '#6e2222'
+                      theme_font_background: '#cc0000'
+                      hide_session_ui: false
+                      url_mangling: false
+                      shake_to_start: false
+                      native_dialogs_enabled: false
+                      invitations_allowed: true
+                      start_with_videochat_on: false
+                      region: ''
+                      selected_regions: []
+                      block_until_agent_joins: true
+                      follower_redirect_url: ''
+                      embedded_sessions_only: false
+                      key_combo_to_start: true
+                      native_selects: true
+                      leader_redirect_url: ''
+  /webhooks/?api_key={API_KEY}:
+    get:
+      tags:
+        - Webhooks
+      summary: List
+      operationId: Webhooks_listAll
+      security:
+        - api_key: []
+      description: List all Webhooks
+      parameters: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhooksListAllResponse'
+              example:
+                count: 2
+                next: null
+                previous: null
+                results:
+                  - id: 538
+                    url: https://dev.mycompany.com/webhooks/
+                    category: session.started
+                    enabled: true
+                    ssl_verification: true
+                    company_id: 94906
+                  - id: 537
+                    url: https://mycompany.com/webhooks/
+                    category: session.started
+                    enabled: true
+                    ssl_verification: true
+                    company_id: 94906
+    post:
+      tags:
+        - Webhooks
+      summary: Create
+      operationId: Webhooks_createWebhook
+      security:
+        - api_key: []
+      description: Create an Webhook
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhooksCreateWebhookRequest'
+            example:
+              url: https://mycompany.com/webhooks/
+              category: session.started
+              enabled: true
+              ssl_verification: true
+        required: true
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhooksCreateWebhookResponse'
+              example:
+                id: 539
+                url: https://mycompany.com/webhooks/
+                category: session.started
+                enabled: true
+                ssl_verification: true
+                company_id: 94906
+  /webhooks/{WEBHOOK_ID}/?api_key={API_KEY}:
+    get:
+      tags:
+        - Webhooks
+      summary: Get by Id
+      operationId: Webhooks_getWebhookInformation
+      security:
+        - api_key: []
+      description: Get Webhook Information
+      parameters:
+        - name: WEBHOOK_ID
+          in: path
+          required: true
+          schema:
+            type: string
+            example: '1'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhooksGetWebhookInformationResponse'
+              example:
+                id: 539
+                url: https://mycompany.com/webhooks/
+                category: session.started
+                enabled: true
+                ssl_verification: true
+                company_id: 94906
+    put:
+      tags:
+        - Webhooks
+      summary: Update
+      operationId: Webhooks_updateWebhook
+      security:
+        - api_key: []
+      description: Update a Webhook
+      parameters:
+        - name: WEBHOOK_ID
+          in: path
+          required: true
+          schema:
+            type: string
+            example: '1'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhooksUpdateWebhookRequest'
+            example:
+              url: https://mycompany.com/webhooks/
+              category: session.started
+              enabled: true
+              ssl_verification: true
+        required: true
+      responses:
+        '200':
+          description: ''
+          headers: {}
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhooksUpdateWebhookResponse'
+              example:
+                id: 539
+                url: https://mycompany.com/webhooks/
+                category: session.started
+                enabled: true
+                ssl_verification: true
+                company_id: 94906
+    delete:
+      tags:
+        - Webhooks
+      summary: Delete an Webhook
+      operationId: Webhooks_removeWebhook
+      security:
+        - api_key: []
+      description: Remove a Webhook by `WEBHOOK_ID`
+      parameters:
+        - name: WEBHOOK_ID
+          in: path
+          required: true
+          schema:
+            type: string
+            example: '1'
+      responses:
+        '204':
+          description: This response has no content.
+  /servers:
+    get:
+      tags:
+        - Servers
+      summary: List
+      operationId: Servers_listAvailable
+      description: Return a list of available servers
+      parameters: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServersListAvailableResponse'
+              example:
+                - description: Germany, Nuremberg
+                  id: '10'
+                  region: eu
+                  ips: 1.1.1.1, 2.2.2.2
+components:
+  schemas:
+    Listallagentsresponse:
+      title: Listallagentsresponse
+      required:
+        - agent_id
+        - agent_name
+        - agent_email
+        - last_login
+        - role
+        - available
+      type: object
+      properties:
+        agent_id:
+          description: ID of the agent
+          type: integer
+          format: int32
+        agent_name:
+          description: name of the agent
+          type: string
+        agent_email:
+          description: email address of the agent
+          type: string
+        last_login:
+          description: date and time when user logged in or agent token has been generated
+          type: string
+        role:
+          description: agent role
+          type: string
+          enum:
+            - admin
+            - manager
+            - agent
+        available:
+          description: agent availability status
+          type: boolean
+      example:
+        agent_id: 1
+        agent_name: Peter Pan
+        agent_email: peter@neverland.net
+        last_login: '2020-02-03T11:03:39.323310Z'
+        role: agent
+        available: true
+    Createanewagentrequest:
+      title: Createanewagentrequest
+      required:
+        - username
+        - agent_email
+        - password
+        - role
+      type: object
+      properties:
+        username:
+          description: Username of the agent
+          type: string
+        agent_email:
+          description: E-mail address of the agent
+          type: string
+        password:
+          description: Password of the agent
+          type: string
+        role:
+          description: Role of the agent
+          type: string
+          default: agent
+          enum:
+            - admin
+            - manager
+            - agent
+      example:
+        username: Peter Pan
+        agent_email: peter@neverland.net
+        password: Pass@123
+        role: admin
+    Createanewagentresponse:
+      title: Createanewagentresponse
+      required:
+        - agent_id
+      type: object
+      properties:
+        agent_id:
+          description: Id of the agent
+          type: string
+      example:
+        agent_id: '1'
+    GetAgentInformationresponse:
+      title: GetAgentInformationresponse
+      required:
+        - agent_id
+        - agent_name
+        - agent_email
+        - last_login
+        - role
+        - available
+      type: object
+      properties:
+        agent_id:
+          description: Id of the agent
+          type: integer
+          format: int32
+        agent_name:
+          description: Name of the agent
+          type: string
+        agent_email:
+          description: Email address of the agent
+          type: string
+        last_login:
+          description: Date and time when user logged in or agent token has been generated
+          type: string
+        role:
+          description: Agent role
+          type: string
+          enum:
+            - admin
+            - manager
+            - agent
+        available:
+          description: Agent availability status
+          type: boolean
+      example:
+        agent_id: 2
+        agent_name: John Doe
+        agent_email: john.doe@example.com
+        last_login: '2020-02-03T11:03:39.323310Z'
+        role: agent
+        available: true
+    Updateanagentrequest:
+      title: Updateanagentrequest
+      required:
+        - username
+        - available
+      type: object
+      properties:
+        username:
+          description: Username of the agent
+          type: string
+        role:
+          description: Agent's role.
+          type: string
+          default: agent
+          enum:
+            - admin
+            - manager
+            - agent
+        available:
+          description: Agent availability status
+          type: boolean
+      example:
+        username: Peter
+        role: admin
+        available: true
+    Updateanagentresponse:
+      title: Updateanagentresponse
+      required:
+        - agent_name
+        - agent_id
+        - agent_email
+        - available
+      type: object
+      properties:
+        agent_name:
+          description: Name of the agent
+          type: string
+        agent_id:
+          description: Id of the agent
+          type: integer
+          format: int32
+        agent_email:
+          description: Email address of the agent
+          type: string
+        role:
+          description: Agent's role.
+          type: string
+          enum:
+            - admin
+            - manager
+            - agent
+        available:
+          description: Agent availability status
+          type: boolean
+      example:
+        agent_name: Peter
+        agent_id: 2
+        agent_email: peter@neverland.com
+        available: true
+    Deleteanagentresponse:
+      title: Deleteanagentresponse
+      required:
+        - response
+      type: object
+      properties:
+        response:
+          type: string
+      example:
+        response: Agent has been removed successfully
+    Generateanaccesstokenrequest:
+      title: Generateanaccesstokenrequest
+      required:
+        - agent_id
+        - email
+        - name
+      type: object
+      properties:
+        agent_id:
+          description: Id of the agent
+          type: integer
+          format: int32
+        email:
+          description: Agent email. Required when `agent_id` is not provided
+          type: string
+        name:
+          description: Agent name. Required when `agent_id` is not provided
+          type: string
+        role:
+          description: User role
+          type: string
+          enum:
+            - admin
+            - manager
+            - agent
+        force_new:
+          description: >-
+            Force generating a new token, even if the old one is not yet
+            expired. Note that a user can only have one active access token at a
+            time, previous token associated with the user will be invalidated
+          type: boolean
+      example:
+        email: agent@neverland.net
+        name: Ethan Hunt
+        role: agent
+    Generateanaccesstokenresponse:
+      title: Generateanaccesstokenresponse
+      required:
+        - user_created
+        - agent_token
+        - expires_in
+        - agent_id
+        - agent_role
+      type: object
+      properties:
+        user_created:
+          description: Indicates whether a new user object was successfuly created
+          type: boolean
+        agent_token:
+          description: The generated access token
+          type: string
+        expires_in:
+          description: Number of seconds before the token expires
+          type: integer
+          format: int32
+        agent_id:
+          description: ID of the agent, useful when the call creates a new agent
+          type: integer
+          format: int32
+        agent_role:
+          description: Role of the agent
+          type: string
+          enum:
+            - admin
+            - manager
+            - agent
+      example:
+        user_created: true
+        agent_token: t0aae2b2454c64b9a87b83ec09647dd9e
+        expires_in: 86400
+        agent_id: 1337
+        agent_role: agent
+    Generateanaccesstokenresponse1:
+      title: Generateanaccesstokenresponse1
+      required:
+        - errors
+      type: object
+      properties:
+        errors:
+          allOf:
+            - $ref: '#/components/schemas/Errors'
+            - {}
+      example:
+        errors:
+          agent_id:
+            - Agent was not found
+    Errors:
+      title: Errors
+      required:
+        - agent_id
+      type: object
+      properties:
+        agent_id:
+          description: ''
+          type: array
+          items:
+            type: string
+      example:
+        agent_id:
+          - Agent was not found
+    ListallSessionsresponse:
+      title: ListallSessionsresponse
+      required:
+        - id
+        - session_id
+        - formatted_id
+        - agent_id
+        - follower_link
+        - cobro_server_name
+        - start_time
+        - duration
+        - participant_num
+        - end_time
+        - successful_start
+        - queue_id
+        - pin
+        - queued
+        - waiting_time
+        - start_url
+        - meta
+        - tags
+        - opentok_archive_id
+        - options
+      type: object
+      properties:
+        tags:
+          description: array of attached session tags
+          type: array
+          items:
+            type: string
+        id:
+          description: Unique ID of the session
+          type: string
+        session_id:
+          description: Unique ID of the session
+          type: string
+        formatted_id:
+          description: Unique formatted ID of the session
+          type: string
+        agent_id:
+          description: ID of the agent
+          type: string
+          nullable: true
+        follower_link:
+          description: The link that must be opened in a follower browser
+          type: string
+        cobro_server_name:
+          description: server name for multi-server installations
+          type: string
+        start_time:
+          description: time the session started
+          type: string
+        duration:
+          description: length of the session (in seconds)
+          type: string
+          nullable: true
+        participant_num:
+          description: null
+          type: integer
+          format: int32
+        end_time:
+          description: null
+          type: string
+          nullable: true
+        successful_start:
+          description: Whether the session was technically successful or not
+          type: string
+          nullable: true
+        queue_id:
+          description: null
+          type: integer
+          format: int32
+        pin:
+          description: 4-digit PIN code that can be used to join the session
+          type: string
+          nullable: true
+        queued:
+          description: Whether the session has been put in a waiting queue
+          type: boolean
+        waiting_time:
+          description: >-
+            time the session waited to start when it was in queue. will be
+            `null` if it's never been in queue
+          type: string
+          nullable: true
+        start_url:
+          description: page the session started from
+          type: string
+        meta:
+          description: additional data attached to joining user
+          type: string
+        opentok_archive_id:
+          description: Opentok archive ID
+          type: string
+          nullable: true
+        space:
+          description: Space
+          type: string
+        options:
+          description: options the session was created with
+          allOf:
+            - $ref: '#/components/schemas/Options'
+            - {}
+      example:
+        tags: []
+        id: fvFkrL4saf52nuFh4GP9oQwX
+        session_id: fvFkrL4saf52nuFh4GP9oQw
+        formatted_id: 123-123-123
+        agent_id: null
+        follower_link: https://surfly.com/123-123-123
+        cobro_server_name: session.surfly.com
+        start_time: '2017-04-21T13:55:08.251918Z'
+        duration: null
+        participant_num: 0
+        end_time: null
+        successful_start: null
+        queue_id: 0
+        pin: null
+        queued: false
+        waiting_time: null
+        start_url: >-
+          https://surfly.com.com/test/widget/?widget_key=3b57bd2db21c46d2875508b982968d26&hide_support_button_when_unavailable=false&hide_until_agent_joins=false
+        meta: '{}'
+        opentok_archive_id: null
+        space: null
+        options:
+          sounds_enabled: true
+          videochat: true
+          allowlist: '[]'
+          anyone_can_deactivate_space: false
+          session_autorestore_enabled: true
+          cookie_transfer_enabled: true
+          cookie_transfer_scopes: []
+          widget_key: 0
+          cookie_transfer_proxying: false
+          chat_logs_enabled: false
+          host_switching_allowed: true
+          start_muted: false
+          format_session_id: true
+          end_redirect_enabled: false
+          cookie_transfer_urls: []
+          start_with_invite_modal: true
+          theme_font_size: 14
+          theme_font_color: '#FFFFFF'
+          verbose_console: false
+          new_urls_allowed: true
+          end_of_session_popup_url: ''
+          start_with_chat_open: false
+          hide_support_button_when_unavailable: false
+          white_label: false
+          blocklist: '[]'
+          support_button_position: bottomleft
+          filesharing_enabled: true
+          hide_until_agent_joins: false
+          hidden: false
+          original_file_download_allowed: false
+          hide_session_ui: false
+          invitations_allowed: true
+          auto_start: false
+          theme_font_background: '#cc0000'
+          block_until_agent_joins: false
+          follower_redirect_url: ''
+          embedded_sessions_only: false
+          key_combo_to_start: true
+          leader_redirect_url: ''
+    Options:
+      title: Options
+      required:
+        - sounds_enabled
+        - videochat
+        - allowlist
+        - anyone_can_deactivate_space
+        - session_autorestore_enabled
+        - cookie_transfer_enabled
+        - cookie_transfer_scopes
+        - widget_key
+        - cookie_transfer_proxying
+        - chat_logs_enabled
+        - host_switching_allowed
+        - start_muted
+        - format_session_id
+        - end_redirect_enabled
+        - cookie_transfer_urls
+        - start_with_invite_modal
+        - theme_font_size
+        - theme_font_color
+        - verbose_console
+        - new_urls_allowed
+        - end_of_session_popup_url
+        - start_with_chat_open
+        - hide_support_button_when_unavailable
+        - white_label
+        - blocklist
+        - support_button_position
+        - filesharing_enabled
+        - hide_until_agent_joins
+        - hidden
+        - original_file_download_allowed
+        - hide_session_ui
+        - invitations_allowed
+        - auto_start
+        - theme_font_background
+        - block_until_agent_joins
+        - follower_redirect_url
+        - embedded_sessions_only
+        - key_combo_to_start
+        - leader_redirect_url
+      type: object
+      properties:
+        sounds_enabled:
+          type: boolean
+        videochat:
+          type: boolean
+        allowlist:
+          type: string
+        anyone_can_deactivate_space:
+          type: boolean
+        session_autorestore_enabled:
+          type: boolean
+        cookie_transfer_enabled:
+          type: boolean
+        cookie_transfer_scopes:
+          description: ''
+          type: array
+          items:
+            type: string
+        widget_key:
+          type: integer
+          format: int32
+        cookie_transfer_proxying:
+          type: boolean
+        chat_logs_enabled:
+          type: boolean
+        host_switching_allowed:
+          type: boolean
+        start_muted:
+          type: boolean
+        format_session_id:
+          type: boolean
+        end_redirect_enabled:
+          type: boolean
+        cookie_transfer_urls:
+          description: ''
+          type: array
+          items:
+            type: string
+        start_with_invite_modal:
+          type: boolean
+        theme_font_size:
+          type: integer
+          format: int32
+        theme_font_color:
+          type: string
+        verbose_console:
+          type: boolean
+        new_urls_allowed:
+          type: boolean
+        end_of_session_popup_url:
+          type: string
+        start_with_chat_open:
+          type: boolean
+        hide_support_button_when_unavailable:
+          type: boolean
+        white_label:
+          type: boolean
+        blocklist:
+          type: string
+        support_button_position:
+          type: string
+        filesharing_enabled:
+          type: boolean
+        hide_until_agent_joins:
+          type: boolean
+        hidden:
+          type: boolean
+        original_file_download_allowed:
+          type: boolean
+        hide_session_ui:
+          type: boolean
+        invitations_allowed:
+          type: boolean
+        auto_start:
+          type: boolean
+        theme_font_background:
+          type: string
+        block_until_agent_joins:
+          type: boolean
+        follower_redirect_url:
+          type: string
+        embedded_sessions_only:
+          type: boolean
+        key_combo_to_start:
+          type: boolean
+        leader_redirect_url:
+          type: string
+      example:
+        sounds_enabled: true
+        videochat: true
+        allowlist: '[]'
+        anyone_can_deactivate_space: false
+        session_autorestore_enabled: true
+        cookie_transfer_enabled: true
+        cookie_transfer_scopes: []
+        widget_key: 0
+        cookie_transfer_proxying: false
+        chat_logs_enabled: false
+        host_switching_allowed: true
+        start_muted: false
+        format_session_id: true
+        end_redirect_enabled: false
+        cookie_transfer_urls: []
+        start_with_invite_modal: true
+        theme_font_size: 14
+        theme_font_color: '#FFFFFF'
+        verbose_console: false
+        new_urls_allowed: true
+        end_of_session_popup_url: ''
+        start_with_chat_open: false
+        hide_support_button_when_unavailable: false
+        white_label: false
+        blocklist: '[]'
+        support_button_position: bottomleft
+        filesharing_enabled: true
+        hide_until_agent_joins: false
+        hidden: false
+        original_file_download_allowed: false
+        hide_session_ui: false
+        invitations_allowed: true
+        auto_start: false
+        theme_font_background: '#cc0000'
+        block_until_agent_joins: false
+        follower_redirect_url: ''
+        embedded_sessions_only: false
+        key_combo_to_start: true
+        leader_redirect_url: ''
+    Createasessionrequest:
+      title: Createasessionrequest
+      required:
+        - url
+      type: object
+      properties:
+        tags:
+          description: Tag associated to this session
+          type: array
+          items:
+            type: string
+        url:
+          description: Url to co-browse
+          type: string
+          required: true
+        agent_id:
+          description: Id of the agent
+          type: integer
+          format: int32
+        skip_queue:
+          description: Prevents queueing the session when using a widget key
+          type: boolean
+          default: false
+        hide_session_ui:
+          description: >-
+            Note that `hide_session_ui` here is just an example. You can also
+            pass any session option(s) in the request body
+          type: boolean
+          required: true
+      example:
+        tags:
+          - tag1
+          - tag2
+        url: http://www.surfly.com/
+    Createasessionresponse:
+      title: Createasessionresponse
+      allOf:
+        - type: object
+          properties:
+            leader_link:
+              description: >-
+                The link that must be opened in a leader (controlling) browser.
+                It has a 2 minute time out attached to it, if not used within
+                that time, the session will be closed.
+              required: true
+              type: string
+        - $ref: '#/components/schemas/ListallSessionsresponse'
+      example:
+        tags: []
+        id: fvFkrL4saf52nuFh4GP9oQwX
+        session_id: fvFkrL4saf52nuFh4GP9oQw
+        formatted_id: 123-123-123
+        agent_id: null
+        follower_link: https://surfly.com/123-123-123
+        leader_link: https://surfly.com/mUBRJyslQStVXPEwUwFyQ
+        cobro_server_name: session.surfly.com
+        start_time: '2017-04-21T13:55:08.251918Z'
+        duration: null
+        end_time: null
+        queue_id: 0
+        pin: null
+        queued: false
+        waiting_time: null
+        start_url: https://example.com
+        meta: '{}'
+        options:
+          sounds_enabled: true
+          videochat: true
+          allowlist: '[]'
+          anyone_can_deactivate_space: false
+          session_autorestore_enabled: true
+          cookie_transfer_enabled: true
+          cookie_transfer_scopes: []
+          widget_key: 0
+          cookie_transfer_proxying: false
+          chat_logs_enabled: false
+          host_switching_allowed: true
+          start_muted: false
+          format_session_id: true
+          end_redirect_enabled: false
+          cookie_transfer_urls: []
+          start_with_invite_modal: true
+          theme_font_size: 14
+          theme_font_color: '#FFFFFF'
+          verbose_console: false
+          new_urls_allowed: true
+          end_of_session_popup_url: ''
+          start_with_chat_open: false
+          hide_support_button_when_unavailable: false
+          white_label: false
+          blocklist: '[]'
+          support_button_position: bottomleft
+          filesharing_enabled: true
+          hide_until_agent_joins: false
+          hidden: false
+          original_file_download_allowed: false
+          hide_session_ui: false
+          invitations_allowed: true
+          auto_start: false
+          theme_font_background: '#cc0000'
+          block_until_agent_joins: false
+          follower_redirect_url: ''
+          embedded_sessions_only: false
+          key_combo_to_start: true
+          leader_redirect_url: ''
+    Filtersessionsresponse:
+      title: Filtersessionsresponse
+      required:
+        - id
+        - session_id
+        - formatted_id
+        - agent_id
+        - follower_link
+        - cobro_server_name
+        - start_time
+        - duration
+        - participant_num
+        - end_time
+        - successful_start
+        - queue_id
+        - pin
+        - queued
+        - waiting_time
+        - start_url
+        - meta
+        - tags
+        - opentok_archive_id
+        - options
+      type: object
+      properties:
+        tags:
+          description: ''
+          type: array
+          items:
+            type: string
+        id:
+          type: string
+        session_id:
+          type: string
+        formatted_id:
+          type: string
+        agent_id:
+          type: string
+          nullable: true
+        follower_link:
+          type: string
+        cobro_server_name:
+          type: string
+        start_time:
+          type: string
+        duration:
+          type: string
+          nullable: true
+        participant_num:
+          type: integer
+          format: int32
+        end_time:
+          type: string
+          nullable: true
+        successful_start:
+          type: string
+          nullable: true
+        queue_id:
+          type: integer
+          format: int32
+        pin:
+          type: string
+          nullable: true
+        queued:
+          type: boolean
+        waiting_time:
+          type: string
+          nullable: true
+        start_url:
+          type: string
+        meta:
+          type: string
+        opentok_archive_id:
+          type: string
+          nullable: true
+        options:
+          allOf:
+            - $ref: '#/components/schemas/Options'
+            - {}
+      example:
+        tags: []
+        id: fvFkrL4saf52nuFh4GP9oQwX
+        session_id: fvFkrL4saf52nuFh4GP9oQw
+        formatted_id: 123-123-123
+        agent_id: null
+        follower_link: https://surfly.com/123-123-123
+        cobro_server_name: session.surfly.com
+        start_time: '2017-04-21T13:55:08.251918Z'
+        duration: null
+        participant_num: 0
+        end_time: null
+        successful_start: null
+        queue_id: 0
+        pin: null
+        queued: false
+        waiting_time: null
+        start_url: https://example.com
+        meta: '{}'
+        opentok_archive_id: null
+        options:
+          sounds_enabled: true
+          videochat: true
+          allowlist: '[]'
+          anyone_can_deactivate_space: false
+          session_autorestore_enabled: true
+          cookie_transfer_enabled: true
+          cookie_transfer_scopes: []
+          widget_key: 0
+          cookie_transfer_proxying: false
+          chat_logs_enabled: false
+          host_switching_allowed: true
+          start_muted: false
+          format_session_id: true
+          end_redirect_enabled: false
+          cookie_transfer_urls: []
+          start_with_invite_modal: true
+          theme_font_size: 14
+          theme_font_color: '#FFFFFF'
+          verbose_console: false
+          new_urls_allowed: true
+          end_of_session_popup_url: ''
+          start_with_chat_open: false
+          hide_support_button_when_unavailable: false
+          white_label: false
+          blocklist: '[]'
+          support_button_position: bottomleft
+          filesharing_enabled: true
+          hide_until_agent_joins: false
+          hidden: false
+          original_file_download_allowed: false
+          hide_session_ui: false
+          invitations_allowed: true
+          auto_start: false
+          theme_font_background: '#cc0000'
+          block_until_agent_joins: false
+          follower_redirect_url: ''
+          embedded_sessions_only: false
+          key_combo_to_start: true
+          leader_redirect_url: ''
+    Getsessioninformationresponse:
+      title: Getsessioninformationresponse
+      required:
+        - id
+        - session_id
+        - formatted_id
+        - agent_id
+        - follower_link
+        - cobro_server_name
+        - start_time
+        - duration
+        - participant_num
+        - end_time
+        - successful_start
+        - queue_id
+        - pin
+        - queued
+        - waiting_time
+        - start_url
+        - meta
+        - tags
+        - opentok_archive_id
+        - options
+      type: object
+      properties:
+        tags:
+          description: ''
+          type: array
+          items:
+            type: string
+        id:
+          type: string
+        session_id:
+          type: string
+        formatted_id:
+          type: string
+        agent_id:
+          type: integer
+          format: int32
+        follower_link:
+          type: string
+        cobro_server_name:
+          type: string
+        start_time:
+          type: string
+        duration:
+          type: string
+          nullable: true
+        participant_num:
+          type: integer
+          format: int32
+        end_time:
+          type: string
+          nullable: true
+        successful_start:
+          type: string
+          nullable: true
+        queue_id:
+          type: integer
+          format: int32
+        pin:
+          type: string
+          nullable: true
+        queued:
+          type: boolean
+        waiting_time:
+          type: string
+          nullable: true
+        start_url:
+          type: string
+        meta:
+          type: string
+        opentok_archive_id:
+          type: string
+          nullable: true
+        options:
+          allOf:
+            - $ref: '#/components/schemas/Options'
+            - {}
+      example:
+        tags: []
+        id: fvFkrL4saf52nuFh4GP9oQwX
+        session_id: fvFkrL4saf52nuFh4GP9oQw
+        formatted_id: 123-123-123
+        agent_id: 1
+        follower_link: https://surfly.com/123-123-123
+        cobro_server_name: session.surfly.com
+        start_time: '2017-04-21T13:55:08.251918Z'
+        duration: null
+        participant_num: 3
+        end_time: null
+        successful_start: null
+        queue_id: 0
+        pin: null
+        queued: false
+        waiting_time: null
+        start_url: https://example.com
+        meta: '{}'
+        opentok_archive_id: null
+        options:
+          sounds_enabled: true
+          videochat: true
+          allowlist: '[]'
+          anyone_can_deactivate_space: false
+          session_autorestore_enabled: true
+          cookie_transfer_enabled: true
+          cookie_transfer_scopes: []
+          widget_key: 0
+          cookie_transfer_proxying: false
+          chat_logs_enabled: false
+          host_switching_allowed: true
+          start_muted: false
+          format_session_id: true
+          end_redirect_enabled: false
+          cookie_transfer_urls: []
+          start_with_invite_modal: true
+          theme_font_size: 14
+          theme_font_color: '#FFFFFF'
+          verbose_console: false
+          new_urls_allowed: true
+          end_of_session_popup_url: ''
+          start_with_chat_open: false
+          hide_support_button_when_unavailable: false
+          white_label: false
+          blocklist: '[]'
+          support_button_position: bottomleft
+          filesharing_enabled: true
+          hide_until_agent_joins: false
+          hidden: false
+          original_file_download_allowed: false
+          hide_session_ui: false
+          invitations_allowed: true
+          auto_start: false
+          theme_font_background: '#cc0000'
+          block_until_agent_joins: false
+          follower_redirect_url: ''
+          embedded_sessions_only: false
+          key_combo_to_start: true
+          leader_redirect_url: ''
+    Endsessionresponse:
+      title: Endsessionresponse
+      required:
+        - id
+        - session_id
+        - formatted_id
+        - agent_id
+        - follower_link
+        - cobro_server_name
+        - start_time
+        - duration
+        - participant_num
+        - end_time
+        - successful_start
+        - queue_id
+        - pin
+        - queued
+        - waiting_time
+        - start_url
+        - meta
+        - tags
+        - opentok_archive_id
+        - options
+      type: object
+      properties:
+        tags:
+          description: ''
+          type: array
+          items:
+            type: string
+        id:
+          type: string
+        session_id:
+          type: string
+        formatted_id:
+          type: string
+        agent_id:
+          type: integer
+          format: int32
+        follower_link:
+          type: string
+        cobro_server_name:
+          type: string
+        start_time:
+          type: string
+        duration:
+          type: integer
+          format: int32
+        participant_num:
+          type: integer
+          format: int32
+        end_time:
+          type: string
+        successful_start:
+          type: boolean
+        queue_id:
+          type: integer
+          format: int32
+        pin:
+          type: string
+          nullable: true
+        queued:
+          type: boolean
+        waiting_time:
+          type: string
+          nullable: true
+        start_url:
+          type: string
+        meta:
+          type: string
+        opentok_archive_id:
+          type: string
+          nullable: true
+        options:
+          allOf:
+            - $ref: '#/components/schemas/Options4'
+            - {}
+      example:
+        tags: []
+        id: fvFkrL4saf52nuFh4GP9oQwX
+        session_id: fvFkrL4saf52nuFh4GP9oQw
+        formatted_id: 123-123-123
+        agent_id: 1
+        follower_link: https://surfly.com/123-123-123
+        cobro_server_name: session.surfly.com
+        start_time: '2017-04-21T13:55:08.251918Z'
+        duration: 10
+        participant_num: 3
+        end_time: '2017-04-21T13:55:18.251918Z'
+        successful_start: false
+        queue_id: 0
+        pin: null
+        queued: false
+        waiting_time: null
+        start_url: https://example.com
+        meta: '{}'
+        opentok_archive_id: null
+        options:
+          sounds_enabled: true
+          videochat: true
+          allowlist: '[]'
+          anyone_can_deactivate_space: false
+          session_autorestore_enabled: true
+          cookie_transfer_enabled: true
+          cookie_transfer_scopes: []
+          widget_key: 0
+          cookie_transfer_proxying: false
+          chat_logs_enabled: false
+          host_switching_allowed: true
+          start_muted: false
+          native_dialogs_enabled: 0
+          format_session_id: true
+          end_redirect_enabled: false
+          cookie_transfer_urls: []
+          start_with_invite_modal: true
+          theme_font_size: 14
+          theme_font_color: '#FFFFFF'
+          verbose_console: false
+          new_urls_allowed: true
+          end_of_session_popup_url: ''
+          start_with_chat_open: false
+          hide_support_button_when_unavailable: false
+          white_label: false
+          blocklist: '[]'
+          support_button_position: bottomleft
+          filesharing_enabled: true
+          hide_until_agent_joins: false
+          hidden: false
+          original_file_download_allowed: false
+          hide_session_ui: false
+          invitations_allowed: true
+          auto_start: false
+          session_start_confirmation: 0
+          theme_font_background: '#cc0000'
+          block_until_agent_joins: false
+          follower_redirect_url: ''
+          embedded_sessions_only: false
+          key_combo_to_start: true
+          leader_redirect_url: ''
+    Options4:
+      title: Options4
+      required:
+        - sounds_enabled
+        - videochat
+        - allowlist
+        - anyone_can_deactivate_space
+        - session_autorestore_enabled
+        - cookie_transfer_enabled
+        - cookie_transfer_scopes
+        - widget_key
+        - cookie_transfer_proxying
+        - chat_logs_enabled
+        - host_switching_allowed
+        - start_muted
+        - native_dialogs_enabled
+        - format_session_id
+        - end_redirect_enabled
+        - cookie_transfer_urls
+        - start_with_invite_modal
+        - theme_font_size
+        - theme_font_color
+        - verbose_console
+        - new_urls_allowed
+        - end_of_session_popup_url
+        - start_with_chat_open
+        - hide_support_button_when_unavailable
+        - white_label
+        - blocklist
+        - support_button_position
+        - filesharing_enabled
+        - hide_until_agent_joins
+        - hidden
+        - original_file_download_allowed
+        - hide_session_ui
+        - invitations_allowed
+        - auto_start
+        - session_start_confirmation
+        - theme_font_background
+        - block_until_agent_joins
+        - follower_redirect_url
+        - embedded_sessions_only
+        - key_combo_to_start
+        - leader_redirect_url
+      type: object
+      properties:
+        sounds_enabled:
+          type: boolean
+        videochat:
+          type: boolean
+        allowlist:
+          type: string
+        anyone_can_deactivate_space:
+          type: boolean
+        session_autorestore_enabled:
+          type: boolean
+        cookie_transfer_enabled:
+          type: boolean
+        cookie_transfer_scopes:
+          description: ''
+          type: array
+          items:
+            type: string
+        widget_key:
+          type: integer
+          format: int32
+        cookie_transfer_proxying:
+          type: boolean
+        chat_logs_enabled:
+          type: boolean
+        host_switching_allowed:
+          type: boolean
+        start_muted:
+          type: boolean
+        native_dialogs_enabled:
+          type: integer
+          format: int32
+        format_session_id:
+          type: boolean
+        end_redirect_enabled:
+          type: boolean
+        cookie_transfer_urls:
+          description: ''
+          type: array
+          items:
+            type: string
+        start_with_invite_modal:
+          type: boolean
+        theme_font_size:
+          type: integer
+          format: int32
+        theme_font_color:
+          type: string
+        verbose_console:
+          type: boolean
+        new_urls_allowed:
+          type: boolean
+        end_of_session_popup_url:
+          type: string
+        start_with_chat_open:
+          type: boolean
+        hide_support_button_when_unavailable:
+          type: boolean
+        white_label:
+          type: boolean
+        blocklist:
+          type: string
+        support_button_position:
+          type: string
+        filesharing_enabled:
+          type: boolean
+        hide_until_agent_joins:
+          type: boolean
+        hidden:
+          type: boolean
+        original_file_download_allowed:
+          type: boolean
+        hide_session_ui:
+          type: boolean
+        invitations_allowed:
+          type: boolean
+        auto_start:
+          type: boolean
+        session_start_confirmation:
+          type: integer
+          format: int32
+        theme_font_background:
+          type: string
+        block_until_agent_joins:
+          type: boolean
+        follower_redirect_url:
+          type: string
+        embedded_sessions_only:
+          type: boolean
+        key_combo_to_start:
+          type: boolean
+        leader_redirect_url:
+          type: string
+      example:
+        sounds_enabled: true
+        videochat: true
+        allowlist: '[]'
+        anyone_can_deactivate_space: false
+        session_autorestore_enabled: true
+        cookie_transfer_enabled: true
+        cookie_transfer_scopes: []
+        widget_key: 0
+        cookie_transfer_proxying: false
+        chat_logs_enabled: false
+        host_switching_allowed: true
+        start_muted: false
+        native_dialogs_enabled: 0
+        format_session_id: true
+        end_redirect_enabled: false
+        cookie_transfer_urls: []
+        start_with_invite_modal: true
+        theme_font_size: 14
+        theme_font_color: '#FFFFFF'
+        verbose_console: false
+        new_urls_allowed: true
+        end_of_session_popup_url: ''
+        start_with_chat_open: false
+        hide_support_button_when_unavailable: false
+        white_label: false
+        blocklist: '[]'
+        support_button_position: bottomleft
+        filesharing_enabled: true
+        hide_until_agent_joins: false
+        hidden: false
+        original_file_download_allowed: false
+        hide_session_ui: false
+        invitations_allowed: true
+        auto_start: false
+        session_start_confirmation: 0
+        theme_font_background: '#cc0000'
+        block_until_agent_joins: false
+        follower_redirect_url: ''
+        embedded_sessions_only: false
+        key_combo_to_start: true
+        leader_redirect_url: ''
+    Retrievedefaultoptionsresponse:
+      title: Retrievedefaultoptionsresponse
+      required:
+        - sounds_enabled
+        - videochat
+        - allowlist
+      type: object
+      properties:
+        sounds_enabled:
+          type: boolean
+        videochat:
+          type: boolean
+        allowlist:
+          type: string
+      example:
+        sounds_enabled: true
+        videochat: true
+        allowlist: '[]'
+    Setdefaultoptionsresponse:
+      title: Setdefaultoptionsresponse
+      required:
+        - sounds_enabled
+        - videochat
+        - allowlist
+      type: object
+      properties:
+        sounds_enabled:
+          type: boolean
+        videochat:
+          type: boolean
+        allowlist:
+          type: string
+      example:
+        sounds_enabled: true
+        videochat: true
+        allowlist: '[]'
+    Updatedefaultoptionsresponse:
+      title: Updatedefaultoptionsresponse
+      required:
+        - sounds_enabled
+        - videochat
+        - allowlist
+      type: object
+      properties:
+        sounds_enabled:
+          type: boolean
+        videochat:
+          type: boolean
+        allowlist:
+          type: string
+      example:
+        sounds_enabled: true
+        videochat: true
+        allowlist: '[]'
+    LatestScreenshotresponse:
+      title: LatestScreenshotresponse
+      required:
+        - url
+      type: object
+      properties:
+        url:
+          description: Url where the latest image is hosted
+          type: string
+      example:
+        url: http://surfly-screenshots.s3.amazonaws.com/screenshot-ID.webp
+    CreateScreenshotrequest:
+      title: CreateScreenshotrequest
+      required:
+        - size
+        - interval
+      type: object
+      properties:
+        size:
+          description: Width of the screenshot in pixels
+          type: integer
+          format: int32
+        interval:
+          description: Rate in seconds, at which screenshot will be generated
+          type: integer
+          format: int32
+      example:
+        size: 1024
+        interval: 30
+    Listsallyourclientsresponse:
+      title: Listsallyourclientsresponse
+      required:
+        - company_name
+        - company_plan_name
+        - client_key
+        - agent_count
+        - widget_key
+        - rest_key
+        - domains
+      type: object
+      properties:
+        company_name:
+          description: Name of the company
+          type: string
+        company_plan_name:
+          description: Name of the company's plan
+          type: string
+        client_key:
+          description: Client key
+          type: string
+        agent_count:
+          description: Maximum number of agents
+          type: integer
+          format: int32
+        widget_key:
+          description: Widget key
+          type: string
+        rest_key:
+          description: REST API key
+          type: string
+        domains:
+          description: Comma-separated list of domains
+          type: string
+      example:
+        company_name: Neverland
+        company_plan_name: pro
+        client_key: AOEUaoeuntsPDe
+        agent_count: 15
+        widget_key: 24d1414c71a94cbf9f205ed4fc4999b5
+        rest_key: 3b57bd2db21c46d2875508b982968d26
+        domains: example.com, *.example.com
+    Createanewclientrequest:
+      title: Createanewclientrequest
+      required:
+        - company_name
+      type: object
+      properties:
+        company_name:
+          description: Name of the company
+          type: string
+        company_plan_name:
+          description: Name of the plan
+          type: string
+          default: client_enterprise
+        domains:
+          description: Comma-separated list of domains
+          type: string
+        agent_email:
+          description: Email of the agent
+          type: string
+        agent_name:
+          description: Username of the agent
+          type: string
+        agent_password:
+          description: Password of the agent
+          type: string
+      example:
+        company_name: Neverland
+        company_plan_name: client_basic
+        domains: '*'
+        agent_email: peter@mail.com
+        agent_name: Peter Pan
+    Createanewclientresponse:
+      title: Createanewclientresponse
+      required:
+        - company_name
+        - client_key
+        - rest_key
+        - widget_key
+      type: object
+      properties:
+        company_name:
+          description: Name of the company
+          type: string
+        client_key:
+          description: Client key
+          type: string
+        rest_key:
+          description: REST API key
+          type: string
+        widget_key:
+          description: Widget key
+          type: string
+      example:
+        company_name: Neverland
+        client_key: fOBg4dXAPTHSoil6LywgfYA
+        rest_key: 22c0f77e5ca54d8fa6748f7cec4732c5
+        widget_key: 92cdd920f4e345768f6717b02f15dae8
+    GetClientInformationresponse:
+      title: GetClientInformationresponse
+      required:
+        - company_name
+        - company_plan_name
+        - client_key
+        - agent_count
+        - widget_key
+        - rest_key
+        - domains
+      type: object
+      properties:
+        company_name:
+          type: string
+        company_plan_name:
+          type: string
+        client_key:
+          type: string
+        agent_count:
+          type: integer
+          format: int32
+        widget_key:
+          type: string
+        rest_key:
+          type: string
+        domains:
+          type: string
+      example:
+        company_name: Neverland
+        company_plan_name: pro
+        client_key: AOEUaoeuntsPDe
+        agent_count: 15
+        widget_key: 24d1414c71a94cbf9f205ed4fc4999b5
+        rest_key: 3b57bd2db21c46d2875508b982968d26
+        domains: example.com, *.example.com
+    SetClientDomainListrequest:
+      title: SetClientDomainListrequest
+      required:
+        - domains
+      type: object
+      properties:
+        domains:
+          description: Comma-separated list of domains
+          type: string
+      example:
+        domains: example.com, *.example.com
+    SetClientDomainListresponse:
+      title: SetClientDomainListresponse
+      required:
+        - domains
+      type: object
+      properties:
+        domains:
+          description: Comma-separated list of domains
+          type: string
+      example:
+        domains: example.com, *.example.com
+    Updateaclientrequest:
+      title: Updateaclientrequest
+      required:
+        - company_name
+      type: object
+      properties:
+        company_name:
+          type: string
+      example:
+        company_name: Peter Pan
+    Updateaclientresponse:
+      title: Updateaclientresponse
+      required:
+        - agent_count
+        - company_name
+        - client_key
+      type: object
+      properties:
+        agent_count:
+          description: Maximum number of agents
+          type: integer
+          format: int32
+        company_name:
+          description: Name of company
+          type: string
+        client_key:
+          description: Client key
+          type: string
+      example:
+        agent_count: 15
+        company_name: Peter Pan
+        client_key: AOEUaoeuntsPDe
+    DeleteaClientresponse:
+      title: DeleteaClientresponse
+      required:
+        - response
+      type: object
+      properties:
+        response:
+          type: string
+      example:
+        response: Client has been removed Successfully
+    ListActiveSessionsforResellersClientresponse:
+      title: ListActiveSessionsforResellersClientresponse
+      required:
+        - session_id
+        - agent_id
+        - follower_link
+        - start_time
+        - duration
+      type: object
+      properties:
+        session_id:
+          description: unique ID of the session
+          type: string
+        agent_id:
+          description: Id of the agent
+          type: integer
+          format: int32
+        follower_link:
+          description: The link that must be opened in a ***viewer*** browser
+          type: string
+        start_time:
+          description: Time the session started
+          type: string
+        duration:
+          description: Length of the session (in seconds)
+          type: integer
+          format: int32
+      example:
+        session_id: fOBg4dXAPTHSoil6LywgfYA
+        agent_id: 2
+        follower_link: https://session.surfly.com/fwqcOuuMwTty7ii3kcA8Q
+        start_time: '2016-08-11T13:44:58.025358Z'
+        duration: 123
+    Listallserversresponse:
+      title: Listallserversresponse
+      required:
+        - id
+        - region
+        - description
+      type: object
+      properties:
+        description:
+          description: Description
+          type: string
+        id:
+          description: Server's ID
+          type: string
+        region:
+          description: Server's location
+          type: string
+        ips:
+          description: >-
+            List of comma-separated IP addresses which are assigned to the
+            server
+          type: string
+      example:
+        description: Germany, Nuremberg
+        id: 10X
+        region: eu
+        ips: 1.1.1.1, 2.2.2.2
+    Listsessionhistoryresponse:
+      title: Listsessionhistoryresponse
+      required:
+        - next
+        - previous
+        - results
+      type: object
+      properties:
+        next:
+          description: Link to the next page
+          type: string
+          nullable: true
+        previous:
+          description: Link to the previous page
+          type: string
+          nullable: true
+        results:
+          description: A list of result objects
+          type: array
+          items:
+            $ref: '#/components/schemas/ListallSessionsresponse'
+    Result:
+      title: Result
+      required:
+        - id
+        - session_id
+        - formatted_id
+        - cobro_server_name
+        - agent_id
+        - follower_link
+        - start_time
+        - duration
+        - end_time
+        - successful_start
+        - queue_id
+        - pin
+        - queued
+        - start_url
+        - meta
+        - tags
+        - participant_num
+        - options
+      type: object
+      properties:
+        tags:
+          description: null
+          type: array
+          items:
+            type: string
+        id:
+          description: null
+          type: string
+        session_id:
+          description: null
+          type: string
+        formatted_id:
+          description: null
+          type: string
+        cobro_server_name:
+          description: null
+          type: string
+        agent_id:
+          description: null
+          oneOf:
+            - type: string
+              nullable: true
+            - type: integer
+              format: int32
+            - nullable: true
+        follower_link:
+          description: null
+          type: string
+        start_time:
+          description: null
+          type: string
+        duration:
+          description: null
+          oneOf:
+            - type: string
+              nullable: true
+            - type: integer
+              format: int32
+            - nullable: true
+        end_time:
+          description: null
+          type: string
+          nullable: true
+        successful_start:
+          description:
+            - type: string
+              nullable: true
+            - type: boolean
+            - nullable: true
+          oneOf: null
+        queue_id:
+          description: null
+          type: integer
+          format: int32
+        pin:
+          description: null
+          type: string
+          nullable: true
+        queued:
+          description: null
+          type: boolean
+        start_url:
+          description: null
+          type: string
+        meta:
+          description: null
+          type: string
+        participant_num:
+          description: null
+          type: integer
+          format: int32
+        options:
+          description: Session options
+          allOf:
+            - $ref: '#/components/schemas/Options5'
+            - {}
+    Options5:
+      title: Options5
+      required:
+        - sounds_enabled
+        - audit_logs_enabled
+        - videochat
+        - download_trigger_enabled
+        - key_combo_to_start
+        - orphan_redirect_url
+        - follower_drawing_selector
+        - hide_element_by_selector
+        - session_autorestore_enabled
+        - session_autorestore_enabled
+        - branding_primary_color
+        - cookie_transfer_enabled
+        - cookie_transfer_scopes
+        - pause_enabled
+        - branding_primary_text_color
+        - start_with_loading_screen
+        - hide_cursors
+        - chat_logs_enabled
+        - hide_until_agent_joins
+        - host_switching_allowed
+        - start_muted
+        - format_session_id
+        - password_required
+        - soft_end_filter
+        - cookie_transfer_urls
+        - start_with_invite_modal
+        - theme_font_size
+        - shake_to_start
+        - chat_integration
+        - hidden
+        - cookie_transfer_proxying
+        - verbose_console
+        - new_urls_allowed
+        - end_redirect_enabled
+        - end_of_session_popup_url
+        - start_with_chat_open
+        - widget_key
+        - white_label
+        - blocklist
+        - allowlist
+        - branding_secondary_text_color
+        - anyone_can_deactivate_space
+        - block_until_agent_joins
+        - native_selects
+        - filesharing_enabled
+        - hide_support_button_when_unavailable
+        - soft_session_end
+        - auto_start
+        - original_file_download_allowed
+        - language
+        - session_start_confirmation
+        - branding_secondary_color
+        - theme_font_background
+        - hide_session_ui
+        - url_mangling
+        - theme_font_color
+        - native_dialogs_enabled
+        - invitations_allowed
+        - leader_redirect_url
+        - private_session
+        - start_with_videochat_on
+        - support_button_position
+        - follower_redirect_url
+        - embedded_sessions_only
+        - region
+        - selected_regions
+      type: object
+      properties:
+        sounds_enabled:
+          type: boolean
+        audit_logs_enabled:
+          type: boolean
+        videochat:
+          type: boolean
+        download_trigger_enabled:
+          type: boolean
+        key_combo_to_start:
+          type: boolean
+        orphan_redirect_url:
+          type: string
+        follower_drawing_selector:
+          type: string
+        hide_element_by_selector:
+          type: string
+        session_autorestore_enabled:
+          type: boolean
+        branding_primary_color:
+          type: string
+        cookie_transfer_enabled:
+          type: boolean
+        cookie_transfer_scopes:
+          description: ''
+          type: array
+          items:
+            type: string
+        pause_enabled:
+          type: boolean
+        branding_primary_text_color:
+          type: string
+        start_with_loading_screen:
+          type: boolean
+        hide_cursors:
+          type: boolean
+        chat_logs_enabled:
+          type: boolean
+        hide_until_agent_joins:
+          type: boolean
+        host_switching_allowed:
+          type: boolean
+        start_muted:
+          type: boolean
+        format_session_id:
+          type: boolean
+        password_required:
+          type: boolean
+        soft_end_filter:
+          description: ''
+          type: array
+          items:
+            type: string
+        cookie_transfer_urls:
+          description: ''
+          type: array
+          items:
+            type: string
+        start_with_invite_modal:
+          type: boolean
+        theme_font_size:
+          type: integer
+          format: int32
+        shake_to_start:
+          type: boolean
+        chat_integration:
+          type: string
+        hidden:
+          type: boolean
+        cookie_transfer_proxying:
+          type: boolean
+        verbose_console:
+          type: boolean
+        new_urls_allowed:
+          type: boolean
+        end_redirect_enabled:
+          type: boolean
+        end_of_session_popup_url:
+          type: string
+        start_with_chat_open:
+          type: boolean
+        widget_key:
+          type: string
+        white_label:
+          type: boolean
+        blocklist:
+          type: string
+        allowlist:
+          type: string
+        branding_secondary_text_color:
+          type: string
+        anyone_can_deactivate_space:
+          type: boolean
+        block_until_agent_joins:
+          type: boolean
+        native_selects:
+          type: boolean
+        filesharing_enabled:
+          type: boolean
+        hide_support_button_when_unavailable:
+          type: boolean
+        soft_session_end:
+          type: boolean
+        auto_start:
+          type: boolean
+        original_file_download_allowed:
+          type: boolean
+        language:
+          type: string
+        session_start_confirmation:
+          type: boolean
+        branding_secondary_color:
+          type: string
+        theme_font_background:
+          type: string
+        hide_session_ui:
+          type: boolean
+        url_mangling:
+          type: boolean
+        theme_font_color:
+          type: string
+        native_dialogs_enabled:
+          type: boolean
+        invitations_allowed:
+          type: boolean
+        leader_redirect_url:
+          type: string
+        private_session:
+          type: boolean
+        start_with_videochat_on:
+          type: boolean
+        support_button_position:
+          type: string
+        follower_redirect_url:
+          type: string
+        embedded_sessions_only:
+          type: boolean
+        region:
+          type: string
+        selected_regions:
+          description: ''
+          type: array
+          items:
+            type: string
+        branding_logo_url:
+          type: string
+        branding_logo_link:
+          type: string
+        dashboard_background_url:
+          type: string
+      example:
+        sounds_enabled: true
+        audit_logs_enabled: false
+        videochat: true
+        download_trigger_enabled: true
+        key_combo_to_start: true
+        orphan_redirect_url: ''
+        follower_drawing_selector: ''
+        hide_element_by_selector: ''
+        session_autorestore_enabled: true
+        branding_primary_color: '#e54747'
+        cookie_transfer_enabled: true
+        cookie_transfer_scopes: []
+        pause_enabled: false
+        branding_primary_text_color: '#ffffff'
+        start_with_loading_screen: true
+        hide_cursors: false
+        chat_logs_enabled: false
+        hide_until_agent_joins: false
+        host_switching_allowed: true
+        start_muted: false
+        format_session_id: false
+        password_required: false
+        soft_end_filter: []
+        cookie_transfer_urls: []
+        start_with_invite_modal: false
+        theme_font_size: 14
+        shake_to_start: false
+        chat_integration: disabled
+        hidden: false
+        cookie_transfer_proxying: false
+        verbose_console: false
+        new_urls_allowed: true
+        end_redirect_enabled: false
+        end_of_session_popup_url: ''
+        start_with_chat_open: true
+        widget_key: ''
+        white_label: false
+        blocklist: '[]'
+        allowlist: '[]'
+        branding_secondary_text_color: '#ffffff'
+        anyone_can_deactivate_space: false
+        block_until_agent_joins: true
+        native_selects: true
+        filesharing_enabled: true
+        hide_support_button_when_unavailable: false
+        soft_session_end: false
+        auto_start: false
+        original_file_download_allowed: false
+        language: en
+        session_start_confirmation: false
+        branding_secondary_color: '#6e2222'
+        theme_font_background: '#cc0000'
+        hide_session_ui: false
+        url_mangling: false
+        theme_font_color: '#FFFFFF'
+        native_dialogs_enabled: false
+        invitations_allowed: true
+        leader_redirect_url: ''
+        private_session: false
+        start_with_videochat_on: false
+        support_button_position: bottomleft
+        follower_redirect_url: ''
+        embedded_sessions_only: false
+        region: ''
+        selected_regions: []
+    Filtersessionhistoryresponse:
+      title: Filtersessionhistoryresponse
+      required:
+        - next
+        - previous
+        - results
+      type: object
+      properties:
+        next:
+          type: string
+          nullable: true
+        previous:
+          type: string
+          nullable: true
+        results:
+          description: ''
+          type: array
+          items:
+            $ref: '#/components/schemas/Result1'
+      example:
+        next: null
+        previous: null
+        results:
+          - tags:
+              - tag1
+            id: fuSHr0sRQ1usugvheahwQX
+            session_id: fuSHr0sRQ1usugvheahwQ
+            formatted_id: 737-464-923
+            cobro_server_name: session.sitesupport.net
+            agent_id: null
+            follower_link: https://sitesupport.net/fuSHr0sRQ1usugvheahwQ
+            start_time: '2020-05-06T10:42:44.940708Z'
+            duration: 120
+            end_time: null
+            successful_start: false
+            queue_id: 8359
+            pin: '8359'
+            queued: false
+            start_url: http://www.surfly.com/
+            meta: '{}'
+            participant_num: 0
+            options:
+              sounds_enabled: true
+              audit_logs_enabled: false
+              password_required: false
+              videochat: true
+              download_trigger_enabled: true
+              allowlist: '[]'
+              orphan_redirect_url: ''
+              support_button_position: bottomleft
+              follower_drawing_selector: ''
+              hide_element_by_selector: ''
+              session_autorestore_enabled: true
+              branding_primary_color: '#e54747'
+              cookie_transfer_enabled: true
+              cookie_transfer_scopes: []
+              pause_enabled: false
+              widget_key: ''
+              branding_primary_text_color: '#ffffff'
+              start_with_loading_screen: true
+              hide_cursors: false
+              chat_logs_enabled: false
+              host_switching_allowed: true
+              branding_logo_url: ''
+              start_muted: false
+              format_session_id: false
+              private_session: false
+              soft_end_filter: []
+              start_with_invite_modal: false
+              theme_font_size: 14
+              branding_logo_link: ''
+              chat_integration: disabled
+              hidden: false
+              cookie_transfer_proxying: false
+              theme_font_color: '#FFFFFF'
+              verbose_console: false
+              end_of_session_popup_url: ''
+              new_urls_allowed: true
+              end_redirect_enabled: false
+              cookie_transfer_urls: []
+              start_with_chat_open: true
+              hide_support_button_when_unavailable: false
+              anyone_can_deactivate_space: false
+              white_label: false
+              blocklist: '[]'
+              branding_secondary_text_color: '#ffffff'
+              dashboard_background_url: ''
+              filesharing_enabled: true
+              hide_until_agent_joins: false
+              soft_session_end: false
+              auto_start: false
+              original_file_download_allowed: false
+              language: en
+              session_start_confirmation: false
+              branding_secondary_color: '#6e2222'
+              theme_font_background: '#cc0000'
+              hide_session_ui: false
+              url_mangling: false
+              shake_to_start: false
+              native_dialogs_enabled: false
+              invitations_allowed: true
+              start_with_videochat_on: false
+              region: ''
+              selected_regions: []
+              block_until_agent_joins: true
+              follower_redirect_url: ''
+              embedded_sessions_only: false
+              key_combo_to_start: true
+              native_selects: true
+              leader_redirect_url: ''
+    Result1:
+      title: Result1
+      required:
+        - id
+        - session_id
+        - formatted_id
+        - cobro_server_name
+        - agent_id
+        - follower_link
+        - start_time
+        - duration
+        - end_time
+        - successful_start
+        - queue_id
+        - pin
+        - queued
+        - start_url
+        - meta
+        - tags
+        - participant_num
+        - options
+      type: object
+      properties:
+        tags:
+          description: ''
+          type: array
+          items:
+            type: string
+        id:
+          type: string
+        session_id:
+          type: string
+        formatted_id:
+          type: string
+        cobro_server_name:
+          type: string
+        agent_id:
+          type: string
+          nullable: true
+        follower_link:
+          type: string
+        start_time:
+          type: string
+        duration:
+          type: integer
+          format: int32
+        end_time:
+          type: string
+          nullable: true
+        successful_start:
+          type: boolean
+        queue_id:
+          type: integer
+          format: int32
+        pin:
+          type: string
+        queued:
+          type: boolean
+        start_url:
+          type: string
+        meta:
+          type: string
+        participant_num:
+          type: integer
+          format: int32
+        options:
+          allOf:
+            - $ref: '#/components/schemas/Options6'
+            - {}
+      example:
+        tags:
+          - tag1
+        id: fuSHr0sRQ1usugvheahwQX
+        session_id: fuSHr0sRQ1usugvheahwQ
+        formatted_id: 737-464-923
+        cobro_server_name: session.sitesupport.net
+        agent_id: null
+        follower_link: https://sitesupport.net/fuSHr0sRQ1usugvheahwQ
+        start_time: '2020-05-06T10:42:44.940708Z'
+        duration: 120
+        end_time: null
+        successful_start: false
+        queue_id: 8359
+        pin: '8359'
+        queued: false
+        start_url: http://www.surfly.com/
+        meta: '{}'
+        participant_num: 0
+        options:
+          sounds_enabled: true
+          audit_logs_enabled: false
+          password_required: false
+          videochat: true
+          download_trigger_enabled: true
+          allowlist: '[]'
+          orphan_redirect_url: ''
+          support_button_position: bottomleft
+          follower_drawing_selector: ''
+          hide_element_by_selector: ''
+          session_autorestore_enabled: true
+          branding_primary_color: '#e54747'
+          cookie_transfer_enabled: true
+          cookie_transfer_scopes: []
+          pause_enabled: false
+          widget_key: ''
+          branding_primary_text_color: '#ffffff'
+          start_with_loading_screen: true
+          hide_cursors: false
+          chat_logs_enabled: false
+          host_switching_allowed: true
+          branding_logo_url: ''
+          start_muted: false
+          format_session_id: false
+          private_session: false
+          soft_end_filter: []
+          start_with_invite_modal: false
+          theme_font_size: 14
+          branding_logo_link: ''
+          chat_integration: disabled
+          hidden: false
+          cookie_transfer_proxying: false
+          theme_font_color: '#FFFFFF'
+          verbose_console: false
+          end_of_session_popup_url: ''
+          new_urls_allowed: true
+          end_redirect_enabled: false
+          cookie_transfer_urls: []
+          start_with_chat_open: true
+          hide_support_button_when_unavailable: false
+          anyone_can_deactivate_space: false
+          white_label: false
+          blocklist: '[]'
+          branding_secondary_text_color: '#ffffff'
+          dashboard_background_url: ''
+          filesharing_enabled: true
+          hide_until_agent_joins: false
+          soft_session_end: false
+          auto_start: false
+          original_file_download_allowed: false
+          language: en
+          session_start_confirmation: false
+          branding_secondary_color: '#6e2222'
+          theme_font_background: '#cc0000'
+          hide_session_ui: false
+          url_mangling: false
+          shake_to_start: false
+          native_dialogs_enabled: false
+          invitations_allowed: true
+          start_with_videochat_on: false
+          region: ''
+          selected_regions: []
+          block_until_agent_joins: true
+          follower_redirect_url: ''
+          embedded_sessions_only: false
+          key_combo_to_start: true
+          native_selects: true
+          leader_redirect_url: ''
+    Options6:
+      title: Options6
+      required:
+        - sounds_enabled
+        - audit_logs_enabled
+        - password_required
+        - videochat
+        - download_trigger_enabled
+        - allowlist
+        - orphan_redirect_url
+        - support_button_position
+        - follower_drawing_selector
+        - hide_element_by_selector
+        - session_autorestore_enabled
+        - session_autorestore_enabled
+        - branding_primary_color
+        - cookie_transfer_enabled
+        - cookie_transfer_scopes
+        - pause_enabled
+        - widget_key
+        - branding_primary_text_color
+        - start_with_loading_screen
+        - hide_cursors
+        - chat_logs_enabled
+        - host_switching_allowed
+        - branding_logo_url
+        - start_muted
+        - format_session_id
+        - private_session
+        - soft_end_filter
+        - start_with_invite_modal
+        - theme_font_size
+        - branding_logo_link
+        - chat_integration
+        - hidden
+        - cookie_transfer_proxying
+        - theme_font_color
+        - verbose_console
+        - end_of_session_popup_url
+        - new_urls_allowed
+        - end_redirect_enabled
+        - cookie_transfer_urls
+        - start_with_chat_open
+        - hide_support_button_when_unavailable
+        - anyone_can_deactivate_space
+        - white_label
+        - blocklist
+        - branding_secondary_text_color
+        - dashboard_background_url
+        - filesharing_enabled
+        - hide_until_agent_joins
+        - soft_session_end
+        - auto_start
+        - original_file_download_allowed
+        - language
+        - session_start_confirmation
+        - branding_secondary_color
+        - theme_font_background
+        - hide_session_ui
+        - url_mangling
+        - shake_to_start
+        - native_dialogs_enabled
+        - invitations_allowed
+        - start_with_videochat_on
+        - region
+        - selected_regions
+        - block_until_agent_joins
+        - follower_redirect_url
+        - embedded_sessions_only
+        - key_combo_to_start
+        - native_selects
+        - leader_redirect_url
+      type: object
+      properties:
+        sounds_enabled:
+          type: boolean
+        audit_logs_enabled:
+          type: boolean
+        password_required:
+          type: boolean
+        videochat:
+          type: boolean
+        download_trigger_enabled:
+          type: boolean
+        allowlist:
+          type: string
+        orphan_redirect_url:
+          type: string
+        support_button_position:
+          type: string
+        follower_drawing_selector:
+          type: string
+        hide_element_by_selector:
+          type: string
+        session_autorestore_enabled:
+          type: boolean
+        branding_primary_color:
+          type: string
+        cookie_transfer_enabled:
+          type: boolean
+        cookie_transfer_scopes:
+          description: ''
+          type: array
+          items:
+            type: string
+        pause_enabled:
+          type: boolean
+        widget_key:
+          type: string
+        branding_primary_text_color:
+          type: string
+        start_with_loading_screen:
+          type: boolean
+        hide_cursors:
+          type: boolean
+        chat_logs_enabled:
+          type: boolean
+        host_switching_allowed:
+          type: boolean
+        branding_logo_url:
+          type: string
+        start_muted:
+          type: boolean
+        format_session_id:
+          type: boolean
+        private_session:
+          type: boolean
+        soft_end_filter:
+          description: ''
+          type: array
+          items:
+            type: string
+        start_with_invite_modal:
+          type: boolean
+        theme_font_size:
+          type: integer
+          format: int32
+        branding_logo_link:
+          type: string
+        chat_integration:
+          type: string
+        hidden:
+          type: boolean
+        cookie_transfer_proxying:
+          type: boolean
+        theme_font_color:
+          type: string
+        verbose_console:
+          type: boolean
+        end_of_session_popup_url:
+          type: string
+        new_urls_allowed:
+          type: boolean
+        end_redirect_enabled:
+          type: boolean
+        cookie_transfer_urls:
+          description: ''
+          type: array
+          items:
+            type: string
+        start_with_chat_open:
+          type: boolean
+        hide_support_button_when_unavailable:
+          type: boolean
+        anyone_can_deactivate_space:
+          type: boolean
+        white_label:
+          type: boolean
+        blocklist:
+          type: string
+        branding_secondary_text_color:
+          type: string
+        dashboard_background_url:
+          type: string
+        filesharing_enabled:
+          type: boolean
+        hide_until_agent_joins:
+          type: boolean
+        soft_session_end:
+          type: boolean
+        auto_start:
+          type: boolean
+        original_file_download_allowed:
+          type: boolean
+        language:
+          type: string
+        session_start_confirmation:
+          type: boolean
+        branding_secondary_color:
+          type: string
+        theme_font_background:
+          type: string
+        hide_session_ui:
+          type: boolean
+        url_mangling:
+          type: boolean
+        shake_to_start:
+          type: boolean
+        native_dialogs_enabled:
+          type: boolean
+        invitations_allowed:
+          type: boolean
+        start_with_videochat_on:
+          type: boolean
+        region:
+          type: string
+        selected_regions:
+          description: ''
+          type: array
+          items:
+            type: string
+        block_until_agent_joins:
+          type: boolean
+        follower_redirect_url:
+          type: string
+        embedded_sessions_only:
+          type: boolean
+        key_combo_to_start:
+          type: boolean
+        native_selects:
+          type: boolean
+        leader_redirect_url:
+          type: string
+      example:
+        sounds_enabled: true
+        audit_logs_enabled: false
+        password_required: false
+        videochat: true
+        download_trigger_enabled: true
+        allowlist: '[]'
+        orphan_redirect_url: ''
+        support_button_position: bottomleft
+        follower_drawing_selector: ''
+        hide_element_by_selector: ''
+        session_autorestore_enabled: true
+        branding_primary_color: '#e54747'
+        cookie_transfer_enabled: true
+        cookie_transfer_scopes: []
+        pause_enabled: false
+        widget_key: ''
+        branding_primary_text_color: '#ffffff'
+        start_with_loading_screen: true
+        hide_cursors: false
+        chat_logs_enabled: false
+        host_switching_allowed: true
+        branding_logo_url: ''
+        start_muted: false
+        format_session_id: false
+        private_session: false
+        soft_end_filter: []
+        start_with_invite_modal: false
+        theme_font_size: 14
+        branding_logo_link: ''
+        chat_integration: disabled
+        hidden: false
+        cookie_transfer_proxying: false
+        theme_font_color: '#FFFFFF'
+        verbose_console: false
+        end_of_session_popup_url: ''
+        new_urls_allowed: true
+        end_redirect_enabled: false
+        cookie_transfer_urls: []
+        start_with_chat_open: true
+        hide_support_button_when_unavailable: false
+        anyone_can_deactivate_space: false
+        white_label: false
+        blocklist: '[]'
+        branding_secondary_text_color: '#ffffff'
+        dashboard_background_url: ''
+        filesharing_enabled: true
+        hide_until_agent_joins: false
+        soft_session_end: false
+        auto_start: false
+        original_file_download_allowed: false
+        language: en
+        session_start_confirmation: false
+        branding_secondary_color: '#6e2222'
+        theme_font_background: '#cc0000'
+        hide_session_ui: false
+        url_mangling: false
+        shake_to_start: false
+        native_dialogs_enabled: false
+        invitations_allowed: true
+        start_with_videochat_on: false
+        region: ''
+        selected_regions: []
+        block_until_agent_joins: true
+        follower_redirect_url: ''
+        embedded_sessions_only: false
+        key_combo_to_start: true
+        native_selects: true
+        leader_redirect_url: ''
+    ListallWebhooksresponse:
+      title: ListallWebhooksresponse
+      required:
+        - count
+        - next
+        - previous
+        - results
+      type: object
+      properties:
+        count:
+          description: The total number of objects, across all pages
+          type: integer
+          format: int32
+        next:
+          description: Link to the next page
+          type: string
+          nullable: true
+        previous:
+          description: Link to the previous page
+          type: string
+          nullable: true
+        results:
+          description: A list of result objects
+          type: array
+          items:
+            $ref: '#/components/schemas/Result2'
+      example:
+        count: 2
+        next: null
+        previous: null
+        results:
+          - id: 538
+            url: https://dev.mycompany.com/webhooks/
+            category: session.started
+            enabled: true
+            ssl_verification: true
+            company_id: 94906
+          - id: 537
+            url: https://mycompany.com/webhooks/
+            category: session.started
+            enabled: true
+            ssl_verification: true
+            company_id: 94906
+    Result2:
+      title: Result2
+      required:
+        - id
+        - url
+        - category
+        - enabled
+        - ssl_verification
+        - company_id
+      type: object
+      properties:
+        id:
+          description: Webhook Id
+          type: integer
+          format: int32
+        url:
+          description: Webhook URL
+          type: string
+        category:
+          description: Webhook category
+          type: string
+        enabled:
+          description: Whether the webhook is enabled or not
+          type: boolean
+        ssl_verification:
+          description: Whether to verify the server's TLS certificate or not
+          type: boolean
+        company_id:
+          description: Company Id
+          type: integer
+          format: int32
+      example:
+        id: 538
+        url: https://dev.mycompany.com/webhooks/
+        category: session.started
+        enabled: true
+        ssl_verification: true
+        company_id: 94906
+    CreateaWebhookrequest:
+      title: CreateaWebhookrequest
+      required:
+        - url
+        - category
+        - enabled
+        - ssl_verification
+      type: object
+      properties:
+        url:
+          description: Webhook URL
+          type: string
+        category:
+          description: Webhook category
+          type: string
+        enabled:
+          description: Whether the webhook is enabled or not
+          type: boolean
+        ssl_verification:
+          description: Whether to verify the server's TLS certificate or not
+          type: boolean
+      example:
+        url: https://mycompany.com/webhooks/
+        category: session.started
+        enabled: true
+        ssl_verification: true
+    CreateaWebhookresponse:
+      title: CreateaWebhookresponse
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/Result2'
+        - type: object
+      example:
+        id: 539
+        url: https://mycompany.com/webhooks/
+        category: session.started
+        enabled: true
+        ssl_verification: true
+        company_id: 94906
+    GetWebhookInformationresponse:
+      title: GetWebhookInformationresponse
+      allOf:
+        - $ref: '#/components/schemas/Result2'
+        - type: object
+      type: object
+      example:
+        id: 539
+        url: https://mycompany.com/webhooks/
+        category: session.started
+        enabled: true
+        ssl_verification: true
+        company_id: 94906
+    UpdateanWebhookrequest:
+      title: UpdateanWebhookrequest
+      required:
+        - url
+        - category
+        - enabled
+        - ssl_verification
+      type: object
+      properties:
+        url:
+          description: Webook URL
+          type: string
+        category:
+          description: Webhook category
+          type: string
+        enabled:
+          description: Whether the webhook is enabled or not
+          type: boolean
+        ssl_verification:
+          description: Whether to verify the server's TLS certificate or not
+          type: boolean
+      example:
+        url: https://mycompany.com/webhooks/
+        category: session.started
+        enabled: true
+        ssl_verification: true
+    UpdateanWebhookresponse:
+      title: UpdateanWebhookresponse
+      allOf:
+        - $ref: '#/components/schemas/Result2'
+        - type: object
+      type: object
+      example:
+        id: 539
+        url: https://mycompany.com/webhooks/
+        category: session.started
+        enabled: true
+        ssl_verification: true
+        company_id: 94906
+    AgentsRegisterNewAgentRequest:
+      allOf:
+        - $ref: '#/components/schemas/Createanewagentrequest'
+        - example:
+            username: Peter Pan
+            agent_email: peter@neverland.net
+            password: Pass@123
+            role: admin
+    AgentsUpdateAgentRequest:
+      allOf:
+        - $ref: '#/components/schemas/Updateanagentrequest'
+        - example:
+            username: Peter
+            role: admin
+            available: true
+    AgentsGenerateAccessTokenRequest:
+      allOf:
+        - $ref: '#/components/schemas/Generateanaccesstokenrequest'
+        - example:
+            email: agent@neverland.net
+            name: Ethan Hunt
+            role: agent
+    SessionsGenerateNewSessionRequest:
+      allOf:
+        - $ref: '#/components/schemas/Createasessionrequest'
+        - example:
+            tags:
+              - tag1
+              - tag2
+            url: http://www.surfly.com/
+    ScreenshotsStartGenerationRequest:
+      allOf:
+        - $ref: '#/components/schemas/CreateScreenshotrequest'
+        - example:
+            size: 1024
+            interval: 30
+    ClientsAddNewClientRequest:
+      allOf:
+        - $ref: '#/components/schemas/Createanewclientrequest'
+        - example:
+            company_name: Neverland
+            domains: '*'
+            agent_email: peter@mail.com
+            agent_name: Peter Pan
+    ClientsSetDomainListRequest:
+      allOf:
+        - $ref: '#/components/schemas/SetClientDomainListrequest'
+        - example:
+            domains: example.com, *.example.com
+    ClientsUpdateClientRequest:
+      allOf:
+        - $ref: '#/components/schemas/Createanewclientrequest'
+        - example:
+            company_name: Peter Pan
+    WebhooksCreateWebhookRequest:
+      allOf:
+        - $ref: '#/components/schemas/CreateaWebhookrequest'
+        - example:
+            url: https://mycompany.com/webhooks/
+            category: session.started
+            enabled: true
+            ssl_verification: true
+    WebhooksUpdateWebhookRequest:
+      allOf:
+        - $ref: '#/components/schemas/UpdateanWebhookrequest'
+        - example:
+            url: https://mycompany.com/webhooks/
+            category: session.started
+            enabled: true
+            ssl_verification: true
+    AgentsGetListResponse:
+      description: ''
+      type: array
+      items:
+        $ref: '#/components/schemas/Listallagentsresponse'
+      example:
+        - agent_id: 1
+          agent_name: Peter Pan
+          agent_email: peter@neverland.net
+          last_login: '2020-02-03T11:03:39.323310Z'
+          role: agent
+          available: true
+    AgentsRegisterNewAgentResponse:
+      allOf:
+        - $ref: '#/components/schemas/Createanewagentresponse'
+        - example:
+            agent_id: '1'
+    AgentsRemoveAgentResponse:
+      allOf:
+        - $ref: '#/components/schemas/Deleteanagentresponse'
+        - example:
+            response: Agent has been removed successfully
+    AgentsGetByIdResponse:
+      allOf:
+        - $ref: '#/components/schemas/GetAgentInformationresponse'
+        - example:
+            agent_id: 2
+            agent_name: John Doe
+            agent_email: john.doe@example.com
+            last_login: '2020-02-03T11:03:39.323310Z'
+            role: agent
+            available: true
+    AgentsUpdateAgentResponse:
+      allOf:
+        - $ref: '#/components/schemas/Updateanagentresponse'
+        - example:
+            agent_name: Peter
+            agent_id: 2
+            agent_email: peter@neverland.com
+            available: true
+    AgentsGenerateAccessTokenResponse:
+      allOf:
+        - $ref: '#/components/schemas/Generateanaccesstokenresponse'
+        - example:
+            user_created: true
+            agent_token: t0aae2b2454c64b9a87b83ec09647dd9e
+            expires_in: 86400
+            agent_id: 1337
+            agent_role: agent
+    AgentsGenerateAccessToken404Response:
+      allOf:
+        - $ref: '#/components/schemas/Generateanaccesstokenresponse1'
+        - example:
+            errors:
+              agent_id:
+                - Agent was not found
+    SessionsGetAllResponse:
+      description: ''
+      type: array
+      items:
+        $ref: '#/components/schemas/ListallSessionsresponse'
+      example:
+        - tags: []
+          id: fvFkrL4saf52nuFh4GP9oQwX
+          session_id: fvFkrL4saf52nuFh4GP9oQw
+          formatted_id: 123-123-123
+          agent_id: null
+          follower_link: https://surfly.com/123-123-123
+          cobro_server_name: session.surfly.com
+          start_time: '2017-04-21T13:55:08.251918Z'
+          duration: null
+          participant_num: 0
+          end_time: null
+          successful_start: null
+          queue_id: 0
+          pin: null
+          queued: false
+          waiting_time: null
+          start_url: >-
+            https://surfly.com.com/test/widget/?widget_key=3b57bd2db21c46d2875508b982968d26&hide_support_button_when_unavailable=false&hide_until_agent_joins=false
+          meta: '{}'
+          opentok_archive_id: null
+          options:
+            sounds_enabled: true
+            videochat: true
+            allowlist: '[]'
+            anyone_can_deactivate_space: false
+            session_autorestore_enabled: true
+            cookie_transfer_enabled: true
+            cookie_transfer_scopes: []
+            widget_key: 0
+            cookie_transfer_proxying: false
+            chat_logs_enabled: false
+            host_switching_allowed: true
+            start_muted: false
+            format_session_id: true
+            end_redirect_enabled: false
+            cookie_transfer_urls: []
+            start_with_invite_modal: true
+            theme_font_size: 14
+            theme_font_color: '#FFFFFF'
+            verbose_console: false
+            new_urls_allowed: true
+            end_of_session_popup_url: ''
+            start_with_chat_open: false
+            hide_support_button_when_unavailable: false
+            white_label: false
+            blocklist: '[]'
+            support_button_position: bottomleft
+            filesharing_enabled: true
+            hide_until_agent_joins: false
+            hidden: false
+            original_file_download_allowed: false
+            hide_session_ui: false
+            invitations_allowed: true
+            auto_start: false
+            theme_font_background: '#cc0000'
+            block_until_agent_joins: false
+            follower_redirect_url: ''
+            embedded_sessions_only: false
+            key_combo_to_start: true
+            leader_redirect_url: ''
+    SessionsGenerateNewSessionResponse:
+      allOf:
+        - $ref: '#/components/schemas/Createasessionresponse'
+        - example:
+            tags: []
+            id: fvFkrL4saf52nuFh4GP9oQwX
+            session_id: fvFkrL4saf52nuFh4GP9oQw
+            formatted_id: 123-123-123
+            agent_id: null
+            follower_link: https://surfly.com/123-123-123
+            leader_link: https://surfly.com/mUBRJyslQStVXPEwUwFyQ
+            cobro_server_name: session.surfly.com
+            start_time: '2017-04-21T13:55:08.251918Z'
+            duration: null
+            end_time: null
+            queue_id: 0
+            pin: null
+            queued: false
+            waiting_time: null
+            start_url: https://example.com
+            meta: '{}'
+            options:
+              sounds_enabled: true
+              videochat: true
+              allowlist: '[]'
+              anyone_can_deactivate_space: false
+              session_autorestore_enabled: true
+              cookie_transfer_enabled: true
+              cookie_transfer_scopes: []
+              widget_key: 0
+              cookie_transfer_proxying: false
+              chat_logs_enabled: false
+              host_switching_allowed: true
+              start_muted: false
+              format_session_id: true
+              end_redirect_enabled: false
+              cookie_transfer_urls: []
+              start_with_invite_modal: true
+              theme_font_size: 14
+              theme_font_color: '#FFFFFF'
+              verbose_console: false
+              new_urls_allowed: true
+              end_of_session_popup_url: ''
+              start_with_chat_open: false
+              hide_support_button_when_unavailable: false
+              white_label: false
+              blocklist: '[]'
+              support_button_position: bottomleft
+              filesharing_enabled: true
+              hide_until_agent_joins: false
+              hidden: false
+              original_file_download_allowed: false
+              hide_session_ui: false
+              invitations_allowed: true
+              auto_start: false
+              theme_font_background: '#cc0000'
+              block_until_agent_joins: false
+              follower_redirect_url: ''
+              embedded_sessions_only: false
+              key_combo_to_start: true
+              leader_redirect_url: ''
+    SessionsFilterResponse:
+      description: ''
+      type: array
+      items:
+        $ref: '#/components/schemas/ListallSessionsresponse'
+      example:
+        - tags: []
+          id: fvFkrL4saf52nuFh4GP9oQwX
+          session_id: fvFkrL4saf52nuFh4GP9oQw
+          formatted_id: 123-123-123
+          agent_id: null
+          follower_link: https://surfly.com/123-123-123
+          cobro_server_name: session.surfly.com
+          start_time: '2017-04-21T13:55:08.251918Z'
+          duration: null
+          participant_num: 0
+          end_time: null
+          successful_start: null
+          queue_id: 0
+          pin: null
+          queued: false
+          waiting_time: null
+          start_url: https://example.com
+          meta: '{}'
+          opentok_archive_id: null
+          options:
+            sounds_enabled: true
+            videochat: true
+            allowlist: '[]'
+            anyone_can_deactivate_space: false
+            session_autorestore_enabled: true
+            cookie_transfer_enabled: true
+            cookie_transfer_scopes: []
+            widget_key: 0
+            cookie_transfer_proxying: false
+            chat_logs_enabled: false
+            host_switching_allowed: true
+            start_muted: false
+            format_session_id: true
+            end_redirect_enabled: false
+            cookie_transfer_urls: []
+            start_with_invite_modal: true
+            theme_font_size: 14
+            theme_font_color: '#FFFFFF'
+            verbose_console: false
+            new_urls_allowed: true
+            end_of_session_popup_url: ''
+            start_with_chat_open: false
+            hide_support_button_when_unavailable: false
+            white_label: false
+            blocklist: '[]'
+            support_button_position: bottomleft
+            filesharing_enabled: true
+            hide_until_agent_joins: false
+            hidden: false
+            original_file_download_allowed: false
+            hide_session_ui: false
+            invitations_allowed: true
+            auto_start: false
+            theme_font_background: '#cc0000'
+            block_until_agent_joins: false
+            follower_redirect_url: ''
+            embedded_sessions_only: false
+            key_combo_to_start: true
+            leader_redirect_url: ''
+    SessionsGetByIdResponse:
+      allOf:
+        - $ref: '#/components/schemas/ListallSessionsresponse'
+        - example:
+            tags: []
+            id: fvFkrL4saf52nuFh4GP9oQwX
+            session_id: fvFkrL4saf52nuFh4GP9oQw
+            formatted_id: 123-123-123
+            agent_id: 1
+            follower_link: https://surfly.com/123-123-123
+            cobro_server_name: session.surfly.com
+            start_time: '2017-04-21T13:55:08.251918Z'
+            duration: null
+            participant_num: 3
+            end_time: null
+            successful_start: null
+            queue_id: 0
+            pin: null
+            queued: false
+            waiting_time: null
+            start_url: https://example.com
+            meta: '{}'
+            opentok_archive_id: null
+            options:
+              sounds_enabled: true
+              videochat: true
+              allowlist: '[]'
+              anyone_can_deactivate_space: false
+              session_autorestore_enabled: true
+              cookie_transfer_enabled: true
+              cookie_transfer_scopes: []
+              widget_key: 0
+              cookie_transfer_proxying: false
+              chat_logs_enabled: false
+              host_switching_allowed: true
+              start_muted: false
+              format_session_id: true
+              end_redirect_enabled: false
+              cookie_transfer_urls: []
+              start_with_invite_modal: true
+              theme_font_size: 14
+              theme_font_color: '#FFFFFF'
+              verbose_console: false
+              new_urls_allowed: true
+              end_of_session_popup_url: ''
+              start_with_chat_open: false
+              hide_support_button_when_unavailable: false
+              white_label: false
+              blocklist: '[]'
+              support_button_position: bottomleft
+              filesharing_enabled: true
+              hide_until_agent_joins: false
+              hidden: false
+              original_file_download_allowed: false
+              hide_session_ui: false
+              invitations_allowed: true
+              auto_start: false
+              theme_font_background: '#cc0000'
+              block_until_agent_joins: false
+              follower_redirect_url: ''
+              embedded_sessions_only: false
+              key_combo_to_start: true
+              leader_redirect_url: ''
+    SessionsEndByIdResponse:
+      allOf:
+        - $ref: '#/components/schemas/ListallSessionsresponse'
+        - example:
+            tags: []
+            id: fvFkrL4saf52nuFh4GP9oQwX
+            session_id: fvFkrL4saf52nuFh4GP9oQw
+            formatted_id: 123-123-123
+            agent_id: 1
+            follower_link: https://surfly.com/123-123-123
+            cobro_server_name: session.surfly.com
+            start_time: '2017-04-21T13:55:08.251918Z'
+            duration: 10
+            participant_num: 3
+            end_time: '2017-04-21T13:55:18.251918Z'
+            successful_start: false
+            queue_id: 0
+            pin: null
+            queued: false
+            waiting_time: null
+            start_url: https://example.com
+            meta: '{}'
+            opentok_archive_id: null
+            options:
+              sounds_enabled: true
+              videochat: true
+              allowlist: '[]'
+              anyone_can_deactivate_space: false
+              session_autorestore_enabled: true
+              cookie_transfer_enabled: true
+              cookie_transfer_scopes: []
+              widget_key: 0
+              cookie_transfer_proxying: false
+              chat_logs_enabled: false
+              host_switching_allowed: true
+              start_muted: false
+              native_dialogs_enabled: 0
+              format_session_id: true
+              end_redirect_enabled: false
+              cookie_transfer_urls: []
+              start_with_invite_modal: true
+              theme_font_size: 14
+              theme_font_color: '#FFFFFF'
+              verbose_console: false
+              new_urls_allowed: true
+              end_of_session_popup_url: ''
+              start_with_chat_open: false
+              hide_support_button_when_unavailable: false
+              white_label: false
+              blocklist: '[]'
+              support_button_position: bottomleft
+              filesharing_enabled: true
+              hide_until_agent_joins: false
+              hidden: false
+              original_file_download_allowed: false
+              hide_session_ui: false
+              invitations_allowed: true
+              auto_start: false
+              session_start_confirmation: 0
+              theme_font_background: '#cc0000'
+              block_until_agent_joins: false
+              follower_redirect_url: ''
+              embedded_sessions_only: false
+              key_combo_to_start: true
+              leader_redirect_url: ''
+    CompanyGetDefaultOptionsResponse:
+      allOf:
+        - $ref: '#/components/schemas/Retrievedefaultoptionsresponse'
+        - example:
+            sounds_enabled: true
+            videochat: true
+            allowlist: '[]'
+    CompanyUpdateDefaultOptionsResponse:
+      allOf:
+        - $ref: '#/components/schemas/Updatedefaultoptionsresponse'
+        - example:
+            sounds_enabled: true
+            videochat: true
+            allowlist: '[]'
+    CompanyPostOptionsResponse:
+      allOf:
+        - $ref: '#/components/schemas/Setdefaultoptionsresponse'
+        - example:
+            sounds_enabled: true
+            videochat: true
+            allowlist: '[]'
+    ScreenshotsGetLatestResponse:
+      allOf:
+        - $ref: '#/components/schemas/LatestScreenshotresponse'
+        - example:
+            url: http://surfly-screenshots.s3.amazonaws.com/screenshot-ID.webp
+    ScreenshotsStartGenerationResponse:
+      type: string
+      example: '"GENERATION-STARTED"'
+    ClientsGetAllResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/Listsallyourclientsresponse'
+      example:
+        - company_name: Neverland
+          company_plan_name: pro
+          client_key: AOEUaoeuntsPDe
+          agent_count: 15
+          widget_key: 24d1414c71a94cbf9f205ed4fc4999b5
+          rest_key: 3b57bd2db21c46d2875508b982968d26
+          domains: example.com, *.example.com
+        - company_name: DefaultCompany
+          company_plan_name: free
+          client_key: b05b45b8d4df42ba96
+          agent_count: 2
+          widget_key: c6a1333308a843cc9fb6aee2e42941d6
+          rest_key: 767dd31a038c4ee798c72abb4b568ade
+          domains: '*'
+    ClientsAddNewClientResponse:
+      allOf:
+        - $ref: '#/components/schemas/Createanewclientresponse'
+        - example:
+            company_name: Neverland
+            client_key: fOBg4dXAPTHSoil6LywgfYA
+            rest_key: 22c0f77e5ca54d8fa6748f7cec4732c5
+            widget_key: 92cdd920f4e345768f6717b02f15dae8
+    ClientsDeleteClientResponse:
+      allOf:
+        - $ref: '#/components/schemas/DeleteaClientresponse'
+        - example:
+            response: Client has been removed Successfully
+    ClientsInfoByIdResponse:
+      allOf:
+        - $ref: '#/components/schemas/Listsallyourclientsresponse'
+        - example:
+            company_name: Neverland
+            company_plan_name: pro
+            client_key: AOEUaoeuntsPDe
+            agent_count: 15
+            widget_key: 24d1414c71a94cbf9f205ed4fc4999b5
+            rest_key: 3b57bd2db21c46d2875508b982968d26
+            domains: example.com, *.example.com
+    ClientsSetDomainListResponse:
+      allOf:
+        - $ref: '#/components/schemas/SetClientDomainListresponse'
+        - example:
+            domains: example.com, *.example.com
+    ClientsUpdateClientResponse:
+      allOf:
+        - $ref: '#/components/schemas/Updateaclientresponse'
+        - example:
+            agent_count: 15
+            company_name: Peter Pan
+            client_key: AOEUaoeuntsPDe
+    ClientsListActiveSessionsForResellerClientResponse:
+      description: ''
+      type: array
+      items:
+        $ref: '#/components/schemas/ListActiveSessionsforResellersClientresponse'
+      example:
+        - session_id: fOBg4dXAPTHSoil6LywgfYA
+          agent_id: 2
+          follower_link: https://session.surfly.com/fwqcOuuMwTty7ii3kcA8Q
+          start_time: '2016-08-11T13:44:58.025358Z'
+          duration: 123
+    HistoryFilterSessionHistoryResponse:
+      allOf:
+        - $ref: '#/components/schemas/Listsessionhistoryresponse'
+        - example:
+            next: null
+            previous: null
+            results:
+              - tags:
+                  - tag1
+                id: fuSHr0sRQ1usugvheahwQX
+                session_id: fuSHr0sRQ1usugvheahwQ
+                formatted_id: 737-464-923
+                cobro_server_name: session.sitesupport.net
+                agent_id: null
+                follower_link: https://sitesupport.net/fuSHr0sRQ1usugvheahwQ
+                start_time: '2020-05-06T10:42:44.940708Z'
+                duration: 120
+                end_time: null
+                successful_start: false
+                queue_id: 8359
+                pin: '8359'
+                queued: false
+                start_url: http://www.surfly.com/
+                meta: '{}'
+                participant_num: 0
+                options:
+                  sounds_enabled: true
+                  audit_logs_enabled: false
+                  password_required: false
+                  videochat: true
+                  download_trigger_enabled: true
+                  allowlist: '[]'
+                  orphan_redirect_url: ''
+                  support_button_position: bottomleft
+                  follower_drawing_selector: ''
+                  hide_element_by_selector: ''
+                  session_autorestore_enabled: true
+                  branding_primary_color: '#e54747'
+                  cookie_transfer_enabled: true
+                  cookie_transfer_scopes: []
+                  pause_enabled: false
+                  widget_key: ''
+                  branding_primary_text_color: '#ffffff'
+                  start_with_loading_screen: true
+                  hide_cursors: false
+                  chat_logs_enabled: false
+                  host_switching_allowed: true
+                  branding_logo_url: ''
+                  start_muted: false
+                  format_session_id: false
+                  private_session: false
+                  soft_end_filter: []
+                  start_with_invite_modal: false
+                  theme_font_size: 14
+                  branding_logo_link: ''
+                  chat_integration: disabled
+                  hidden: false
+                  cookie_transfer_proxying: false
+                  theme_font_color: '#FFFFFF'
+                  verbose_console: false
+                  end_of_session_popup_url: ''
+                  new_urls_allowed: true
+                  end_redirect_enabled: false
+                  cookie_transfer_urls: []
+                  start_with_chat_open: true
+                  hide_support_button_when_unavailable: false
+                  anyone_can_deactivate_space: false
+                  white_label: false
+                  blocklist: '[]'
+                  branding_secondary_text_color: '#ffffff'
+                  dashboard_background_url: ''
+                  filesharing_enabled: true
+                  hide_until_agent_joins: false
+                  soft_session_end: false
+                  auto_start: false
+                  original_file_download_allowed: false
+                  language: en
+                  session_start_confirmation: false
+                  branding_secondary_color: '#6e2222'
+                  theme_font_background: '#cc0000'
+                  hide_session_ui: false
+                  url_mangling: false
+                  shake_to_start: false
+                  native_dialogs_enabled: false
+                  invitations_allowed: true
+                  start_with_videochat_on: false
+                  region: ''
+                  selected_regions: []
+                  block_until_agent_joins: true
+                  follower_redirect_url: ''
+                  embedded_sessions_only: false
+                  key_combo_to_start: true
+                  native_selects: true
+                  leader_redirect_url: ''
+    WebhooksListAllResponse:
+      allOf:
+        - $ref: '#/components/schemas/ListallWebhooksresponse'
+        - example:
+            count: 2
+            next: null
+            previous: null
+            results:
+              - id: 538
+                url: https://dev.mycompany.com/webhooks/
+                category: session.started
+                enabled: true
+                ssl_verification: true
+                company_id: 94906
+              - id: 537
+                url: https://mycompany.com/webhooks/
+                category: session.started
+                enabled: true
+                ssl_verification: true
+                company_id: 94906
+    WebhooksCreateWebhookResponse:
+      allOf:
+        - $ref: '#/components/schemas/CreateaWebhookresponse'
+        - example:
+            id: 539
+            url: https://mycompany.com/webhooks/
+            category: session.started
+            enabled: true
+            ssl_verification: true
+            company_id: 94906
+    WebhooksGetWebhookInformationResponse:
+      allOf:
+        - $ref: '#/components/schemas/GetWebhookInformationresponse'
+        - example:
+            id: 539
+            url: https://mycompany.com/webhooks/
+            category: session.started
+            enabled: true
+            ssl_verification: true
+            company_id: 94906
+    WebhooksUpdateWebhookResponse:
+      allOf:
+        - $ref: '#/components/schemas/UpdateanWebhookresponse'
+        - example:
+            id: 539
+            url: https://mycompany.com/webhooks/
+            category: session.started
+            enabled: true
+            ssl_verification: true
+            company_id: 94906
+    ServersListAvailableResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/Listallserversresponse'
+  securitySchemes:
+    api_key:
+      description: >
+        For this sample, you can use the api key `special-key` to test the
+        authorization filters.
+      type: apiKey
+      name: api_key
+      in: query
