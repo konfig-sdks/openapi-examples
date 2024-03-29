@@ -1,0 +1,3194 @@
+openapi: 3.0.3
+info:
+  title: Real-time payments, everywhere.
+  description: >
+    Join the real-time revolution! Give your customers a faster, easier and
+    safer way to pay. Volt has developed a REST API for merchants, allowing you
+    to offer the option to use Open Banking payments on your online checkout.
+
+
+
+    ## NEW : API idempotency 
+
+
+    We have introduced support for idempotency on the POST endpoints in the Volt
+    Connect endpoints of the API.  The idea of idempotency is to avoid unwanted
+    duplication should a request to our API fail and need to be retried. 
+
+
+    Using a unique idempotency key for each POST request, it is possible to
+    safely retry the same call multiple times with the guarantee that it will
+    only be actioned once.
+
+
+    ### Endpoints supporting idempotency
+
+    If an endpoint supports idempotent processing, we'll indicate this in the
+    header documentation for that endpoint.
+
+
+    ### Using an idempotency key
+
+
+    Using the idempotency key is optional.  If you would like to use it to help
+    prevent duplicates in your POST requests, simply include the header
+    ```idempotency-key: <key>``` - where  ```<key>``` is a unique identifier for
+    the message.  We recommend using a **UUID** for the key, however you may use
+    any other unique identifier you choose. 
+
+
+    ### Retries
+
+    If the request times out or you don't receive a response for any other
+    reason, you may safely retry it using the same payload and headers.  Use the
+    same key for the retried attempt. 
+
+
+    ### Preventing duplicates 
+
+    If we have already processed the request and you send a request using the
+    same idempotency key, it will fail with an error, returning an HTTP code of
+    ```409``` Conflict. 
+
+
+    ### Exponential backoff for retries
+
+    You should adopt an exponential backoff strategy when retrying requests
+    using the same idempotency key. For example, retry 1 second later then, if
+    it fails again, 2 seconds later, 4 seconds later etc.
+  version: 2024.04.11
+  x-konfig-ignore:
+    object-with-no-properties: true
+    potential-incorrect-type: true
+servers:
+  - description: >
+      Sandbox server - start here and make test payments through our model
+      banks.
+    url: https://api.sandbox.volt.io
+  - description: >
+      Production server - when you're ready to make live payments, connect to
+      Volt's banking network.
+    url: https://api.volt.io
+tags:
+  - name: Reporting
+  - name: Payments
+  - name: Payouts (Connect)
+  - name: Refunds (Connect)
+  - name: Authenticating with the API
+  - name: Banks and financial institutions
+  - name: Matchmeter
+paths:
+  /oauth:
+    post:
+      tags:
+        - Authenticating with the API
+      summary: oAuth2 password authentication
+      operationId: AuthenticatingWithTheApi_usingOAuth2Password
+      description: >
+        We use the industry-standard oAuth2 authentication to secure our API.   
+
+
+        ### Information you'll need
+
+        - Your **Client ID** and **Client Secret** (from the application you
+        created in Fuzebox)
+
+        - Your **API username** and **password** (from the merchant credentials
+        section in Fuzebox)
+
+
+        Step-by-step instructions on how to authenticate are available in our
+        [product guides](https://docs.volt.io/gateway/authentication/]) area.
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: >-
+                #/components/schemas/AuthenticatingWithTheApiUsingOAuth2PasswordRequest
+        required: true
+      responses:
+        '200':
+          description: |
+            **OK** - Successful login attempt, returning an access token
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/AuthenticatingWithTheApiUsingOAuth2PasswordResponse
+        '401':
+          $ref: '#/components/responses/401'
+      x-stoplight:
+        id: crymw4j35sz4f
+  /banks/{id}:
+    get:
+      tags:
+        - Banks and financial institutions
+      summary: Bank details
+      operationId: BanksAndFinancialInstitutions_getDetails
+      description: View details about a single bank or financial institution
+      parameters:
+        - name: id
+          in: path
+          required: true
+          example: 662384a0-9734-4556-a8bd-3f1e774e2a3c
+          schema:
+            description: UUID of the Bank
+            type: string
+      responses:
+        '200':
+          description: Details of bank or financial institution
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/bank_full'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+      x-stoplight:
+        id: gggi6h8jroy0q
+  /v2/payments:
+    post:
+      tags:
+        - Payments
+      summary: New payment request
+      operationId: Payments_submitDetails
+      description: >
+        The first step is to submit the details of the payment you'd like to
+        initiate.  We'll validate that all the required data is supplied and
+        that it's a payment that Volt can support.
+
+
+        Step-by-step instructions for payment initiation are available in our
+        [product guides](https://docs.volt.io/gateway/hosted/) area.
+      requestBody:
+        description: Details of the payment you'd like to initiate
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/payment'
+        required: false
+      responses:
+        '201':
+          description: >
+            **Created** - The payment request was validated and accepted and a
+            payment ID returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentsSubmitDetailsResponse'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+      x-stoplight:
+        id: 6rh252bydol2e
+      x-internal: false
+  /dropin:
+    post:
+      tags:
+        - Payments
+      summary: New Embedded checkout
+      operationId: Payments_initiateEmbeddedCheckout
+      description: >
+        The first step is to submit the details of the payment you'd like to
+        initiate. We'll validate that all the required data is supplied and that
+        it's a payment that Volt can support.v2.
+
+
+        Step-by-step instructions for creating Embedded Checkout are available
+        in our [product
+        guides](https://docs.volt.io/gateway/embedded-checkout-v1/embedded-checkout-v2/)
+        area.
+      requestBody:
+        description: Details of the payment you'd like to initiate
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentsInitiateEmbeddedCheckoutRequest'
+        required: false
+      responses:
+        '201':
+          description: >
+            **Created** - The payment request was validated and accepted and a
+            payment ID returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentsInitiateEmbeddedCheckoutResponse'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+      x-stoplight:
+        id: 7a5nksmppj3ar
+  /payments:
+    get:
+      tags:
+        - Payments
+      summary: List payments
+      operationId: Payments_getList
+      description: >-
+        Reporting API available to fetch list of payments based on specific
+        selection criteria
+      parameters:
+        - description: UUID of the Payment
+          in: query
+          name: id
+          required: false
+          example: 662384a0-9734-4556-a8bd-3f1e774e2a3c
+          schema:
+            type: string
+            format: uuid
+        - description: UUID of the Bank
+          in: query
+          name: bank
+          required: false
+          example: 662384a0-9734-4556-a8bd-3f1e774e2a3c
+          schema:
+            type: string
+            format: uuid
+        - description: >-
+            3-letter currency code - See [ISO 4217 - Currency
+            codes](https://www.iso.org/iso-4217-currency-codes.html)
+          in: query
+          name: currency
+          example: EUR
+          required: false
+          schema:
+            type: string
+        - description: The amount of the transaction in 1/100 units (pence, cents etc)
+          name: amount
+          in: query
+          example: 12345
+          schema:
+            type: integer
+        - description: The transaction type (these are predefined)
+          name: type
+          in: query
+          example: OTHER
+          schema:
+            type: string
+            enum:
+              - BILL
+              - GOODS
+              - PERSON_TO_PERSON
+              - OTHER
+              - SERVICES
+        - description: Unique reference for the payment
+          name: uniqueReference
+          in: query
+          example: sale123456
+          schema:
+            type: string
+        - description: The current status of the payment
+          name: status
+          in: query
+          example: REQUESTED
+          schema:
+            type: string
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/limit'
+      responses:
+        '200':
+          description: |
+            **OK** - All payments corresponding to specified filters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentsGetListResponse'
+              example:
+                - id: ed2f2418-3009-48e0-9a43-051e5c3ee5b6
+                  active: true
+                  createdAt: '2023-02-16T09:42:20+00:00'
+                  currency:
+                    id: GBP
+                    name: POUND STERLING
+                    decimal: 2
+                    active: true
+                  amount: 1
+                  type: BILL
+                  account:
+                    id: 66683afe-7dc0-4939-8dab-4a3d657b2b91
+                    active: true
+                    createdAt: '2021-04-29T08:15:42+00:00'
+                    currency:
+                      id: GBPX
+                      name: POUND STERLING
+                      decimal: 2
+                      active: true
+                    country:
+                      id: GB
+                      name: United Kingdom
+                  bank:
+                    id: e822a93c-72d4-4de1-8bcc-2381370c5437
+                    name: Ulster Bank (UK)
+                    country:
+                      id: GBX
+                      name: United Kingdom
+                    officialName: Ulster Bank (UK)
+                    localName: null
+                    branchName: Ulster Bank (UK)
+                    shortBranchName: null
+                    createdAt: '2022-06-01T13:45:14+00:00'
+                    active: true
+                    logo: https://cdn.sandbox.volt.io/banks/logos/default.png
+                    icon: https://cdn.sandbox.volt.io/banks/icons/default.png
+                  uniqueReference: AJmEznH3kLVT2mpoqK
+                  status: RECEIVED
+                  statusUpdates:
+                    - createdAt: '2023-02-16T09:42:37+00:00'
+                      newStatus: APPROVED_BY_RISK
+                    - createdAt: '2023-02-16T09:42:37+00:00'
+                      newStatus: BANK_REDIRECT
+                    - createdAt: '2023-02-16T09:43:10+00:00'
+                      newStatus: AUTHORISED_BY_USER
+                    - createdAt: '2023-02-16T09:43:11+00:00'
+                      newStatus: COMPLETED
+                    - createdAt: '2023-02-16T09:45:01+00:00'
+                      newStatus: RECEIVED
+                  beneficiary:
+                    id: cc9a9f87-7be9-4aae-928d-a27b9c3b689c
+                    customerId: e6707f41-5f2a-4a39-8338-084fb3a8e19b
+                    accountIdentifications:
+                      - type: sortCode
+                        value: '123456'
+                      - type: accountName
+                        value: Test CM account
+                      - type: accountNumber
+                        value: '12345678'
+                    country:
+                      id: GBX
+                      name: United Kingdom
+                  transferType: Faster Payments Scheme
+                  pblValidityPeriod: null
+                  sender:
+                    name: null
+                    email: null
+                    ip: null
+                    deviceFingerprint: c1fc9f277826d16825940603196ab037
+                    voltConnect:
+                      accountName: Jane Doe
+                      accountNumber: null
+                      sortCode: null
+                - id: 729771f6-37a3-4635-836f-566b60b217a8
+                  active: true
+                  createdAt: '2023-02-16T09:32:24+00:00'
+                  currency:
+                    id: GBPX
+                    name: POUND STERLING
+                    decimal: 2
+                    active: true
+                  amount: 1
+                  type: BILL
+                  account:
+                    id: 66683afe-7dc0-4939-8dab-4a3d657b2b91X
+                    active: true
+                    createdAt: '2021-04-29T08:15:42+00:00'
+                    currency:
+                      id: GBPX
+                      name: POUND STERLING
+                      decimal: 2
+                      active: true
+                    country:
+                      id: GBX
+                      name: United Kingdom
+                  bank:
+                    id: c2a44111-03df-475a-9800-e7ce6bbaa0b7
+                    name: Natwest Bank Sandbox
+                    country:
+                      id: GBX
+                      name: United Kingdom
+                    officialName: Natwest Bank Sandbox
+                    localName: null
+                    branchName: Natwest Bank Sandbox
+                    shortBranchName: null
+                    createdAt: '2021-08-10T14:34:02+00:00'
+                    active: true
+                    logo: https://cdn.sandbox.volt.io/banks/logos/default.png
+                    icon: https://cdn.sandbox.volt.io/banks/icons/default.png
+                  uniqueReference: 6eSCeNp4Pd0CRruSPt
+                  status: RECEIVED
+                  statusUpdates:
+                    - createdAt: '2023-02-16T09:32:34+00:00'
+                      newStatus: APPROVED_BY_RISK
+                    - createdAt: '2023-02-16T09:32:34+00:00'
+                      newStatus: BANK_REDIRECT
+                    - createdAt: '2023-02-16T09:33:23+00:00'
+                      newStatus: AUTHORISED_BY_USER
+                    - createdAt: '2023-02-16T09:33:24+00:00'
+                      newStatus: COMPLETED
+                    - createdAt: '2023-02-16T09:35:02+00:00'
+                      newStatus: RECEIVED
+                  beneficiary:
+                    id: cc9a9f87-7be9-4aae-928d-a27b9c3b689cX
+                    customerId: e6707f41-5f2a-4a39-8338-084fb3a8e19b
+                    accountIdentifications:
+                      - type: sortCode
+                        value: '123456'
+                      - type: accountName
+                        value: Test CM account
+                      - type: accountNumber
+                        value: '12345678'
+                    country:
+                      id: GBX
+                      name: United Kingdom
+                  transferType: Faster Payments Scheme
+                  pblValidityPeriod: null
+                  sender:
+                    name: null
+                    email: null
+                    ip: null
+                    deviceFingerprint: c1fc9f277826d16825940603196ab037
+                    voltConnect:
+                      accountName: Jane Doe
+                      accountNumber: null
+                      sortCode: null
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+      x-stoplight:
+        id: w36v7atgt3lul
+  /payments/{id}:
+    get:
+      tags:
+        - Payments
+      summary: Payment details
+      operationId: Payments_getDetails
+      description: >
+        Returns the full details of an existing payment that you've created
+        througn the POST /payments endpoint.  Simply supply the ```id``` of the
+        payment we returned when the payment was created.
+
+
+        You can retrieve a filterable list of payments through the ```GET
+        /payments``` endpoint.
+      parameters:
+        - description: ID of the payment
+          name: id
+          example: 93b85f3c-76eb-4316-b1ae-f3370ddc59bc
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: |
+            **OK** - Payment details for the ID specified
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/payment_full'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+      x-stoplight:
+        id: xyws709wfnvzh
+  /payouts/beneficiaries:
+    get:
+      tags:
+        - Payouts (Connect)
+      summary: Eligible beneficiaries list
+      operationId: PayoutsConnect_eligibleBeneficiariesList
+      description: >
+        **Payouts are only available when using Volt Connect**
+
+
+        For regulatory purposes, it's a closed-loop payout system, meaning you
+        may only payout funds to a person or organisation you've previously
+        received money from using Volt Connect.
+
+
+        This endpoint will return a list of beneficiaries you are allowed send
+        payouts to.  
+
+
+        ### Usage
+
+        The list is paginated by default.
+
+
+        ### More information
+
+        Full details on payouts can be found in our comprehensive integration
+        guides.
+      parameters:
+        - description: Name of the beneficiary you'd like to send a payout to
+          name: name
+          in: query
+          schema:
+            type: string
+        - description: >-
+            Domestic account number for the beneficiary you'd like to send a
+            payout to
+          name: accountNumber
+          in: query
+          schema:
+            type: string
+        - description: iban for the beneficiary you'd like to send a payout to
+          name: iban
+          in: query
+          schema:
+            type: string
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/limit'
+      responses:
+        '200':
+          description: |
+            **OK** - A paginated list of eligible beneficiaries.
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/PayoutsConnectEligibleBeneficiariesListResponse
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+      externalDocs:
+        description: |
+          Integration guide: Payouts   
+        url: https://docs.volt.io/connect/payouts/
+      x-stoplight:
+        id: wazr6t5n0gyap
+  /payouts:
+    post:
+      tags:
+        - Payouts (Connect)
+      summary: New payout request
+      operationId: PayoutsConnect_createRequest
+      description: >
+        **Payouts are only available when using Volt Connect**
+
+
+        This will create a payout request to send funds from your Connect
+        account to a beneficiary.  For regulatory purposes, it's a closed-loop
+        payout system, meaning you may only payout funds to a person or
+        organisation you've previously received money from using Volt Connect.
+
+
+        ### Usage
+
+        Pass the details of the payout you'd like to make in the body of the
+        request.
+
+
+        ### Approval
+
+        Payouts don't require approval if you create them using the API.  If you
+        need to review payouts before sending, this workflow should take place
+        on your own system before you call this endpoint. 
+
+
+        ### More information
+
+        Full details on payouts can be found in our comprehensive integration
+        guides.
+      parameters:
+        - description: Recommended to avoid duplicate payout requests
+          in: header
+          name: idempotency-key
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: Details of the payout you'd like to create
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/payout_request'
+        required: false
+      responses:
+        '201':
+          description: >
+            **Created** - The payout request was validated and accepted and a
+            payout ID returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PayoutsConnectCreateRequestResponse'
+        '400':
+          description: >
+            **Bad request** - The request could not be processed due to one or
+            more errors.  If the exception message does not provide enough
+            information, please contact merchant support for further details.  
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PayoutsConnectCreateRequest400Response'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          description: >
+            **Forbidden** - Although your credentials are correct, your access
+            to payout functionality on the API has been disabled or restricted. 
+            If the exception message does not provide enough information, please
+            contact merchant support for further details.  
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PayoutsConnectCreateRequest403Response'
+        '409':
+          $ref: '#/components/responses/409'
+        '422':
+          description: >
+            **Unprocessable Entity** - The payout request could not be completed
+            due to a problem with the beneficiary you're trying to send to.  If
+            the exception message does not provide enough information, please
+            contact merchant support for further details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PayoutsConnectCreateRequest422Response'
+      externalDocs:
+        description: |
+          Integration guide: Payouts   
+        url: https://docs.volt.io/connect/payouts/
+      x-stoplight:
+        id: kqsjgtn9xnn2p
+    get:
+      tags:
+        - Payouts (Connect)
+      summary: Payout list
+      operationId: PayoutsConnect_getList
+      description: >
+        **Payouts are only available when using Volt Connect**
+
+
+        This will return a list of all existing payouts.  
+
+
+        ### Usage
+
+        The list is paginated by default and can be filtered using the
+        parameters shown in the request section below.
+
+
+        ### More information
+
+        Full details on payouts can be found in our comprehensive integration
+        guides.
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/limit'
+      responses:
+        '200':
+          description: |
+            **OK** - A paginated list of payouts.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/payout_list'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+      externalDocs:
+        description: |
+          Integration guide: Payouts
+        url: https://docs.volt.io/connect/payouts/
+      x-stoplight:
+        id: 8xnw41z5ucb59
+  /payouts/{id}:
+    get:
+      tags:
+        - Payouts (Connect)
+      summary: Payout details
+      operationId: PayoutsConnect_getDetails
+      description: >
+        **Payouts are only available when using Volt Connect**
+
+
+        This will return details of the selected payout, with approval update
+        history.
+
+
+        ### Usage
+
+        Pass the **id** of the payout as part of the URL. 
+
+
+        ### More information
+
+        Full details on payouts can be found in our comprehensive integration
+        guides.
+      parameters:
+        - description: ID of the payout
+          name: id
+          example: efffed42-40f7-4bd2-840d-908aae9a33ad
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: |
+            **OK** - Details of the selected payout
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PayoutsConnectGetDetailsResponse'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+      externalDocs:
+        description: |
+          Integration guide: Payouts        
+        url: https://docs.volt.io/connect/payouts/
+      x-stoplight:
+        id: 86b830u6vxgp6
+  /payments/{id}/refund-details:
+    get:
+      tags:
+        - Refunds (Connect)
+      summary: Check refund eligibility
+      operationId: RefundsConnect_checkEligibility
+      description: >
+        **Refunds are only available when using Volt Connect**  
+
+
+        ### Usage
+
+        Pass the **id** of the existing payment in the URL to check whether this
+        payment is eligible for a refund.
+                
+        ### More information
+
+        Full details on how to request refunds, with full details of
+        notifications you can expect, can be found in our comprehensive
+        integration guides.
+      parameters:
+        - description: ID of the refund
+          name: id
+          example: 93b85f3c-76eb-4316-b1ae-f3370ddc59bc
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: All payments details for specified filters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefundsConnectCheckEligibilityResponse'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+      externalDocs:
+        description: |
+          Integration guide: Refunds         
+        url: https://docs.volt.io/connect/refunds-via-api/
+      x-stoplight:
+        id: no8qiwijobr83
+  /payments/{id}/request-refund:
+    post:
+      tags:
+        - Refunds (Connect)
+      summary: New refund request
+      operationId: RefundsConnect_createRequest
+      description: >
+        **Refunds are only available when using Volt Connect**  
+
+
+        ### Usage
+
+        Pass the **id** of the existing payment in the URL and the amount and
+        reference for the refund in the body of the request.
+
+
+        ### Checking eligibility before requesting a refund
+
+        You can get the eligibility for a refund using GET
+        /payments/{id}/refund-details
+
+
+        ### More information
+
+        Full details on how to use refunds, with details of notifications you
+        can expect, can be found in our comprehensive integration guides.
+      parameters:
+        - description: Optional - but recommended - to avoid duplicate refund requests
+          in: header
+          name: idempotency-key
+          schema:
+            type: string
+            format: uuid
+        - description: ID of the payment
+          name: id
+          example: 93b85f3c-76eb-4316-b1ae-f3370ddc59bc
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Details of the refund you'd like to request for this payment
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/refund_request'
+      responses:
+        '201':
+          description: |
+            **Created** - The refund request was validated and accepted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefundsConnectCreateRequestResponse'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          description: >
+            **Not authorised** - Although your credentials are correct, your
+            access to this section of the API has been disabled or limited.
+            Subsequent requests to this endpoint (even with valid data) will not
+            be processed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefundsConnectCreateRequest403Response'
+        '409':
+          $ref: '#/components/responses/409'
+        '422':
+          description: >
+            **Unprocessable Entity** - The payout request could not be completed
+            due to a problem with the beneficiary you're trying to send to.  If
+            the exception message does not provide enough information, please
+            contact merchant support for further details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefundsConnectCreateRequest422Response'
+      externalDocs:
+        description: |
+          Integration guide: Refunds via the API        
+        url: https://docs.volt.io/connect/refunds-via-api/
+      x-stoplight:
+        id: imxi4gqo57xyy
+  /reports/payments:
+    parameters: []
+    post:
+      tags:
+        - Reporting
+      summary: Create payment report
+      operationId: Reporting_createPaymentReport
+      description: >
+        This endpoint allows you to request a payment report for a specific
+        period.  Once requested, your report will be generated asynchronously
+        and available at the ```/reports/id/download endpoint``` as a CSV file
+        once it's been generated.  Check on the availability status of your
+        report using the ```/reports/{id}``` endpoint.
+
+
+        The ```startDate``` and ```endDate``` may be a maximum of **92 days**
+        apart, so you can generate reports containing 3 months data.
+
+
+        If you supply a ```customerId``` for any merchant within your customer
+        hierarchy, only that merchant's data will be returned.  
+
+
+        If a ```customer ID``` is **not** provided, the report will contain data
+        for all merchants within your customer hierarchy.
+      requestBody:
+        description: ''
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReportingCreatePaymentReportRequest'
+            examples:
+              Example with customerId provided:
+                value:
+                  startDate: '2019-08-24T14:15:22+00:00'
+                  endDate: '2019-08-24T14:15:22+00:00'
+                  customerId: 87d8e330-2878-4742-a86f-dbbb3bf522ac
+              Example without customerId:
+                value:
+                  startDate: '2019-08-24T14:15:22+00:00'
+                  endDate: '2019-08-24T14:15:22+00:00'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/report_requested'
+        '400':
+          description: |
+            **Bad Request** - For example, when invalid JSON was provided.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportingCreatePaymentReportResponse'
+              examples:
+                Bad request:
+                  value:
+                    exception:
+                      code: 400
+                      message: Bad Request
+                Validation error:
+                  value:
+                    exception:
+                      code: 400
+                      message: Validation exception
+                      errorList:
+                        - property: fieldName
+                          message: Detailed error for that field
+        '422':
+          $ref: '#/components/responses/422'
+        '429':
+          description: >
+            **Too Many Requests** - This may occur when you have requested more
+            than 5 reports to be generated at the same time.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportingCreatePaymentReport429Response'
+  /reports/connect/{bankAccountId}:
+    parameters:
+      - description: Connect bank account ID that you're requesting report for
+        schema:
+          type: string
+        name: bankAccountId
+        in: path
+        required: true
+    post:
+      tags:
+        - Reporting
+      summary: Create Connect report
+      operationId: Reporting_createConnectReport
+      description: >
+        This endpoint allows you to request a Connect report for a selected
+        ```bankAccountId``` and specific period.  Once requested, your report
+        will be generated asynchronously and available at the
+        ```/reports/id/download endpoint``` as a CSV file once it's been
+        generated.  Check on the availability status of your report using the
+        ```/reports/{id}``` endpoint.
+
+
+        The ```startDate``` and ```endDate``` may be a maximum of **92 days**
+        apart, so you can generate reports containing 3 months data.
+      requestBody:
+        description: ''
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReportingCreateConnectReportRequest'
+            examples:
+              Example payload:
+                value:
+                  startDate: '2023-08-21T18:32:00+00:00'
+                  endDate: '2023-08-28T18:32:00+00:00'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/report_requested'
+        '400':
+          description: |
+            **Bad Request** - For example, when invalid JSON was provided.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportingCreateConnectReportResponse'
+              examples:
+                Bad request:
+                  value:
+                    exception:
+                      code: 400
+                      message: Bad Request
+                Validation error:
+                  value:
+                    exception:
+                      code: 400
+                      message: Validation exception
+                      errorList:
+                        - property: fieldName
+                          message: Detailed error for that field
+        '422':
+          $ref: '#/components/responses/422'
+        '429':
+          description: >
+            **Too Many Requests** - This may occur when you have requested more
+            than 5 reports to be generated at the same time.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportingCreateConnectReport429Response'
+  /reports/refund:
+    parameters: []
+    post:
+      tags:
+        - Reporting
+      summary: Create Refund report
+      operationId: Reporting_createRefundReport
+      description: >
+        This endpoint allows you to request a refund report for a specific
+        period. Once requested, your report will be generated asynchronously and
+        available at the ```/reports/id/download endpoint``` as a CSV file once
+        it's been generated. Check on the availability status of your report
+        using the ```/reports/{id}``` endpoint.
+
+
+        The ```startDate``` and ```endDate``` may be a maximum of **92 days**
+        apart, so you can generate reports containing 3 months data.
+
+
+        If you supply a ```customerId``` for any merchant within your customer
+        hierarchy, only that merchant's data will be returned.
+
+
+        If a ```customer ID``` is **not** provided, the report will contain data
+        for all merchants within your customer hierarchy.
+
+
+        If you supply an ```accountId``` for Connect account, only data related
+        to this account will be returned.
+
+
+        If an ```account ID``` is **not** provided, the report will contain data
+        related to all Connect accounts.
+      requestBody:
+        description: ''
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReportingCreateRefundReportRequest'
+            examples:
+              Example with customerId and includeEventFees provided:
+                value:
+                  startDate: '2019-08-24T14:15:22+00:00'
+                  endDate: '2019-08-24T14:15:22+00:00'
+                  customerId: 87d8e330-2878-4742-a86f-dbbb3bf522ac
+                  accountId: 12d8e330-2878-4742-a86f-dbbb3bf52234
+                  includeEventFees: true
+              Example without customerId and includeEventFees:
+                value:
+                  startDate: '2019-08-24T14:15:22+00:00'
+                  endDate: '2019-08-24T14:15:22+00:00'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/report_requested'
+        '400':
+          description: |
+            **Bad Request** - For example, when invalid JSON was provided.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportingCreateRefundReportResponse'
+              examples:
+                Bad request:
+                  value:
+                    exception:
+                      code: 400
+                      message: Bad Request
+                Validation error:
+                  value:
+                    exception:
+                      code: 400
+                      message: Validation exception
+                      errorList:
+                        - property: fieldName
+                          message: Detailed error for that field
+        '422':
+          $ref: '#/components/responses/422'
+        '429':
+          description: >
+            **Too Many Requests** - This may occur when you have requested more
+            than 5 reports to be generated at the same time.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportingCreateRefundReport429Response'
+  /reports/auditlog:
+    parameters: []
+    post:
+      tags:
+        - Reporting
+      summary: Create Audit Log report
+      operationId: Reporting_createAuditLogReport
+      description: >
+        This endpoint initiates the generation of an audit log report for a
+        specified time frame. Reports are generated asynchronously and, once
+        ready, can be downloaded as CSV files from `/reports/{id}/download`. Use
+        `/reports/{id}` to monitor the report's status.
+
+
+        The period between `startDate` and `endDate` must not exceed 92 days,
+        allowing for quarterly reports. Specifying a `customerId` filters the
+        report to include data exclusively for that merchant. Without a
+        `customerId`, the report covers all merchants in your customer
+        hierarchy.
+      requestBody:
+        description: ''
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReportingCreateAuditLogReportRequest'
+            examples:
+              Example with customerId provided:
+                value:
+                  startDate: '2019-08-24T14:15:22+00:00'
+                  endDate: '2019-08-24T14:15:22+00:00'
+                  customerId: 87d8e330-2878-4742-a86f-dbbb3bf522ac
+              Example without customerId:
+                value:
+                  startDate: '2019-08-24T14:15:22+00:00'
+                  endDate: '2019-08-24T14:15:22+00:00'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/report_requested'
+        '400':
+          description: |
+            **Bad Request** - For example, when invalid JSON was provided.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportingCreateAuditLogReportResponse'
+              examples:
+                Bad request:
+                  value:
+                    exception:
+                      code: 400
+                      message: Bad Request
+                Validation error:
+                  value:
+                    exception:
+                      code: 400
+                      message: Validation exception
+                      errorList:
+                        - property: fieldName
+                          message: Detailed error for that field
+        '422':
+          $ref: '#/components/responses/422'
+        '429':
+          description: >
+            **Too Many Requests** - This may occur when you have requested more
+            than 5 reports to be generated at the same time.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportingCreateAuditLogReport429Response'
+  /reports:
+    get:
+      tags:
+        - Reporting
+      summary: Get available reports
+      operationId: Reporting_getAvailableReports
+      description: >
+        This endpoint will allow you to fetch a list containing all the reports
+        you've generated.  Use the ```id``` of the report to download it using
+        the ```/reports/{id}/download``` endpoint.
+
+
+        By default, it will return a complete list of reports for your entire
+        customer hierarchy. 
+
+
+        Providing a ```customerId``` in the query will allow you to limit the
+        list to reports available for one particular merchant.
+      parameters:
+        - description: The ID of a specific merchant within your customer hierarchy
+          schema:
+            type: string
+            format: uuid
+          in: query
+          name: customerId
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportingGetAvailableReportsResponse'
+        '400':
+          description: |
+            Bad Request (e.g. an invalid customerId was provided)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportingGetAvailableReports400Response'
+              examples:
+                Customer not found:
+                  value:
+                    title: Violation exception
+                    violations:
+                      - title: Provided customer does not exist.
+                        type: customer-not-found
+                        propertyPath: customerId
+        '422':
+          $ref: '#/components/responses/422'
+  /reports/{id}:
+    parameters:
+      - description: ID of the report you wish to retrieve
+        schema:
+          type: string
+          format: uuid
+        name: id
+        in: path
+        required: true
+    get:
+      tags:
+        - Reporting
+      summary: Get report by ID
+      operationId: Reporting_getReportDetails
+      description: >
+        This endpoint allows fetching the details of a specific report.  
+
+
+        Note that this will return the details of the report only.  To download
+        the report as a CSV file, use the ```/reports/{id}/download``` endpoint.
+
+
+        Provide the ```id``` returned when you requested the report.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/report'
+        '400':
+          description: Bad Request (f.e. invalid ID provided)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportingGetReportDetailsResponse'
+        '404':
+          description: Report not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportingGetReportDetails404Response'
+  /reports/{id}/download:
+    parameters:
+      - description: ID of report
+        schema:
+          type: string
+          format: uuid
+        name: id
+        in: path
+        required: true
+    get:
+      tags:
+        - Reporting
+      summary: Download a report
+      operationId: Reporting_downloadReportById
+      description: >
+        This endpoint allows downloading a previously generated report in CSV
+        format.  
+
+
+        Use the ```id``` returned when you requested the report.
+      responses:
+        '200':
+          description: OK
+          content:
+            text/csv:
+              schema:
+                $ref: '#/components/schemas/ReportingDownloadReportByIdResponse'
+          headers: {}
+        '400':
+          description: Bad Request (e.g. in case of invalid ID provided)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportingDownloadReportById400Response'
+        '404':
+          description: Report not found or not generated yet
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportingDownloadReportById404Response'
+  /payments/{paymentId}/name-match-score:
+    parameters:
+      - schema:
+          type: string
+        name: paymentId
+        in: path
+        required: true
+    get:
+      tags:
+        - Payments
+        - Matchmeter
+      summary: Payment Match Score
+      operationId: Payments_checkMatchScore
+      description: >-
+        This endpoint will allow accurately matches naming nuances between
+        merchant inputs and end-user bank records
+      parameters:
+        - description: >-
+            default: true - if set to false, receiving an account holder name
+            that contains an initial instead of a first name will significantly
+            impact the match score.
+          schema:
+            type: boolean
+          in: query
+          name: allow_initials
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentsCheckMatchScoreResponse'
+        '403':
+          description: >-
+            **Not authorised** - Although your credentials are correct, your
+            access to this section of the API has been disabled or limited.
+            Subsequent requests to this endpoint (even with valid data) will not
+            be processed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentsCheckMatchScore403Response'
+        '404':
+          description: >-
+            **Not found** - The resource that you are requesting cannot be
+            found. The response may contain further information.
+        '409':
+          description: >-
+            **Conflict** - Name match score is only available for payments in
+            the received status.
+      x-stoplight:
+        id: gxg8o99lzn2l2
+components:
+  parameters:
+    page:
+      description: >
+        You can request additional pages of information by appending the page
+        parameter to your GET request. Pages start numbering at 1 and are in
+        blocks of 50 records, so to call records 51-100, append **page**=2 to
+        your request. If you omit the page parameter, we will return you the
+        information on page 1.
+      in: query
+      name: page
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    limit:
+      description: >
+        If you want to return more than the default number of records per page,
+        append the parameter items to your GET request. To get the first 100
+        records, append **limit**=100 to your request. To get the next 100
+        records, append **page**=2&**limit**=100. If you omit the items
+        parameter, we will return 50 records per page.
+      in: query
+      name: limit
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 50
+  responses:
+    '400':
+      description: >
+        **Bad request** - We cannot accept the payload from the request you sent
+        because the data is invalid or malformed. The response will contain a
+        description of the actual problem.
+    '401':
+      description: >
+        **Access denied** - Your credentials were invalid. It may be that the
+        token you've used has expired. Try re-authenticating with valid or
+        updated credentials and retry this request.
+    '403':
+      description: >
+        **Not authorised** - Although your credentials are correct, your access
+        to this section of the API has been disabled or limited. Subsequent
+        requests to this endpoint (even with valid data) will not be processed.
+    '404':
+      description: >
+        **Not found** - The resource that you are requesting cannot be found.
+        The response may contain further information.
+    '409':
+      description: >
+        **Conflict** - A resource has already been created with this idempotency
+        key.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PayoutsConnectCreateRequest409Response'
+    '422':
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/validation_error_v1'
+  schemas:
+    bank_full:
+      description: Bank or financial institution
+      type: object
+      properties:
+        id:
+          description: UUID identifying the bank
+          type: string
+          example: 662384a0-9734-4556-a8bd-3f1e774e2a3c
+        shortCode:
+          description: Bank short code
+          type: string
+          example: barclays
+        supportedCurrencies:
+          description: Currencies supported by bank.
+          type: array
+          items:
+            type: string
+          example:
+            - GBP
+            - EUR
+        name:
+          description: The bank's display name
+          maxLength: 100
+          type: string
+          example: Barclays Bank
+        country:
+          $ref: '#/components/schemas/country'
+        officialName:
+          description: The full bank or financial institution's name
+          maxLength: 100
+          type: string
+          example: Barclays Bank Plc
+        active:
+          description: Whether this bank is active
+          type: boolean
+        logo:
+          description: URL of the bank logo PNG asset. Image presents official bank logo
+          type: string
+          example: https://cdn.volt.io/banks/logos/xx_barclays_bank.png
+        icon:
+          description: >-
+            URL of the bank icon PNG asset. Image presents bank logomark, icons
+            should be displayed together with bank names.
+          type: string
+          example: https://cdn.volt.io/banks/icons/xx_barclays_bank.png
+      x-stoplight:
+        id: 85utnoyly6dn2
+    bank_payment_list:
+      description: Banks and financial institutions.
+      type: object
+      properties:
+        id:
+          description: UUID identifying the bank
+          type: string
+          example: 662384a0-9734-4556-a8bd-3f1e774e2a3c
+        name:
+          description: The bank's display name
+          maxLength: 100
+          type: string
+          example: Barclays Bank
+        country:
+          $ref: '#/components/schemas/country_payment_list'
+        officialName:
+          description: The full bank or financial institution's name
+          maxLength: 100
+          type: string
+          example: Barclays Bank Plc
+        branchName:
+          description: The full bank or financial branch institution's name
+          maxLength: 255
+          type: string
+          example: Barclays Bank Branch Plc
+        shortBranchName:
+          description: The short bank or financial branch institution's name
+          maxLength: 255
+          type: string
+          nullable: true
+          example: Barclays Bank Branch
+        active:
+          description: Whether this bank is active
+          type: boolean
+        logo:
+          description: URL of the bank logo PNG asset. Image presents official bank logo
+          type: string
+          example: https://cdn.volt.io/banks/logos/xx_barclays_bank.png
+        icon:
+          description: >-
+            URL of the bank icon PNG asset. Image presents bank logomark, icons
+            should be displayed together with bank names.
+          type: string
+          example: https://cdn.volt.io/banks/icons/xx_barclays_bank.png
+      x-stoplight:
+        id: 3sqkw7z5986l9
+    country:
+      description: Country
+      type: object
+      properties:
+        id:
+          description: ISO (2-letter) code for the country
+          maxLength: 2
+          minLength: 2
+          type: string
+          example: GB
+        name:
+          description: Country name
+          type: string
+          example: United Kingdom
+      x-stoplight:
+        id: mlyly5qku3g51
+    country_payment_list:
+      description: Country
+      type: object
+      properties:
+        id:
+          description: ISO (2-letter) code for the country
+          maxLength: 2
+          minLength: 2
+          type: string
+          example: GB
+        name:
+          description: Country name
+          type: string
+          example: United Kingdom
+      x-stoplight:
+        id: kd59wbqzgba1z
+    currency:
+      type: object
+      properties:
+        id:
+          description: >-
+            3-letter currency code - See [ISO 4217 - Currency
+            codes](https://www.iso.org/iso-4217-currency-codes.html)
+          type: string
+          example: EUR
+        name:
+          description: Name of the Currency
+          type: string
+          example: Euro
+        decimal:
+          description: Decimal places of the Currency
+          type: integer
+          example: 2
+        active:
+          description: If this Currency is active
+          type: boolean
+          example: true
+      x-stoplight:
+        id: ziaa5rwveskr5
+    beneficiary:
+      type: object
+      properties:
+        id:
+          description: uuid
+          type: string
+          format: uuid
+          example: 9ddcd918-d569-445b-bbd9-df759f6159e6
+        customerId:
+          description: uuid
+          type: string
+          format: uuid
+          example: eeeeeeee-0002-eeee-eeee-eeeeeeeeeeee
+        accountIdentifications:
+          type: array
+          items:
+            type: object
+            properties:
+              type:
+                type: string
+                example: bic
+              value:
+                type: string
+                example: LOYDGB2LXXX
+        country:
+          type: object
+          properties:
+            id:
+              description: country
+              type: string
+              example: GB
+            name:
+              description: country name
+              type: string
+              example: United Kingdom
+      x-stoplight:
+        id: gsznojwp6qc5e
+    statusUpdates:
+      type: array
+      items:
+        type: object
+        properties:
+          createdAt:
+            type: string
+            format: datetime
+            example: '2023-02-16T09:42:37+00:00'
+          newStatus:
+            type: string
+            example: NEW_PAYMENT
+      x-stoplight:
+        id: qeinqsnybv5cc
+    sender:
+      type: object
+      properties:
+        name:
+          description: name
+          type: string
+          example: Jane Doe
+        email:
+          description: email
+          type: string
+          example: jane@example.com
+        ip:
+          description: ip address
+          type: string
+          example: 151.152.153.154
+        deviceFingerprint:
+          type: string
+          example: c1fc9f277826d16825940603196ab037
+        voltConnect:
+          type: object
+          properties:
+            accountName:
+              description: account name
+              type: string
+              example: Jane Doe
+            accountNumber:
+              description: account number
+              type: string
+              example: '12345678'
+            sortCode:
+              description: sort code
+              type: string
+              example: '12345'
+      x-stoplight:
+        id: gnxbakbu0zvn0
+    payment:
+      description: Payments - money flowing from a consumer to a merchant.
+      x-stoplight:
+        id: cqn0jma8u837s
+      type: object
+      properties:
+        currencyCode:
+          description: >-
+            Currency in which the payment should be made, in ISO 4217 format (3
+            uppercase letters)
+          maxLength: 3
+          minLength: 3
+          type: string
+          example: GBP
+        amount:
+          description: The amount of the transaction in 1/100 units (pence, cents etc)
+          type: integer
+          example: 12345
+        type:
+          description: The transaction type (these are predefined)
+          type: string
+          example: OTHER
+          enum:
+            - BILL
+            - GOODS
+            - PERSON_TO_PERSON
+            - OTHER
+            - SERVICES
+        uniqueReference:
+          description: >-
+            Unique reference for the payment from the merchant, must contain
+            only alphanumeric characters
+          type: string
+          maxLength: 18
+          example: sale123456
+        merchantInternalReference:
+          description: >-
+            A field which identifies the transaction in the merchant's system,
+            which can be used as a longer alternative to the uniqueReference
+            field.  This field can contain up to 100 characters, including
+            special ones.
+
+
+            - If the **uniqueReference** value is provided, then this field is
+            optional
+
+
+            - If this field contains a value but **uniqueReference** is not
+            provided, a **uniqueReference** will be automatically generated by
+            Volt
+          type: string
+          example: 1d73dd8a-4aef-4c83-80aa-f06c4f615a75
+          maxLength: 100
+          x-stoplight:
+            id: cnl13cszwgrs8
+        shopper:
+          $ref: '#/components/schemas/shopper'
+        bank:
+          description: UUID of the bank selected to originate the payment
+          type: string
+          format: iri-reference
+          example: 662384a0-9734-4556-a8bd-3f1e774e2a3c
+        callback:
+          description: Query string which will be returned to the merchant
+          type: string
+          example: order_id=662384a0&sample=parameter
+        notificationUrl:
+          description: >-
+            External URL where the notification is going to be sent when the
+            payment status changes
+          type: string
+          example: https://client.app.example/notify
+        paymentSuccessUrl:
+          description: >-
+            URL where the user is redirected after a successful payment. This
+            will overwrite the application configuration set in Fuzebox. Only
+            provide a value here if you need to overwrite it.
+          type: string
+          example: https://example.com/redirect/success
+        paymentFailureUrl:
+          description: >-
+            URL where the user is redirected after a failed payment. This will
+            overwrite the application configuration set in Fuzebox. Only provide
+            a value here if you need to overwrite it.
+          type: string
+          example: https://example.com/redirect/failure
+        paymentPendingUrl:
+          description: >-
+            URL where the user is redirected if payment is pending. This will
+            overwrite the application configuration set in Fuzebox. Only provide
+            a value here if you need to overwrite it.
+          type: string
+          example: https://example.com/redirect/pending
+        paymentCancelUrl:
+          description: >-
+            URL where the user is redirected after cancelling a payment. This
+            will overwrite the application configuration set in Fuzebox. Only
+            provide a value here if you need to overwrite it.
+          type: string
+          example: https://example.com/redirect/cancel
+        checkoutCountries:
+          description: >
+            This field should be used only if you require to limit the countries
+            that are visible to the Shopper for this specific payment. Without
+            providing values in this field all the countries that are setup in
+            your Fuzebox account will be available for Shopper to select from
+          type: array
+          x-stoplight:
+            id: g4zed612q61mq
+          example:
+            - PL
+            - DE
+          items:
+            x-stoplight:
+              id: 0uhazpi6lb7jx
+            type: string
+            pattern: ^[a-zA-Z]{2}$
+            example: GB
+      required:
+        - currencyCode
+        - amount
+        - type
+        - shopper
+    payment_list:
+      description: Payments - money flowing from a consumer to a merchant.
+      type: object
+      properties:
+        id:
+          description: UUID identifying the payment
+          type: string
+          format: uuid
+          readOnly: true
+          example: 662384a0-9734-4556-a8bd-3f1e774e2a3c
+        currency:
+          $ref: '#/components/schemas/currency'
+        bank:
+          $ref: '#/components/schemas/bank_payment_list'
+        amount:
+          description: The amount of the transaction in 1/100 units (pence, cents etc)
+          type: integer
+          example: 12345
+        type:
+          description: The transaction type (these are predefined)
+          type: string
+          example: OTHER
+          enum:
+            - BILL
+            - GOODS
+            - PERSON_TO_PERSON
+            - OTHER
+            - SERVICES
+        uniqueReference:
+          description: Unique reference for the payment from the merchant
+          type: string
+          example: sale123456
+        status:
+          description: The current status of the payment (in words)
+          type: string
+          example: REQUESTED
+        active:
+          description: Whether the payment is active
+          type: boolean
+        createdAt:
+          description: When was Payment created
+          type: string
+          format: date-time
+          example: '2020-06-02T07:48:53+02:00'
+        beneficiary:
+          $ref: '#/components/schemas/beneficiary'
+        statusUpdates:
+          $ref: '#/components/schemas/statusUpdates'
+      x-stoplight:
+        id: ipbfcef0yvl8i
+    payment_embedded_flow:
+      title: Payment - Embedded Flow
+      description: Payments - money flowing from a consumer to a merchant.
+      x-stoplight:
+        id: n1jgj1fv44cox
+      type: object
+      properties:
+        currencyCode:
+          description: >-
+            Currency in which the payment should be made, in ISO 4217 format (3
+            uppercase letters)
+          maxLength: 3
+          minLength: 3
+          type: string
+          example: GBP
+        amount:
+          description: The amount of the transaction in 1/100 units (pence, cents etc)
+          type: integer
+          example: 12345
+        type:
+          description: The transaction type (these are predefined)
+          example: OTHER
+          enum:
+            - BILL
+            - GOODS
+            - PERSON_TO_PERSON
+            - SERVICES
+            - OTHER
+          type: string
+        shopper:
+          $ref: '#/components/schemas/shopper'
+        uniqueReference:
+          description: >-
+            Unique reference for the payment from the merchant, must contain
+            only alphanumeric characters
+          example: sale123456
+          type: string
+          maxLength: 18
+        merchantInternalReference:
+          description: >-
+            A field which identifies the transaction in the merchant's system,
+            which can be used as a longer alternative to the uniqueReference
+            field.  This field can contain up to 100 characters, including
+            special ones.
+
+
+            - If the **uniqueReference** value is provided, then this field is
+            optional
+
+
+            - If this field contains a value but **uniqueReference** is not
+            provided, a **uniqueReference** will be automatically generated by
+            Volt
+          type: string
+          example: 1d73dd8a-4aef-4c83-80aa-f06c4f615a75
+          maxLength: 100
+        bank:
+          description: UUID of the bank selected to originate the payment
+          type: string
+          format: iri-reference
+          example: 662384a0-9734-4556-a8bd-3f1e774e2a3c
+        callback:
+          description: Query string which will be returned to the merchant
+          type: string
+          example: order_id=662384a0&sample=parameter
+        notificationUrl:
+          description: >-
+            External URL where the notification is going to be sent when the
+            payment status changes
+          type: string
+          example: https://client.app.example/notify
+        paymentSuccessUrl:
+          description: >-
+            URL where the user is redirected after a successful payment. This
+            will overwrite the application configuration set in Fuzebox. Only
+            provide a value here if you need to overwrite it.
+          type: string
+          example: https://example.com/redirect/success
+        paymentFailureUrl:
+          description: >-
+            URL where the user is redirected after a failed payment. This will
+            overwrite the application configuration set in Fuzebox. Only provide
+            a value here if you need to overwrite it.
+          type: string
+          example: https://example.com/redirect/failure
+        paymentPendingUrl:
+          description: >-
+            URL where the user is redirected if payment is pending. This will
+            overwrite the application configuration set in Fuzebox. Only provide
+            a value here if you need to overwrite it.
+          type: string
+          example: https://example.com/redirect/pending
+        paymentCancelUrl:
+          description: >-
+            URL where the user is redirected after cancelling a payment. This
+            will overwrite the application configuration set in Fuzebox. Only
+            provide a value here if you need to overwrite it.
+          type: string
+          example: https://example.com/redirect/cancel
+        checkoutCountries:
+          description: >-
+            This field should be used only if you require to limit the countries
+            that are visible to the Shopper for this specific payment. Without
+            providing values in this field all the countries that are setup in
+            your Fuzebox account will be available for Shopper to select from
+          type: array
+          x-stoplight:
+            id: pwmbkcn6k643u
+          example:
+            - PL
+            - DE
+          items:
+            x-stoplight:
+              id: df173qyxut2h5
+            type: string
+            pattern: ^[a-zA-Z]{2}$
+            example: GB
+      required:
+        - currencyCode
+        - amount
+        - type
+        - shopper
+    payment_au_embedded_flow:
+      title: Payment - Embedded Flow Australia
+      description: Payments - money flowing from a consumer to a merchant.
+      x-stoplight:
+        id: zpeu8tdw7e206
+      type: object
+      properties:
+        currencyCode:
+          description: >-
+            Currency in which the payment should be made, in ISO 4217 format (3
+            uppercase letters)
+          maxLength: 3
+          minLength: 3
+          type: string
+          example: AUD
+        amount:
+          description: The amount of the transaction in 1/100 units (pence, cents etc)
+          type: integer
+          example: 12345
+        type:
+          description: The transaction type (these are predefined)
+          enum:
+            - MORTGAGE
+            - UTILITY
+            - LOAN
+            - DEPENDANT_SUPPORT
+            - GAMBLING
+            - RETAIL
+            - SALARY
+            - PERSONAL
+            - GOVERNMENT
+            - PENSION
+            - TAX
+            - OTHER
+          type: string
+        additionalDescription:
+          description: >-
+            Value that represents agreement's and payment's description that
+            will be shown to shopper at his bank.
+          type: string
+          maxLength: 140
+          example: Additional description
+        shopper:
+          $ref: '#/components/schemas/shopper'
+        uniqueReference:
+          description: >-
+            Unique reference for the payment from the merchant, must contain
+            only alphanumeric characters
+          example: sale123456
+          type: string
+          maxLength: 35
+        merchantInternalReference:
+          description: >-
+            A field which identifies the transaction in the merchant's system,
+            which can be used as a longer alternative to the uniqueReference
+            field.  This field can contain up to 100 characters, including
+            special ones.
+
+
+            - If the **uniqueReference** value is provided, then this field is
+            optional
+
+
+            - If this field contains a value but **uniqueReference** is not
+            provided, a **uniqueReference** will be automatically generated by
+            Volt
+          type: string
+          example: 1d73dd8a-4aef-4c83-80aa-f06c4f615a75
+          maxLength: 100
+        bank:
+          description: UUID of the bank selected to originate the payment
+          type: string
+          format: iri-reference
+          example: 662384a0-9734-4556-a8bd-3f1e774e2a3c
+        notificationUrl:
+          description: >-
+            External URL where the notification is going to be sent when the
+            payment status changes
+          type: string
+          example: https://client.app.example/notify
+      required:
+        - currencyCode
+        - amount
+        - type
+        - additionalDescription
+        - shopper
+    payment_full:
+      description: Payments - money flowing from a consumer to a merchant.
+      type: object
+      properties:
+        id:
+          description: UUID identifying the payment
+          type: string
+          readOnly: true
+          example: 662384a0-9734-4556-a8bd-3f1e774e2a3c
+        active:
+          type: boolean
+          example: true
+        createdAt:
+          description: Timestamp for when the payment was requested
+          type: string
+          format: date-time
+          readOnly: true
+        currency:
+          $ref: '#/components/schemas/currency'
+        amount:
+          description: The amount of the transaction in 1/100 units (pence, cents etc)
+          type: integer
+          example: 12345
+        type:
+          description: The transaction type (these are predefined)
+          type: string
+          example: OTHER
+          enum:
+            - BILL
+            - GOODS
+            - PERSON_TO_PERSON
+            - OTHER
+            - SERVICES
+        account:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            active:
+              type: boolean
+              example: true
+            createdAt:
+              description: Timestamp for when the account was created
+              type: string
+              format: date-time
+              readOnly: true
+            nickname:
+              type: string
+              example: Virtual EUR CY Account
+            accountNumber:
+              type: string
+              nullable: true
+              example: null
+            iban:
+              type: string
+              example: DE3339010517382289891
+            swiftBic:
+              type: string
+              example: BARCGB2L
+            currency:
+              $ref: '#/components/schemas/currency'
+            country:
+              $ref: '#/components/schemas/country'
+            bankname:
+              type: string
+              nullable: true
+              example: null
+        uniqueReference:
+          description: Unique reference for the payment from the merchant
+          type: string
+          example: sale123456
+        bank:
+          $ref: '#/components/schemas/bank_payment_list'
+        status:
+          description: The current status of the payment (in words)
+          type: string
+          example: NEW_PAYMENT
+        statusUpdates:
+          $ref: '#/components/schemas/statusUpdates'
+        beneficiary:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            customerId:
+              type: string
+              format: uuid
+            accountIdentifications:
+              type: array
+              items:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  value:
+                    type: string
+            country:
+              $ref: '#/components/schemas/country'
+        transferType:
+          type: string
+          nullable: true
+          example: null
+        sender:
+          $ref: '#/components/schemas/sender'
+        refundAvailable:
+          type: boolean
+          example: false
+        refundNotAvailableReason:
+          type: string
+          example: This payment cannot be refunded because it was not received
+        refundNotAvailableCode:
+          type: string
+          example: ApiPaymentNotReceived
+      x-stoplight:
+        id: 44fqcwd23h4ra
+    shopper:
+      description: Information about the shopper
+      type: object
+      x-stoplight:
+        id: 5fy4pfd9j5enp
+      x-examples:
+        First and last name:
+          reference: user-13489
+          documentId: 90971226008
+          email: john.smith@example.com
+          firstName: John
+          lastName: Smith
+          ip: 122.118.64.13
+        Organisation name:
+          reference: user-13489
+          documentId: 90971226008
+          email: john.smith@example.com
+          organisationName: Company
+          ip: 122.118.64.13
+      properties:
+        reference:
+          description: >-
+            Your unique reference for the shopper, e.g. customer ID or email
+            address. It can feature a combination of letters and numbers, along
+            with an optional single "@" symbol and a curated selection of
+            special characters like !$#%^&*.-_. Please note that special
+            characters are not permitted at the end of the reference value, and
+            the "@" symbol is only allowed in the middle of the reference value.
+          type: string
+          minLength: 3
+          maxLength: 256
+          example: user-13489
+          pattern: >-
+            ^[a-zA-Z0-9.!#$%&\'\*+\/\=?^_`{|}~-]+@?[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$
+        documentId:
+          description: >-
+            Only required for PIX payments in Brazil.  The shopper's document ID
+            - must be 14 digits long for CNPJ and 11 digits for CPF.
+          type: string
+          example: '90971226008'
+        email:
+          description: Shopper's email address
+          type: string
+          maxLength: 255
+          example: john.smith@example.com
+        firstName:
+          description: Shopper's first name (required when lastName provided).
+          type: string
+          maxLength: 255
+          example: John
+        lastName:
+          description: Shopper's last name (required when firstName provided).
+          type: string
+          maxLength: 255
+          example: Smith
+        organisationName:
+          description: >-
+            Shopper's organisation name (required when firstName and lastName
+            not provided).
+          type: string
+          maxLength: 255
+          example: Company
+        ip:
+          description: >-
+            Shopper's IP address - we use this for fraud prevention.  You can
+            supply either ipv4 or v6 addresses as appropriate for your
+            organisation.
+          type: string
+          format: ipv4 or ipv6
+          example: 122.118.64.13
+      required:
+        - reference
+        - firstName
+        - lastName
+        - organisationName
+    refund_available:
+      title: Refund available
+      type: object
+      properties:
+        refundAvailable:
+          description: Whether a refund is currently available for this payment
+          type: boolean
+          example: true
+        remainingDays:
+          description: >-
+            A refund can only be processed within the timeframe specified (in
+            calendar days)
+          type: integer
+          example: 365
+        availableAmount:
+          description: |
+            The currently refundable amount, in 1/100 units (pence, cents etc)
+          type: integer
+          example: 12345
+        refundedAmount:
+          description: |
+            The amount already refunded, in 1/100 units (pence, cents etc)
+          type: integer
+          example: 0
+        numberOfRefunds:
+          description: |
+            The number of refunds already processed for this payment
+          type: integer
+          example: 0
+        message:
+          description: If a refund is available, this will be *null*
+          type: string
+          nullable: true
+          example: null
+        code:
+          description: If a refund is available, this will be *null*
+          type: string
+          nullable: true
+          example: null
+      x-stoplight:
+        id: f0e39no82iw0j
+    refund_unavailable:
+      title: Refund unavailable
+      type: object
+      properties:
+        refundAvailable:
+          description: Whether a refund is currently available for this payment
+          type: boolean
+          example: false
+        remainingDays:
+          description: >-
+            A refund can only be processed within the timeframe specified (in
+            calendar days)
+          type: integer
+          example: 365
+        availableAmount:
+          description: |
+            The currently refundable amount, in 1/100 units (pence, cents etc)
+          type: integer
+          example: 0
+        refundedAmount:
+          description: |
+            The amount already refunded, in 1/100 units (pence, cents etc)
+          type: integer
+          example: 12345
+        numberOfRefunds:
+          description: |
+            The number of refunds already processed for this payment
+          type: integer
+          example: 1
+        message:
+          description: Further details on why the refund is unavailable
+          type: string
+          example: >-
+            Payment with id: 93b85f3c-76eb-4316-b1ae-f3370ddc59bc has been fully
+            refunded.
+        code:
+          description: >-
+            A unique code for the issue, useful for debugging.  Please quote if
+            you're raising a support request.
+          type: string
+          example: PaymentRefundBalanceIsNotAvailable
+      x-stoplight:
+        id: q1sxvr6wu5yh6
+    refund_request:
+      type: object
+      properties:
+        amount:
+          description: >
+            For **full refunds**, you do not need to pass a value here.  If
+            there's no value, a refund or the remaining refundable amount will
+            automatically be actioned.
+
+
+            For **partial refunds**, pass the amount to be refunded in 1/100
+            units (pence, cents etc).
+          type: integer
+          example: 12345
+          nullable: true
+        externalReference:
+          description: The reference you want to use for this refund
+          type: string
+          format: AlphaNumeric
+          example: MyRefundReference
+      x-stoplight:
+        id: w0euo4qiu75y8
+    payout_request:
+      type: object
+      properties:
+        amount:
+          description: The amount to be paid out, in 1/100 units (pence, cents etc).
+          type: integer
+          example: 12345
+          nullable: true
+        currency:
+          description: >-
+            Currency in which the payment should be made, in ISO 4217 format (3
+            uppercase letters)
+          maxLength: 3
+          minLength: 3
+          type: string
+          example: EUR
+        paymentTitle:
+          description: >-
+            Payment reference to be used for the payout.  This will appear on
+            the beneficiary's statement.
+          type: string
+          example: Test Payout
+        beneficiary:
+          type: object
+          properties:
+            name:
+              description: Beneficiary name
+              type: string
+              example: John Johnson
+            accountNumber:
+              description: Domestic bank account number
+              type: string
+              example: '12345678'
+            sortCode:
+              description: UK sort code
+              type: string
+              example: '123456'
+            iban:
+              description: International Bank Account Number
+              type: string
+              example: DK8389009999910135
+            swiftBic:
+              description: Swift Code (BIC)
+              type: string
+              example: SXPYDKKKXXX
+              nullable: true
+          oneOf:
+            - title: GBP to UK
+              description: >
+                **GBP** - UK domestic payouts, account number and sort code
+                required
+              required:
+                - sortCode
+                - accountNumber
+            - title: EUR SEPA
+              description: |
+                **EUR** = SEPA payouts, only IBAN is required
+              required:
+                - iban
+            - title: Other (IBAN)
+              description: >
+                **Other currencies** - SWIFT payouts, if you have an IBAN and
+                Swift Code (BIC)
+              required:
+                - iban
+                - swiftBic
+            - title: Other (Account number)
+              description: >
+                **Other currencies** - SWIFT payouts, if you have an account
+                number and Swift Code (BIC)              
+              required:
+                - accountNumber
+                - swiftBic
+      x-stoplight:
+        id: 1h55ugwry8dlq
+    payout_list:
+      type: array
+      items:
+        $ref: '#/components/schemas/payout_item'
+      x-stoplight:
+        id: k0pla0z95kzay
+    payout_details:
+      allOf:
+        - $ref: '#/components/schemas/payout_item'
+        - type: object
+          properties:
+            createdBy:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: Jack Jackson
+      x-stoplight:
+        id: vdll9bc6j9zj1
+    payout_item:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: efffed42-40f7-4bd2-840d-908aae9a33ad
+        status:
+          type: string
+          enum:
+            - CREATED
+          example: CREATED
+        createdAt:
+          type: string
+          format: date-time
+        amount:
+          description: The amount to be paid out, in 1/100 units (pence, cents etc).
+          type: integer
+          example: 500
+        currency:
+          description: >-
+            Currency in which the payment should be made, in ISO 4217 format (3
+            uppercase letters)
+          type: string
+          example: EUR
+        paymentTitle:
+          description: >-
+            Payment reference to be used for the payout.  This will appear on
+            the beneficiary's statement.
+          type: string
+          example: Payout123456
+        beneficiary:
+          description: Beneficiary bank account details
+          type: object
+          properties:
+            name:
+              description: Beneficiary name
+              type: string
+              example: John Johnson
+            accountNumber:
+              description: Domestic bank account number
+              type: string
+              example: '12345678'
+            sortCode:
+              description: UK sort code
+              type: string
+              example: '404452'
+            iban:
+              type: string
+              example: DK8389009999910135
+            swiftBic:
+              type: string
+              example: SXPYDKKKXXX
+        sender:
+          description: Your Connect account details
+          type: object
+          properties:
+            sortCode:
+              description: UK sort code
+              type: string
+              example: '404777'
+              nullable: true
+            accountNumber:
+              description: Domestic bank account number
+              type: string
+              example: '8765432'
+              nullable: true
+            iban:
+              description: International Bank Account Number
+              type: string
+              example: DK8389009999910135
+              nullable: true
+            swiftBic:
+              description: Swift Code (BIC)
+              type: string
+              example: SXPYDKKKXXX
+              nullable: true
+      x-stoplight:
+        id: myjtevwpbktr0
+    payout_beneficiary:
+      type: object
+      properties:
+        name:
+          description: Beneficiary name
+          type: string
+          example: John Johnson
+          nullable: true
+      x-stoplight:
+        id: c491o8ideg6da
+    payout_gbp_uk:
+      title: GBP to UK
+      description: |
+        **GBP** - UK domestic payouts to an account number and sort code
+      type: object
+      properties:
+        accountNumber:
+          description: Domestic bank account number
+          type: string
+          example: '12345678'
+        sortCode:
+          description: UK sort code
+          type: string
+          example: '404452'
+        iban:
+          type: string
+          nullable: true
+          example: null
+        swiftBic:
+          type: string
+          nullable: true
+          example: null
+      x-stoplight:
+        id: lw9zjjrabjd5b
+    payout_eur_sepa:
+      title: EUR SEPA
+      description: |
+        **EUR** - SEPA payouts to an IBAN
+      type: object
+      properties:
+        accountNumber:
+          type: string
+          nullable: true
+          example: null
+        sortCode:
+          type: string
+          nullable: true
+          example: null
+        iban:
+          description: International Bank Account Number
+          type: string
+          example: DE8389009999910135
+        swiftBic:
+          description: Swift Code (BIC)
+          type: string
+          example: SXPYDKKKXXX
+          nullable: true
+      x-stoplight:
+        id: s81tpd8mdvkzo
+    payout_swift_iban:
+      title: Other (IBAN)
+      description: |
+        **Other currencies** - SWIFT payouts to an IBAN and Swift Code (BIC)
+      type: object
+      properties:
+        accountNumber:
+          type: string
+          nullable: true
+          example: null
+        sortCode:
+          type: string
+          nullable: true
+          example: null
+        iban:
+          description: International Bank Account Number
+          type: string
+          example: DK8389009999910135
+        swiftBic:
+          description: Swift Code (BIC)
+          type: string
+          example: SXPYDKKKXXX
+      x-stoplight:
+        id: hh40veszh0lck
+    payout_swift_other:
+      title: Other (Account number)
+      description: >
+        **Other currencies** - SWIFT payouts to an account number and Swift Code
+        (BIC)
+      type: object
+      properties:
+        accountNumber:
+          description: Domestic bank account number
+          type: string
+          example: '12345678'
+        sortCode:
+          type: string
+          nullable: true
+          example: null
+        iban:
+          type: string
+          nullable: true
+          example: null
+        swiftBic:
+          description: Swift Code (BIC)
+          type: string
+          example: SXPYDKKKXXX
+      x-stoplight:
+        id: 3u5kokv0svafy
+    payout_approved:
+      title: Fuzebox payout
+      description: API payouts don't require approval
+      allOf:
+        - $ref: '#/components/schemas/payout_item'
+        - type: object
+          properties:
+            approvals:
+              type: array
+              items:
+                type: object
+                properties:
+                  user:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                        example: Robert Robertson
+                  type:
+                    type: string
+                    enum:
+                      - APPROVAL
+                    example: APPROVAL
+                  createdAt:
+                    type: string
+                    format: date-time
+      x-stoplight:
+        id: aplw2ht31u1v8
+    report_requested:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum:
+            - REPORT_REQUESTED
+            - REPORT_GENERATING
+            - REPORT_AVAILABLE
+            - REPORT_FAILED
+            - REPORT_REMOVAL_REQUESTED
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - status
+        - createdAt
+      examples:
+        Example response:
+          value:
+            id: 497f6eca-6276-4993-bfeb-53cbbbba6f08
+            status: REPORT_REQUESTED
+            createdAt: '2023-10-01T18:32:00+00:00'
+    report:
+      title: report
+      x-stoplight:
+        id: 3xqsvork7dlvf
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+        status:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        generatedAt:
+          format: date-time
+          type: string
+          readOnly: true
+      required:
+        - id
+        - type
+        - status
+        - createdAt
+    validation_error_v1:
+      title: validation_error_v1
+      description: Standard Volt validation error
+      x-stoplight:
+        id: jkwfcy9yjqepb
+      type: object
+      properties:
+        exception:
+          type: object
+          properties:
+            code:
+              type: number
+            message:
+              type: string
+            errorList:
+              type: array
+              items:
+                type: object
+                properties:
+                  property:
+                    type: string
+                  message:
+                    type: string
+      example:
+        exception:
+          code: 400
+          message: Validation exception
+          errorList:
+            - property: propertyName
+              message: Error message
+      x-examples:
+        - exception:
+            code: 400
+            message: Validation exception
+            errorList:
+              - property: propertyName
+                message: Error message
+        - exception:
+            code: 422
+            message: Validation exception
+            errorList:
+              - property: propertyName
+                message: Error message
+    AuthenticatingWithTheApiUsingOAuth2PasswordRequest:
+      required:
+        - client_id
+        - client_secret
+        - grant_type
+        - password
+        - username
+      properties:
+        grant_type:
+          description: This field **must** have a value of **password**
+          type: string
+          example: password
+        client_id:
+          description: The ID for the application you're using to access the Volt API
+          type: string
+          format: uuid
+          example: 847485d4-9208-44b4-b351-5b175da5a4fe
+        client_secret:
+          description: The secret for the application you're using to access the Volt API
+          type: string
+          format: uuid
+          example: 58f0ea67-3fa0-4575-9a73-1ea6fb61c4df
+        username:
+          description: Username in email address format
+          type: string
+          format: email
+          example: test2892548542@volt.io
+        password:
+          description: Password from your credentials
+          type: string
+          example: 1@D834uvtSzM*kW!EGX$#7&%188423
+    PaymentsInitiateEmbeddedCheckoutRequest:
+      oneOf:
+        - $ref: '#/components/schemas/payment_embedded_flow'
+          x-stoplight:
+            id: bwgn3w8lmvdk9
+        - $ref: '#/components/schemas/payment_au_embedded_flow'
+          x-stoplight:
+            id: ycofbyk0r9dkf
+    ReportingCreatePaymentReportRequest:
+      type: object
+      properties:
+        startDate:
+          description: >-
+            From which date payments data should be gathered (in error response
+            exists as filters.createdAt.gte)
+          type: string
+          format: date-time
+        endDate:
+          description: >-
+            To which date payments data should be gathered (in error response
+            exists as filters.createdAt.lte)
+          type: string
+          format: date-time
+        customerId:
+          type: string
+          format: uuid
+      required:
+        - startDate
+        - endDate
+    ReportingCreateConnectReportRequest:
+      type: object
+      properties:
+        startDate:
+          description: >-
+            From which date account operations data should be gathered (in error
+            response exists as filters.createdAt.gte)
+          type: string
+          format: date-time
+        endDate:
+          description: >-
+            To which date account operations data should be gathered (in error
+            response exists as filters.createdAt.lte)
+          type: string
+          format: date-time
+      required:
+        - startDate
+        - endDate
+    ReportingCreateRefundReportRequest:
+      type: object
+      properties:
+        startDate:
+          description: >-
+            From which date refund data should be gathered (in error response
+            exists as filters.createdAt.gte)
+          type: string
+          format: date-time
+        endDate:
+          description: >-
+            To which date refund data should be gathered (in error response
+            exists as filters.createdAt.lte)
+          type: string
+          format: date-time
+        customerId:
+          type: string
+          format: uuid
+        accountId:
+          description: Filter refunds from particular connect account.
+          type: string
+          format: uuid
+        includeEventFees:
+          type: boolean
+      required:
+        - startDate
+        - endDate
+    ReportingCreateAuditLogReportRequest:
+      type: object
+      properties:
+        startDate:
+          description: >-
+            Start date for collecting audit log data, referenced in errors as
+            'filters.createdAt.gte'.
+          type: string
+          format: date-time
+        endDate:
+          description: >-
+            End date for collecting audit log data, referenced in errors as
+            'filters.createdAt.lte'.
+          type: string
+          format: date-time
+        customerId:
+          type: string
+          format: uuid
+      required:
+        - startDate
+        - endDate
+    AuthenticatingWithTheApiUsingOAuth2PasswordResponse:
+      type: object
+      properties:
+        token_type:
+          type: string
+          example: Bearer
+        expires_in:
+          type: number
+          example: 3600
+        access_token:
+          type: string
+          example: >-
+            eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImp0aSI6Ijc2MGEwNDRkMDkwZmUxNmE0YzRkMWRjMWE5NDU1MTgxMzgxZDRkNDIyZGUyNDY5NjQ0NDI4NWNkZjk1NWJkMzBjMjcxYzYxNjE0MzkyMmI0In0.eyJhdWQiOiI2NjIzODRhMC05NzE0LTQ2NTYtYTNiZC0zZjFlNzc0ZTJhM2MiLCJqdGkiOiI3NjBhMDQ0ZDA5MGZlMTZhNGM0ZDFkYzFhOTQ1NTE4MTM4MWQ0ZDQyMmRlMjQ2OTY0NDQyODVjZGY5NTViZDMwYzI3MWM2MTYxNDM5MjJiNCIsImlhdCI6MTU2MjA0MzA1OSwibmJmIjoxNTYyMDQzMDU5LCJleHAiOjE1NjIwNDY2NTksInN1YiI6IjQyMzc5YjQ5LWJjYTItNDhkNy05ZmQ4LTRlNTMwYzliM2VkNyIsInNjb3BlcyI6WyJiYW5rcyIsInBheW1lbnRzIiwiYWRtaW4iXX0.Twey0UPvEfx2ITbPEW2ATlsYYwRB_Ts_Hl2kBiHv0mP42jNB7B5xdftjvr4JzMVUzbXmv7161L7gvcrTMHEZvqcqppcLYsFzbVLViZsxT8oktrQdX6wjx5f2OYkG1Cbrxgc8fR4BBh84kSYwfHMoPEWVdTJTb27nmyWSIqxmpUX6U-8ZKzu2eHZ2YnyDD-aS4PGv6bDKBZXsC369hBmQY6mpvLKhv67mT52E1MFhTv8kI7ALiQx5BUW6IOuuqUQ_6f5mIBu_9Dzul_2cqhVFVOGw-hmoXlEr0cehfPI7UoDk70icozKjpfEiNuqAMwddsPHUdC_F_n1hAeBoplzOfQ
+        refresh_token:
+          type: string
+          example: >-
+            def50200fd32e987655dbdbfa15b0acb5b9e9b6f56c245fc4d92db02a0f60a8fbd664249959aff1f311109a26305fb4f26417db1f318203505172830f9a1db170e9affd0890dcc77f1db713993b9de26680d86127b4320b160fc477827d34103997847ac65d505a34b4d9183fd54c619171de4f4b32cba1bbff9f4eac8131a26b9b8aa666ca0adb79ce23a5e23f4f89a9e537d9379796655803160c04977ea1cbb8f2bd534a500f64a5f66b6763c30268eb8064a9957f4fadd39e478cd64b24b252516b23b55615a581b989dbc5eee36f378a40405de7285a199cb8dfc1446a1851ea73c7b6ed3cdeca7055a09a600f9a7b72a6c4240e0ce3a31de85c0f791a6babc765bf6c94661892a18e338412115b1a397bd814738f08e9ae0f7dbadcab0f419f68b9275d643a99c7ffe3e6c2f3eb66ed16114d3d6dd0fb7f219dc3cb77011ef2f0080beff8f89e7f2ebf9e83356181cb7ff4bf6fcdd0592a9f773866be50aae6713319f8dca4eb454d84affbaf24eb2af0009e67f68ceb4c1188aae0809f010fb5b271ca33723c67f8e3dd8ab99ac1508985e43ba03e30cecff766b9354b38d98e911b5883319e031389703d19e62d826a79456d17801b48c197aef9c11a29ed2
+    PaymentsSubmitDetailsResponse:
+      type: object
+      properties: {}
+      example: {}
+    PaymentsInitiateEmbeddedCheckoutResponse:
+      type: object
+      properties: {}
+      example: {}
+    PaymentsGetListResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/payment_list'
+    PayoutsConnectEligibleBeneficiariesListResponse:
+      type: array
+      items:
+        allOf:
+          - $ref: '#/components/schemas/payout_beneficiary'
+          - oneOf:
+              - $ref: '#/components/schemas/payout_gbp_uk'
+              - $ref: '#/components/schemas/payout_eur_sepa'
+              - $ref: '#/components/schemas/payout_swift_iban'
+              - $ref: '#/components/schemas/payout_swift_other'
+    PayoutsConnectCreateRequestResponse:
+      type: object
+      properties: {}
+      example: {}
+    PayoutsConnectCreateRequest400Response:
+      type: object
+      properties: {}
+      example: {}
+    PayoutsConnectCreateRequest403Response:
+      type: object
+      properties: {}
+      example: {}
+    PayoutsConnectCreateRequest409Response:
+      type: object
+      properties: {}
+      example: {}
+    PayoutsConnectCreateRequest422Response:
+      type: object
+      properties: {}
+      example: {}
+    PayoutsConnectGetDetailsResponse:
+      oneOf:
+        - allOf:
+            - $ref: '#/components/schemas/payout_details'
+            - title: API payout
+              description: API payouts don't require approval
+              type: object
+              properties:
+                approvals:
+                  description: Will contain an empty array
+                  type: array
+                  items:
+                    description: >-
+                      WARNING: Missing items property in array schema. Missing
+                      items property has been filled with this AnyType schema.
+        - title: Fuzebox payout
+          description: API payouts don't require approval
+          $ref: '#/components/schemas/payout_approved'
+    RefundsConnectCheckEligibilityResponse:
+      oneOf:
+        - $ref: '#/components/schemas/refund_available'
+        - $ref: '#/components/schemas/refund_unavailable'
+    RefundsConnectCreateRequestResponse:
+      type: object
+      properties: {}
+      example: {}
+    RefundsConnectCreateRequest403Response:
+      type: object
+      properties: {}
+      example: {}
+    RefundsConnectCreateRequest422Response:
+      type: object
+      properties: {}
+      example: {}
+    ReportingCreatePaymentReportResponse:
+      type: object
+      properties:
+        exception:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: number
+              example: 400
+            message:
+              type: string
+              example: Bad Request
+      required:
+        - exception
+    ReportingCreatePaymentReport429Response:
+      type: object
+      properties:
+        exception:
+          type: object
+          properties:
+            code:
+              type: number
+              example: 429
+            message:
+              type: string
+              example: Too Many Requests
+    ReportingCreateConnectReportResponse:
+      type: object
+      properties:
+        exception:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: number
+              example: 400
+            message:
+              type: string
+              example: Bad Request
+      required:
+        - exception
+    ReportingCreateConnectReport429Response:
+      type: object
+      properties:
+        exception:
+          type: object
+          properties:
+            code:
+              type: number
+              example: 429
+            message:
+              type: string
+              example: Too Many Requests
+    ReportingCreateRefundReportResponse:
+      type: object
+      properties:
+        exception:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: number
+              example: 400
+            message:
+              type: string
+              example: Bad Request
+      required:
+        - exception
+    ReportingCreateRefundReport429Response:
+      type: object
+      properties:
+        exception:
+          type: object
+          properties:
+            code:
+              type: number
+              example: 429
+            message:
+              type: string
+              example: Too Many Requests
+    ReportingCreateAuditLogReportResponse:
+      type: object
+      properties:
+        exception:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: number
+              example: 400
+            message:
+              type: string
+              example: Bad Request
+      required:
+        - exception
+    ReportingCreateAuditLogReport429Response:
+      type: object
+      properties:
+        exception:
+          type: object
+          properties:
+            code:
+              type: number
+              example: 429
+            message:
+              type: string
+              example: Too Many Requests
+    ReportingGetAvailableReportsResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/report'
+    ReportingGetAvailableReports400Response:
+      type: object
+      properties:
+        exception:
+          type: object
+          properties:
+            code:
+              type: number
+            message:
+              type: string
+    ReportingGetReportDetailsResponse:
+      type: object
+      properties:
+        exception:
+          type: object
+          properties:
+            code:
+              type: number
+              example: 400
+            message:
+              type: string
+    ReportingGetReportDetails404Response:
+      type: object
+      properties:
+        exception:
+          type: object
+          properties:
+            code:
+              type: number
+              example: 404
+            message:
+              type: string
+              example: Not Found
+    ReportingDownloadReportByIdResponse:
+      type: string
+      format: binary
+    ReportingDownloadReportById400Response:
+      type: object
+      properties:
+        exception:
+          type: object
+          properties:
+            code:
+              type: number
+              example: 400
+            message:
+              type: string
+    ReportingDownloadReportById404Response:
+      type: object
+      properties:
+        exception:
+          type: object
+          properties:
+            code:
+              type: number
+              example: 404
+            message:
+              type: string
+    PaymentsCheckMatchScoreResponse:
+      type: object
+      properties:
+        invocationId:
+          type: string
+          x-stoplight:
+            id: e0bb7qj7jvewp
+          example: 97428d91-f71f-49d8-9442-ae0b891b973f
+          format: uuid
+        nameMatchScore:
+          type: number
+          x-stoplight:
+            id: 5fwniea48bm6q
+          format: float
+          example: 0.5
+    PaymentsCheckMatchScore403Response:
+      type: object
+      properties: {}
+  securitySchemes:
+    oauth:
+      description: >-
+        OAuth2 password grant - see the documentation in the oAuth2
+        Authentication section
+      type: oauth2
+      flows:
+        password:
+          tokenUrl: /oauth
+          scopes: {}
+security:
+  - oauth: []
+x-stoplight:
+  id: 7vvn25my47m4d
