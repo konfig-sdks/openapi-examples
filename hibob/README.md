@@ -10,7 +10,7 @@ Since late 2015, trusted and empowered "Bobbers" from around the world have brou
 
 #### [api.hibob.com/v1](https://api.hibob.com/v1)
 
-![api.hibob.com/v1](response-time-charts/6170692e6869626f622e636f6d2f7631.png)
+![api.hibob.com/v1](response-time-charts/6170692e6869626f622e636f6d2f7631.svg)
 #### [api.sandbox.hibob.com/v1](https://api.sandbox.hibob.com/v1)
 
-![api.sandbox.hibob.com/v1](response-time-charts/6170692e73616e64626f782e6869626f622e636f6d2f7631.png)
+![api.sandbox.hibob.com/v1](response-time-charts/6170692e73616e64626f782e6869626f622e636f6d2f7631.svg)

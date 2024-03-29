@@ -8,4 +8,4 @@ PROOViD is a regulatory technology (RegTech) company based in Nicosia, Cyprus co
 
 #### [proovidapi.azurewebsites.net](https://proovidapi.azurewebsites.net)
 
-![proovidapi.azurewebsites.net](response-time-charts/70726f6f7669646170692e617a75726577656273697465732e6e6574.png)
+![proovidapi.azurewebsites.net](response-time-charts/70726f6f7669646170692e617a75726577656273697465732e6e6574.svg)

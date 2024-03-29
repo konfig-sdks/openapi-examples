@@ -8,4 +8,4 @@ Mastercard is a global payment technology company that connects billions of cons
 
 #### [api.finicity.com](https://api.finicity.com)
 
-![api.finicity.com](response-time-charts/6170692e66696e69636974792e636f6d.png)
+![api.finicity.com](response-time-charts/6170692e66696e69636974792e636f6d.svg)

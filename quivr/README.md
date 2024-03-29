@@ -8,4 +8,4 @@ Open-source RAG Framework
 
 #### [api.quivr.app](https://api.quivr.app)
 
-![api.quivr.app](response-time-charts/6170692e71756976722e617070.png)
+![api.quivr.app](response-time-charts/6170692e71756976722e617070.svg)

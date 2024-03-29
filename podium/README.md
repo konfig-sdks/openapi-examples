@@ -14,4 +14,4 @@ We are here to provide local businesses with everything they need to win. Get mo
 
 #### [api.podium.com](https://api.podium.com)
 
-![api.podium.com](response-time-charts/6170692e706f6469756d2e636f6d.png)
+![api.podium.com](response-time-charts/6170692e706f6469756d2e636f6d.svg)

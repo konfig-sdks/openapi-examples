@@ -8,4 +8,4 @@ Meilisearch is a powerful, fast, open-source, and easy-to-use search engine that
 
 #### [edge.meilisearch.com](https://edge.meilisearch.com)
 
-![edge.meilisearch.com](response-time-charts/656467652e6d65696c697365617263682e636f6d.png)
+![edge.meilisearch.com](response-time-charts/656467652e6d65696c697365617263682e636f6d.svg)

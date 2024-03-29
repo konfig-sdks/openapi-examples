@@ -8,4 +8,4 @@ Tap into the Ticketmaster open developer network which gives you the flexibility
 
 #### [//www.ticketmaster.com/discovery/v2](https:////www.ticketmaster.com/discovery/v2)
 
-![//www.ticketmaster.com/discovery/v2](response-time-charts/2f2f7777772e7469636b65746d61737465722e636f6d2f646973636f766572792f7632.png)
+![//www.ticketmaster.com/discovery/v2](response-time-charts/2f2f7777772e7469636b65746d61737465722e636f6d2f646973636f766572792f7632.svg)

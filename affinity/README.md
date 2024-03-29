@@ -14,4 +14,4 @@ Affinity has been named in Fortune Magazine's Best Workplaces, Inc. Magazine's B
 
 #### [//api.affinity.co](https:////api.affinity.co)
 
-![//api.affinity.co](response-time-charts/2f2f6170692e616666696e6974792e636f.png)
+![//api.affinity.co](response-time-charts/2f2f6170692e616666696e6974792e636f.svg)

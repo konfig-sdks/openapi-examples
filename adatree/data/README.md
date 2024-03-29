@@ -24,4 +24,4 @@ Reach out to our team today: https://www.adatree.com.au/contact
 
 #### [cdr-insights-prod.api.adatree.com.au](https://cdr-insights-prod.api.adatree.com.au)
 
-![cdr-insights-prod.api.adatree.com.au](response-time-charts/6364722d696e7369676874732d70726f642e6170692e616461747265652e636f6d2e6175.png)
+![cdr-insights-prod.api.adatree.com.au](response-time-charts/6364722d696e7369676874732d70726f642e6170692e616461747265652e636f6d2e6175.svg)

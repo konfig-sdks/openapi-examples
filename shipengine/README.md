@@ -18,4 +18,4 @@ Or get a free API key and start building, no credit card required, at shipengine
 
 #### [api.shipengine.com](https://api.shipengine.com)
 
-![api.shipengine.com](response-time-charts/6170692e73686970656e67696e652e636f6d.png)
+![api.shipengine.com](response-time-charts/6170692e73686970656e67696e652e636f6d.svg)

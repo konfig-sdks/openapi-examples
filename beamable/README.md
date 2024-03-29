@@ -8,4 +8,4 @@ var Beamable = BeamContext.Default; - That one line of code is a gateway to ever
 
 #### [api.beamable.com](https://api.beamable.com)
 
-![api.beamable.com](response-time-charts/6170692e6265616d61626c652e636f6d.png)
+![api.beamable.com](response-time-charts/6170692e6265616d61626c652e636f6d.svg)

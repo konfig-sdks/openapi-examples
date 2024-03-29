@@ -8,4 +8,4 @@ Mailchimp is a marketing platform for small businesses. It offers an all-in-one 
 
 #### [api.mailchimp.com/3.0](https://api.mailchimp.com/3.0)
 
-![api.mailchimp.com/3.0](response-time-charts/6170692e6d61696c6368696d702e636f6d2f332e30.png)
+![api.mailchimp.com/3.0](response-time-charts/6170692e6d61696c6368696d702e636f6d2f332e30.svg)

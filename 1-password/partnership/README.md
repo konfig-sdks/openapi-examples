@@ -12,7 +12,7 @@ As an integral layer of the Identity and Access Management (IAM) stack, 1Passwor
 
 #### [billing.1password.com](https://billing.1password.com)
 
-![billing.1password.com](response-time-charts/62696c6c696e672e3170617373776f72642e636f6d.png)
+![billing.1password.com](response-time-charts/62696c6c696e672e3170617373776f72642e636f6d.svg)
 #### [billing.b5test.eu](https://billing.b5test.eu)
 
-![billing.b5test.eu](response-time-charts/62696c6c696e672e6235746573742e6575.png)
+![billing.b5test.eu](response-time-charts/62696c6c696e672e6235746573742e6575.svg)

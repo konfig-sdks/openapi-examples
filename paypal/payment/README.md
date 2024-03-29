@@ -12,7 +12,7 @@ For employment opportunities, check out our job openings in the 'Jobs' tab. We'r
 
 #### [api-m.paypal.com](https://api-m.paypal.com)
 
-![api-m.paypal.com](response-time-charts/6170692d6d2e70617970616c2e636f6d.png)
+![api-m.paypal.com](response-time-charts/6170692d6d2e70617970616c2e636f6d.svg)
 #### [api-m.sandbox.paypal.com](https://api-m.sandbox.paypal.com)
 
-![api-m.sandbox.paypal.com](response-time-charts/6170692d6d2e73616e64626f782e70617970616c2e636f6d.png)
+![api-m.sandbox.paypal.com](response-time-charts/6170692d6d2e73616e64626f782e70617970616c2e636f6d.svg)

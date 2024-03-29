@@ -10,4 +10,4 @@ Twitter: @jumpcloud
 
 #### [console.jumpcloud.com/api/v2](https://console.jumpcloud.com/api/v2)
 
-![console.jumpcloud.com/api/v2](response-time-charts/636f6e736f6c652e6a756d70636c6f75642e636f6d2f6170692f7632.png)
+![console.jumpcloud.com/api/v2](response-time-charts/636f6e736f6c652e6a756d70636c6f75642e636f6d2f6170692f7632.svg)

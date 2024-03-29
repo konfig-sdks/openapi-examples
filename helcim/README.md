@@ -10,4 +10,4 @@ It's the fair & transparent pricing structures that help Helcim build long-term 
 
 #### [api.helcim.com/v2](https://api.helcim.com/v2)
 
-![api.helcim.com/v2](response-time-charts/6170692e68656c63696d2e636f6d2f7632.png)
+![api.helcim.com/v2](response-time-charts/6170692e68656c63696d2e636f6d2f7632.svg)

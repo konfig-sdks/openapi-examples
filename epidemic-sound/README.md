@@ -10,4 +10,4 @@ Providing a direct license model that comes with all rights included and next-ge
 
 #### [partner-content-api.epidemicsound.com](https://partner-content-api.epidemicsound.com)
 
-![partner-content-api.epidemicsound.com](response-time-charts/706172746e65722d636f6e74656e742d6170692e65706964656d6963736f756e642e636f6d.png)
+![partner-content-api.epidemicsound.com](response-time-charts/706172746e65722d636f6e74656e742d6170692e65706964656d6963736f756e642e636f6d.svg)

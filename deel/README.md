@@ -10,7 +10,7 @@ Today, Deel serves over 25,000+ companies worldwide—from small teams to public
 
 #### [api-staging.letsdeel.com/rest/v2](https://api-staging.letsdeel.com/rest/v2)
 
-![api-staging.letsdeel.com/rest/v2](response-time-charts/6170692d73746167696e672e6c6574736465656c2e636f6d2f726573742f7632.png)
+![api-staging.letsdeel.com/rest/v2](response-time-charts/6170692d73746167696e672e6c6574736465656c2e636f6d2f726573742f7632.svg)
 #### [api.letsdeel.com/rest/v2](https://api.letsdeel.com/rest/v2)
 
-![api.letsdeel.com/rest/v2](response-time-charts/6170692e6c6574736465656c2e636f6d2f726573742f7632.png)
+![api.letsdeel.com/rest/v2](response-time-charts/6170692e6c6574736465656c2e636f6d2f726573742f7632.svg)

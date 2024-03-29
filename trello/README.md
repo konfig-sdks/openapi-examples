@@ -8,4 +8,4 @@ Trello is a collaboration tool that organizes your projects into boards. In one 
 
 #### [trello.com/1](https://trello.com/1)
 
-![trello.com/1](response-time-charts/7472656c6c6f2e636f6d2f31.png)
+![trello.com/1](response-time-charts/7472656c6c6f2e636f6d2f31.svg)

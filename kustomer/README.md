@@ -8,4 +8,4 @@ Kustomer helps businesses grow by delivering exceptional customer service via ph
 
 #### [api.kustomerapp.com/v1](https://api.kustomerapp.com/v1)
 
-![api.kustomerapp.com/v1](response-time-charts/6170692e6b7573746f6d65726170702e636f6d2f7631.png)
+![api.kustomerapp.com/v1](response-time-charts/6170692e6b7573746f6d65726170702e636f6d2f7631.svg)

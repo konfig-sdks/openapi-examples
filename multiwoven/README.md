@@ -8,4 +8,4 @@ Open-source Reverse ETL that makes data segmentation, sync and activation both e
 
 #### [api.multiwoven.com](https://api.multiwoven.com)
 
-![api.multiwoven.com](response-time-charts/6170692e6d756c7469776f76656e2e636f6d.png)
+![api.multiwoven.com](response-time-charts/6170692e6d756c7469776f76656e2e636f6d.svg)

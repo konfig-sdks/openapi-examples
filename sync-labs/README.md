@@ -18,4 +18,4 @@ we're building a suite of audio / video models to change how we live, work, and 
 
 #### [api.synclabs.so](https://api.synclabs.so)
 
-![api.synclabs.so](response-time-charts/6170692e73796e636c6162732e736f.png)
+![api.synclabs.so](response-time-charts/6170692e73796e636c6162732e736f.svg)

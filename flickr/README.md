@@ -8,4 +8,4 @@ Flickr is an image hosting and video hosting website, web services suite, and on
 
 #### [api.flickr.com/services](https://api.flickr.com/services)
 
-![api.flickr.com/services](response-time-charts/6170692e666c69636b722e636f6d2f7365727669636573.png)
+![api.flickr.com/services](response-time-charts/6170692e666c69636b722e636f6d2f7365727669636573.svg)

@@ -8,4 +8,4 @@ Unit is the leading financial infrastructure platform that helps tech companies,
 
 #### [api.s.unit.sh](https://api.s.unit.sh)
 
-![api.s.unit.sh](response-time-charts/6170692e732e756e69742e7368.png)
+![api.s.unit.sh](response-time-charts/6170692e732e756e69742e7368.svg)

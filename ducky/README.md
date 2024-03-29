@@ -26,4 +26,4 @@ Turn climate actions into a fun, team-building, and engaging process. Set up edu
 
 #### [api.ducky.eco/v3](https://api.ducky.eco/v3)
 
-![api.ducky.eco/v3](response-time-charts/6170692e6475636b792e65636f2f7633.png)
+![api.ducky.eco/v3](response-time-charts/6170692e6475636b792e65636f2f7633.svg)

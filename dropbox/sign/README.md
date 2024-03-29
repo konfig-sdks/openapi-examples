@@ -20,4 +20,4 @@ We may remove comments that violate these guidelines.
 
 #### [api.hellosign.com/v3](https://api.hellosign.com/v3)
 
-![api.hellosign.com/v3](response-time-charts/6170692e68656c6c6f7369676e2e636f6d2f7633.png)
+![api.hellosign.com/v3](response-time-charts/6170692e68656c6c6f7369676e2e636f6d2f7633.svg)

@@ -8,10 +8,10 @@ Wink helps hotels improve their products and sell them through innovative new sa
 
 #### [api.wink.travel](https://api.wink.travel)
 
-![api.wink.travel](response-time-charts/6170692e77696e6b2e74726176656c.png)
+![api.wink.travel](response-time-charts/6170692e77696e6b2e74726176656c.svg)
 #### [dev-api.wink.travel](https://dev-api.wink.travel)
 
-![dev-api.wink.travel](response-time-charts/6465762d6170692e77696e6b2e74726176656c.png)
+![dev-api.wink.travel](response-time-charts/6465762d6170692e77696e6b2e74726176656c.svg)
 #### [staging-api.wink.travel](https://staging-api.wink.travel)
 
-![staging-api.wink.travel](response-time-charts/73746167696e672d6170692e77696e6b2e74726176656c.png)
+![staging-api.wink.travel](response-time-charts/73746167696e672d6170692e77696e6b2e74726176656c.svg)

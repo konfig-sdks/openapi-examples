@@ -20,4 +20,4 @@ Want to see what it's all about? Start using Hive for free: app.hive.com/join
 
 #### [app.hive.com/api/v1](https://app.hive.com/api/v1)
 
-![app.hive.com/api/v1](response-time-charts/6170702e686976652e636f6d2f6170692f7631.png)
+![app.hive.com/api/v1](response-time-charts/6170702e686976652e636f6d2f6170692f7631.svg)

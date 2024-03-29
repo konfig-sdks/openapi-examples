@@ -12,4 +12,4 @@ Griffin is authorised (with restrictions) by the PRA and FCA and backed by leadi
 
 #### [api.griffin.com](https://api.griffin.com)
 
-![api.griffin.com](response-time-charts/6170692e6772696666696e2e636f6d.png)
+![api.griffin.com](response-time-charts/6170692e6772696666696e2e636f6d.svg)

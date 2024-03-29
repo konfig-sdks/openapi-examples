@@ -20,7 +20,7 @@ And, more importantly, our partners can discover those less frequent customers w
 
 #### [api.currencyalliance.com/public/v3.0](https://api.currencyalliance.com/public/v3.0)
 
-![api.currencyalliance.com/public/v3.0](response-time-charts/6170692e63757272656e6379616c6c69616e63652e636f6d2f7075626c69632f76332e30.png)
+![api.currencyalliance.com/public/v3.0](response-time-charts/6170692e63757272656e6379616c6c69616e63652e636f6d2f7075626c69632f76332e30.svg)
 #### [sandbox.api.currencyalliance.com/public/v3.0](https://sandbox.api.currencyalliance.com/public/v3.0)
 
-![sandbox.api.currencyalliance.com/public/v3.0](response-time-charts/73616e64626f782e6170692e63757272656e6379616c6c69616e63652e636f6d2f7075626c69632f76332e30.png)
+![sandbox.api.currencyalliance.com/public/v3.0](response-time-charts/73616e64626f782e6170692e63757272656e6379616c6c69616e63652e636f6d2f7075626c69632f76332e30.svg)

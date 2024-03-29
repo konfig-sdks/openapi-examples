@@ -12,7 +12,7 @@ We are here to bring you one step closer to expanding your business in East and 
 
 #### [api.echelonpay.com](https://api.echelonpay.com)
 
-![api.echelonpay.com](response-time-charts/6170692e656368656c6f6e7061792e636f6d.png)
+![api.echelonpay.com](response-time-charts/6170692e656368656c6f6e7061792e636f6d.svg)
 #### [api.sandbox.echelonpay.com](https://api.sandbox.echelonpay.com)
 
-![api.sandbox.echelonpay.com](response-time-charts/6170692e73616e64626f782e656368656c6f6e7061792e636f6d.png)
+![api.sandbox.echelonpay.com](response-time-charts/6170692e73616e64626f782e656368656c6f6e7061792e636f6d.svg)

@@ -8,4 +8,4 @@ Height is the autonomous project collaboration tool. With an embedded AI engine,
 
 #### [api.height.app](https://api.height.app)
 
-![api.height.app](response-time-charts/6170692e6865696768742e617070.png)
+![api.height.app](response-time-charts/6170692e6865696768742e617070.svg)

@@ -10,4 +10,4 @@ Build like a team of hundreds.
 
 #### [cloud.appwrite.io/v1](https://cloud.appwrite.io/v1)
 
-![cloud.appwrite.io/v1](response-time-charts/636c6f75642e61707077726974652e696f2f7631.png)
+![cloud.appwrite.io/v1](response-time-charts/636c6f75642e61707077726974652e696f2f7631.svg)

@@ -13,4 +13,4 @@ CircleCI is proud to be an Equal Opportunity and Affirmative Action employer. We
 
 #### [circleci.com/api/v2](https://circleci.com/api/v2)
 
-![circleci.com/api/v2](response-time-charts/636972636c6563692e636f6d2f6170692f7632.png)
+![circleci.com/api/v2](response-time-charts/636972636c6563692e636f6d2f6170692f7632.svg)

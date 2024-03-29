@@ -10,4 +10,4 @@ Please read our important disclosures: https://www.globalpredictions.com/disclos
 
 #### [portfoliopilot.com/api](https://portfoliopilot.com/api)
 
-![portfoliopilot.com/api](response-time-charts/706f7274666f6c696f70696c6f742e636f6d2f617069.png)
+![portfoliopilot.com/api](response-time-charts/706f7274666f6c696f70696c6f742e636f6d2f617069.svg)

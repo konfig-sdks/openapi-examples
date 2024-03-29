@@ -8,4 +8,4 @@ Uploadcare is file management platform and a CDN for user-generated content. It 
 
 #### [upload.uploadcare.com](https://upload.uploadcare.com)
 
-![upload.uploadcare.com](response-time-charts/75706c6f61642e75706c6f6164636172652e636f6d.png)
+![upload.uploadcare.com](response-time-charts/75706c6f61642e75706c6f6164636172652e636f6d.svg)

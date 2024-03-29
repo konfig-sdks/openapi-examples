@@ -8,4 +8,4 @@
 
 #### [sandbox-pgw.2c2p.com](https://sandbox-pgw.2c2p.com)
 
-![sandbox-pgw.2c2p.com](response-time-charts/73616e64626f782d7067772e326332702e636f6d.png)
+![sandbox-pgw.2c2p.com](response-time-charts/73616e64626f782d7067772e326332702e636f6d.svg)

@@ -10,7 +10,7 @@ Through one refreshingly easy, integrated platform, we automate and simplify you
 
 #### [api.gusto-demo.com](https://api.gusto-demo.com)
 
-![api.gusto-demo.com](response-time-charts/6170692e677573746f2d64656d6f2e636f6d.png)
+![api.gusto-demo.com](response-time-charts/6170692e677573746f2d64656d6f2e636f6d.svg)
 #### [api.gusto.com](https://api.gusto.com)
 
-![api.gusto.com](response-time-charts/6170692e677573746f2e636f6d.png)
+![api.gusto.com](response-time-charts/6170692e677573746f2e636f6d.svg)

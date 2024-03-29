@@ -10,4 +10,4 @@ Agrimetrics provides data and tools to agrifood businesses, researchers and poli
 
 #### [api-test.agrimetrics.co.uk/catalog](https://api-test.agrimetrics.co.uk/catalog)
 
-![api-test.agrimetrics.co.uk/catalog](response-time-charts/6170692d746573742e616772696d6574726963732e636f2e756b2f636174616c6f67.png)
+![api-test.agrimetrics.co.uk/catalog](response-time-charts/6170692d746573742e616772696d6574726963732e636f2e756b2f636174616c6f67.svg)

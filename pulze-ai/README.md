@@ -10,4 +10,4 @@ We are a VC Funded, early stage startup based in San Francisco.
 
 #### [api.pulze.ai](https://api.pulze.ai)
 
-![api.pulze.ai](response-time-charts/6170692e70756c7a652e6169.png)
+![api.pulze.ai](response-time-charts/6170692e70756c7a652e6169.svg)

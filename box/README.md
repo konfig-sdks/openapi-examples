@@ -8,4 +8,4 @@ Box (NYSE:BOX) is the Cloud Content Management company that empowers enterprises
 
 #### [api.box.com/2.0](https://api.box.com/2.0)
 
-![api.box.com/2.0](response-time-charts/6170692e626f782e636f6d2f322e30.png)
+![api.box.com/2.0](response-time-charts/6170692e626f782e636f6d2f322e30.svg)

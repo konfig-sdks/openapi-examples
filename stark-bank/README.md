@@ -10,7 +10,7 @@ Tudo que fazemos é para impulsionar empresas e empreendedores a desafiarem o st
 
 #### [api.starkbank.com](https://api.starkbank.com)
 
-![api.starkbank.com](response-time-charts/6170692e737461726b62616e6b2e636f6d.png)
+![api.starkbank.com](response-time-charts/6170692e737461726b62616e6b2e636f6d.svg)
 #### [sandbox.api.starkbank.com](https://sandbox.api.starkbank.com)
 
-![sandbox.api.starkbank.com](response-time-charts/73616e64626f782e6170692e737461726b62616e6b2e636f6d.png)
+![sandbox.api.starkbank.com](response-time-charts/73616e64626f782e6170692e737461726b62616e6b2e636f6d.svg)

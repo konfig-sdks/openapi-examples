@@ -23,4 +23,4 @@ Además:
 
 #### [rrhh.tramitapp.com/tramitapi](https://rrhh.tramitapp.com/tramitapi)
 
-![rrhh.tramitapp.com/tramitapi](response-time-charts/727268682e7472616d69746170702e636f6d2f7472616d6974617069.png)
+![rrhh.tramitapp.com/tramitapi](response-time-charts/727268682e7472616d69746170702e636f6d2f7472616d6974617069.svg)

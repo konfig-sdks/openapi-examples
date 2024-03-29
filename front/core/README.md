@@ -10,4 +10,4 @@ With Front, teams can centralize messages across channels, route them to the rig
 
 #### [api2.frontapp.com](https://api2.frontapp.com)
 
-![api2.frontapp.com](response-time-charts/617069322e66726f6e746170702e636f6d.png)
+![api2.frontapp.com](response-time-charts/617069322e66726f6e746170702e636f6d.svg)

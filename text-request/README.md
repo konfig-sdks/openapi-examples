@@ -12,4 +12,4 @@ Learn more about how we help busy business leaders like you with conversational 
 
 #### [api.textrequest.com/api/v3](https://api.textrequest.com/api/v3)
 
-![api.textrequest.com/api/v3](response-time-charts/6170692e74657874726571756573742e636f6d2f6170692f7633.png)
+![api.textrequest.com/api/v3](response-time-charts/6170692e74657874726571756573742e636f6d2f6170692f7633.svg)

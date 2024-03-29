@@ -8,4 +8,4 @@ xkcd is a webcomic of romance, sarcasm, math, and language. It delivers a mix of
 
 #### [xkcd.com](https://xkcd.com)
 
-![xkcd.com](response-time-charts/786b63642e636f6d.png)
+![xkcd.com](response-time-charts/786b63642e636f6d.svg)

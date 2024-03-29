@@ -10,4 +10,4 @@ What is Revenium? Revenium is a pioneering and indispensable element in the peri
 
 #### [api.revenium.io/meter/v1/api](https://api.revenium.io/meter/v1/api)
 
-![api.revenium.io/meter/v1/api](response-time-charts/6170692e726576656e69756d2e696f2f6d657465722f76312f617069.png)
+![api.revenium.io/meter/v1/api](response-time-charts/6170692e726576656e69756d2e696f2f6d657465722f76312f617069.svg)

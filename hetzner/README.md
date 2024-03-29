@@ -8,4 +8,4 @@ Hetzner provides reliable and efficient cloud hosting and data center services. 
 
 #### [api.hetzner.cloud/v1](https://api.hetzner.cloud/v1)
 
-![api.hetzner.cloud/v1](response-time-charts/6170692e6865747a6e65722e636c6f75642f7631.png)
+![api.hetzner.cloud/v1](response-time-charts/6170692e6865747a6e65722e636c6f75642f7631.svg)

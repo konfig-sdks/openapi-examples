@@ -16,4 +16,4 @@ In the last year, we have been awarded Technology Company of the Year in the UK 
 
 #### [api.iris.co.uk/hr/v2](https://api.iris.co.uk/hr/v2)
 
-![api.iris.co.uk/hr/v2](response-time-charts/6170692e697269732e636f2e756b2f68722f7632.png)
+![api.iris.co.uk/hr/v2](response-time-charts/6170692e697269732e636f2e756b2f68722f7632.svg)

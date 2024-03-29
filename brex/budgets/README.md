@@ -8,7 +8,7 @@ Brex is the AI-powered spend platform. We transform finance teams from reactive 
 
 #### [platform.brexapis.com](https://platform.brexapis.com)
 
-![platform.brexapis.com](response-time-charts/706c6174666f726d2e62726578617069732e636f6d.png)
+![platform.brexapis.com](response-time-charts/706c6174666f726d2e62726578617069732e636f6d.svg)
 #### [platform.staging.brexapps.com](https://platform.staging.brexapps.com)
 
-![platform.staging.brexapps.com](response-time-charts/706c6174666f726d2e73746167696e672e62726578617070732e636f6d.png)
+![platform.staging.brexapps.com](response-time-charts/706c6174666f726d2e73746167696e672e62726578617070732e636f6d.svg)

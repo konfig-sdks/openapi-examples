@@ -16,4 +16,4 @@ Learn more at BlueSnap.com
 
 #### [sandbox.bluesnap.com/services/2](https://sandbox.bluesnap.com/services/2)
 
-![sandbox.bluesnap.com/services/2](response-time-charts/73616e64626f782e626c7565736e61702e636f6d2f73657276696365732f32.png)
+![sandbox.bluesnap.com/services/2](response-time-charts/73616e64626f782e626c7565736e61702e636f6d2f73657276696365732f32.svg)

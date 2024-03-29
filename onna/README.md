@@ -9,4 +9,4 @@ For more information, please visit us at www.onna.com.
 
 #### [api.onna.com/v1](https://api.onna.com/v1)
 
-![api.onna.com/v1](response-time-charts/6170692e6f6e6e612e636f6d2f7631.png)
+![api.onna.com/v1](response-time-charts/6170692e6f6e6e612e636f6d2f7631.svg)

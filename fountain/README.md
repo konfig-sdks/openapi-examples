@@ -27,4 +27,4 @@ Visit us at https://get.fountain.com to learn more.
 
 #### [api.fountain.com](https://api.fountain.com)
 
-![api.fountain.com](response-time-charts/6170692e666f756e7461696e2e636f6d.png)
+![api.fountain.com](response-time-charts/6170692e666f756e7461696e2e636f6d.svg)

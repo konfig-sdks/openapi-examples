@@ -8,4 +8,4 @@ DigitalOcean is a cloud infrastructure provider that offers virtual servers, sto
 
 #### [api.digitalocean.com](https://api.digitalocean.com)
 
-![api.digitalocean.com](response-time-charts/6170692e6469676974616c6f6365616e2e636f6d.png)
+![api.digitalocean.com](response-time-charts/6170692e6469676974616c6f6365616e2e636f6d.svg)

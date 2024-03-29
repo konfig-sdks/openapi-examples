@@ -13,7 +13,7 @@ AlexisHR har kunder som NAKD, Bokio, Qred och används av företag och anställd
 
 #### [api.alexishr.com/v1](https://api.alexishr.com/v1)
 
-![api.alexishr.com/v1](response-time-charts/6170692e616c6578697368722e636f6d2f7631.png)
+![api.alexishr.com/v1](response-time-charts/6170692e616c6578697368722e636f6d2f7631.svg)
 #### [api.sandbox.alexishr.com/v1](https://api.sandbox.alexishr.com/v1)
 
-![api.sandbox.alexishr.com/v1](response-time-charts/6170692e73616e64626f782e616c6578697368722e636f6d2f7631.png)
+![api.sandbox.alexishr.com/v1](response-time-charts/6170692e73616e64626f782e616c6578697368722e636f6d2f7631.svg)

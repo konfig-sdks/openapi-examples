@@ -8,4 +8,4 @@ UniCourt is a leader in making court data more accessible and useful. We provide
 
 #### [enterpriseapi.unicourt.com](https://enterpriseapi.unicourt.com)
 
-![enterpriseapi.unicourt.com](response-time-charts/656e74657270726973656170692e756e69636f7572742e636f6d.png)
+![enterpriseapi.unicourt.com](response-time-charts/656e74657270726973656170692e756e69636f7572742e636f6d.svg)

@@ -8,4 +8,4 @@ NASA, the National Aeronautics and Space Administration, is an independent agenc
 
 #### [techport.nasa.gov](https://techport.nasa.gov)
 
-![techport.nasa.gov](response-time-charts/74656368706f72742e6e6173612e676f76.png)
+![techport.nasa.gov](response-time-charts/74656368706f72742e6e6173612e676f76.svg)

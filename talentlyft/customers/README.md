@@ -8,4 +8,4 @@ TalentLyft is an innovative recruitment software that streamlines the hiring pro
 
 #### [api.talentlyft.com](https://api.talentlyft.com)
 
-![api.talentlyft.com](response-time-charts/6170692e74616c656e746c7966742e636f6d.png)
+![api.talentlyft.com](response-time-charts/6170692e74616c656e746c7966742e636f6d.svg)

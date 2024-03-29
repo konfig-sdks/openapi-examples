@@ -8,4 +8,4 @@ Onedoc is an innovative API solution for developers, offering a simple and secur
 
 #### [app.onedoclabs.com](https://app.onedoclabs.com)
 
-![app.onedoclabs.com](response-time-charts/6170702e6f6e65646f636c6162732e636f6d.png)
+![app.onedoclabs.com](response-time-charts/6170702e6f6e65646f636c6162732e636f6d.svg)

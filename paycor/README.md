@@ -8,4 +8,4 @@ Paycor is a leading provider of comprehensive HR and payroll solutions for busin
 
 #### [apis.paycor.com](https://apis.paycor.com)
 
-![apis.paycor.com](response-time-charts/617069732e706179636f722e636f6d.png)
+![apis.paycor.com](response-time-charts/617069732e706179636f722e636f6d.svg)

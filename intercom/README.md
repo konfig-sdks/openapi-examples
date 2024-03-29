@@ -12,10 +12,10 @@ Founded in 2011 and backed by leading venture capitalists, including Kleiner Per
 
 #### [api.au.intercom.io](https://api.au.intercom.io)
 
-![api.au.intercom.io](response-time-charts/6170692e61752e696e746572636f6d2e696f.png)
+![api.au.intercom.io](response-time-charts/6170692e61752e696e746572636f6d2e696f.svg)
 #### [api.eu.intercom.io](https://api.eu.intercom.io)
 
-![api.eu.intercom.io](response-time-charts/6170692e65752e696e746572636f6d2e696f.png)
+![api.eu.intercom.io](response-time-charts/6170692e65752e696e746572636f6d2e696f.svg)
 #### [api.intercom.io](https://api.intercom.io)
 
-![api.intercom.io](response-time-charts/6170692e696e746572636f6d2e696f.png)
+![api.intercom.io](response-time-charts/6170692e696e746572636f6d2e696f.svg)

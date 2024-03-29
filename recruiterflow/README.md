@@ -16,4 +16,4 @@ Recruiterflow's user interface is designed to be effortlessly navigable, ensurin
 
 #### [recruiterflow.com](https://recruiterflow.com)
 
-![recruiterflow.com](response-time-charts/726563727569746572666c6f772e636f6d.png)
+![recruiterflow.com](response-time-charts/726563727569746572666c6f772e636f6d.svg)

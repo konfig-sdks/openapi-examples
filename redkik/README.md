@@ -14,4 +14,4 @@ Join Redkik's rapidly growing network of global partners and exceed your busines
 
 #### [sales.app.redkik.com/api/v2](https://sales.app.redkik.com/api/v2)
 
-![sales.app.redkik.com/api/v2](response-time-charts/73616c65732e6170702e7265646b696b2e636f6d2f6170692f7632.png)
+![sales.app.redkik.com/api/v2](response-time-charts/73616c65732e6170702e7265646b696b2e636f6d2f6170692f7632.svg)

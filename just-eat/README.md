@@ -8,10 +8,10 @@ Just Eat is an online food ordering and delivery platform that connects users wi
 
 #### [aus.api.just-eat.io](https://aus.api.just-eat.io)
 
-![aus.api.just-eat.io](response-time-charts/6175732e6170692e6a7573742d6561742e696f.png)
+![aus.api.just-eat.io](response-time-charts/6175732e6170692e6a7573742d6561742e696f.svg)
 #### [i18n.api.just-eat.io](https://i18n.api.just-eat.io)
 
-![i18n.api.just-eat.io](response-time-charts/6931386e2e6170692e6a7573742d6561742e696f.png)
+![i18n.api.just-eat.io](response-time-charts/6931386e2e6170692e6a7573742d6561742e696f.svg)
 #### [uk.api.just-eat.io](https://uk.api.just-eat.io)
 
-![uk.api.just-eat.io](response-time-charts/756b2e6170692e6a7573742d6561742e696f.png)
+![uk.api.just-eat.io](response-time-charts/756b2e6170692e6a7573742d6561742e696f.svg)

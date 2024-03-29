@@ -10,4 +10,4 @@ BambooHR's cloud-based system is an intuitive, affordable way for growing compan
 
 #### [api.bamboohr.com/api/gateway.php](https://api.bamboohr.com/api/gateway.php)
 
-![api.bamboohr.com/api/gateway.php](response-time-charts/6170692e62616d626f6f68722e636f6d2f6170692f676174657761792e706870.png)
+![api.bamboohr.com/api/gateway.php](response-time-charts/6170692e62616d626f6f68722e636f6d2f6170692f676174657761792e706870.svg)

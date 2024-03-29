@@ -8,4 +8,4 @@ FastSpring is how SaaS, software, and digital product companies sell online in m
 
 #### [api.fastspring.com](https://api.fastspring.com)
 
-![api.fastspring.com](response-time-charts/6170692e66617374737072696e672e636f6d.png)
+![api.fastspring.com](response-time-charts/6170692e66617374737072696e672e636f6d.svg)

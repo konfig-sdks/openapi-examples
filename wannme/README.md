@@ -11,4 +11,4 @@ Do you want me?
 
 #### [rest-demo.wannme.com/integration/v2](https://rest-demo.wannme.com/integration/v2)
 
-![rest-demo.wannme.com/integration/v2](response-time-charts/726573742d64656d6f2e77616e6e6d652e636f6d2f696e746567726174696f6e2f7632.png)
+![rest-demo.wannme.com/integration/v2](response-time-charts/726573742d64656d6f2e77616e6e6d652e636f6d2f696e746567726174696f6e2f7632.svg)

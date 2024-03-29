@@ -10,4 +10,4 @@ Sumsub has over 2,000 clients in fintech, crypto, transportation, trading, e-com
 
 #### [api.sumsub.com](https://api.sumsub.com)
 
-![api.sumsub.com](response-time-charts/6170692e73756d7375622e636f6d.png)
+![api.sumsub.com](response-time-charts/6170692e73756d7375622e636f6d.svg)

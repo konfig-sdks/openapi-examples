@@ -8,4 +8,4 @@ Terminal is Plaid for Telematics in commercial trucking. Companies building the 
 
 #### [api.sandbox.withterminal.com/tsp/v1](https://api.sandbox.withterminal.com/tsp/v1)
 
-![api.sandbox.withterminal.com/tsp/v1](response-time-charts/6170692e73616e64626f782e776974687465726d696e616c2e636f6d2f7473702f7631.png)
+![api.sandbox.withterminal.com/tsp/v1](response-time-charts/6170692e73616e64626f782e776974687465726d696e616c2e636f6d2f7473702f7631.svg)

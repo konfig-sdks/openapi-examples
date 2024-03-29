@@ -14,4 +14,4 @@ We have a strong presence in France since 2015 and have been quickly growing in 
 
 #### [partner-api.payfit.com](https://partner-api.payfit.com)
 
-![partner-api.payfit.com](response-time-charts/706172746e65722d6170692e7061796669742e636f6d.png)
+![partner-api.payfit.com](response-time-charts/706172746e65722d6170692e7061796669742e636f6d.svg)

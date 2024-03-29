@@ -11,7 +11,7 @@ The service handles the end-to-end workflow, from video ingestion to worldwide v
 
 #### [sandbox.api.video](https://sandbox.api.video)
 
-![sandbox.api.video](response-time-charts/73616e64626f782e6170692e766964656f.png)
+![sandbox.api.video](response-time-charts/73616e64626f782e6170692e766964656f.svg)
 #### [ws.api.video](https://ws.api.video)
 
-![ws.api.video](response-time-charts/77732e6170692e766964656f.png)
+![ws.api.video](response-time-charts/77732e6170692e766964656f.svg)

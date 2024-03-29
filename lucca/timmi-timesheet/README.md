@@ -10,7 +10,7 @@ Créée en décembre 2011, Nereo propose déjà une solution complète de gestio
 
 #### [example.ilucca-test.net](https://example.ilucca-test.net)
 
-![example.ilucca-test.net](response-time-charts/6578616d706c652e696c756363612d746573742e6e6574.png)
+![example.ilucca-test.net](response-time-charts/6578616d706c652e696c756363612d746573742e6e6574.svg)
 #### [example.ilucca.net](https://example.ilucca.net)
 
-![example.ilucca.net](response-time-charts/6578616d706c652e696c756363612e6e6574.png)
+![example.ilucca.net](response-time-charts/6578616d706c652e696c756363612e6e6574.svg)

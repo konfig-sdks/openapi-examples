@@ -8,4 +8,4 @@ Our mission is to create a more equal world by making it possible for companies 
 
 #### [api.oysterhr.com](https://api.oysterhr.com)
 
-![api.oysterhr.com](response-time-charts/6170692e6f797374657268722e636f6d.png)
+![api.oysterhr.com](response-time-charts/6170692e6f797374657268722e636f6d.svg)

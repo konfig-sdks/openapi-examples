@@ -17,4 +17,4 @@ Learn more: https://customer.io
 
 #### [track.customer.io](https://track.customer.io)
 
-![track.customer.io](response-time-charts/747261636b2e637573746f6d65722e696f.png)
+![track.customer.io](response-time-charts/747261636b2e637573746f6d65722e696f.svg)

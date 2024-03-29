@@ -12,7 +12,7 @@ Peach Payments currently powers businesses in South Africa, Kenya and Mauritius.
 
 #### [api-v2.peachpayments.com](https://api-v2.peachpayments.com)
 
-![api-v2.peachpayments.com](response-time-charts/6170692d76322e70656163687061796d656e74732e636f6d.png)
+![api-v2.peachpayments.com](response-time-charts/6170692d76322e70656163687061796d656e74732e636f6d.svg)
 #### [testapi-v2.peachpayments.com](https://testapi-v2.peachpayments.com)
 
-![testapi-v2.peachpayments.com](response-time-charts/746573746170692d76322e70656163687061796d656e74732e636f6d.png)
+![testapi-v2.peachpayments.com](response-time-charts/746573746170692d76322e70656163687061796d656e74732e636f6d.svg)

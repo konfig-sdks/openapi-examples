@@ -8,4 +8,4 @@ Personio's all-in-one software makes HR processes as efficient and effective as 
 
 #### [api.personio.de/v1](https://api.personio.de/v1)
 
-![api.personio.de/v1](response-time-charts/6170692e706572736f6e696f2e64652f7631.png)
+![api.personio.de/v1](response-time-charts/6170692e706572736f6e696f2e64652f7631.svg)

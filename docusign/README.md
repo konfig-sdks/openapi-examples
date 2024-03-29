@@ -8,4 +8,4 @@ DocuSign makes it easy to send, sign and manage documents securely. With DocuSig
 
 #### [www.docusign.net/restapi](https://www.docusign.net/restapi)
 
-![www.docusign.net/restapi](response-time-charts/7777772e646f63757369676e2e6e65742f72657374617069.png)
+![www.docusign.net/restapi](response-time-charts/7777772e646f63757369676e2e6e65742f72657374617069.svg)

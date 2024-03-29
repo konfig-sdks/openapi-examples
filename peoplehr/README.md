@@ -8,4 +8,4 @@ Access PeopleHR is part of The Access Group, and together we are supporting the 
 
 #### [api.peoplehr.net](https://api.peoplehr.net)
 
-![api.peoplehr.net](response-time-charts/6170692e70656f706c6568722e6e6574.png)
+![api.peoplehr.net](response-time-charts/6170692e70656f706c6568722e6e6574.svg)

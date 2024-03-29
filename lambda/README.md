@@ -8,4 +8,4 @@ Lambda provides computation to accelerate human progress. We're a team of Deep L
 
 #### [cloud.lambdalabs.com/api/v1](https://cloud.lambdalabs.com/api/v1)
 
-![cloud.lambdalabs.com/api/v1](response-time-charts/636c6f75642e6c616d6264616c6162732e636f6d2f6170692f7631.png)
+![cloud.lambdalabs.com/api/v1](response-time-charts/636c6f75642e6c616d6264616c6162732e636f6d2f6170692f7631.svg)

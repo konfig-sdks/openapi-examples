@@ -16,7 +16,7 @@ With over 50k users, we're default alive, growing 97% through word of mouth, and
 
 #### [app.posthog.com](https://app.posthog.com)
 
-![app.posthog.com](response-time-charts/6170702e706f7374686f672e636f6d.png)
+![app.posthog.com](response-time-charts/6170702e706f7374686f672e636f6d.svg)
 #### [eu.posthog.com](https://eu.posthog.com)
 
-![eu.posthog.com](response-time-charts/65752e706f7374686f672e636f6d.png)
+![eu.posthog.com](response-time-charts/65752e706f7374686f672e636f6d.svg)

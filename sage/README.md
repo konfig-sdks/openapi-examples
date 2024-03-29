@@ -9,4 +9,4 @@ We provide businesses with software and services that are simple and easy to use
 
 #### [subdomain.sage.hr/api](https://subdomain.sage.hr/api)
 
-![subdomain.sage.hr/api](response-time-charts/737562646f6d61696e2e736167652e68722f617069.png)
+![subdomain.sage.hr/api](response-time-charts/737562646f6d61696e2e736167652e68722f617069.svg)

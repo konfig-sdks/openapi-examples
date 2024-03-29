@@ -12,7 +12,7 @@ All of this with the aim of making HR a key part of the success of companies and
 
 #### [api.kenjo.io/api/v1](https://api.kenjo.io/api/v1)
 
-![api.kenjo.io/api/v1](response-time-charts/6170692e6b656e6a6f2e696f2f6170692f7631.png)
+![api.kenjo.io/api/v1](response-time-charts/6170692e6b656e6a6f2e696f2f6170692f7631.svg)
 #### [sandbox-api.kenjo.io/api/v1](https://sandbox-api.kenjo.io/api/v1)
 
-![sandbox-api.kenjo.io/api/v1](response-time-charts/73616e64626f782d6170692e6b656e6a6f2e696f2f6170692f7631.png)
+![sandbox-api.kenjo.io/api/v1](response-time-charts/73616e64626f782d6170692e6b656e6a6f2e696f2f6170692f7631.svg)

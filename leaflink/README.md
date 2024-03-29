@@ -8,4 +8,4 @@ LeafLink is the industry's wholesale platform. Easily and efficiently sell, ship
 
 #### [www.leaflink.com/api/v2](https://www.leaflink.com/api/v2)
 
-![www.leaflink.com/api/v2](response-time-charts/7777772e6c6561666c696e6b2e636f6d2f6170692f7632.png)
+![www.leaflink.com/api/v2](response-time-charts/7777772e6c6561666c696e6b2e636f6d2f6170692f7632.svg)

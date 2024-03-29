@@ -10,4 +10,4 @@ In 2023, we've made significant strides in advancing AI generation tools grounde
 
 #### [api.jina.ai](https://api.jina.ai)
 
-![api.jina.ai](response-time-charts/6170692e6a696e612e6169.png)
+![api.jina.ai](response-time-charts/6170692e6a696e612e6169.svg)

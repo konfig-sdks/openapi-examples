@@ -8,4 +8,4 @@ Vantage is a cloud cost observability platform with more than a dozen native int
 
 #### [api.vantage.sh/v2](https://api.vantage.sh/v2)
 
-![api.vantage.sh/v2](response-time-charts/6170692e76616e746167652e73682f7632.png)
+![api.vantage.sh/v2](response-time-charts/6170692e76616e746167652e73682f7632.svg)

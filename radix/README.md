@@ -16,4 +16,4 @@ Our client portfolio includes GSK, Atlas Copco, Yara International, Brussels Air
 
 #### [api.talentapi.com](https://api.talentapi.com)
 
-![api.talentapi.com](response-time-charts/6170692e74616c656e746170692e636f6d.png)
+![api.talentapi.com](response-time-charts/6170692e74616c656e746170692e636f6d.svg)

@@ -8,4 +8,4 @@ Zuora is a subscription management platform that helps businesses manage their s
 
 #### [rest.zuora.com](https://rest.zuora.com)
 
-![rest.zuora.com](response-time-charts/726573742e7a756f72612e636f6d.png)
+![rest.zuora.com](response-time-charts/726573742e7a756f72612e636f6d.svg)

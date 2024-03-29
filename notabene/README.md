@@ -8,7 +8,7 @@ Notabene's SafeTransact is an easy-to-use platform that empowers customers to id
 
 #### [api.notabene.dev](https://api.notabene.dev)
 
-![api.notabene.dev](response-time-charts/6170692e6e6f746162656e652e646576.png)
+![api.notabene.dev](response-time-charts/6170692e6e6f746162656e652e646576.svg)
 #### [api.notabene.id](https://api.notabene.id)
 
-![api.notabene.id](response-time-charts/6170692e6e6f746162656e652e6964.png)
+![api.notabene.id](response-time-charts/6170692e6e6f746162656e652e6964.svg)

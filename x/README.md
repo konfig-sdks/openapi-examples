@@ -8,4 +8,4 @@ Publish & analyze posts, optimize ads, & create unique customer experiences with
 
 #### [api.twitter.com](https://api.twitter.com)
 
-![api.twitter.com](response-time-charts/6170692e747769747465722e636f6d.png)
+![api.twitter.com](response-time-charts/6170692e747769747465722e636f6d.svg)

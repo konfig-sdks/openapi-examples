@@ -8,4 +8,4 @@ Workable develops a cloud-based recruitment platform for companies to post jobs,
 
 #### [www.workable.com/api](https://www.workable.com/api)
 
-![www.workable.com/api](response-time-charts/7777772e776f726b61626c652e636f6d2f617069.png)
+![www.workable.com/api](response-time-charts/7777772e776f726b61626c652e636f6d2f617069.svg)

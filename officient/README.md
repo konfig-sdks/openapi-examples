@@ -10,4 +10,4 @@ We support our customers in transforming HR towards paperless administration and
 
 #### [api.officient.io](https://api.officient.io)
 
-![api.officient.io](response-time-charts/6170692e6f6666696369656e742e696f.png)
+![api.officient.io](response-time-charts/6170692e6f6666696369656e742e696f.svg)

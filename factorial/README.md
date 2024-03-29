@@ -12,7 +12,7 @@ Factorial offers solutions like time management, talent management, recruitment,
 
 #### [api.demo.factorial.dev/api](https://api.demo.factorial.dev/api)
 
-![api.demo.factorial.dev/api](response-time-charts/6170692e64656d6f2e666163746f7269616c2e6465762f617069.png)
+![api.demo.factorial.dev/api](response-time-charts/6170692e64656d6f2e666163746f7269616c2e6465762f617069.svg)
 #### [api.factorialhr.com/api](https://api.factorialhr.com/api)
 
-![api.factorialhr.com/api](response-time-charts/6170692e666163746f7269616c68722e636f6d2f617069.png)
+![api.factorialhr.com/api](response-time-charts/6170692e666163746f7269616c68722e636f6d2f617069.svg)

@@ -8,4 +8,4 @@ The purr-fect headless browser API for busy businesses! Easy, fast, and affordab
 
 #### [api.browsercat.com](https://api.browsercat.com)
 
-![api.browsercat.com](response-time-charts/6170692e62726f777365726361742e636f6d.png)
+![api.browsercat.com](response-time-charts/6170692e62726f777365726361742e636f6d.svg)

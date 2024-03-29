@@ -8,4 +8,4 @@ Email for developers
 
 #### [api.resend.com](https://api.resend.com)
 
-![api.resend.com](response-time-charts/6170692e726573656e642e636f6d.png)
+![api.resend.com](response-time-charts/6170692e726573656e642e636f6d.svg)

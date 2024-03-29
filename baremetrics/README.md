@@ -16,4 +16,4 @@ Flightpath: Plan for the future with flexible financial modeling tools built for
 
 #### [api.baremetrics.com](https://api.baremetrics.com)
 
-![api.baremetrics.com](response-time-charts/6170692e626172656d6574726963732e636f6d.png)
+![api.baremetrics.com](response-time-charts/6170692e626172656d6574726963732e636f6d.svg)

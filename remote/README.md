@@ -12,7 +12,7 @@ Whether you're just starting your global journey, or looking to optimize your ex
 
 #### [gateway.remote-sandbox.com](https://gateway.remote-sandbox.com)
 
-![gateway.remote-sandbox.com](response-time-charts/676174657761792e72656d6f74652d73616e64626f782e636f6d.png)
+![gateway.remote-sandbox.com](response-time-charts/676174657761792e72656d6f74652d73616e64626f782e636f6d.svg)
 #### [gateway.remote.com](https://gateway.remote.com)
 
-![gateway.remote.com](response-time-charts/676174657761792e72656d6f74652e636f6d.png)
+![gateway.remote.com](response-time-charts/676174657761792e72656d6f74652e636f6d.svg)

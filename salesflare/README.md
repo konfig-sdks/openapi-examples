@@ -16,4 +16,4 @@ There's a free trial available from salesflare.com.
 
 #### [api.salesflare.com](https://api.salesflare.com)
 
-![api.salesflare.com](response-time-charts/6170692e73616c6573666c6172652e636f6d.png)
+![api.salesflare.com](response-time-charts/6170692e73616c6573666c6172652e636f6d.svg)

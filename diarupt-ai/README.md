@@ -8,4 +8,4 @@ Diarupt AI lets you build real-time video AI conversations into your product.
 
 #### [engine.diarupt.ai](https://engine.diarupt.ai)
 
-![engine.diarupt.ai](response-time-charts/656e67696e652e646961727570742e6169.png)
+![engine.diarupt.ai](response-time-charts/656e67696e652e646961727570742e6169.svg)

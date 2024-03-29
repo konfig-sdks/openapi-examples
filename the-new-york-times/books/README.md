@@ -8,4 +8,4 @@ Live news, investigations, opinion, photos and video by the journalists of The N
 
 #### [api.nytimes.com/svc/books/v3](https://api.nytimes.com/svc/books/v3)
 
-![api.nytimes.com/svc/books/v3](response-time-charts/6170692e6e7974696d65732e636f6d2f7376632f626f6f6b732f7633.png)
+![api.nytimes.com/svc/books/v3](response-time-charts/6170692e6e7974696d65732e636f6d2f7376632f626f6f6b732f7633.svg)

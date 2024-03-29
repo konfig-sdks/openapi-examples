@@ -8,4 +8,4 @@ HubSpot is a Massachusetts-based CRM platform that provides solutions such as ma
 
 #### [api.hubapi.com](https://api.hubapi.com)
 
-![api.hubapi.com](response-time-charts/6170692e6875626170692e636f6d.png)
+![api.hubapi.com](response-time-charts/6170692e6875626170692e636f6d.svg)

@@ -8,4 +8,4 @@ Oxford Dictionaries, part of the Oxford Language Division, is a leading authorit
 
 #### [od-api.oxforddictionaries.com/api/v2/](https://od-api.oxforddictionaries.com/api/v2/)
 
-![od-api.oxforddictionaries.com/api/v2/](response-time-charts/6f642d6170692e6f78666f726464696374696f6e61726965732e636f6d2f6170692f76322f.png)
+![od-api.oxforddictionaries.com/api/v2/](response-time-charts/6f642d6170692e6f78666f726464696374696f6e61726965732e636f6d2f6170692f76322f.svg)

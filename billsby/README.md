@@ -16,4 +16,4 @@ Why not book a call, talk through your Billing requirements and we can let you k
 
 #### [public.billsby.com/api/v1/rest/core](https://public.billsby.com/api/v1/rest/core)
 
-![public.billsby.com/api/v1/rest/core](response-time-charts/7075626c69632e62696c6c7362792e636f6d2f6170692f76312f726573742f636f7265.png)
+![public.billsby.com/api/v1/rest/core](response-time-charts/7075626c69632e62696c6c7362792e636f6d2f6170692f76312f726573742f636f7265.svg)

@@ -19,4 +19,4 @@ Brevo, formerly known as Sendinblue, is the leading customer relationship manage
 
 #### [api.brevo.com/v3](https://api.brevo.com/v3)
 
-![api.brevo.com/v3](response-time-charts/6170692e627265766f2e636f6d2f7633.png)
+![api.brevo.com/v3](response-time-charts/6170692e627265766f2e636f6d2f7633.svg)

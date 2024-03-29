@@ -8,4 +8,4 @@ Since its founding in 1993, NVIDIA (NASDAQ: NVDA) has been a pioneer in accelera
 
 #### [api.nvcf.nvidia.com](https://api.nvcf.nvidia.com)
 
-![api.nvcf.nvidia.com](response-time-charts/6170692e6e7663662e6e76696469612e636f6d.png)
+![api.nvcf.nvidia.com](response-time-charts/6170692e6e7663662e6e76696469612e636f6d.svg)

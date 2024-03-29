@@ -8,4 +8,4 @@ Ably provides a suite of APIs to build, extend, and deliver powerful digital exp
 
 #### [rest.ably.io](https://rest.ably.io)
 
-![rest.ably.io](response-time-charts/726573742e61626c792e696f.png)
+![rest.ably.io](response-time-charts/726573742e61626c792e696f.svg)

@@ -8,4 +8,4 @@ DEV is a community of software developers where they can share knowledge, collab
 
 #### [dev.to/api](https://dev.to/api)
 
-![dev.to/api](response-time-charts/6465762e746f2f617069.png)
+![dev.to/api](response-time-charts/6465762e746f2f617069.svg)

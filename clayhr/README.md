@@ -15,4 +15,4 @@ Completely cloud based application available via your favorite web browsers and 
 
 #### [clayhr.readme.io/](https://clayhr.readme.io/)
 
-![clayhr.readme.io/](response-time-charts/636c617968722e726561646d652e696f2f.png)
+![clayhr.readme.io/](response-time-charts/636c617968722e726561646d652e696f2f.svg)

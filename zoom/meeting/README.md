@@ -8,4 +8,4 @@ Zoom is a video conferencing platform that allows users to connect remotely for 
 
 #### [api.zoom.us/v2](https://api.zoom.us/v2)
 
-![api.zoom.us/v2](response-time-charts/6170692e7a6f6f6d2e75732f7632.png)
+![api.zoom.us/v2](response-time-charts/6170692e7a6f6f6d2e75732f7632.svg)

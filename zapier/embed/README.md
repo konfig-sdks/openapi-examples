@@ -8,4 +8,4 @@ Zapier is a tool that allows users to connect and automate workflows between dif
 
 #### [api.zapier.com/v2](https://api.zapier.com/v2)
 
-![api.zapier.com/v2](response-time-charts/6170692e7a61706965722e636f6d2f7632.png)
+![api.zapier.com/v2](response-time-charts/6170692e7a61706965722e636f6d2f7632.svg)

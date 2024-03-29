@@ -14,4 +14,4 @@ We go to work every day striving to improve education for millions of kids. Join
 
 #### [api.clever.com/v3.1](https://api.clever.com/v3.1)
 
-![api.clever.com/v3.1](response-time-charts/6170692e636c657665722e636f6d2f76332e31.png)
+![api.clever.com/v3.1](response-time-charts/6170692e636c657665722e636f6d2f76332e31.svg)

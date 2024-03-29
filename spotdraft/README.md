@@ -14,4 +14,4 @@ Founded by a Harvard Law School lawyer and two Carnegie Mellon computer scientis
 
 #### [api.spotdraft.com/api](https://api.spotdraft.com/api)
 
-![api.spotdraft.com/api](response-time-charts/6170692e73706f7464726166742e636f6d2f617069.png)
+![api.spotdraft.com/api](response-time-charts/6170692e73706f7464726166742e636f6d2f617069.svg)

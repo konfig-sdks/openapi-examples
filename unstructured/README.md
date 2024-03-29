@@ -10,4 +10,4 @@ Unstructured captures this unstructured data wherever it lives and transforms it
 
 #### [api.unstructured.io](https://api.unstructured.io)
 
-![api.unstructured.io](response-time-charts/6170692e756e737472756374757265642e696f.png)
+![api.unstructured.io](response-time-charts/6170692e756e737472756374757265642e696f.svg)

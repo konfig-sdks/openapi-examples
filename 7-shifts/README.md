@@ -12,4 +12,4 @@ Start your free trial or request a demo at www.7shifts.com.
 
 #### [api.7shifts.com](https://api.7shifts.com)
 
-![api.7shifts.com](response-time-charts/6170692e377368696674732e636f6d.png)
+![api.7shifts.com](response-time-charts/6170692e377368696674732e636f6d.svg)

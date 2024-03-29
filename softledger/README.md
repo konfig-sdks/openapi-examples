@@ -10,7 +10,7 @@ Our cloud-native accounting software and APIs help organizations manage their di
 
 #### [api.softledger.com/v2](https://api.softledger.com/v2)
 
-![api.softledger.com/v2](response-time-charts/6170692e736f66746c65646765722e636f6d2f7632.png)
+![api.softledger.com/v2](response-time-charts/6170692e736f66746c65646765722e636f6d2f7632.svg)
 #### [eu-api.softledger.com/v2](https://eu-api.softledger.com/v2)
 
-![eu-api.softledger.com/v2](response-time-charts/65752d6170692e736f66746c65646765722e636f6d2f7632.png)
+![eu-api.softledger.com/v2](response-time-charts/65752d6170692e736f66746c65646765722e636f6d2f7632.svg)

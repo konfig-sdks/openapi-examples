@@ -8,4 +8,4 @@ We're an AI video research company making personalized video possible at scale. 
 
 #### [tavusapi.com](https://tavusapi.com)
 
-![tavusapi.com](response-time-charts/74617675736170692e636f6d.png)
+![tavusapi.com](response-time-charts/74617675736170692e636f6d.svg)

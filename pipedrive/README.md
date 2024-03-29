@@ -14,4 +14,4 @@ Learn more at www.pipedrive.com.
 
 #### [api.pipedrive.com/v1](https://api.pipedrive.com/v1)
 
-![api.pipedrive.com/v1](response-time-charts/6170692e7069706564726976652e636f6d2f7631.png)
+![api.pipedrive.com/v1](response-time-charts/6170692e7069706564726976652e636f6d2f7631.svg)

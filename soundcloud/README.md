@@ -8,4 +8,4 @@ Discover and play over 320 million music tracks. Join the world’s largest onli
 
 #### [api.soundcloud.com](https://api.soundcloud.com)
 
-![api.soundcloud.com](response-time-charts/6170692e736f756e64636c6f75642e636f6d.png)
+![api.soundcloud.com](response-time-charts/6170692e736f756e64636c6f75642e636f6d.svg)

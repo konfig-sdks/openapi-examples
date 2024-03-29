@@ -8,4 +8,4 @@ Asana helps teams orchestrate their work, from small projects to strategic initi
 
 #### [app.asana.com/api/1.0](https://app.asana.com/api/1.0)
 
-![app.asana.com/api/1.0](response-time-charts/6170702e6173616e612e636f6d2f6170692f312e30.png)
+![app.asana.com/api/1.0](response-time-charts/6170702e6173616e612e636f6d2f6170692f312e30.svg)

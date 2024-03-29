@@ -10,4 +10,4 @@ Crowd4Cash brings investors and borrower together. For better returns for the in
 
 #### [api2.crowd4cash.ch](https://api2.crowd4cash.ch)
 
-![api2.crowd4cash.ch](response-time-charts/617069322e63726f776434636173682e6368.png)
+![api2.crowd4cash.ch](response-time-charts/617069322e63726f776434636173682e6368.svg)

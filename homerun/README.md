@@ -8,4 +8,4 @@ Homerun is an intuitive recruitment software that helps companies create beautif
 
 #### [api.homerun.co/v2](https://api.homerun.co/v2)
 
-![api.homerun.co/v2](response-time-charts/6170692e686f6d6572756e2e636f2f7632.png)
+![api.homerun.co/v2](response-time-charts/6170692e686f6d6572756e2e636f2f7632.svg)

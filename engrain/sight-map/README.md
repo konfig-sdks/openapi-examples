@@ -10,4 +10,4 @@ Through its innovative SightMap™ data visualization software platform, Engrain
 
 #### [api.sightmap.com/v1](https://api.sightmap.com/v1)
 
-![api.sightmap.com/v1](response-time-charts/6170692e73696768746d61702e636f6d2f7631.png)
+![api.sightmap.com/v1](response-time-charts/6170692e73696768746d61702e636f6d2f7631.svg)

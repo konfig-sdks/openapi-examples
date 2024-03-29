@@ -8,4 +8,4 @@ HSBC, also known as The Hongkong and Shanghai Banking Corporation, is a multinat
 
 #### [sandbox.ob.hsbcnet.com/mock/ce/obie/open-banking/v3.1/aisp](https://sandbox.ob.hsbcnet.com/mock/ce/obie/open-banking/v3.1/aisp)
 
-![sandbox.ob.hsbcnet.com/mock/ce/obie/open-banking/v3.1/aisp](response-time-charts/73616e64626f782e6f622e687362636e65742e636f6d2f6d6f636b2f63652f6f6269652f6f70656e2d62616e6b696e672f76332e312f61697370.png)
+![sandbox.ob.hsbcnet.com/mock/ce/obie/open-banking/v3.1/aisp](response-time-charts/73616e64626f782e6f622e687362636e65742e636f6d2f6d6f636b2f63652f6f6269652f6f70656e2d62616e6b696e672f76332e312f61697370.svg)

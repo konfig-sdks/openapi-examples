@@ -8,4 +8,4 @@ BulkSMS.com is a leading SMS messaging service provider offering two-way SMS com
 
 #### [api.bulksms.com/v1](https://api.bulksms.com/v1)
 
-![api.bulksms.com/v1](response-time-charts/6170692e62756c6b736d732e636f6d2f7631.png)
+![api.bulksms.com/v1](response-time-charts/6170692e62756c6b736d732e636f6d2f7631.svg)

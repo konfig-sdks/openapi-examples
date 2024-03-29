@@ -8,4 +8,4 @@ Elevate your projects with the fastest & most powerful text to speech & voice AP
 
 #### [api.elevenlabs.io](https://api.elevenlabs.io)
 
-![api.elevenlabs.io](response-time-charts/6170692e656c6576656e6c6162732e696f.png)
+![api.elevenlabs.io](response-time-charts/6170692e656c6576656e6c6162732e696f.svg)

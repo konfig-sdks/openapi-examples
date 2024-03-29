@@ -8,4 +8,4 @@ Building the next evolution of actionable AI.
 
 #### [api.induced.ai/api/v1](https://api.induced.ai/api/v1)
 
-![api.induced.ai/api/v1](response-time-charts/6170692e696e64756365642e61692f6170692f7631.png)
+![api.induced.ai/api/v1](response-time-charts/6170692e696e64756365642e61692f6170692f7631.svg)

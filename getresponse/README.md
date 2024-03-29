@@ -12,10 +12,10 @@ With our easy-to-use platform, proven expertise, and focus on user-friendly solu
 
 #### [api.getresponse.com/v3](https://api.getresponse.com/v3)
 
-![api.getresponse.com/v3](response-time-charts/6170692e676574726573706f6e73652e636f6d2f7633.png)
+![api.getresponse.com/v3](response-time-charts/6170692e676574726573706f6e73652e636f6d2f7633.svg)
 #### [api3.getresponse360.com/v3](https://api3.getresponse360.com/v3)
 
-![api3.getresponse360.com/v3](response-time-charts/617069332e676574726573706f6e73653336302e636f6d2f7633.png)
+![api3.getresponse360.com/v3](response-time-charts/617069332e676574726573706f6e73653336302e636f6d2f7633.svg)
 #### [api3.getresponse360.pl/v3](https://api3.getresponse360.pl/v3)
 
-![api3.getresponse360.pl/v3](response-time-charts/617069332e676574726573706f6e73653336302e706c2f7633.png)
+![api3.getresponse360.pl/v3](response-time-charts/617069332e676574726573706f6e73653336302e706c2f7633.svg)

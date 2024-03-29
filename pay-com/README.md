@@ -12,7 +12,7 @@ The company was launched in 2020 and is currently expanding with 5 global office
 
 #### [api.pay.com](https://api.pay.com)
 
-![api.pay.com](response-time-charts/6170692e7061792e636f6d.png)
+![api.pay.com](response-time-charts/6170692e7061792e636f6d.svg)
 #### [api.sandbox.pay.com](https://api.sandbox.pay.com)
 
-![api.sandbox.pay.com](response-time-charts/6170692e73616e64626f782e7061792e636f6d.png)
+![api.sandbox.pay.com](response-time-charts/6170692e73616e64626f782e7061792e636f6d.svg)

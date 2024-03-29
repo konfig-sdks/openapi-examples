@@ -8,4 +8,4 @@ Klarna is a Swedish bank that provides online financial services such as payment
 
 #### [api.klarna.com](https://api.klarna.com)
 
-![api.klarna.com](response-time-charts/6170692e6b6c61726e612e636f6d.png)
+![api.klarna.com](response-time-charts/6170692e6b6c61726e612e636f6d.svg)

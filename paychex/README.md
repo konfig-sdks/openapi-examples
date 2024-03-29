@@ -21,4 +21,4 @@ Baltimore, Maryland 21202
 
 #### [api.paychex.com](https://api.paychex.com)
 
-![api.paychex.com](response-time-charts/6170692e706179636865782e636f6d.png)
+![api.paychex.com](response-time-charts/6170692e706179636865782e636f6d.svg)

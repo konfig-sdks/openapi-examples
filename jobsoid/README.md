@@ -10,4 +10,4 @@ Post a job opening, send automated responses and bulk emails, filter through app
 
 #### [demo.jobsoid.com](https://demo.jobsoid.com)
 
-![demo.jobsoid.com](response-time-charts/64656d6f2e6a6f62736f69642e636f6d.png)
+![demo.jobsoid.com](response-time-charts/64656d6f2e6a6f62736f69642e636f6d.svg)

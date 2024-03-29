@@ -10,7 +10,7 @@ We're 75 people, fully remote, highly profitable, and self-funded (yes, crazy, w
 
 #### [testflight.tremendous.com/api/v2](https://testflight.tremendous.com/api/v2)
 
-![testflight.tremendous.com/api/v2](response-time-charts/74657374666c696768742e7472656d656e646f75732e636f6d2f6170692f7632.png)
+![testflight.tremendous.com/api/v2](response-time-charts/74657374666c696768742e7472656d656e646f75732e636f6d2f6170692f7632.svg)
 #### [www.tremendous.com/api/v2](https://www.tremendous.com/api/v2)
 
-![www.tremendous.com/api/v2](response-time-charts/7777772e7472656d656e646f75732e636f6d2f6170692f7632.png)
+![www.tremendous.com/api/v2](response-time-charts/7777772e7472656d656e646f75732e636f6d2f6170692f7632.svg)

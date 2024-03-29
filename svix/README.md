@@ -8,7 +8,7 @@ Svix is a platform that simplifies webhook processing for developers. By providi
 
 #### [api.eu.svix.com](https://api.eu.svix.com)
 
-![api.eu.svix.com](response-time-charts/6170692e65752e737669782e636f6d.png)
+![api.eu.svix.com](response-time-charts/6170692e65752e737669782e636f6d.svg)
 #### [api.us.svix.com](https://api.us.svix.com)
 
-![api.us.svix.com](response-time-charts/6170692e75732e737669782e636f6d.png)
+![api.us.svix.com](response-time-charts/6170692e75732e737669782e636f6d.svg)

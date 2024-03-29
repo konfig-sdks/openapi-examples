@@ -8,4 +8,4 @@ Payfactory specializes in embedded payment facilitation (payfac) services for IS
 
 #### [dev-api.payfactory.app](https://dev-api.payfactory.app)
 
-![dev-api.payfactory.app](response-time-charts/6465762d6170692e706179666163746f72792e617070.png)
+![dev-api.payfactory.app](response-time-charts/6465762d6170692e706179666163746f72792e617070.svg)

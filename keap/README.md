@@ -22,4 +22,4 @@ Top 100 Best Workplaces for Millennials in US
 
 #### [api.infusionsoft.com/crm/rest](https://api.infusionsoft.com/crm/rest)
 
-![api.infusionsoft.com/crm/rest](response-time-charts/6170692e696e667573696f6e736f66742e636f6d2f63726d2f72657374.png)
+![api.infusionsoft.com/crm/rest](response-time-charts/6170692e696e667573696f6e736f66742e636f6d2f63726d2f72657374.svg)

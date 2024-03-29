@@ -8,4 +8,4 @@ Giphy is a platform that provides a vast collection of animated GIFs and sticker
 
 #### [api.giphy.com/v1](https://api.giphy.com/v1)
 
-![api.giphy.com/v1](response-time-charts/6170692e67697068792e636f6d2f7631.png)
+![api.giphy.com/v1](response-time-charts/6170692e67697068792e636f6d2f7631.svg)

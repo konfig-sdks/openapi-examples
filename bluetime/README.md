@@ -8,4 +8,4 @@ Don’t stress over integrating with multiple providers to fulfill your payment 
 
 #### [api.epaytools.com](https://api.epaytools.com)
 
-![api.epaytools.com](response-time-charts/6170692e65706179746f6f6c732e636f6d.png)
+![api.epaytools.com](response-time-charts/6170692e65706179746f6f6c732e636f6d.svg)

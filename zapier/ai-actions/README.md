@@ -8,4 +8,4 @@ AI Actions is a tool for builders to equip AI platforms (or custom integrations)
 
 #### [actions.zapier.com](https://actions.zapier.com)
 
-![actions.zapier.com](response-time-charts/616374696f6e732e7a61706965722e636f6d.png)
+![actions.zapier.com](response-time-charts/616374696f6e732e7a61706965722e636f6d.svg)

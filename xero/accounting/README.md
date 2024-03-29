@@ -10,4 +10,4 @@ Get support http://central.xero.com
 
 #### [api.xero.com/api.xro/2.0](https://api.xero.com/api.xro/2.0)
 
-![api.xero.com/api.xro/2.0](response-time-charts/6170692e7865726f2e636f6d2f6170692e78726f2f322e30.png)
+![api.xero.com/api.xro/2.0](response-time-charts/6170692e7865726f2e636f6d2f6170692e78726f2f322e30.svg)

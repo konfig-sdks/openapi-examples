@@ -10,4 +10,4 @@ interviewstream is dedicated to the success of more than 900 clients from emergi
 
 #### [api.interviewstream.com/](https://api.interviewstream.com/)
 
-![api.interviewstream.com/](response-time-charts/6170692e696e7465727669657773747265616d2e636f6d2f.png)
+![api.interviewstream.com/](response-time-charts/6170692e696e7465727669657773747265616d2e636f6d2f.svg)

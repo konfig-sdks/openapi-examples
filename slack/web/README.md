@@ -8,4 +8,4 @@ Slack is a popular messaging platform designed for teams and workplaces. It offe
 
 #### [slack.com/api](https://slack.com/api)
 
-![slack.com/api](response-time-charts/736c61636b2e636f6d2f617069.png)
+![slack.com/api](response-time-charts/736c61636b2e636f6d2f617069.svg)

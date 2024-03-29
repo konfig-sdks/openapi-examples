@@ -8,4 +8,4 @@ Join the world's leading professional video platform and grow your business with
 
 #### [api.vimeo.com](https://api.vimeo.com)
 
-![api.vimeo.com](response-time-charts/6170692e76696d656f2e636f6d.png)
+![api.vimeo.com](response-time-charts/6170692e76696d656f2e636f6d.svg)

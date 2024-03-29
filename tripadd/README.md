@@ -12,7 +12,7 @@ Sign up today at www.tripadd.com
 
 #### [api.tripadd.com/v1](https://api.tripadd.com/v1)
 
-![api.tripadd.com/v1](response-time-charts/6170692e747269706164642e636f6d2f7631.png)
+![api.tripadd.com/v1](response-time-charts/6170692e747269706164642e636f6d2f7631.svg)
 #### [sandbox.tripadd.com/v1](https://sandbox.tripadd.com/v1)
 
-![sandbox.tripadd.com/v1](response-time-charts/73616e64626f782e747269706164642e636f6d2f7631.png)
+![sandbox.tripadd.com/v1](response-time-charts/73616e64626f782e747269706164642e636f6d2f7631.svg)

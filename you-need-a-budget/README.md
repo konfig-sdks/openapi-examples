@@ -8,4 +8,4 @@ Working hard with nothing to show for it? Use your money more efficiently and co
 
 #### [api.ynab.com/v1](https://api.ynab.com/v1)
 
-![api.ynab.com/v1](response-time-charts/6170692e796e61622e636f6d2f7631.png)
+![api.ynab.com/v1](response-time-charts/6170692e796e61622e636f6d2f7631.svg)

@@ -8,4 +8,4 @@ Notion is a new tool that blends your everyday work apps into one. It's the all-
 
 #### [api.notion.com](https://api.notion.com)
 
-![api.notion.com](response-time-charts/6170692e6e6f74696f6e2e636f6d.png)
+![api.notion.com](response-time-charts/6170692e6e6f74696f6e2e636f6d.svg)

@@ -9,4 +9,4 @@ Découvrez nos offres : https://www.pappers.fr/api et https://www.pappers.fr/exp
 
 #### [api.pappers.fr/v2](https://api.pappers.fr/v2)
 
-![api.pappers.fr/v2](response-time-charts/6170692e706170706572732e66722f7632.png)
+![api.pappers.fr/v2](response-time-charts/6170692e706170706572732e66722f7632.svg)

@@ -8,4 +8,4 @@ SuprSend is a central communication stack for easily creating, managing and deli
 
 #### [hub.suprsend.com](https://hub.suprsend.com)
 
-![hub.suprsend.com](response-time-charts/6875622e7375707273656e642e636f6d.png)
+![hub.suprsend.com](response-time-charts/6875622e7375707273656e642e636f6d.svg)

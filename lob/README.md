@@ -8,4 +8,4 @@ Lob provides a suite of APIs to deliver mail, including address verification, ma
 
 #### [api.lob.com/v1](https://api.lob.com/v1)
 
-![api.lob.com/v1](response-time-charts/6170692e6c6f622e636f6d2f7631.png)
+![api.lob.com/v1](response-time-charts/6170692e6c6f622e636f6d2f7631.svg)

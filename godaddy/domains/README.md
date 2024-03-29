@@ -8,4 +8,4 @@ All the help and tools you need to grow online: Websites, Domains, Digital and S
 
 #### [//api.ote-godaddy.com](https:////api.ote-godaddy.com)
 
-![//api.ote-godaddy.com](response-time-charts/2f2f6170692e6f74652d676f64616464792e636f6d.png)
+![//api.ote-godaddy.com](response-time-charts/2f2f6170692e6f74652d676f64616464792e636f6d.svg)

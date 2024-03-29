@@ -27,4 +27,4 @@ Some stats:
 
 #### [api.documents.resistant.ai](https://api.documents.resistant.ai)
 
-![api.documents.resistant.ai](response-time-charts/6170692e646f63756d656e74732e726573697374616e742e6169.png)
+![api.documents.resistant.ai](response-time-charts/6170692e646f63756d656e74732e726573697374616e742e6169.svg)

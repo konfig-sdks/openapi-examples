@@ -18,4 +18,4 @@ Today, FreeAgent helps over 150,000 users take care of their finances - from the
 
 #### [api.freeagent.com](https://api.freeagent.com)
 
-![api.freeagent.com](response-time-charts/6170692e667265656167656e742e636f6d.png)
+![api.freeagent.com](response-time-charts/6170692e667265656167656e742e636f6d.svg)

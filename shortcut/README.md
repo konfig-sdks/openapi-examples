@@ -10,4 +10,4 @@ Visit https://www.shortcut.com to learn more.
 
 #### [api.app.shortcut.com](https://api.app.shortcut.com)
 
-![api.app.shortcut.com](response-time-charts/6170692e6170702e73686f72746375742e636f6d.png)
+![api.app.shortcut.com](response-time-charts/6170692e6170702e73686f72746375742e636f6d.svg)

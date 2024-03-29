@@ -9,4 +9,4 @@ Dixa's Conversational Customer Service Platform combines powerful AI with a huma
 
 #### [dev.dixa.io](https://dev.dixa.io)
 
-![dev.dixa.io](response-time-charts/6465762e646978612e696f.png)
+![dev.dixa.io](response-time-charts/6465762e646978612e696f.svg)

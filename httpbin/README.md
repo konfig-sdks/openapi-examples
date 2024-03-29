@@ -8,4 +8,4 @@ httpbin is a simple HTTP request and response service that provides a variety of
 
 #### [httpbin.org](https://httpbin.org)
 
-![httpbin.org](response-time-charts/6874747062696e2e6f7267.png)
+![httpbin.org](response-time-charts/6874747062696e2e6f7267.svg)

@@ -21,4 +21,4 @@ Its full configurability ensures a tailored fit for specific needs, while advanc
 
 #### [api.intellihr.io/v1](https://api.intellihr.io/v1)
 
-![api.intellihr.io/v1](response-time-charts/6170692e696e74656c6c6968722e696f2f7631.png)
+![api.intellihr.io/v1](response-time-charts/6170692e696e74656c6c6968722e696f2f7631.svg)

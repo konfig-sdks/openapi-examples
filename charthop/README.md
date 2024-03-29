@@ -8,4 +8,4 @@ ChartHop is a dynamic People Operations Platform that connects and visualizes al
 
 #### [api.charthop.com](https://api.charthop.com)
 
-![api.charthop.com](response-time-charts/6170692e6368617274686f702e636f6d.png)
+![api.charthop.com](response-time-charts/6170692e6368617274686f702e636f6d.svg)

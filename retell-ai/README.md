@@ -8,4 +8,4 @@ API for voice AI. Effortlessly integrate human-like Voice AI into your product. 
 
 #### [api.retellai.com](https://api.retellai.com)
 
-![api.retellai.com](response-time-charts/6170692e726574656c6c61692e636f6d.png)
+![api.retellai.com](response-time-charts/6170692e726574656c6c61692e636f6d.svg)

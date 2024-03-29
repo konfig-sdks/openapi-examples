@@ -8,4 +8,4 @@ At Baseten we provide all the infrastructure you need to deploy and serve ML mod
 
 #### [api.baseten.co](https://api.baseten.co)
 
-![api.baseten.co](response-time-charts/6170692e6261736574656e2e636f.png)
+![api.baseten.co](response-time-charts/6170692e6261736574656e2e636f.svg)
