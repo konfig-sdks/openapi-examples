@@ -1,0 +1,288 @@
+openapi: 3.0.0
+info:
+  title: Netvyne API
+  description: Moderation API Service
+  version: '1.0'
+  termsOfService: https://blog.netvyne.com/blog/eula
+  contact:
+    name: API Support
+    url: https://blog.netvyne.com/blog/support
+    email: info@netvyne.com
+  license:
+    name: ©2023 Netvyne, Inc.
+    url: https://www.netvyne.com
+  x-logo:
+    altText: Netvyne Logo
+    backgroundColor: '#FFFFFF'
+    url: https://www.netvyne.com/logo-full-light.png
+  x-konfig-ignore:
+    object-with-no-properties: true
+servers:
+  - url: https://api.netvyne.com/v1
+tags:
+  - name: settings
+  - name: comment
+  - name: example
+  - name: webhook
+paths:
+  /categories:
+    post:
+      tags:
+        - settings
+      summary: Set/update the categories used for moderation of comments
+      operationId: Settings_updateCategories
+      security:
+        - Bearer: []
+      description: >-
+        The body of this request contains categories that you desire; these must
+        be explained at the InstructionsURL. Requires prior authorization.
+      requestBody:
+        description: Categories
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/server.HandleUpdateCategories.request'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SettingsUpdateCategoriesResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/core.ErrorResponse'
+  /comments:
+    post:
+      tags:
+        - comment
+      summary: Submit a comment for processing
+      operationId: Comment_submitProcessingDetails
+      security:
+        - Bearer: []
+      description: The body of this request contains the details of this comment
+      requestBody:
+        description: comment
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/server.HandlePostComment.request'
+        required: true
+      responses:
+        '200':
+          description: >-
+            ParentCommentID will not be set in response if corresponding parent
+            comment not submitted prior
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/server.HandlePostComment.response'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/core.ErrorResponse'
+  /demo_webhook:
+    post:
+      tags:
+        - example
+      summary: Sample of a route that receives the webhook response
+      operationId: Example_webhookResponseHandling
+      description: >-
+        The body of the request contains the marked categories for a given item
+        that you submitted.
+
+        You should implement such a route and set it as your webhook URL
+
+        Your endpoint must quickly return a successful status code (2xx) prior
+        to any complex logic that could cause a timeout.
+
+        Note: A webhook can come for the same item multiple times; make sure use
+        the latest prediction and disregard prior ones.
+      requestBody:
+        description: Marked Categories
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/server.HandlePostDemoWebhook.request'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExampleWebhookResponseHandlingResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/core.ErrorResponse'
+  /instructions:
+    post:
+      tags:
+        - settings
+      summary: >-
+        Set/update the instructions url at which moderation instructions are
+        provided
+      operationId: Settings_setInstructionsUrl
+      security:
+        - Bearer: []
+      description: The body of this request contains the InstructionsURL that you desire
+      requestBody:
+        description: InstructionsURL
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/server.HandleUpdateInstructions.request'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SettingsSetInstructionsUrlResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/core.ErrorResponse'
+  /webhooks:
+    post:
+      tags:
+        - webhook
+      summary: Set/update the webhook url at which results are received
+      operationId: Webhook_updateWebhookUrl
+      security:
+        - Bearer: []
+      description: The body of this request contains WebhookURL that you desire
+      requestBody:
+        description: WebhookURL
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/server.HandleUpdateWebook.request'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookUpdateWebhookUrlResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/core.ErrorResponse'
+components:
+  securitySchemes:
+    Bearer:
+      description: '"Type ''Bearer TOKEN'' to correctly set the API Key"'
+      type: apiKey
+      name: Authorization
+      in: header
+  schemas:
+    core.ErrorResponse:
+      type: object
+      properties:
+        Code:
+          type: integer
+        Message:
+          type: string
+    core.WebhookCategory:
+      type: object
+      properties:
+        Confidence:
+          type: number
+        DisplayName:
+          type: string
+        Value:
+          type: boolean
+    server.HandlePostComment.request:
+      type: object
+      properties:
+        ID:
+          type: string
+        ParentCommentID:
+          type: string
+        Text:
+          type: string
+        UserName:
+          type: string
+    server.HandlePostComment.response:
+      type: object
+      properties:
+        ID:
+          type: string
+        ParentCommentID:
+          type: string
+        Text:
+          type: string
+        UserName:
+          type: string
+    server.HandlePostDemoWebhook.request:
+      type: object
+      properties:
+        APIVersion:
+          type: string
+        Categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/core.WebhookCategory'
+        ID:
+          type: string
+        LastComputedAt:
+          type: string
+        Type:
+          type: string
+    server.HandlePostDemoWebhook.response:
+      type: object
+    server.HandleUpdateCategories.request:
+      type: object
+      properties:
+        Categories:
+          type: array
+          items:
+            type: string
+    server.HandleUpdateCategories.response:
+      type: object
+    server.HandleUpdateInstructions.request:
+      type: object
+      properties:
+        InstructionsURL:
+          type: string
+    server.HandleUpdateInstructions.response:
+      type: object
+    server.HandleUpdateWebook.request:
+      type: object
+      properties:
+        WebhookURL:
+          type: string
+    server.HandleUpdateWebook.response:
+      type: object
+    SettingsUpdateCategoriesResponse:
+      type: object
+      properties: {}
+      example: {}
+    ExampleWebhookResponseHandlingResponse:
+      type: object
+      properties: {}
+      example: {}
+    SettingsSetInstructionsUrlResponse:
+      type: object
+      properties: {}
+      example: {}
+    WebhookUpdateWebhookUrlResponse:
+      type: object
+      properties: {}
+      example: {}
