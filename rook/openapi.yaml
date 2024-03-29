@@ -1,0 +1,3116 @@
+openapi: 3.0.3
+info:
+  title: ROOK
+  description: >-
+
+    ### Intro
+
+    [ROOK](https://docs.tryrook.io/docs/Definitions#rook) is a set of services
+    that simplifies the collection, processing, and delivering of
+    [Users'](https://docs.tryrook.io/docs/Definitions#User)
+    [HealthData](https://docs.tryrook.io/docs/Definitions#health-data) from
+    various data sources.  
+
+
+
+    ### Testing
+
+    You can use the following constants to test the API and receive default
+    responses:      
+      - client_uuid = Your "client_uuid" for testing you can use: 'demoClientUUID'
+      - client secret = Your "client secret" for testing you can use: 'demoClientSecret'
+      - user_id = Your "user_id" for testing you can use: 'demoUserId'
+      - date = Your "date" for testing you can use: '2022-10-28'         
+  version: 2.0.1
+  x-konfig-ignore:
+    object-with-no-properties: true
+servers:
+  - description: Production Server
+    url: https://api.rook-connect.com
+  - description: Sandbox Server
+    url: https://api.rook-connect.review
+tags:
+  - name: Health
+  - name: User
+  - name: SleepHealthSummary
+  - name: Nutrition
+  - name: PhysicalHealthSummary
+  - name: Mood
+  - name: Hydration
+paths:
+  /api/v1/client_uuid/{client_uuid}/user_id/{user_id}/data_sources/authorizers:
+    get:
+      tags:
+        - User
+      summary: '[User][Data Sources][Authorizers]'
+      operationId: User_getDataSourcesAuthorizers
+      description: >
+        Retrieves the array of authorizers corresponding to the data sources
+        enabled for  each client. Includes the data source's description, its
+        logo, the authorization URL personalized for each user_id, and the
+        user's current authorization status.
+      parameters:
+        - $ref: '#/components/parameters/parameter_path_client_uuid'
+        - $ref: '#/components/parameters/parameter_path_user_id'
+        - $ref: '#/components/parameters/parameter_query_redirect_url'
+      responses:
+        '200':
+          description: Successfully retrieved the data source authorizers.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/schema_data_sources_authorizers'
+          headers:
+            Connection:
+              $ref: '#/components/headers/ConnectionHeader'
+            Access-Control-Allow-Origin:
+              $ref: '#/components/headers/AccessControlAllowOriginHeader'
+  /api/v1/user_id/{user_id}/data_sources/authorized:
+    get:
+      tags:
+        - User
+      summary: '[User][Data Sources][Authorized]'
+      operationId: User_getAuthorizedDataSources
+      description: Provides a list of authorized data sources for the specified user.
+      parameters:
+        - $ref: '#/components/parameters/parameter_query_user_id'
+      responses:
+        '200':
+          description: Successfully retrieved the authorized data sources.
+          headers:
+            Connection:
+              $ref: '#/components/headers/ConnectionHeader'
+            Access-Control-Allow-Origin:
+              $ref: '#/components/headers/AccessControlAllowOriginHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserGetAuthorizedDataSourcesResponse'
+  /v2/processed_data/user/info:
+    get:
+      tags:
+        - User
+      summary: '[User][Info]'
+      operationId: User_getInfo
+      description: Fetches user information for the given user ID and date.
+      parameters:
+        - $ref: '#/components/parameters/parameter_path_user_id'
+        - $ref: '#/components/parameters/parameter_query_date'
+      responses:
+        '200':
+          description: User information retrieved successfully.
+          headers:
+            Connection:
+              $ref: '#/components/headers/ConnectionHeader'
+            Access-Control-Allow-Origin:
+              $ref: '#/components/headers/AccessControlAllowOriginHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/schema_user_info'
+        '204':
+          $ref: '#/components/responses/response_no_content_for_user_and_date'
+  /api/v1/user_id/{user_id}/data_sources/revoke_auth:
+    post:
+      tags:
+        - User
+      summary: '[User][Data Sources][Revoke]'
+      operationId: User_revokeAuthData
+      description: Revokes user authorization for the specified data source.
+      parameters:
+        - $ref: '#/components/parameters/parameter_path_user_id'
+      requestBody:
+        description: body
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BodyRevokePermission'
+      responses:
+        '200':
+          description: >-
+            User authorization successfully revoked for the specified data
+            source.
+          headers: {}
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RevokePermission'
+        '204':
+          $ref: '#/components/responses/response_no_content_for_user_and_date'
+        '400':
+          description: Missing body.
+          headers: {}
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MissingBody'
+        '401':
+          description: Unauthorized.
+          headers: {}
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Unauth'
+        '404':
+          description: The URL does not exists.
+          headers: {}
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UrlNoExists'
+        '422':
+          description: Wrong data source.
+          headers: {}
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WrongData'
+  /v2/processed_data/physical_health/summary:
+    get:
+      tags:
+        - PhysicalHealthSummary
+      summary: '[Physical][Summary]'
+      operationId: PhysicalHealthSummary_getSummary
+      description: >-
+        Fetches a summary of the user's physical health data for a specified
+        date.
+      parameters:
+        - $ref: '#/components/parameters/parameter_query_user_id'
+        - $ref: '#/components/parameters/parameter_query_date'
+      responses:
+        '200':
+          description: Successfully retrieved the physical health summary.
+          headers:
+            Connection:
+              $ref: '#/components/headers/ConnectionHeader'
+            Access-Control-Allow-Origin:
+              $ref: '#/components/headers/AccessControlAllowOriginHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PhysicalSummary'
+        '204':
+          $ref: '#/components/responses/response_no_content_for_user_and_date'
+  /v2/processed_data/physical_health/events/activity:
+    get:
+      tags:
+        - Health
+      summary: '[Physical][Events][Activity]'
+      operationId: Health_getActivityEventData
+      description: Retrieves activity event data for the specified user over a given date.
+      parameters:
+        - $ref: '#/components/parameters/parameter_query_user_id'
+        - $ref: '#/components/parameters/parameter_query_date'
+      responses:
+        '200':
+          description: Successfully retrieved activity event data.
+          headers:
+            Connection:
+              $ref: '#/components/headers/ConnectionHeader'
+            Access-Control-Allow-Origin:
+              $ref: '#/components/headers/AccessControlAllowOriginHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivityEvent'
+        '204':
+          $ref: '#/components/responses/response_no_content_for_user_and_date'
+  /v2/processed_data/physical_health/events/heart_rate:
+    get:
+      tags:
+        - Health
+      summary: '[Physical][Events][Heart Rate]'
+      operationId: Health_getHeartRateEventData
+      description: Fetches heart rate event data for the specified user on a given date.
+      parameters:
+        - $ref: '#/components/parameters/parameter_query_user_id'
+        - $ref: '#/components/parameters/parameter_query_date'
+      responses:
+        '200':
+          description: Successfully retrieved heart rate event data.
+          headers:
+            Connection:
+              $ref: '#/components/headers/ConnectionHeader'
+            Access-Control-Allow-Origin:
+              $ref: '#/components/headers/AccessControlAllowOriginHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HeartRateEvent'
+        '204':
+          $ref: '#/components/responses/response_no_content_for_user_and_date'
+  /v2/processed_data/physical_health/events/oxygenation:
+    get:
+      tags:
+        - Health
+      summary: '[Physical][Events][Oxygenation]'
+      operationId: Health_getOxygenationEventData
+      description: Retrieves oxygenation event data for a specified user on a given date.
+      parameters:
+        - $ref: '#/components/parameters/parameter_query_user_id'
+        - $ref: '#/components/parameters/parameter_query_date'
+      responses:
+        '200':
+          description: Successfully retrieved oxygenation event data.
+          headers:
+            Connection:
+              $ref: '#/components/headers/ConnectionHeader'
+            Access-Control-Allow-Origin:
+              $ref: '#/components/headers/AccessControlAllowOriginHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OxygenationEvent'
+        '204':
+          $ref: '#/components/responses/response_no_content_for_user_and_date'
+  /v2/processed_data/physical_health/events/stress:
+    get:
+      tags:
+        - Health
+      summary: '[Physical][Events][Stress]'
+      operationId: Health_getStressEventData
+      description: Retrieves stress event data for the specified user on a given date.
+      parameters:
+        - $ref: '#/components/parameters/parameter_query_user_id'
+        - $ref: '#/components/parameters/parameter_query_date'
+      responses:
+        '200':
+          description: Successfully retrieved stress event data.
+          headers:
+            Connection:
+              $ref: '#/components/headers/ConnectionHeader'
+            Access-Control-Allow-Origin:
+              $ref: '#/components/headers/AccessControlAllowOriginHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StressEvent'
+        '204':
+          $ref: '#/components/responses/response_no_content_for_user_and_date'
+  /v2/processed_data/sleep_health/summary:
+    get:
+      tags:
+        - SleepHealthSummary
+      summary: '[Sleep][Summary]'
+      operationId: SleepHealthSummary_getSummaryData
+      description: >-
+        Retrieves a summary of the user's sleep health data for a specified
+        date.
+      parameters:
+        - $ref: '#/components/parameters/parameter_query_user_id'
+        - $ref: '#/components/parameters/parameter_query_date'
+      responses:
+        '200':
+          description: Successfully retrieved sleep health summary.
+          headers:
+            Connection:
+              $ref: '#/components/headers/ConnectionHeader'
+            Access-Control-Allow-Origin:
+              $ref: '#/components/headers/AccessControlAllowOriginHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SleepSummary'
+        '204':
+          $ref: '#/components/responses/response_no_content_for_user_and_date'
+  /v2/processed_data/body_health/summary:
+    get:
+      tags:
+        - Health
+      summary: '[Body][Summary]'
+      operationId: Health_getSummary
+      description: Retrieves a summary of the user's body health data for a specified date.
+      parameters:
+        - $ref: '#/components/parameters/parameter_query_user_id'
+        - $ref: '#/components/parameters/parameter_query_date'
+      responses:
+        '200':
+          description: Successfully retrieved body health summary.
+          headers:
+            Connection:
+              $ref: '#/components/headers/ConnectionHeader'
+            Access-Control-Allow-Origin:
+              $ref: '#/components/headers/AccessControlAllowOriginHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BodySummary'
+        '204':
+          $ref: '#/components/responses/response_no_content_for_user_and_date'
+  /v2/processed_data/body_health/events/body_metrics:
+    get:
+      tags:
+        - Health
+      summary: '[Body][Events][Body Metrics]'
+      operationId: Health_getBodyMetricsEventData
+      description: Retrieves body metrics event data for a specified user on a given date.
+      parameters:
+        - $ref: '#/components/parameters/parameter_query_user_id'
+        - $ref: '#/components/parameters/parameter_query_date'
+      responses:
+        '200':
+          description: Successfully retrieved body metrics event data.
+          headers:
+            Connection:
+              $ref: '#/components/headers/ConnectionHeader'
+            Access-Control-Allow-Origin:
+              $ref: '#/components/headers/AccessControlAllowOriginHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BodyMetricsEvent'
+        '204':
+          $ref: '#/components/responses/response_no_content_for_user_and_date'
+  /v2/processed_data/body_health/events/heart_rate:
+    get:
+      tags:
+        - Health
+      summary: '[Body][Events][Heart Rate]'
+      operationId: Health_getHeartRateEvent
+      description: Retrieves heart rate event data for the specified user on a given date.
+      parameters:
+        - $ref: '#/components/parameters/parameter_query_user_id'
+        - $ref: '#/components/parameters/parameter_query_date'
+      responses:
+        '200':
+          description: Successfully retrieved heart rate event data.
+          headers:
+            Connection:
+              $ref: '#/components/headers/ConnectionHeader'
+            Access-Control-Allow-Origin:
+              $ref: '#/components/headers/AccessControlAllowOriginHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BodyHeartRateEvent'
+        '204':
+          $ref: '#/components/responses/response_no_content_for_user_and_date'
+  /v2/processed_data/body_health/events/oxygenation:
+    get:
+      tags:
+        - Health
+      summary: '[Body][Events][Oxygenation]'
+      operationId: Health_getOxygenationEventData
+      description: Retrieves oxygenation event data for the specified user on a given date.
+      parameters:
+        - $ref: '#/components/parameters/parameter_query_user_id'
+        - $ref: '#/components/parameters/parameter_query_date'
+      responses:
+        '200':
+          description: Successfully retrieved oxygenation event data.
+          headers:
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            Access-Control-Allow-Origin:
+              schema:
+                type: string
+                example: '*'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BodyOxygenationEvent'
+        '204':
+          $ref: '#/components/responses/response_no_content_for_user_and_date'
+  /v2/processed_data/body_health/events/nutrition:
+    get:
+      tags:
+        - Nutrition
+      summary: '[Body][Events][Nutrition]'
+      operationId: Nutrition_getData
+      description: Retrieves nutrition event data for the specified user on a given date.
+      parameters:
+        - $ref: '#/components/parameters/parameter_query_user_id'
+        - $ref: '#/components/parameters/parameter_query_date'
+      responses:
+        '200':
+          description: Successfully retrieved nutrition event data.
+          headers:
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            Access-Control-Allow-Origin:
+              schema:
+                type: string
+                example: '*'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BodyNutritionEvent'
+        '204':
+          $ref: '#/components/responses/response_no_content_for_user_and_date'
+  /v2/processed_data/body_health/events/mood:
+    get:
+      tags:
+        - Mood
+      summary: '[Body][Events][Mood]'
+      operationId: Mood_eventDataRetrieve
+      description: Retrieves mood event data for the specified user on a given date.
+      parameters:
+        - $ref: '#/components/parameters/parameter_query_user_id'
+        - $ref: '#/components/parameters/parameter_query_date'
+      responses:
+        '200':
+          description: Successfully retrieved mood event data.
+          headers:
+            Connection:
+              $ref: '#/components/headers/ConnectionHeader'
+            Access-Control-Allow-Origin:
+              $ref: '#/components/headers/AccessControlAllowOriginHeader'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BodyMoodEvent'
+        '204':
+          $ref: '#/components/responses/response_no_content_for_user_and_date'
+  /v2/processed_data/body_health/events/hydration:
+    get:
+      tags:
+        - Hydration
+      summary: '[Body][Events][Hydration]'
+      operationId: Hydration_getEventData
+      description: Retrieves hydration event data for the specified user on a given date.
+      parameters:
+        - $ref: '#/components/parameters/parameter_query_user_id'
+        - $ref: '#/components/parameters/parameter_query_date'
+      responses:
+        '200':
+          description: Successfully retrieved hydration event data.
+          headers:
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            Access-Control-Allow-Origin:
+              schema:
+                type: string
+                example: '*'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BodyHydrationEvent'
+        '204':
+          $ref: '#/components/responses/response_no_content_for_user_and_date'
+  /v2/processed_data/body_health/events/blood_glucose:
+    get:
+      tags:
+        - Health
+      summary: '[Body][Events][Blood Glucose]'
+      operationId: Health_getBloodGlucoseEventData
+      description: >-
+        Retrieves blood glucose event data for the specified user on a given
+        date.
+      parameters:
+        - $ref: '#/components/parameters/parameter_query_user_id'
+        - $ref: '#/components/parameters/parameter_query_date'
+      responses:
+        '200':
+          description: Successfully retrieved blood glucose event data.
+          headers:
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            Access-Control-Allow-Origin:
+              schema:
+                type: string
+                example: '*'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BodyBloodGlucoseEvent'
+        '204':
+          $ref: '#/components/responses/response_no_content_for_user_and_date'
+  /v2/processed_data/body_health/events/blood_pressure:
+    get:
+      tags:
+        - Health
+      summary: '[Body][Events][Blood Pressure]'
+      operationId: Health_getBloodPressureEventData
+      description: >-
+        Retrieves blood pressure event data for the specified user on a given
+        date.
+      parameters:
+        - $ref: '#/components/parameters/parameter_query_user_id'
+        - $ref: '#/components/parameters/parameter_query_date'
+      responses:
+        '200':
+          description: Successfully retrieved blood pressure event data.
+          headers:
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            Access-Control-Allow-Origin:
+              schema:
+                type: string
+                example: '*'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BodyBloodPressureEvent'
+        '204':
+          $ref: '#/components/responses/response_no_content_for_user_and_date'
+  /v2/processed_data/body_health/events/temperature:
+    get:
+      tags:
+        - Health
+      summary: '[Body][Events][Temperature]'
+      operationId: Health_getTemperatureEventData
+      description: >-
+        Retrieves body temperature event data for the specified user on a given
+        date.
+      parameters:
+        - $ref: '#/components/parameters/parameter_query_user_id'
+        - $ref: '#/components/parameters/parameter_query_date'
+      responses:
+        '200':
+          description: Successfully retrieved body temperature event data.
+          headers:
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            Access-Control-Allow-Origin:
+              schema:
+                type: string
+                example: '*'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BodyTemperatureEvent'
+        '204':
+          $ref: '#/components/responses/response_no_content_for_user_and_date'
+components:
+  parameters:
+    parameter_query_client_uuid:
+      description: >-
+        A unique identifier for each client, in UUID4 format. Provided by ROOK
+        upon signing service agreements.
+      name: client_uuid
+      in: query
+      required: true
+      schema:
+        $ref: '#/components/schemas/schema_client_uuid'
+    parameter_path_client_uuid:
+      description: >-
+        A unique identifier for each client, in UUID4 format. Provided by ROOK
+        upon signing service agreements.
+      name: client_uuid
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/schema_client_uuid'
+    parameter_query_user_id:
+      description: >-
+        Unique identifier for the user. Can include numerals, UUID4, strings, or
+        other identifiers. Length must be between 1 to 50 characters.
+      name: user_id
+      in: query
+      required: true
+      schema:
+        $ref: '#/components/schemas/schema_user_id'
+    parameter_path_user_id:
+      description: >-
+        Unique identifier for the user. Can include numerals, UUID4, strings, or
+        other identifiers. Length must be between 1 to 50 characters.
+      name: user_id
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/schema_user_id'
+    parameter_query_date:
+      description: Date in YYYY-MM-DD format.
+      name: date
+      in: query
+      required: true
+      schema:
+        type: string
+        format: date
+        example: '2023-01-01'
+    parameter_query_redirect_url:
+      description: >
+        (Optional): Designates a custom URL to which the user is redirected
+        after a successful authentication or linking process. In its absence,
+        the redirection will be to ROOK's connections page (or the default
+        configured) to continue the post-authentication flow.
+      name: redirect_url
+      in: query
+      required: false
+      schema:
+        type: string
+        format: uri
+        pattern: ^https://.+
+        minLength: 1
+        maxLength: 50
+        example: https://example.com
+  responses:
+    response_no_content:
+      description: No content available for the given query.
+      headers:
+        Content-Type:
+          $ref: '#/components/headers/ContentTypeHeader'
+        Connection:
+          $ref: '#/components/headers/ConnectionHeader'
+        Access-Control-Allow-Origin:
+          $ref: '#/components/headers/AccessControlAllowOriginHeader'
+      content:
+        application/json:
+          schema:
+            type: object
+          example: {}
+    response_no_content_for_user_and_date:
+      description: No content available for the given user and date.
+      headers:
+        Connection:
+          $ref: '#/components/headers/ConnectionHeader'
+        Access-Control-Allow-Origin:
+          $ref: '#/components/headers/AccessControlAllowOriginHeader'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/UserGetInfoResponse'
+  headers:
+    ContentTypeHeader:
+      description: The MIME type of the body of the request or response.
+      schema:
+        type: string
+        example: application/json
+    ConnectionHeader:
+      description: >-
+        Options that specify whether the network connection remains open after
+        the current transaction finishes.
+      schema:
+        type: string
+        example: keep-alive
+    AccessControlAllowOriginHeader:
+      description: >-
+        Specifies either a single origin which tells browsers to allow that
+        origin to access the resource; or else — for requests without
+        credentials — the "*" wildcard, to tell browsers to allow any origin to
+        access the resource.
+      schema:
+        type: string
+        example: '*'
+    Content-Length:
+      schema:
+        type: integer
+        example: 468
+  securitySchemes:
+    basicAuth:
+      description: >
+        Basic authentication where the username is the 'client_uuid' and the
+        password is the client's secret.
+      type: http
+      scheme: basic
+  schemas:
+    schema_client_uuid:
+      description: >-
+        A unique identifier for each client, in UUID4 format. This UUID is
+        generated by ROOK and provided to clients upon signing service
+        agreements.
+      type: string
+      format: uuid
+      example: demoClientUUID
+    schema_user_id:
+      type: string
+      pattern: ^[a-zA-Z0-9\-]{1,50}$
+      example: demoUserId
+    datetime_iso8601:
+      description: Date and time in ISO 8601 format (YYYY-MM-DDTHH:MM:SS.sssZ).
+      type: string
+      format: date-time
+      example: '2023-12-29T21:07:14.402999Z'
+    schema_health_structure_common_properties:
+      type: object
+      properties:
+        version:
+          $ref: '#/components/schemas/schema_version'
+        client_uuid:
+          $ref: '#/components/schemas/schema_client_uuid'
+        user_id:
+          $ref: '#/components/schemas/schema_user_id'
+        document_version:
+          $ref: '#/components/schemas/schema_document_version'
+    schema_events_common_properties:
+      type: object
+      properties:
+        auto_detected:
+          $ref: '#/components/schemas/schema_auto_detected'
+    schema_version:
+      description: The version number of the data structure.
+      type: number
+      example: 2
+    schema_document_version:
+      description: >-
+        The current version of the document. Increments if the data source
+        updates the information.
+      type: number
+      example: 1
+    schema_non_structured_data_array:
+      type: array
+      items:
+        type: object
+        additionalProperties: true
+    schema_metadata:
+      type: object
+      properties:
+        datetime_string:
+          $ref: '#/components/schemas/datetime_iso8601'
+        sources_of_data_array:
+          type: array
+          items:
+            type: string
+          example:
+            - Polar
+        user_id_string:
+          $ref: '#/components/schemas/schema_user_id'
+    schema_auto_detected:
+      description: Indicates whether the event was automatically detected by the device.
+      type: boolean
+      example: false
+    schema_one_data_source_authorizer:
+      type: object
+      properties:
+        description:
+          type: string
+          example: >-
+            Fitbit is part of Google. Together we can make health and well-being
+            more accessible to more people.
+        name:
+          type: string
+          example: Fitbit
+        image:
+          type: string
+          format: uri
+          example: https://static/img/fitbit.png
+        connected:
+          type: boolean
+          example: false
+        authorization_url:
+          type: string
+          format: uri
+          example: >-
+            https://www.fitbit.com/oauth2/authorize?response_type=code&client_id=23R2...
+      required:
+        - name
+        - description
+        - image
+        - connected
+        - authorization_url
+    schema_data_sources_authorizers:
+      type: object
+      properties:
+        client_name:
+          type: string
+          example: demoClientName
+        theme:
+          type: string
+          example: Dark
+        data_sources:
+          type: array
+          items:
+            $ref: '#/components/schemas/schema_one_data_source_authorizer'
+      required:
+        - client_name
+        - theme
+        - data_sources
+    schema_user_info:
+      allOf:
+        - $ref: '#/components/schemas/schema_health_structure_common_properties'
+        - type: object
+          properties:
+            metadata:
+              $ref: '#/components/schemas/schema_metadata'
+            data_structure:
+              title: data_struture
+              type: string
+              example: user_info
+            user_information:
+              type: object
+              properties:
+                user_body_metrics:
+                  type: object
+                  properties:
+                    height_cm_int:
+                      type: integer
+                    weight_kg_float:
+                      type: number
+                      format: float
+                user_demographics:
+                  type: object
+                  properties:
+                    sex_string:
+                      type: string
+                    gender_string:
+                      type: string
+                    date_of_birth_string:
+                      type: string
+                    country_string:
+                      type: string
+                    state_string:
+                      type: string
+                    city_string:
+                      type: string
+                    ethnicity_string:
+                      type: string
+                    income_string:
+                      type: string
+                    marital_status_string:
+                      type: string
+                    time_zone_string:
+                      type: string
+                    education_string:
+                      type: string
+    RevokePermission:
+      allOf:
+        - type: object
+          properties:
+            message:
+              type: string
+              example: >-
+                Authorization for the specified user data source has been
+                successfully revoked
+    BodyRevokePermission:
+      allOf:
+        - type: object
+          properties:
+            data_source:
+              type: string
+              example: Whoop
+    Unauth:
+      allOf:
+        - type: object
+          properties:
+            error:
+              type: string
+              example: Unauthorized
+            exception:
+              type: string
+              example: The client_uuid or password are incorrect
+            path:
+              type: string
+              example: /api/v1/user_id/{user_id}/data_sources/revoke_auth
+            method:
+              type: string
+              example: POST
+    MissingBody:
+      allOf:
+        - type: object
+          properties:
+            error:
+              type: string
+              example: Bad Request
+            exception:
+              type: string
+              example: Content-Type not supported!
+            path:
+              type: string
+              example: /api/v1/user_id/{user_id}/data_sources/revoke_auth
+            method:
+              type: string
+              example: POST
+    UrlNoExists:
+      allOf:
+        - type: object
+          properties:
+            error:
+              type: string
+              example: Not Found
+            exception:
+              type: string
+              example: >-
+                The requested URL was not found on the server. If you entered
+                the URL manually please check your spelling and try again
+            path:
+              type: string
+              example: /api/v1/user_id/data_sources/revoke_auth
+            method:
+              type: string
+              example: POST
+    WrongData:
+      allOf:
+        - type: object
+          properties:
+            error:
+              type: string
+              example: Unprocessable Entity
+            exception:
+              type: string
+              example: >-
+                Must be one of Garmin, Oura, Apple Health, Health Connect,
+                Polar, Fitbit, Whoop.
+            path:
+              type: string
+              example: /api/v1/user_id/{user_id}/data_sources/revoke_auth
+            method:
+              type: string
+              example: POST
+    PhysicalSummary:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/schema_health_structure_common_properties'
+        - type: object
+          properties:
+            data_structure:
+              type: string
+              example: physical_summary
+            physical_health:
+              type: object
+              properties:
+                summary:
+                  type: object
+                  properties:
+                    physical_summary:
+                      type: object
+                      properties:
+                        non_structured_data_array:
+                          $ref: >-
+                            #/components/schemas/schema_non_structured_data_array
+                        metadata:
+                          $ref: '#/components/schemas/schema_metadata'
+                        activity:
+                          type: object
+                          properties:
+                            active_seconds_int:
+                              type: number
+                              format: int32
+                            continuous_inactive_periods_int:
+                              type: number
+                              format: int32
+                            inactivity_seconds_int:
+                              type: number
+                              format: int32
+                            low_intensity_seconds_int:
+                              type: number
+                              format: int32
+                            moderate_intensity_seconds_int:
+                              type: number
+                              format: int32
+                            rest_seconds_int:
+                              type: number
+                              format: int32
+                            vigorous_intensity_seconds_int:
+                              type: number
+                              format: int32
+                            activity_level_granular_data_array:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  datetime_string:
+                                    $ref: '#/components/schemas/datetime_iso8601'
+                                  interval_duration_seconds_float:
+                                    type: number
+                                    format: float
+                                  activity_level_float:
+                                    type: number
+                                    format: float
+                                  activity_level_label_string:
+                                    type: string
+                        calories:
+                          type: object
+                          properties:
+                            calories_basal_metabolic_rate_kcal_float:
+                              type: number
+                              format: float
+                            calories_expenditure_kcal_float:
+                              type: number
+                              format: float
+                            calories_net_active_kcal_float:
+                              type: number
+                              format: float
+                            calories_net_intake_kcal_float:
+                              type: number
+                              format: float
+                        distance:
+                          type: object
+                          properties:
+                            steps_int:
+                              type: number
+                              format: int32
+                            active_steps_int:
+                              type: number
+                              format: int32
+                            floors_climbed_float:
+                              type: number
+                              format: float
+                            elevation_avg_altitude_meters_float:
+                              type: number
+                              format: float
+                            elevation_minimum_altitude_meters_float:
+                              type: number
+                              format: float
+                            elevation_maximum_altitude_meters_float:
+                              type: number
+                              format: float
+                            elevation_gain_actual_altitude_meters_float:
+                              type: number
+                              format: float
+                            elevation_loss_actual_altitude_meters_float:
+                              type: number
+                              format: float
+                            elevation_planned_gain_meters_float:
+                              type: number
+                              format: float
+                            swimming_num_strokes_float:
+                              type: number
+                              format: float
+                            swimming_num_laps_int:
+                              type: number
+                              format: int32
+                            swimming_pool_length_meters_float:
+                              type: number
+                              format: float
+                            swimming_total_distance_meters_float:
+                              type: number
+                              format: float
+                            traveled_distance_meters_float:
+                              type: number
+                              format: float
+                            walked_distance_meters_float:
+                              type: number
+                              format: float
+                            steps_granular_data_array:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  datetime_string:
+                                    $ref: '#/components/schemas/datetime_iso8601'
+                                  interval_duration_seconds_float:
+                                    type: number
+                                    format: float
+                                  steps_int:
+                                    type: number
+                                    format: int32
+                            active_steps_granular_data_array:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  datetime_string:
+                                    $ref: '#/components/schemas/datetime_iso8601'
+                                  interval_duration_seconds_float:
+                                    type: number
+                                    format: float
+                                  active_steps_int:
+                                    type: number
+                                    format: int32
+                            floors_climbed_granular_data_array:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  datetime_string:
+                                    $ref: '#/components/schemas/datetime_iso8601'
+                                  interval_duration_seconds_float:
+                                    type: number
+                                    format: float
+                                  floors_climbed_float:
+                                    type: number
+                                    format: float
+                            elevation_granular_data_array:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  datetime_string:
+                                    $ref: '#/components/schemas/datetime_iso8601'
+                                  interval_duration_seconds_float:
+                                    type: number
+                                    format: float
+                                  elevation_change_meters_float:
+                                    type: number
+                                    format: float
+                            swimming_distance_granular_data_array:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  datetime_string:
+                                    $ref: '#/components/schemas/datetime_iso8601'
+                                  interval_duration_seconds_float:
+                                    type: number
+                                    format: float
+                                  swimming_distance_meters_float:
+                                    type: number
+                                    format: float
+                            traveled_distance_granular_data_array:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  datetime_string:
+                                    $ref: '#/components/schemas/datetime_iso8601'
+                                  interval_duration_seconds_float:
+                                    type: number
+                                    format: float
+                                  traveled_distance_meters_float:
+                                    type: number
+                                    format: float
+                        heart_rate:
+                          type: object
+                          properties:
+                            hr_avg_bpm_int:
+                              type: number
+                              format: int32
+                            hr_maximum_bpm_int:
+                              type: number
+                              format: int32
+                            hr_minimum_bpm_int:
+                              type: number
+                              format: int32
+                            hr_resting_bpm_int:
+                              type: number
+                              format: int32
+                            hrv_avg_rmssd_float:
+                              type: number
+                              format: float
+                            hrv_avg_sdnn_float:
+                              type: number
+                              format: float
+                            hr_granular_data_array:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  datetime_string:
+                                    $ref: '#/components/schemas/datetime_iso8601'
+                                  hr_bpm_int:
+                                    type: number
+                                    format: int32
+                            hrv_rmssd_granular_data_array:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  datetime_string:
+                                    $ref: '#/components/schemas/datetime_iso8601'
+                                  hrv_rmssd_float:
+                                    type: number
+                                    format: float
+                            hrv_sdnn_granular_data_array:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  datetime_string:
+                                    $ref: '#/components/schemas/datetime_iso8601'
+                                  hrv_sdnn_float:
+                                    type: number
+                                    format: float
+                        oxygenation:
+                          type: object
+                          properties:
+                            saturation_avg_percentage_int:
+                              type: number
+                              format: int32
+                            vo2max_mL_per_min_per_kg_int:
+                              type: number
+                              format: int32
+                            saturation_granular_data_array:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  datetime_string:
+                                    $ref: '#/components/schemas/datetime_iso8601'
+                                  interval_duration_seconds_float:
+                                    type: number
+                                    format: float
+                                  saturation_percentage_int:
+                                    type: number
+                                    format: int32
+                            vo2_granular_data_array:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  datetime_string:
+                                    $ref: '#/components/schemas/datetime_iso8601'
+                                  interval_duration_seconds_float:
+                                    type: number
+                                    format: float
+                                  vo2_mL_per_min_per_kg_int:
+                                    type: number
+                                    format: int32
+                        stress:
+                          type: object
+                          properties:
+                            high_stress_duration_seconds_int:
+                              type: number
+                              format: int32
+                            low_stress_duration_seconds_int:
+                              type: number
+                              format: int32
+                            medium_stress_duration_seconds_int:
+                              type: number
+                              format: int32
+                            stress_at_rest_duration_seconds_int:
+                              type: number
+                              format: int32
+                            stress_avg_level_int:
+                              type: number
+                              format: int32
+                            stress_duration_seconds_int:
+                              type: number
+                              format: int32
+                            stress_maximum_level_int:
+                              type: number
+                              format: int32
+                            stress_granular_data_array:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  datetime_string:
+                                    $ref: '#/components/schemas/datetime_iso8601'
+                                  stress_score_int:
+                                    type: number
+                                    format: int32
+    ActivityEvent:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/schema_health_structure_common_properties'
+        - $ref: '#/components/schemas/schema_events_common_properties'
+        - type: object
+          properties:
+            data_structure:
+              type: string
+              example: activity_event
+            physical_health:
+              type: object
+              properties:
+                events:
+                  type: object
+                  properties:
+                    activity_event:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          non_structured_data_array:
+                            $ref: >-
+                              #/components/schemas/schema_non_structured_data_array
+                          metadata:
+                            allOf:
+                              - $ref: '#/components/schemas/schema_metadata'
+                              - type: object
+                                properties:
+                                  was_the_user_under_physical_activity_bool:
+                                    type: boolean
+                          activity:
+                            type: object
+                            properties:
+                              active_seconds_int:
+                                type: number
+                                format: int32
+                              activity_duration_seconds_int:
+                                type: number
+                                format: int32
+                              activity_end_datetime_string:
+                                $ref: '#/components/schemas/datetime_iso8601'
+                              activity_energy_kilojoules_float:
+                                type: number
+                                format: float
+                              activity_energy_planned_kilojoules_float:
+                                type: number
+                                format: float
+                              activity_level_granular_data_array:
+                                type: array
+                                items:
+                                  type: object
+                                  properties:
+                                    activity_level_float:
+                                      type: number
+                                      format: float
+                                    activity_level_label_string:
+                                      type: string
+                                    datetime_string:
+                                      $ref: '#/components/schemas/datetime_iso8601'
+                                    interval_duration_seconds_float:
+                                      type: number
+                                      format: float
+                              activity_start_datetime_string:
+                                $ref: '#/components/schemas/datetime_iso8601'
+                              activity_strain_level_float:
+                                type: number
+                                format: float
+                              activity_type_name_string:
+                                type: string
+                                example: 'HKWorkoutActivityType(rawValue: 46)'
+                              activity_work_kilojoules_float:
+                                type: number
+                                format: float
+                              continuous_inactive_periods_int:
+                                type: number
+                                format: int32
+                              inactivity_seconds_int:
+                                type: number
+                                format: int32
+                              low_intensity_seconds_int:
+                                type: number
+                                format: int32
+                              moderate_intensity_seconds_int:
+                                type: number
+                                format: int32
+                              rest_seconds_int:
+                                type: number
+                                format: int32
+                              vigorous_intensity_seconds_int:
+                                type: number
+                                format: int32
+                          calories:
+                            type: object
+                            properties:
+                              calories_basal_metabolic_rate_kcal_float:
+                                type: number
+                                format: float
+                              calories_expenditure_kcal_float:
+                                type: number
+                                format: float
+                              calories_net_active_kcal_float:
+                                type: number
+                                format: float
+                              calories_net_intake_kcal_float:
+                                type: number
+                                format: float
+                              carbohydrate_percentage_of_calories_int:
+                                type: number
+                                format: int32
+                              fat_percentage_of_calories_int:
+                                type: number
+                                format: int32
+                              protein_percentage_of_calories_int:
+                                type: number
+                                format: int32
+                          distance:
+                            type: object
+                            properties:
+                              elevation_avg_altitude_meters_float:
+                                type: number
+                                format: float
+                              elevation_gain_actual_altitude_meters_float:
+                                type: number
+                                format: float
+                              elevation_granular_data_array:
+                                type: array
+                                items:
+                                  type: object
+                                  properties:
+                                    datetime_string:
+                                      $ref: '#/components/schemas/datetime_iso8601'
+                                    elevation_change_meters_float:
+                                      type: number
+                                      format: float
+                                    interval_duration_seconds_float:
+                                      type: number
+                                      format: float
+                              elevation_loss_actual_altitude_meters_float:
+                                type: number
+                                format: float
+                              elevation_maximum_altitude_meters_float:
+                                type: number
+                                format: float
+                              elevation_minimum_altitude_meters_float:
+                                type: number
+                                format: float
+                              elevation_planned_gain_meters_float:
+                                type: number
+                                format: float
+                              floors_climbed_float:
+                                type: number
+                                format: float
+                              floors_climbed_granular_data_array:
+                                type: array
+                                items:
+                                  type: object
+                                  properties:
+                                    datetime_string:
+                                      $ref: '#/components/schemas/datetime_iso8601'
+                                    floors_climbed_float:
+                                      type: number
+                                      format: float
+                                    interval_duration_seconds_float:
+                                      type: number
+                                      format: float
+                              steps_int:
+                                type: number
+                              steps_granular_data_array:
+                                type: array
+                                items:
+                                  type: object
+                                  properties:
+                                    datetime_string:
+                                      $ref: '#/components/schemas/datetime_iso8601'
+                                    interval_duration_seconds_float:
+                                      type: number
+                                      format: float
+                                    steps_int:
+                                      type: number
+                                      format: int32
+                              swimming_num_laps_int:
+                                type: number
+                                format: int32
+                              swimming_distance_granular_data_array:
+                                type: array
+                                items:
+                                  type: object
+                                  properties:
+                                    datetime_string:
+                                      $ref: '#/components/schemas/datetime_iso8601'
+                                    interval_duration_seconds_float:
+                                      type: number
+                                      format: float
+                                    swimming_distance_meters_float:
+                                      type: number
+                                      format: float
+                              swimming_num_strokes_float:
+                                type: number
+                                format: float
+                              swimming_pool_length_meters_float:
+                                type: number
+                                format: float
+                              swimming_total_distance_meters_float:
+                                type: number
+                                format: float
+                              traveled_distance_meters_float:
+                                type: number
+                                format: float
+                              traveled_distance_granular_data_array:
+                                type: array
+                                items:
+                                  type: object
+                                  properties:
+                                    datetime_string:
+                                      $ref: '#/components/schemas/datetime_iso8601'
+                                    interval_duration_seconds_float:
+                                      type: number
+                                      format: float
+                                    traveled_distance_meters_float:
+                                      type: number
+                                      format: float
+                              walked_distance_meters_float:
+                                type: number
+                                format: float
+                          heart_rate:
+                            type: object
+                            properties:
+                              hr_avg_bpm_int:
+                                type: number
+                                format: int32
+                              hr_maximum_bpm_int:
+                                type: number
+                                format: int32
+                              hr_granular_data_array:
+                                type: array
+                                items:
+                                  type: object
+                                  properties:
+                                    datetime_string:
+                                      $ref: '#/components/schemas/datetime_iso8601'
+                                    hr_bpm_int:
+                                      type: number
+                                      format: int32
+                              hr_minimum_bpm_int:
+                                type: number
+                                format: int32
+                              hr_resting_bpm_int:
+                                type: number
+                                format: int32
+                              hrv_avg_rmssd_float:
+                                type: number
+                                format: float
+                              hrv_avg_sdnn_float:
+                                type: number
+                                format: float
+                              hrv_rmssd_granular_data_array:
+                                type: array
+                                items:
+                                  type: object
+                                  properties:
+                                    datetime_string:
+                                      $ref: '#/components/schemas/datetime_iso8601'
+                                    hrv_rmssd_float:
+                                      type: number
+                                      format: float
+                              hrv_sdnn_granular_data_array:
+                                type: array
+                                items:
+                                  type: object
+                                  properties:
+                                    datetime_string:
+                                      $ref: '#/components/schemas/datetime_iso8601'
+                                    hrv_sdnn_float:
+                                      type: number
+                                      format: float
+                          movement:
+                            type: object
+                            properties:
+                              cadence_avg_rpm_float:
+                                type: number
+                                format: float
+                              cadence_granular_data_array:
+                                type: array
+                                items:
+                                  type: object
+                                  properties:
+                                    cadence_rpm_float:
+                                      type: number
+                                      format: float
+                                    datetime_string:
+                                      $ref: '#/components/schemas/datetime_iso8601'
+                                    interval_duration_seconds_float:
+                                      type: number
+                                      format: float
+                              cadence_maximum_rpm_float:
+                                type: number
+                                format: float
+                              pace_avg_min_per_km_float:
+                                type: number
+                                format: float
+                              pace_maximum_min_per_km_float:
+                                type: number
+                                format: float
+                              speed_avg_meters_per_second_float:
+                                type: number
+                                format: float
+                              lap_granular_data_array:
+                                type: array
+                                items:
+                                  type: object
+                                  properties:
+                                    datetime_string:
+                                      $ref: '#/components/schemas/datetime_iso8601'
+                                    interval_duration_seconds_float:
+                                      type: number
+                                      format: float
+                                    laps_int:
+                                      type: number
+                                      format: int32
+                              speed_granular_data_array:
+                                type: array
+                                items:
+                                  type: object
+                                  properties:
+                                    datetime_string:
+                                      $ref: '#/components/schemas/datetime_iso8601'
+                                    interval_duration_seconds_float:
+                                      type: number
+                                      format: float
+                                    speed_meters_per_second_float:
+                                      type: number
+                                      format: float
+                              speed_maximum_meters_per_second_float:
+                                type: number
+                                format: float
+                              speed_normalized_meters_per_second_float:
+                                type: number
+                                format: float
+                              torque_avg_newton_meters_float:
+                                type: number
+                                format: float
+                              torque_maximum_newton_meters_float:
+                                type: number
+                                format: float
+                              torque_granular_data_array:
+                                type: array
+                                items:
+                                  type: object
+                                  properties:
+                                    datetime_string:
+                                      $ref: '#/components/schemas/datetime_iso8601'
+                                    interval_duration_seconds_float:
+                                      type: number
+                                      format: float
+                                    torque_newton_meters_float:
+                                      type: number
+                                      format: float
+                              velocity_avg_object:
+                                type: object
+                                properties:
+                                  direction_string:
+                                    type: string
+                                  speed_meters_per_second_float:
+                                    type: number
+                                    format: float
+                              velocity_maximum_object:
+                                type: object
+                                properties:
+                                  direction_string:
+                                    type: string
+                                  speed_meters_per_second_float:
+                                    type: number
+                                    format: float
+                          oxygenation:
+                            type: object
+                            properties:
+                              saturation_avg_percentage_int:
+                                type: number
+                                format: int32
+                              vo2max_mL_per_min_per_kg_int:
+                                type: number
+                                format: int32
+                              saturation_granular_data_array:
+                                type: array
+                                items:
+                                  type: object
+                                  properties:
+                                    datetime_string:
+                                      $ref: '#/components/schemas/datetime_iso8601'
+                                    interval_duration_seconds_float:
+                                      type: number
+                                      format: float
+                                    saturation_percentage_int:
+                                      type: number
+                                      format: int32
+                              vo2_granular_data_array:
+                                type: array
+                                items:
+                                  type: object
+                                  properties:
+                                    datetime_string:
+                                      $ref: '#/components/schemas/datetime_iso8601'
+                                    interval_duration_seconds_float:
+                                      type: number
+                                      format: float
+                                    vo2_mL_per_min_per_kg_int:
+                                      type: number
+                                      format: int32
+                          position:
+                            type: object
+                            properties:
+                              position_centroid_object:
+                                type: object
+                                properties:
+                                  lat_deg_float:
+                                    type: number
+                                    format: float
+                                  lng_deg_float:
+                                    type: number
+                                    format: float
+                              position_end_object:
+                                type: object
+                                properties:
+                                  lat_deg_float:
+                                    type: number
+                                    format: float
+                                  lng_deg_float:
+                                    type: number
+                                    format: float
+                              position_granular_data_array:
+                                type: array
+                                items:
+                                  type: object
+                                  properties:
+                                    datetime_string:
+                                      $ref: '#/components/schemas/datetime_iso8601'
+                                    interval_duration_seconds_float:
+                                      type: number
+                                      format: float
+                                    lat_deg_float:
+                                      type: number
+                                      format: float
+                                    lng_deg_float:
+                                      type: number
+                                      format: float
+                              position_polyline_map_data_summary_string:
+                                type: string
+                              position_start_object:
+                                type: object
+                                properties:
+                                  lat_deg_float:
+                                    type: number
+                                    format: float
+                                  lng_deg_float:
+                                    type: number
+                                    format: float
+                          power:
+                            type: object
+                            properties:
+                              power_avg_watts_float:
+                                type: number
+                                format: float
+                              power_granular_data_array:
+                                type: array
+                                items:
+                                  type: object
+                                  properties:
+                                    datetime_string:
+                                      $ref: '#/components/schemas/datetime_iso8601'
+                                    interval_duration_seconds_float:
+                                      type: number
+                                      format: float
+                                    power_watts_float:
+                                      type: number
+                                      format: float
+                              power_maximum_watts_float:
+                                type: number
+                                format: float
+                          stress:
+                            type: object
+                            properties:
+                              tss_granular_data_array:
+                                type: array
+                                items:
+                                  type: object
+                                  properties:
+                                    datetime_string:
+                                      $ref: '#/components/schemas/datetime_iso8601'
+                                    tss_score_int:
+                                      type: number
+                                      format: int32
+                              high_stress_duration_seconds_int:
+                                type: number
+                                format: int32
+                              low_stress_duration_seconds_int:
+                                type: number
+                                format: int32
+                              medium_stress_duration_seconds_int:
+                                type: number
+                                format: int32
+                              stress_at_rest_duration_seconds_int:
+                                type: number
+                                format: int32
+                              stress_avg_level_int:
+                                type: number
+                                format: int32
+                              stress_duration_seconds_int:
+                                type: number
+                                format: int32
+                              stress_maximum_level_int:
+                                type: number
+                                format: int32
+    HeartRateEvent:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/schema_health_structure_common_properties'
+        - $ref: '#/components/schemas/schema_events_common_properties'
+        - type: object
+          properties:
+            data_structure:
+              type: string
+              example: heart_rate_event
+            physical_health:
+              type: object
+              properties:
+                events:
+                  type: object
+                  properties:
+                    heart_rate_event:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          non_structured_data_array:
+                            $ref: >-
+                              #/components/schemas/schema_non_structured_data_array
+                          metadata:
+                            allOf:
+                              - $ref: '#/components/schemas/schema_metadata'
+                              - type: object
+                                properties:
+                                  was_the_user_under_physical_activity_bool:
+                                    type: boolean
+                          heart_rate:
+                            type: object
+                            properties:
+                              hr_maximum_bpm_int:
+                                type: integer
+                              hr_minimum_bpm_int:
+                                type: integer
+                              hr_avg_bpm_int:
+                                type: integer
+                              hr_resting_bpm_int:
+                                type: integer
+                              hr_granular_data_array:
+                                type: array
+                                items:
+                                  type: object
+                                  properties:
+                                    datetime_string:
+                                      $ref: '#/components/schemas/datetime_iso8601'
+                                    hr_bpm_int:
+                                      type: integer
+                              hrv_avg_rmssd_float:
+                                type: number
+                                format: float
+                              hrv_avg_sdnn_float:
+                                type: number
+                                format: float
+                              hrv_sdnn_granular_data_array:
+                                type: array
+                                items:
+                                  type: object
+                                  properties:
+                                    datetime_string:
+                                      $ref: '#/components/schemas/datetime_iso8601'
+                                    hrv_sdnn_float:
+                                      type: number
+                                      format: float
+                              hrv_rmssd_granular_data_array:
+                                type: array
+                                items:
+                                  type: object
+                                  properties:
+                                    datetime_string:
+                                      $ref: '#/components/schemas/datetime_iso8601'
+                                    hrv_rmssd_float:
+                                      type: number
+                                      format: float
+    OxygenationEvent:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/schema_health_structure_common_properties'
+        - $ref: '#/components/schemas/schema_events_common_properties'
+        - type: object
+          properties:
+            data_structure:
+              type: string
+              example: oxygenation_event
+            physical_health:
+              type: object
+              properties:
+                events:
+                  type: object
+                  properties:
+                    oxygenation_event:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          non_structured_data_array:
+                            $ref: >-
+                              #/components/schemas/schema_non_structured_data_array
+                          metadata:
+                            allOf:
+                              - $ref: '#/components/schemas/schema_metadata'
+                              - type: object
+                                properties:
+                                  was_the_user_under_physical_activity_bool:
+                                    type: boolean
+                          oxygenation:
+                            type: object
+                            properties:
+                              saturation_avg_percentage_int:
+                                type: integer
+                              saturation_granular_data_array:
+                                type: array
+                                items:
+                                  type: object
+                                  properties:
+                                    datetime_string:
+                                      $ref: '#/components/schemas/datetime_iso8601'
+                                    interval_duration_seconds_float:
+                                      type: number
+                                      format: float
+                                    saturation_percentage_int:
+                                      type: integer
+                              vo2max_mL_per_min_per_kg_int:
+                                type: integer
+                              vo2_granular_data_array:
+                                type: array
+                                items:
+                                  type: object
+                                  properties:
+                                    datetime_string:
+                                      $ref: '#/components/schemas/datetime_iso8601'
+                                    interval_duration_seconds_float:
+                                      type: number
+                                      format: float
+                                    vo2_mL_per_min_per_kg_int:
+                                      type: integer
+    StressEvent:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/schema_health_structure_common_properties'
+        - $ref: '#/components/schemas/schema_events_common_properties'
+        - type: object
+          properties:
+            data_structure:
+              type: string
+              example: stress_event
+            physical_health:
+              type: object
+              properties:
+                events:
+                  type: object
+                  properties:
+                    stress_event:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          non_structured_data_array:
+                            $ref: >-
+                              #/components/schemas/schema_non_structured_data_array
+                          metadata:
+                            allOf:
+                              - $ref: '#/components/schemas/schema_metadata'
+                              - type: object
+                                properties:
+                                  was_the_user_under_physical_activity_bool:
+                                    type: boolean
+                          stress:
+                            type: object
+                            properties:
+                              stress_at_rest_duration_seconds_int:
+                                type: integer
+                              stress_duration_seconds_int:
+                                type: integer
+                              low_stress_duration_seconds_int:
+                                type: integer
+                              medium_stress_duration_seconds_int:
+                                type: integer
+                              high_stress_duration_seconds_int:
+                                type: integer
+                              tss_granular_data_array:
+                                type: array
+                                items:
+                                  type: object
+                                  properties:
+                                    datetime_string:
+                                      $ref: '#/components/schemas/datetime_iso8601'
+                                    interval_duration_seconds_float:
+                                      type: number
+                                      format: float
+                                    tss_score_int:
+                                      type: integer
+                              stress_avg_level_int:
+                                type: integer
+                              stress_maximum_level_int:
+                                type: integer
+    SleepSummary:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/schema_health_structure_common_properties'
+        - type: object
+          properties:
+            data_structure:
+              type: string
+              example: sleep_summary
+            sleep_health:
+              type: object
+              properties:
+                summary:
+                  type: object
+                  properties:
+                    sleep_summary:
+                      type: object
+                      properties:
+                        non_structured_data_array:
+                          $ref: >-
+                            #/components/schemas/schema_non_structured_data_array
+                        metadata:
+                          $ref: '#/components/schemas/schema_metadata'
+                        duration:
+                          type: object
+                          properties:
+                            sleep_start_datetime_string:
+                              $ref: '#/components/schemas/datetime_iso8601'
+                            sleep_end_datetime_string:
+                              $ref: '#/components/schemas/datetime_iso8601'
+                            sleep_date_string:
+                              type: string
+                            sleep_duration_seconds_int:
+                              type: integer
+                            time_in_bed_seconds_int:
+                              type: integer
+                            light_sleep_duration_seconds_int:
+                              type: integer
+                            rem_sleep_duration_seconds_int:
+                              type: integer
+                            deep_sleep_duration_seconds_int:
+                              type: integer
+                            time_to_fall_asleep_seconds_int:
+                              type: integer
+                            time_awake_during_sleep_seconds_int:
+                              type: integer
+                        scores:
+                          type: object
+                          properties:
+                            sleep_quality_rating_1_5_score_int:
+                              type: integer
+                            sleep_efficiency_1_100_score_int:
+                              type: integer
+                            sleep_goal_seconds_int:
+                              type: integer
+                            sleep_continuity_1_5_score_int:
+                              type: integer
+                            sleep_continuity_1_5_rating_int:
+                              type: integer
+                        heart_rate:
+                          type: object
+                          properties:
+                            hr_maximum_bpm_int:
+                              type: integer
+                            hr_minimum_bpm_int:
+                              type: integer
+                            hr_avg_bpm_int:
+                              type: integer
+                            hr_resting_bpm_int:
+                              type: integer
+                            hr_basal_bpm_int:
+                              type: integer
+                            hr_granular_data_array:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  datetime_string:
+                                    $ref: '#/components/schemas/datetime_iso8601'
+                                  hr_bpm_int:
+                                    type: integer
+                            hrv_avg_rmssd_float:
+                              type: number
+                              format: float
+                            hrv_avg_sdnn_float:
+                              type: number
+                              format: float
+                            hrv_sdnn_granular_data_array:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  datetime_string:
+                                    $ref: '#/components/schemas/datetime_iso8601'
+                                  hrv_sdnn_float:
+                                    type: number
+                                    format: float
+                            hrv_rmssd_granular_data_array:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  datetime_string:
+                                    $ref: '#/components/schemas/datetime_iso8601'
+                                  hrv_rmssd_float:
+                                    type: number
+                                    format: float
+                        temperature:
+                          type: object
+                          properties:
+                            temperature_avg_object:
+                              type: object
+                              properties:
+                                measurement_type_string:
+                                  type: string
+                                temperature_celsius_float:
+                                  type: number
+                                  format: float
+                            temperature_delta_object:
+                              type: object
+                              properties:
+                                measurement_type_string:
+                                  type: string
+                                temperature_celsius_float:
+                                  type: number
+                                  format: float
+                            temperature_granular_data_array:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  datetime_string:
+                                    $ref: '#/components/schemas/datetime_iso8601'
+                                  measurement_type_string:
+                                    type: string
+                                  temperature_celsius_float:
+                                    type: number
+                                    format: float
+                            temperature_maximum_object:
+                              type: object
+                              properties:
+                                measurement_type_string:
+                                  type: string
+                                temperature_celsius_float:
+                                  type: number
+                                  format: float
+                            temperature_minimum_object:
+                              type: object
+                              properties:
+                                measurement_type_string:
+                                  type: string
+                                temperature_celsius_float:
+                                  type: number
+                                  format: float
+                        breathing:
+                          type: object
+                          properties:
+                            breaths_minimum_per_min_int:
+                              type: integer
+                            breaths_avg_per_min_int:
+                              type: integer
+                            breaths_maximum_per_min_int:
+                              type: integer
+                            breathing_granular_data_array:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  datetime_string:
+                                    $ref: '#/components/schemas/datetime_iso8601'
+                                  breaths_per_min_int:
+                                    type: integer
+                            snoring_events_count_int:
+                              type: integer
+                            snoring_duration_total_seconds_int:
+                              type: integer
+                            snoring_granular_data_array:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  datetime_string:
+                                    $ref: '#/components/schemas/datetime_iso8601'
+                                  interval_duration_seconds_float:
+                                    type: number
+                                    format: float
+                                  snoring_events_count_int:
+                                    type: integer
+                            saturation_avg_percentage_int:
+                              type: integer
+                            saturation_minimum_percentage_int:
+                              type: integer
+                            saturation_maximum_percentage_int:
+                              type: integer
+                            saturation_granular_data_array:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  datetime_string:
+                                    $ref: '#/components/schemas/datetime_iso8601'
+                                  interval_duration_seconds_float_number:
+                                    type: number
+                                    format: float
+                                  saturation_percentage_int:
+                                    type: integer
+    BodySummary:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/schema_health_structure_common_properties'
+        - type: object
+          properties:
+            data_structure:
+              type: string
+              example: body_summary
+            body_health:
+              type: object
+              properties:
+                summary:
+                  type: object
+                  properties:
+                    body_summary:
+                      type: object
+                      properties:
+                        non_structured_data_array:
+                          $ref: >-
+                            #/components/schemas/schema_non_structured_data_array
+                        metadata:
+                          $ref: '#/components/schemas/schema_metadata'
+                        body_metrics:
+                          type: object
+                          properties:
+                            waist_circumference_cm_int:
+                              type: integer
+                            hip_circumference_cm_int:
+                              type: integer
+                            chest_circumference_cm_int:
+                              type: integer
+                            bone_composition_percentage_int:
+                              type: integer
+                            muscle_composition_percentage_int:
+                              type: integer
+                            water_composition_percentage_int:
+                              type: integer
+                            weight_kg_float:
+                              type: number
+                              format: float
+                            height_cm_int:
+                              type: integer
+                            bmi_float:
+                              type: number
+                              format: float
+                        blood_glucose:
+                          type: object
+                          properties:
+                            blood_glucose_avg_mg_per_dL_int:
+                              type: integer
+                            blood_glucose_granular_data_array:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  blood_glucose_mg_per_dL_int:
+                                    type: integer
+                                  datetime_string:
+                                    $ref: '#/components/schemas/datetime_iso8601'
+                        blood_pressure:
+                          type: object
+                          properties:
+                            blood_pressure_avg_object:
+                              type: object
+                              properties:
+                                systolic_mmHg_int:
+                                  type: integer
+                                diastolic_mmHg_int:
+                                  type: integer
+                            blood_pressure_granular_data_array:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  datetime_string:
+                                    $ref: '#/components/schemas/datetime_iso8601'
+                                  systolic_mmHg_int:
+                                    type: integer
+                                  diastolic_mmHg_int:
+                                    type: integer
+                        hydration:
+                          type: object
+                          properties:
+                            water_total_consumption_mL_int:
+                              type: integer
+                            hydration_amount_granular_data_array:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  datetime_string:
+                                    $ref: '#/components/schemas/datetime_iso8601'
+                                  interval_duration_seconds_float:
+                                    type: number
+                                    format: float
+                                  hydration_amount_mL_int:
+                                    type: integer
+                            hydration_level_granular_data_array:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  datetime_string:
+                                    $ref: '#/components/schemas/datetime_iso8601'
+                                  interval_duration_seconds_float:
+                                    type: number
+                                    format: float
+                                  hydration_level_percentage_int:
+                                    type: integer
+                        heart_rate:
+                          type: object
+                          properties:
+                            hr_maximum_bpm_int:
+                              type: integer
+                            hr_minimum_bpm_int:
+                              type: integer
+                            hr_avg_bpm_int:
+                              type: integer
+                            hr_resting_bpm_int:
+                              type: integer
+                            hr_granular_data_array:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  datetime_string:
+                                    $ref: '#/components/schemas/datetime_iso8601'
+                                  hr_bpm_int:
+                                    type: integer
+                            hrv_avg_rmssd_float:
+                              type: number
+                              format: float
+                            hrv_avg_sdnn_float:
+                              type: number
+                              format: float
+                            hrv_sdnn_granular_data_array:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  datetime_string:
+                                    $ref: '#/components/schemas/datetime_iso8601'
+                                  hrv_sdnn_float:
+                                    type: number
+                                    format: float
+                            hrv_rmssd_granular_data_array:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  datetime_string:
+                                    $ref: '#/components/schemas/datetime_iso8601'
+                                  hrv_rmssd_float:
+                                    type: number
+                                    format: float
+                        mood:
+                          type: object
+                          properties:
+                            mood_minimum_scale_int:
+                              type: integer
+                            mood_avg_scale_int:
+                              type: integer
+                            mood_maximum_scale_int:
+                              type: integer
+                            mood_granular_data_array:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  datetime_string:
+                                    $ref: '#/components/schemas/datetime_iso8601'
+                                  interval_duration_seconds_float:
+                                    type: number
+                                    format: float
+                                  mood_scale_int:
+                                    type: integer
+                            mood_delta_scale_int:
+                              type: integer
+                        nutrition:
+                          type: object
+                          properties:
+                            food_intake_float:
+                              type: number
+                              format: float
+                            calories_intake_kcal_float:
+                              type: number
+                              format: float
+                            protein_intake_g_float:
+                              type: number
+                              format: float
+                            sugar_intake_g_float:
+                              type: number
+                              format: float
+                            fat_intake_g_float:
+                              type: number
+                              format: float
+                            trans_fat_intake_g_floatr:
+                              type: number
+                              format: float
+                            carbohydrates_intake_g_float:
+                              type: number
+                              format: float
+                            fiber_intake_g_float:
+                              type: number
+                              format: float
+                            alcohol_intake_g_float:
+                              type: number
+                              format: float
+                            sodium_intake_mg_float:
+                              type: number
+                              format: float
+                            cholesterol_intake_mg_float:
+                              type: number
+                              format: float
+                        oxygenation:
+                          type: object
+                          properties:
+                            saturation_avg_percentage_int:
+                              type: number
+                            saturation_granular_data_array:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  datetime_string:
+                                    $ref: '#/components/schemas/datetime_iso8601'
+                                  interval_duration_seconds_float:
+                                    type: number
+                                    format: float
+                                  saturation_percentage_int:
+                                    type: integer
+                            vo2max_mL_per_min_per_kg_int:
+                              type: integer
+                            vo2_granular_data_array:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  datetime_string:
+                                    $ref: '#/components/schemas/datetime_iso8601'
+                                  interval_duration_seconds_float:
+                                    type: number
+                                    format: float
+                                  vo2_mL_per_min_per_kg_int:
+                                    type: integer
+                        temperature:
+                          type: object
+                          properties:
+                            temperature_avg_object:
+                              type: object
+                              properties:
+                                measurement_type_string:
+                                  type: string
+                                temperature_celsius_float:
+                                  type: number
+                                  format: float
+                            temperature_delta_object:
+                              type: object
+                              properties:
+                                measurement_type_string:
+                                  type: string
+                                temperature_celsius_float:
+                                  type: number
+                                  format: float
+                            temperature_granular_data_array:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  datetime_string:
+                                    $ref: '#/components/schemas/datetime_iso8601'
+                                  measurement_type_string:
+                                    type: string
+                                  temperature_celsius_float:
+                                    type: number
+                                    format: float
+                            temperature_maximum_object:
+                              type: object
+                              properties:
+                                measurement_type_string:
+                                  type: string
+                                temperature_celsius_float:
+                                  type: number
+                                  format: float
+                            temperature_minimum_object:
+                              type: object
+                              properties:
+                                measurement_type_string:
+                                  type: string
+                                temperature_celsius_float:
+                                  type: number
+                                  format: float
+                        menstruation:
+                          type: object
+                          properties:
+                            last_updated_datetime_string:
+                              $ref: '#/components/schemas/datetime_iso8601'
+                            period_start_date_string:
+                              type: string
+                              example: '2022-10-28'
+                            cycle_day_int:
+                              type: integer
+                            predicted_cycle_length_days_int:
+                              type: integer
+                            cycle_length_days_int:
+                              type: integer
+                            current_phase_string:
+                              type: string
+                            length_of_current_phase_days_int:
+                              type: integer
+                            days_until_next_phase_int:
+                              type: integer
+                            is_a_predicted_cycle_bool:
+                              type: boolean
+                              example: true
+                            menstruation_flow_granular_data_array:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  datetime_string:
+                                    $ref: '#/components/schemas/datetime_iso8601'
+                                  flow_mL_int:
+                                    type: integer
+    BodyBloodGlucoseEvent:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/schema_health_structure_common_properties'
+        - $ref: '#/components/schemas/schema_events_common_properties'
+        - type: object
+          properties:
+            data_structure:
+              type: string
+              example: blood_glucose_event
+            body_health:
+              type: object
+              properties:
+                events:
+                  type: object
+                  properties:
+                    blood_glucose_event:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          non_structured_data_array:
+                            $ref: >-
+                              #/components/schemas/schema_non_structured_data_array
+                          metadata:
+                            allOf:
+                              - $ref: '#/components/schemas/schema_metadata'
+                              - type: object
+                                properties:
+                                  was_the_user_under_physical_activity_bool:
+                                    type: boolean
+                          blood_glucose:
+                            type: object
+                            properties:
+                              blood_glucose_avg_mg_per_dL_int:
+                                type: integer
+                              blood_glucose_granular_data_array:
+                                type: array
+                                items:
+                                  type: object
+                                  properties:
+                                    datetime_string:
+                                      $ref: '#/components/schemas/datetime_iso8601'
+                                    blood_glucose_mg_per_dL_int:
+                                      type: integer
+    BodyBloodPressureEvent:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/schema_health_structure_common_properties'
+        - $ref: '#/components/schemas/schema_events_common_properties'
+        - type: object
+          properties:
+            data_structure:
+              type: string
+              example: blood_pressure_event
+            body_health:
+              type: object
+              properties:
+                events:
+                  type: object
+                  properties:
+                    blood_pressure_event:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          non_structured_data_array:
+                            $ref: >-
+                              #/components/schemas/schema_non_structured_data_array
+                          metadata:
+                            allOf:
+                              - $ref: '#/components/schemas/schema_metadata'
+                              - type: object
+                                properties:
+                                  was_the_user_under_physical_activity_bool:
+                                    type: boolean
+                          blood_pressure:
+                            type: object
+                            properties:
+                              blood_pressure_avg_object:
+                                type: object
+                                properties:
+                                  systolic_mmHg_int:
+                                    type: integer
+                                  diastolic_mmHg_int:
+                                    type: integer
+                              blood_pressure_granular_data_array:
+                                type: array
+                                items:
+                                  type: object
+                                  properties:
+                                    datetime_string:
+                                      $ref: '#/components/schemas/datetime_iso8601'
+                                    systolic_mmHg_int:
+                                      type: integer
+                                    diastolic_mmHg_int:
+                                      type: integer
+    BodyMetricsEvent:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/schema_health_structure_common_properties'
+        - $ref: '#/components/schemas/schema_events_common_properties'
+        - type: object
+          properties:
+            data_structure:
+              type: string
+              example: body_metrics_event
+            body_health:
+              type: object
+              properties:
+                events:
+                  type: object
+                  properties:
+                    body_metrics_event:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          non_structured_data_array:
+                            $ref: >-
+                              #/components/schemas/schema_non_structured_data_array
+                          metadata:
+                            allOf:
+                              - $ref: '#/components/schemas/schema_metadata'
+                              - type: object
+                                properties:
+                                  was_the_user_under_physical_activity_bool:
+                                    type: boolean
+                          body_metrics:
+                            type: object
+                            properties:
+                              waist_circumference_cm_int:
+                                type: integer
+                              hip_circumference_cm_int:
+                                type: integer
+                              chest_circumference_cm_int:
+                                type: integer
+                              bone_composition_percentage_int:
+                                type: integer
+                              muscle_composition_percentage_int:
+                                type: integer
+                              water_composition_percentage_int:
+                                type: integer
+                              weight_kg_float:
+                                type: number
+                                format: float
+                              height_cm_int:
+                                type: integer
+                              bmi_float:
+                                type: number
+                                format: float
+    BodyHeartRateEvent:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/schema_health_structure_common_properties'
+        - $ref: '#/components/schemas/schema_events_common_properties'
+        - type: object
+          properties:
+            data_structure:
+              type: string
+              example: heart_rate_event
+            body_health:
+              type: object
+              properties:
+                events:
+                  type: object
+                  properties:
+                    heart_rate_event:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          non_structured_data_array:
+                            $ref: >-
+                              #/components/schemas/schema_non_structured_data_array
+                          metadata:
+                            allOf:
+                              - $ref: '#/components/schemas/schema_metadata'
+                              - type: object
+                                properties:
+                                  was_the_user_under_physical_activity_bool:
+                                    type: boolean
+                          heart_rate:
+                            type: object
+                            properties:
+                              hr_maximum_bpm_int:
+                                type: integer
+                              hr_minimum_bpm_int:
+                                type: integer
+                              hr_avg_bpm_int:
+                                type: integer
+                              hr_resting_bpm_int:
+                                type: integer
+                              hr_granular_data_array:
+                                type: array
+                                items:
+                                  type: object
+                                  properties:
+                                    datetime_string:
+                                      $ref: '#/components/schemas/datetime_iso8601'
+                                    hr_bpm_int:
+                                      type: integer
+                              hrv_avg_rmssd_float:
+                                type: number
+                                format: float
+                              hrv_avg_sdnn_float:
+                                type: number
+                                format: float
+                              hrv_sdnn_granular_data_array:
+                                type: array
+                                items:
+                                  type: object
+                                  properties:
+                                    datetime_string:
+                                      $ref: '#/components/schemas/datetime_iso8601'
+                                    hrv_sdnn_float:
+                                      type: number
+                                      format: float
+                              hrv_rmssd_granular_data_array:
+                                type: array
+                                items:
+                                  type: object
+                                  properties:
+                                    datetime_string:
+                                      $ref: '#/components/schemas/datetime_iso8601'
+                                    hrv_rmssd_float:
+                                      type: number
+                                      format: float
+    BodyHydrationEvent:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/schema_health_structure_common_properties'
+        - $ref: '#/components/schemas/schema_events_common_properties'
+        - type: object
+          properties:
+            data_structure:
+              type: string
+              example: hydration_event
+            body_health:
+              type: object
+              properties:
+                events:
+                  type: object
+                  properties:
+                    hydration_event:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          non_structured_data_array:
+                            $ref: >-
+                              #/components/schemas/schema_non_structured_data_array
+                          metadata:
+                            allOf:
+                              - $ref: '#/components/schemas/schema_metadata'
+                              - type: object
+                                properties:
+                                  was_the_user_under_physical_activity_bool:
+                                    type: boolean
+                          hydration:
+                            type: object
+                            properties:
+                              water_total_consumption_mL_int:
+                                type: integer
+                              hydration_amount_granular_data_array:
+                                type: array
+                                items:
+                                  type: object
+                                  properties:
+                                    datetime_string:
+                                      $ref: '#/components/schemas/datetime_iso8601'
+                                    interval_duration_seconds_float:
+                                      type: number
+                                      format: float
+                                    hydration_amount_mL_int:
+                                      type: integer
+                              hydration_level_granular_data_array:
+                                type: array
+                                items:
+                                  type: object
+                                  properties:
+                                    datetime_string:
+                                      $ref: '#/components/schemas/datetime_iso8601'
+                                    interval_duration_seconds_float:
+                                      type: number
+                                      format: float
+                                    hydration_level_percentage_int:
+                                      type: integer
+    BodyMoodEvent:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/schema_health_structure_common_properties'
+        - $ref: '#/components/schemas/schema_events_common_properties'
+        - type: object
+          properties:
+            data_structure:
+              type: string
+              example: mood_event
+            body_health:
+              type: object
+              properties:
+                events:
+                  type: object
+                  properties:
+                    mood_event:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          non_structured_data_array:
+                            $ref: >-
+                              #/components/schemas/schema_non_structured_data_array
+                          metadata:
+                            allOf:
+                              - $ref: '#/components/schemas/schema_metadata'
+                              - type: object
+                                properties:
+                                  was_the_user_under_physical_activity_bool:
+                                    type: boolean
+                          mood:
+                            type: object
+                            properties:
+                              mood_minimum_scale_int:
+                                type: integer
+                              mood_avg_scale_int:
+                                type: integer
+                              mood_maximum_scale_int:
+                                type: integer
+                              mood_granular_data_array:
+                                type: array
+                                items:
+                                  type: object
+                                  properties:
+                                    datetime_string:
+                                      $ref: '#/components/schemas/datetime_iso8601'
+                                    interval_duration_seconds_float:
+                                      type: number
+                                      format: float
+                                    mood_scale_int:
+                                      type: integer
+                              mood_delta_scale_int:
+                                type: integer
+    BodyNutritionEvent:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/schema_health_structure_common_properties'
+        - $ref: '#/components/schemas/schema_events_common_properties'
+        - type: object
+          properties:
+            data_structure:
+              type: string
+              example: nutrition_event
+            body_health:
+              type: object
+              properties:
+                events:
+                  type: object
+                  properties:
+                    nutrition_event:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          non_structured_data_array:
+                            $ref: >-
+                              #/components/schemas/schema_non_structured_data_array
+                          metadata:
+                            allOf:
+                              - $ref: '#/components/schemas/schema_metadata'
+                              - type: object
+                                properties:
+                                  was_the_user_under_physical_activity_bool:
+                                    type: boolean
+                          nutrition:
+                            type: object
+                            properties:
+                              food_intake_float:
+                                type: number
+                                format: float
+                              calories_intake_kcal_float:
+                                type: number
+                                format: float
+                              protein_intake_g_float:
+                                type: number
+                                format: float
+                              sugar_intake_g_float:
+                                type: number
+                                format: float
+                              fat_intake_g_float:
+                                type: number
+                                format: float
+                              trans_fat_intake_g_float:
+                                type: number
+                                format: float
+                              carbohydrates_intake_g_float:
+                                type: number
+                                format: float
+                              fiber_intake_g_float:
+                                type: number
+                                format: float
+                              alcohol_intake_g_float:
+                                type: number
+                                format: float
+                              sodium_intake_mg_float:
+                                type: number
+                                format: float
+                              cholesterol_intake_mg_float:
+                                type: number
+                                format: float
+    BodyOxygenationEvent:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/schema_health_structure_common_properties'
+        - $ref: '#/components/schemas/schema_events_common_properties'
+        - type: object
+          properties:
+            data_structure:
+              type: string
+              example: oxygenation_event
+            body_health:
+              type: object
+              properties:
+                events:
+                  type: object
+                  properties:
+                    oxygenation_event:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          non_structured_data_array:
+                            $ref: >-
+                              #/components/schemas/schema_non_structured_data_array
+                          metadata:
+                            allOf:
+                              - $ref: '#/components/schemas/schema_metadata'
+                              - type: object
+                                properties:
+                                  was_the_user_under_physical_activity_bool:
+                                    type: boolean
+                          oxygenation:
+                            type: object
+                            properties:
+                              saturation_avg_percentage_int:
+                                type: integer
+                              saturation_granular_data_array:
+                                type: array
+                                items:
+                                  type: object
+                                  properties:
+                                    datetime_string:
+                                      $ref: '#/components/schemas/datetime_iso8601'
+                                    interval_duration_seconds_float:
+                                      type: number
+                                      format: float
+                                    saturation_percentage_int:
+                                      type: integer
+                              vo2max_mL_per_min_per_kg_int:
+                                type: integer
+                              vo2_granular_data_array:
+                                type: array
+                                items:
+                                  type: object
+                                  properties:
+                                    datetime_string:
+                                      $ref: '#/components/schemas/datetime_iso8601'
+                                    interval_duration_seconds_float:
+                                      type: number
+                                      format: float
+                                    vo2_mL_per_min_per_kg_int:
+                                      type: integer
+    BodyTemperatureEvent:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/schema_health_structure_common_properties'
+        - $ref: '#/components/schemas/schema_events_common_properties'
+        - type: object
+          properties:
+            data_structure:
+              type: string
+              example: temperature_event
+            body_health:
+              type: object
+              properties:
+                events:
+                  type: object
+                  properties:
+                    temperature_event:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          non_structured_data_array:
+                            $ref: >-
+                              #/components/schemas/schema_non_structured_data_array
+                          metadata:
+                            allOf:
+                              - $ref: '#/components/schemas/schema_metadata'
+                              - type: object
+                                properties:
+                                  was_the_user_under_physical_activity_bool:
+                                    type: boolean
+                          temperature:
+                            type: object
+                            properties:
+                              temperature_avg_object:
+                                type: object
+                                properties:
+                                  temperature_celcius_float:
+                                    type: number
+                                    format: float
+                                  measurement_type_string:
+                                    type: string
+                              temperature_maximum_object:
+                                type: object
+                                properties:
+                                  temperature_celcius_float:
+                                    type: number
+                                    format: float
+                                  measurement_type_string:
+                                    type: string
+                              temperature_minimum_object:
+                                type: object
+                                properties:
+                                  temperature_celcius_float:
+                                    type: number
+                                    format: float
+                                  measurement_type_string:
+                                    type: string
+                              temperature_delta_object:
+                                type: object
+                                properties:
+                                  temperature_celcius_float:
+                                    type: number
+                                    format: float
+                                  measurement_type_string:
+                                    type: string
+                              temperature_granular_data_array:
+                                type: array
+                                items:
+                                  type: object
+                                  properties:
+                                    datetime_string:
+                                      $ref: '#/components/schemas/datetime_iso8601'
+                                    temperature_celsius_float:
+                                      type: number
+                                      format: float
+                                    measurement_type_string:
+                                      type: string
+    UserGetAuthorizedDataSourcesResponse:
+      type: object
+      properties:
+        user_id:
+          type: string
+          example: demoUserId
+        sources:
+          type: object
+          properties:
+            oura:
+              type: boolean
+              example: false
+            polar:
+              type: boolean
+              example: false
+            whoop:
+              type: boolean
+              example: false
+            fitbit:
+              type: boolean
+              example: false
+            garmin:
+              type: boolean
+              example: false
+            withings:
+              type: boolean
+              example: false
+            google_fit:
+              type: boolean
+              example: false
+            apple_health:
+              type: boolean
+              example: true
+      example:
+        user_id: demoUserId
+        sources:
+          oura: false
+          polar: false
+          whoop: false
+          fitbit: false
+          garmin: false
+          withings: false
+          google_fit: false
+          apple_health: true
+    UserGetInfoResponse:
+      type: object
+      properties: {}
+      example: {}
+security:
+  - basicAuth: []
