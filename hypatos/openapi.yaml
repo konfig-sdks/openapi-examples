@@ -1,0 +1,3908 @@
+openapi: 3.0.3
+info:
+  title: Hypatos REST API
+  description: >
+    # Introduction
+
+
+    The Hypatos API is organized around REST. The majority of the endpoints
+    provide CRUD 
+
+    functionality for resources. The API is also exposing Intent Resources which
+    mimic user intents 
+
+    or actions.
+
+
+    The Hypatos API uses [OAuth 2.0 Client Credential
+    Grant](https://www.rfc-editor.org/rfc/rfc6749#section-4.4) 
+
+    to authenticate requests. Before making any requests to any endpoint a
+    client must authenticate 
+
+    with the authorization server and requests an access token from the [token
+    endpoint](https://hypatos.redoc.ly/). 
+
+
+    ````sh
+      POST /auth/token HTTP/1.1
+      Host: api.cloud.hypatos.ai
+      Content-Type: application/x-www-form-urlencoded
+      Authorization: Basic dXNlcm5hbWU6cGFzc3dvcmQ=
+
+      grant_type=client_credentials
+    ````
+
+
+    `Authorization` header contains `client_id:client_secret` encoded as
+    explained in [RFC Client Password
+    section](https://datatracker.ietf.org/doc/html/rfc6749#section-2.3.1).
+         
+    If the authorization server authenticated the client successfully, an access
+    token is issued. 
+
+    Here is an example successful response:
+
+
+    ````sh
+      HTTP/1.1 200 OK
+      Content-Type: application/json;charset=UTF-8
+      Cache-Control: no-store
+      Pragma: no-cache
+
+      {
+        "access_token": "mF_9.B5f-4.1JqM",
+        "expires_in": 86400,
+        "scope": "enrichment.write files.read",
+        "token_type": "Bearer",
+      }
+    ````
+
+    This token can be used to authenticate the requests to API endpoints by
+    sending a Bearer token 
+
+    in the `Authorization` HTTP header. The following example demonstrates how
+    to use the access token 
+
+    to retrieve a list of documents.
+
+
+    ````sh
+      GET /v2/documents HTTP/1.1
+      Host: api.cloud.hypatos.ai
+      Authorization: Bearer mF_9.B5f-4.1JqM
+    ````
+
+
+    # Versioning
+
+
+    Changes to this API are released regularly. We use [Semantic Versioning
+    2.0.0](https://semver.org/spec/v2.0.0.html) 
+
+    scheme for versioning so that the clients can identify any
+    backward-incompatible changes 
+
+    easily. Briefly summarized one can say, if the MAJOR version of the new API
+    version didn't 
+
+    change you can expect the new version to be backward-compatible.
+
+
+    # Rate limits
+
+
+    In order to maximise the stability of our API, we institue rate limits for
+    all of API 
+
+    endpoints. Clients who send too many requests over a given period of time
+    will see error 
+
+    responses that show up as status code [429 Too Many
+    Requests](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/429). 
+
+
+    When you see error responses with status code 429, it means you exhausted
+    your current 
+
+    quota and need to withhold from sending further requests until the quota is
+    reset. We 
+
+    encourage you not to wait until you get a 429 error but to monitor your
+    quota in each 
+
+    request. In each response you receive from the API, you will find HTTP
+    headers providing 
+
+    the details about your current quota. Here is the list of the HTTP headers:
+
+
+    * `x-ratelimit-limit`: Indicates the quota associated to the client in the 
+
+    current time-window followed by the description of the quota policy.
+
+    * `x-ratelimit-remaining`: Indicates the number of remaining requests in the
+    current 
+
+    time-window
+
+    * `x-ratelimit-reset`: Indicates the number of seconds until quota reset of
+    the current 
+
+    time-window
+
+
+    Please note that IETF is currently in the process of publishing a standard
+    for these 
+
+    headers. Please explore the
+    [draft](https://datatracker.ietf.org/doc/draft-ietf-httpapi-ratelimit-headers/) 
+
+    for more details.
+
+
+    A basic technique to gracefully handle rate limits is watch for your quota
+    permanently 
+
+    and increase the time between your request as the quota is decreasing. To
+    recover from a 
+
+    429 error you need a retry mechanism following an exponential backoff
+    schedule.
+  version: 2.13.0
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  x-konfig-ignore:
+    potential-incorrect-type: true
+servers:
+  - description: API EU
+    url: https://api.cloud.hypatos.ai/v2
+  - description: API US
+    url: https://api.cloud.hypatos.com/v2
+tags:
+  - description: Endpoints for data enrichment
+    name: Enrichment
+  - description: Endpoints for document management
+    name: Documents
+  - description: Endpoints for project management
+    name: Projects
+  - description: |
+      Endpoints for management of files
+    name: Files
+  - description: Endpoints for company management
+    name: Companies
+  - description: >-
+      Endpoints for handling the [OAuth 2.0 Client Credentials
+      Grant](https://www.rfc-editor.org/rfc/rfc6749#section-4.4) flow.
+    name: Authorization
+  - name: Emails
+paths:
+  /auth/token:
+    post:
+      tags:
+        - Authorization
+      summary: Request an access token
+      operationId: Authorization_requestAccessToken
+      security:
+        - Basic: []
+      description: Request an access token using your client credentials
+      requestBody:
+        description: Access token request
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AccessTokenRequest'
+      responses:
+        '200':
+          description: Access token provided
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessTokenResponse'
+        '401':
+          description: Invalid Client Credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                title: Invalid client credentials
+                detail: The provided client credentials are not valid
+                status: 401
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+  /files:
+    post:
+      tags:
+        - Files
+      summary: Upload a file
+      operationId: Files_uploadFile
+      security:
+        - OAuth2:
+            - files.write
+      description: >
+        This endpoint allows a client to upload a binary file. The ``id``
+        returned in the reponse is representing the file in Hypatos systems. It
+        can be used in other endpoints, for example to initiate a processing of
+        the file to create document holding captured data.
+      parameters:
+        - description: >-
+            Optional name of the file to be stored along with the content. If
+            not provided, a filename will be generated
+          in: header
+          name: X-Hy-Filename
+          schema:
+            type: string
+            maxLength: 256
+      requestBody:
+        description: Payload of the file
+        required: true
+        content:
+          application/pdf:
+            schema:
+              $ref: '#/components/schemas/BinaryFile'
+          image/jpeg:
+            schema:
+              $ref: '#/components/schemas/BinaryFile'
+          image/png:
+            schema:
+              $ref: '#/components/schemas/BinaryFile'
+          image/tiff:
+            schema:
+              $ref: '#/components/schemas/BinaryFile'
+      responses:
+        '201':
+          description: Document uploaded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadResponse'
+        '400':
+          description: Content type is not supported
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                title: Content type not supported
+                detail: The provided content type is not supported
+                status: 400
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+  /files/{id}:
+    get:
+      tags:
+        - Files
+      summary: Download a file by id
+      operationId: Files_downloadById
+      security:
+        - OAuth2:
+            - files.read
+      description: |
+        Download the content of a file with the given identifier.
+      parameters:
+        - description: File id to download
+          in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Binary content of a file
+          content:
+            application/pdf:
+              schema:
+                $ref: '#/components/schemas/BinaryFile'
+            image/jpeg:
+              schema:
+                $ref: '#/components/schemas/BinaryFile'
+            image/png:
+              schema:
+                $ref: '#/components/schemas/BinaryFile'
+            image/tiff:
+              schema:
+                $ref: '#/components/schemas/BinaryFile'
+          headers:
+            X-Hy-Filename:
+              description: >-
+                If a filename was provided during the file upload via the
+                `X-Hy-Filename` request header, it will be returned in this
+                header.
+              schema:
+                type: string
+        '404':
+          description: No file with given identifier exist
+          content:
+            application/pdf:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                title: File not found
+                detail: File with given identifier does not exist
+                status: 404
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+  /documents:
+    get:
+      tags:
+        - Documents
+      summary: Retrieve a list of documents
+      operationId: Documents_getList
+      security:
+        - OAuth2:
+            - documents.read
+      description: Retrieve a list of documents.
+      parameters:
+        - $ref: '#/components/parameters/projectId'
+        - $ref: '#/components/parameters/pagingOffset'
+        - $ref: '#/components/parameters/pagingLimit'
+        - $ref: '#/components/parameters/sortByCreatedAtUpdatedAt'
+        - description: >-
+            Used to retrieve documents that are in specific states only.
+            Multiple states can be used for this filtering. By default,
+            documents in all states are returned.
+          in: query
+          name: state
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/DocumentState'
+          style: form
+          explode: true
+          required: false
+        - description: >-
+            File identifier to retrieve documents that were created from that
+            file
+          in: query
+          name: fileId
+          schema:
+            type: string
+          required: false
+      responses:
+        '200':
+          description: List of documents
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentsListResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                InvalidProjectId:
+                  value:
+                    title: Provided project identifier is invalid
+                    detail: >-
+                      One of the given project identifier provided as projectId
+                      query parameter is invalid
+                    status: 400
+                OffsetOutOfRange:
+                  value:
+                    title: Offset out of range
+                    detail: The provided offset is out of range
+                    status: 400
+                LimitOutOfRange:
+                  value:
+                    title: Limit out of range
+                    detail: Limit is out of range
+                    status: 400
+                InvalidSortDefinition:
+                  value:
+                    title: Limit out of range
+                    detail: Limit is out of range
+                    status: 400
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+  /documents/process-file:
+    post:
+      tags:
+        - Documents
+      summary: Request processing of a file
+      operationId: Documents_processFileIntoDocument
+      security:
+        - OAuth2:
+            - documents.write
+      description: >
+        Request a processing of a file that was previously uploaded. 
+
+        The `fileId` in the request body is representing the identifier of the
+        file that was returned by the upload endpoint. 
+
+        As a result of this request a document will be created and its
+        identifier will be returned in the response.
+
+        The `projectId` in the request body is an identifier of the project to
+        create the document in.
+      requestBody:
+        description: Payload for processing the given file
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProcessFileRequest'
+      responses:
+        '202':
+          description: Processing accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessingAccepted'
+        '400':
+          $ref: '#/components/responses/DocumentErrorResponse'
+        '404':
+          $ref: '#/components/responses/DocumentErrorResponse'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+  /documents/{id}:
+    get:
+      tags:
+        - Documents
+      summary: Retrieve a document by id
+      operationId: Documents_getById
+      security:
+        - OAuth2:
+            - documents.read
+      description: Retrieve a document by id
+      parameters:
+        - description: Id of the document to get.
+          in: path
+          name: id
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: Document retrieved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentResponse'
+        '404':
+          $ref: '#/components/responses/DocumentErrorResponse'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+  /documents/{id}/transfer:
+    post:
+      tags:
+        - Documents
+      summary: Provide information about a transfer of a document to the target system
+      operationId: Documents_updateTransferInformation
+      security:
+        - OAuth2:
+            - documents.write
+      description: Update information about the transfer for the given document
+      parameters:
+        - description: Id of of the document to update.
+          in: path
+          name: id
+          schema:
+            type: string
+          required: true
+      requestBody:
+        description: Payload about the transfer
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocumentsUpdateTransferRequest'
+      responses:
+        '202':
+          description: Document transfer infor accepted
+        '400':
+          $ref: '#/components/responses/DocumentErrorResponse'
+        '404':
+          $ref: '#/components/responses/DocumentErrorResponse'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+  /documents/{id}/external-data:
+    post:
+      tags:
+        - Documents
+      summary: Provide external data for a document with given id
+      operationId: Documents_updateExternalData
+      security:
+        - OAuth2:
+            - documents.write
+      description: >
+        Update the external data for a document with given identifier. The
+        external data are provided as a flat JSON object. The payload of this
+        requests completley overrides the existing external data of a document.
+        To remove the data, justsend empty JSON object `{}` in the payload.
+
+
+        Please note that the maximum lenght of an key is 50 characters. Any
+        value with a longer key will be omitted. The maximum amount of key-value
+        pairs is limited to 20.
+      parameters:
+        - description: Id of the document to update.
+          in: path
+          name: id
+          schema:
+            type: string
+          required: true
+      requestBody:
+        description: Payload containing the external data.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocumentsUpdateExternalDataRequest'
+      responses:
+        '202':
+          description: External data provided for the document accepted.
+        '400':
+          $ref: '#/components/responses/DocumentErrorResponse'
+        '404':
+          $ref: '#/components/responses/DocumentErrorResponse'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+  /documents/{id}/external-id:
+    post:
+      tags:
+        - Documents
+      summary: Provide an external identifier for a document with given id
+      operationId: Documents_provideExternalId
+      security:
+        - OAuth2:
+            - documents.write
+      description: Provide an external identifier for a document with given id
+      parameters:
+        - description: Id of the document to update.
+          in: path
+          name: id
+          schema:
+            type: string
+          required: true
+      requestBody:
+        description: Update external id for a given document.
+        required: true
+        content:
+          text/plain:
+            schema:
+              $ref: '#/components/schemas/DocumentsUpdateExternalIdRequest'
+      responses:
+        '202':
+          description: External ID provided for the document accepted.
+        '400':
+          $ref: '#/components/responses/DocumentErrorResponse'
+        '404':
+          $ref: '#/components/responses/DocumentErrorResponse'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+  /documents/{id}/title:
+    post:
+      tags:
+        - Documents
+      summary: Provide a title for a document with given id
+      operationId: Documents_provideTitle
+      security:
+        - OAuth2:
+            - documents.write
+      description: Provide a title for a document with given id.
+      parameters:
+        - description: Id of the document to update.
+          in: path
+          name: id
+          schema:
+            type: string
+          required: true
+      requestBody:
+        description: Title for a given document.
+        required: true
+        content:
+          text/plain:
+            schema:
+              $ref: '#/components/schemas/DocumentsUpdateTitleRequest'
+      responses:
+        '202':
+          description: Document title provided for the document accepted.
+        '400':
+          $ref: '#/components/responses/DocumentErrorResponse'
+        '404':
+          $ref: '#/components/responses/DocumentErrorResponse'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+  /documents/{id}/states:
+    get:
+      tags:
+        - Documents
+      summary: Retrieve a document states
+      operationId: Documents_getDocumentStates
+      security:
+        - OAuth2:
+            - documents.read
+      description: >-
+        Provides a list of states the given document passed through. If the
+        document is still in processing, the number of states returend must not
+        be considered as final. Subsequent calls to this endpoint might get more
+        states as the document is progressing the processing pipeline.
+      parameters:
+        - description: Id of the document to get states of.
+          in: path
+          name: id
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: Document states.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentStatesResponse'
+        '404':
+          $ref: '#/components/responses/DocumentErrorResponse'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+  /enrichment/invoices:
+    post:
+      tags:
+        - Enrichment
+      summary: Insert invoice including invoice lines
+      operationId: Enrichment_insertInvoiceIncludingInvoiceLines
+      security:
+        - OAuth2:
+            - enrichment.write
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/invoice'
+        required: true
+      responses:
+        '200':
+          $ref: '#/components/responses/successfullyInserted'
+        '422':
+          $ref: '#/components/responses/validationError'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+  /enrichment/invoices/{externalId}:
+    delete:
+      tags:
+        - Enrichment
+      summary: Mark invoice as deleted
+      operationId: Enrichment_markInvoiceDeleted
+      security:
+        - OAuth2:
+            - enrichment.delete
+      parameters:
+        - description: Previously sent `externalId`
+          in: path
+          name: externalId
+          schema:
+            type: string
+          required: true
+        - description: |
+            Line number of one of the line numbers inside the Invoice.
+            Optional, omitting means the whole Invoice is deleted.
+          in: query
+          name: lineNumber
+          schema:
+            type: string
+          required: false
+      responses:
+        '204':
+          description: Successfully marked as deleted
+        '404':
+          $ref: '#/components/responses/notFound'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+  /enrichment/companies:
+    post:
+      tags:
+        - Enrichment
+      summary: Insert company
+      operationId: Enrichment_addCompanyData
+      security:
+        - OAuth2:
+            - enrichment.write
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/company'
+        required: true
+      responses:
+        '200':
+          $ref: '#/components/responses/successfullyInserted'
+        '422':
+          $ref: '#/components/responses/validationError'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+  /enrichment/companies/{externalId}:
+    delete:
+      tags:
+        - Enrichment
+      summary: Mark company as deleted
+      operationId: Enrichment_markCompanyDeleted
+      security:
+        - OAuth2:
+            - enrichment.delete
+      parameters:
+        - description: Previously sent `externalId`
+          in: path
+          name: externalId
+          schema:
+            type: string
+          required: true
+      responses:
+        '204':
+          description: Successfully marked as deleted
+        '404':
+          $ref: '#/components/responses/notFound'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+  /enrichment/suppliers:
+    post:
+      tags:
+        - Enrichment
+      summary: Insert supplier including related subsidiaries
+      operationId: Enrichment_insertSupplierIncludingSubsidiaries
+      security:
+        - OAuth2:
+            - enrichment.write
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/supplier'
+        required: true
+      responses:
+        '200':
+          $ref: '#/components/responses/successfullyInserted'
+        '422':
+          $ref: '#/components/responses/validationError'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+  /enrichment/suppliers/{externalId}:
+    delete:
+      tags:
+        - Enrichment
+      summary: Mark supplier as deleted
+      operationId: Enrichment_markSupplierDeleted
+      security:
+        - OAuth2:
+            - enrichment.delete
+      parameters:
+        - description: Previously sent `externalId`
+          in: path
+          name: externalId
+          schema:
+            type: string
+          required: true
+      responses:
+        '204':
+          description: Successfully marked as deleted
+        '404':
+          $ref: '#/components/responses/notFound'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+  /enrichment/purchase-orders:
+    post:
+      tags:
+        - Enrichment
+      summary: Insert purchase order including purchase order lines
+      operationId: Enrichment_insertPurchaseOrder
+      security:
+        - OAuth2:
+            - enrichment.write
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/purchaseOrder'
+        required: true
+      responses:
+        '200':
+          $ref: '#/components/responses/successfullyInserted'
+        '422':
+          $ref: '#/components/responses/validationError'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+  /enrichment/purchase-orders/{externalId}:
+    delete:
+      tags:
+        - Enrichment
+      summary: Mark purchase Order as deleted
+      operationId: Enrichment_markPurchaseOrderDeleted
+      security:
+        - OAuth2:
+            - enrichment.delete
+      parameters:
+        - description: Previously sent `externalId`
+          in: path
+          name: externalId
+          schema:
+            type: string
+          required: true
+        - description: |
+            Line number of one of the line numbers inside the PO.
+            Optional, omitting means the whole PO is deleted.
+          in: query
+          name: lineNumber
+          schema:
+            type: string
+          required: false
+      responses:
+        '204':
+          description: Successfully marked as deleted
+        '404':
+          $ref: '#/components/responses/notFound'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+  /enrichment/gl-accounts:
+    post:
+      tags:
+        - Enrichment
+      summary: Insert general ledger account
+      operationId: Enrichment_insertGlAccount
+      security:
+        - OAuth2:
+            - enrichment.write
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/glAccount'
+        required: true
+      responses:
+        '200':
+          $ref: '#/components/responses/successfullyInserted'
+        '422':
+          $ref: '#/components/responses/validationError'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+  /enrichment/gl-accounts/{externalId}:
+    delete:
+      tags:
+        - Enrichment
+      summary: Mark general ledger account as deleted
+      operationId: Enrichment_markGlAccountDeleted
+      security:
+        - OAuth2:
+            - enrichment.delete
+      parameters:
+        - description: Previously sent `externalId`
+          in: path
+          name: externalId
+          schema:
+            type: string
+          required: true
+      responses:
+        '204':
+          description: Successfully marked as deleted
+        '404':
+          $ref: '#/components/responses/notFound'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+  /enrichment/cost-centers:
+    post:
+      tags:
+        - Enrichment
+      summary: Insert cost center
+      operationId: Enrichment_insertCostCenter
+      security:
+        - OAuth2:
+            - enrichment.write
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/costCenter'
+        required: true
+      responses:
+        '200':
+          $ref: '#/components/responses/successfullyInserted'
+        '422':
+          $ref: '#/components/responses/validationError'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+  /enrichment/cost-centers/{externalId}:
+    delete:
+      tags:
+        - Enrichment
+      summary: Mark cost Center as deleted
+      operationId: Enrichment_markCostCenterDeleted
+      security:
+        - OAuth2:
+            - enrichment.delete
+      parameters:
+        - description: Previously sent `externalId`
+          in: path
+          name: externalId
+          schema:
+            type: string
+          required: true
+      responses:
+        '204':
+          description: Successfully marked as deleted
+        '404':
+          $ref: '#/components/responses/notFound'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+  /enrichment/approvers:
+    post:
+      tags:
+        - Enrichment
+      summary: Insert approver
+      operationId: Enrichment_insertApproverRecord
+      security:
+        - OAuth2:
+            - enrichment.write
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/approver'
+        required: true
+      responses:
+        '200':
+          $ref: '#/components/responses/successfullyInserted'
+        '422':
+          $ref: '#/components/responses/validationError'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+  /enrichment/approvers/{externalId}:
+    delete:
+      tags:
+        - Enrichment
+      summary: Mark approver as deleted
+      operationId: Enrichment_markApproverDeleted
+      security:
+        - OAuth2:
+            - enrichment.delete
+      parameters:
+        - description: Previously sent `externalId`
+          in: path
+          name: externalId
+          schema:
+            type: string
+          required: true
+      responses:
+        '204':
+          description: Successfully marked as deleted
+        '404':
+          $ref: '#/components/responses/notFound'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+  /enrichment/customers:
+    post:
+      tags:
+        - Enrichment
+      summary: Insert customer
+      operationId: Enrichment_insertCustomer
+      security:
+        - OAuth2:
+            - enrichment.write
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/customer'
+        required: true
+      responses:
+        '200':
+          $ref: '#/components/responses/successfullyInserted'
+        '422':
+          $ref: '#/components/responses/validationError'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+  /enrichment/customers/{externalId}:
+    delete:
+      tags:
+        - Enrichment
+      summary: Mark customer as deleted
+      operationId: Enrichment_markCustomerAsDeleted
+      security:
+        - OAuth2:
+            - enrichment.delete
+      parameters:
+        - description: Previously sent `externalId`
+          in: path
+          name: externalId
+          schema:
+            type: string
+          required: true
+      responses:
+        '204':
+          description: Successfully marked as deleted
+        '404':
+          $ref: '#/components/responses/notFound'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+  /companies/{id}:
+    get:
+      tags:
+        - Companies
+      summary: Retrieve a company by id
+      operationId: Companies_getById
+      security:
+        - OAuth2:
+            - companies.read
+      parameters:
+        - description: Id of the company to retrieve
+          required: true
+          schema:
+            $ref: '#/components/schemas/CompaniesId'
+          name: id
+          in: path
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompaniesResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                title: Invalid company ID
+                status: 400
+                detail: Error details
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                title: Invalid token
+                status: 401
+                detail: Error details
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                title: Forbidden
+                status: 403
+                detail: Error details
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                title: Company does not exists
+                status: 404
+                detail: Error details
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                title: Internal Server Error
+                status: 500
+                detail: Error details
+  /companies:
+    get:
+      tags:
+        - Companies
+      summary: Retrieve a list of companies
+      operationId: Companies_list
+      security:
+        - OAuth2:
+            - companies.read
+      description: 'Note: For now pagination is not implemented'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompaniesListResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+  /projects:
+    post:
+      tags:
+        - Projects
+      summary: Create a project
+      operationId: Projects_createProject
+      security:
+        - OAuth2:
+            - projects.write
+      description: Creates a project based on the request
+      requestBody:
+        description: Project data
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectCreateRequest'
+      responses:
+        '201':
+          description: Project created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectResponse'
+        '400':
+          $ref: '#/components/responses/ProjectClientBadRequestErrorResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedErrorResponse'
+        '403':
+          $ref: '#/components/responses/ForbiddenErrorResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundErrorResponse'
+        '422':
+          $ref: '#/components/responses/ProjectRequestValidationErrorResponse'
+    get:
+      tags:
+        - Projects
+      summary: Retrieve a projects list for given search criteria
+      operationId: Projects_listForGivenSearchCriteria
+      security:
+        - OAuth2:
+            - projects.read
+      parameters:
+        - $ref: '#/components/parameters/pagingOffset'
+        - $ref: '#/components/parameters/pagingLimit'
+        - $ref: '#/components/parameters/sortByCreatedAt'
+        - required: false
+          schema:
+            title: Search text used to find projects.
+            description: Search text is used against projects name and id
+            type: string
+          name: search
+          in: query
+      responses:
+        '200':
+          description: Projects list retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectListResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedErrorResponse'
+        '403':
+          $ref: '#/components/responses/ForbiddenErrorResponse'
+        '422':
+          $ref: '#/components/responses/ProjectRequestValidationErrorResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerErrorResponse'
+  /projects/{id}:
+    get:
+      tags:
+        - Projects
+      summary: Retrieve a project by id
+      operationId: Projects_getById
+      security:
+        - OAuth2:
+            - projects.read
+      description: Retrieve a project by id
+      parameters:
+        - $ref: '#/components/parameters/ProjectIdPathParameter'
+      responses:
+        '200':
+          description: Project by id
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedErrorResponse'
+        '403':
+          $ref: '#/components/responses/ForbiddenErrorResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundErrorResponse'
+  /projects/{id}/schema:
+    get:
+      tags:
+        - Projects
+      summary: Retrieve a schema by project id
+      operationId: Projects_getSchemaByProjectId
+      security:
+        - OAuth2:
+            - projects.read
+      description: Retrieve a schema by project id
+      parameters:
+        - $ref: '#/components/parameters/ProjectIdPathParameter'
+      responses:
+        '200':
+          description: Schema retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Schema'
+        '400':
+          $ref: '#/components/responses/SchemaClientBadRequestErrorResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedErrorResponse'
+        '403':
+          $ref: '#/components/responses/ForbiddenErrorResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundErrorResponse'
+  /emails/{id}/content:
+    get:
+      tags:
+        - Emails
+      summary: Retrieve an email merged content for given document ID
+      operationId: Emails_getMergedContentById
+      security:
+        - OAuth2:
+            - emails.read
+      parameters:
+        - required: true
+          schema:
+            title: Document identifier
+            type: string
+          example: 6295dcd39db1ab740c3e296c
+          name: id
+          in: path
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/pdf:
+              schema:
+                $ref: '#/components/schemas/EmailsGetMergedContentByIdResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                title: Invalid token
+                status: 401
+                detail: Error details
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                title: Forbidden
+                status: 403
+                detail: Error details
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                title: Company does not exists
+                status: 404
+                detail: Error details
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                title: Request validation error
+                status: 422
+                detail: Error details
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                title: Internal Server Error
+                status: 500
+                detail: Error details
+components:
+  parameters:
+    ProjectIdPathParameter:
+      description: Project id
+      in: path
+      name: id
+      schema:
+        $ref: '#/components/schemas/ProjectId'
+      required: true
+    pagingOffset:
+      description: A zero-based offset of the first item in the data collection to return.
+      in: query
+      name: offset
+      schema:
+        type: integer
+        minimum: 0
+      required: false
+    sortByCreatedAt:
+      description: The field to sort reponse items by.
+      in: query
+      name: sort
+      schema:
+        type: string
+        enum:
+          - '-createdAt'
+          - +createdAt
+        default: '-createdAt'
+      required: false
+    projectId:
+      description: >-
+        Project ids to to find items by. If ommitted, items from all existing
+        projects are returned.
+      in: query
+      name: projectId
+      schema:
+        type: array
+        items:
+          type: string
+      style: form
+      explode: true
+      required: false
+    pagingLimit:
+      description: >-
+        Limit the amount of items returned in the response. If the value exceeds
+        the maximum, then the maximum value will be used.
+      in: query
+      name: limit
+      schema:
+        type: integer
+        default: 20
+        minimum: 0
+        maximum: 50
+      required: false
+    sortByCreatedAtUpdatedAt:
+      description: The field to sort reponse items by.
+      in: query
+      name: sort
+      schema:
+        type: string
+        enum:
+          - createdAt
+          - '-createdAt'
+          - +createdAt
+          - updatedAt
+          - '-updatedAt'
+          - +updatedAt
+        default: '-createdAt'
+      required: false
+  responses:
+    DocumentErrorResponse:
+      description: Error occured while processing request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            title: Document does not exist
+            detail: The document with given identifier does not exist
+            status: 404
+    successfullyInserted:
+      description: Successfully inserted
+      content:
+        application/json:
+          schema:
+            $ref: >-
+              #/components/schemas/EnrichmentInsertInvoiceIncludingInvoiceLinesResponse
+    validationError:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/HTTPValidationError'
+    notFound:
+      description: Not Found error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+          example:
+            title: Not found
+            status: 404
+    UnauthorizedErrorResponse:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            title: Unauthorized
+            detail: Provided no credentials or invalid credentials
+            status: 401
+    ForbiddenErrorResponse:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            title: Forbidden
+            detail: Not enough privileges to perform an action on a resource
+            status: 403
+    ProjectClientBadRequestErrorResponse:
+      description: Response when client request is wrong
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            Invalid request parameter:
+              value:
+                title: Provided project identifier is invalid
+                detail: One of the given query parameters is invalid
+                status: 400
+            Invalid payload data:
+              value:
+                title: Payload data is invalid
+                detail: Payload data couldn't be deserialised
+                status: 400
+    ProjectRequestValidationErrorResponse:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            Request validation error:
+              value:
+                title: Request validation error
+                detail: Error details
+                status: 422
+    InternalServerErrorResponse:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            title: Internal Server Error
+            status: 500
+            detail: Error details
+    SchemaClientBadRequestErrorResponse:
+      description: Response when client request is wrong
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            Invalid request parameter:
+              value:
+                title: Provided project identifier is invalid
+                detail: One of the given query parameters is invalid
+                status: 400
+            Invalid payload data:
+              value:
+                title: Provided payload is invalid
+                detail: One or more of the payload parameters are invalid
+                status: 400
+    NotFoundErrorResponse:
+      description: Response when resource was not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            Project not found:
+              value:
+                title: Project does not exist
+                detail: The project with given identifier does not exist
+                status: 404
+    RateLimitExceeded:
+      description: Rate limit exceeded
+      headers:
+        x-ratelimit-limit:
+          $ref: '#/components/headers/x-ratelimit-limit'
+        x-ratelimit-remaining:
+          $ref: '#/components/headers/x-ratelimit-remaining'
+        x-ratelimit-reset:
+          $ref: '#/components/headers/x-ratelimit-reset'
+  schemas:
+    AccessTokenRequest:
+      type: object
+      required:
+        - grant_type
+      properties:
+        grant_type:
+          type: string
+          enum:
+            - client_credentials
+    AccessTokenResponse:
+      type: object
+      required:
+        - access_token
+        - token_type
+        - expires_in
+      properties:
+        access_token:
+          description: The access token issued by the authorization server
+          type: string
+          example: MTQ0NjJkZmQ5OTM2NDE1ZTZjNGZmZjI3
+        expires_in:
+          description: The lifetime of the access token in seconds
+          type: integer
+          example: 3600
+        token_type:
+          type: string
+          enum:
+            - Bearer
+        scope:
+          description: Scopes allowed for the client
+          type: string
+          example: document.create project.create
+    BinaryFile:
+      type: string
+      format: binary
+    UploadResponse:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: string
+          example: 6040dc9680b782b365ea77d5
+    DocumentsUpdateExternalDataRequest:
+      description: >-
+        External data to be associated with the document. The data are provided
+        as a flat JSON object. The properties of that object are
+        case-insensitive. The maximum amount of properties is limited to 20.
+      type: object
+      properties:
+        key1:
+          type: string
+          example: value1
+        key2:
+          type: string
+          example: value2
+    DocumentsUpdateExternalIdRequest:
+      description: External ID
+      type: string
+      example: 15b884b0-d551-4865-bda9-4168800c9d87
+    DocumentsUpdateTitleRequest:
+      description: New Title
+      type: string
+      example: New Title of Document
+      maxLength: 256
+    DocumentsUpdateTransferRequest:
+      type: object
+      required:
+        - successful
+      properties:
+        successful:
+          description: Indicates if the transfer was successful or not
+          type: boolean
+          example: true
+        message:
+          description: >-
+            May be used to provide additional details about the transfer.
+            Especially in the erroneous case this field is valueable.
+          type: string
+          example: Upload failed due to ERP being down
+    DocumentsListResponse:
+      type: object
+      required:
+        - documents
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentResponse'
+        limit:
+          description: >-
+            The limit used for this page of results. This will be the same as
+            the limit query parameter unless it exceeds the maximal allowed
+            value.
+          type: integer
+          example: 20
+        offset:
+          description: >-
+            The offset used for this page of results. This will be the same as
+            the offset query parameter
+          type: integer
+          example: 0
+        totalCount:
+          description: The total number of elements in the data attribute
+          type: integer
+          example: 1000
+    DocumentResponse:
+      type: object
+      required:
+        - id
+        - createdAt
+        - createdBy
+        - state
+        - title
+      properties:
+        title:
+          type: string
+          example: scan-doc-1.jpg
+        id:
+          type: string
+          example: 6040dc9680b782b365ea77d5
+        completedAt:
+          type: string
+          format: date-time
+          example: '1990-12-31T15:59:60-08:00'
+        completedBy:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+          example: '1990-12-31T15:59:60-08:00'
+        createdBy:
+          type: string
+        fileId:
+          type: string
+          example: 5349b4ddd2781d08c09890f4
+        entities:
+          type: object
+          example:
+            currency: EUR
+            items:
+              - name: High quality cement for rabbit hole sealing
+                qty: 1
+            number: 2018-DE-0011122351
+            qty: 2
+        externalId:
+          type: string
+          example: doc-0001
+        externalData:
+          type: object
+          example:
+            internalSystemId: sap-01
+        projectId:
+          type: string
+          example: 6040dc9680b782b365ea77d5
+        state:
+          $ref: '#/components/schemas/DocumentState'
+        updatedAt:
+          type: string
+          format: date-time
+          example: '1990-12-31T15:59:60-08:00'
+        updatedBy:
+          type: string
+    DocumentState:
+      type: string
+      enum:
+        - done
+        - doneAutomatically
+        - extracted
+        - failed
+        - inCompletion
+        - junk
+        - new
+        - processing
+        - rejected
+        - reviewRequired
+        - split
+        - transferFailed
+        - transferred
+    DocumentStatesResponse:
+      type: array
+      items:
+        type: object
+        properties:
+          state:
+            $ref: '#/components/schemas/DocumentState'
+          updatedAt:
+            type: string
+            format: date-time
+            example: '1990-12-31T15:59:60-08:00'
+    ProcessFileRequest:
+      type: object
+      required:
+        - fileId
+        - projectId
+      properties:
+        fileId:
+          type: string
+          example: 5349b4ddd2781d08c09890f4
+        projectId:
+          type: string
+          example: 00000020f51bb4362eee2a4d
+        externalId:
+          description: >-
+            External id of the file. Can be used if you want to link the file
+            with an identifier in your system.
+          type: string
+          example: doc-0001
+        externalData:
+          $ref: '#/components/schemas/DocumentsUpdateExternalDataRequest'
+    ProcessingAccepted:
+      type: object
+      required:
+        - documentId
+        - fileId
+        - projectId
+      properties:
+        documentId:
+          type: string
+          example: 6040dc9680b782b365ea77d5
+        fileId:
+          type: string
+          example: 5349b4ddd2781d08c09890f4
+        projectId:
+          type: string
+          example: 00000020f51bb4362eee2a4d
+    validationError:
+      required:
+        - loc
+        - msg
+        - type
+      type: object
+      properties:
+        loc:
+          type: array
+          items:
+            type: string
+        msg:
+          type: string
+        type:
+          type: string
+    HTTPValidationError:
+      type: object
+      properties:
+        detail:
+          type: array
+          items:
+            $ref: '#/components/schemas/validationError'
+    Problem:
+      type: object
+      properties:
+        title:
+          description: >
+            A short summary of the problem type. Written in English and readable
+            for engineers, usually not suited for non technical stakeholders and
+            not localized.
+          type: string
+          example: some title for the error situation
+        type:
+          description: >
+            A URI reference that uniquely identifies the problem type only in
+            the context of the provided API. Opposed to the specification in
+            RFC-7807, it is neither recommended to be dereferenceable and point
+            to a human-readable documentation nor globally unique for the
+            problem type.
+          type: string
+          format: uri-reference
+          default: about:blank
+          example: /some/uri-reference
+        status:
+          description: >
+            The HTTP status code generated by the origin server for this
+            occurrence of the problem.
+          type: integer
+          format: int32
+          minimum: 100
+          maximum: 599
+        detail:
+          description: >
+            A human readable explanation specific to this occurrence of the
+            problem that is helpful to locate the problem and give advice on how
+            to proceed. Written in English and readable for engineers, usually
+            not suited for non technical stakeholders and not localized.
+          type: string
+          example: some description for the error situation
+        instance:
+          description: >
+            A URI reference that identifies the specific occurrence of the
+            problem, e.g. by adding a fragment identifier or sub-path to the
+            problem type. May be used to locate the root of this problem in the
+            source code.
+          type: string
+          format: uri-reference
+          example: /some/uri-reference#specific-occurrence-context
+    CompaniesId:
+      title: CompaniesId
+      type: string
+      example: 63e6663823b4c1f5287398bb
+    CompaniesAdminRequest:
+      title: CompaniesAdminRequest
+      required:
+        - name
+        - email
+      type: object
+      properties:
+        name:
+          title: Companies admin display name
+          type: string
+          example: Mr. Bean
+        email:
+          title: Companies admin email
+          type: string
+          example: bean@example.com
+    CompaniesListResponse:
+      title: CompaniesListResponse
+      required:
+        - data
+        - limit
+        - offset
+        - totalCount
+      type: object
+      properties:
+        data:
+          title: Companies list
+          type: array
+          items:
+            $ref: '#/components/schemas/CompaniesResponse'
+        limit:
+          title: >-
+            The limit used for this page of results. This will be the same as
+            the limit query parameter unless it exceeds the maximal allowed
+            value.
+          type: integer
+          example: 20
+        offset:
+          title: >-
+            The offset used for this page of results. This will be the same as
+            the offset query parameter.
+          type: integer
+          example: 0
+        totalCount:
+          title: The total number of elements of the data attribute.
+          type: integer
+          example: 1000
+    CompaniesRequest:
+      title: CompaniesRequest
+      required:
+        - name
+      type: object
+      properties:
+        name:
+          title: Companies display name
+          type: string
+          example: Companies Name Inc.
+    CompaniesResponse:
+      title: CompaniesResponse
+      required:
+        - name
+        - id
+        - active
+        - createdAt
+      type: object
+      properties:
+        name:
+          title: Companies display name
+          type: string
+          example: Companies Name Inc.
+        id:
+          title: Companies identifier
+          type: string
+          example: 63e6663823b4c1f5287398bb
+        active:
+          title: Companies activity flag
+          type: boolean
+          example: true
+        createdAt:
+          title: Companies creation date
+          type: string
+          example: '1990-12-31T15:46:19.384990Z'
+    ProjectResponse:
+      description: Project response
+      type: object
+      required:
+        - id
+        - name
+        - ocr
+        - extractionModelId
+        - createdAt
+        - createdBy
+        - updatedAt
+        - updatedBy
+        - completion
+        - duplicates
+        - members
+      properties:
+        id:
+          $ref: '#/components/schemas/ProjectId'
+        createdAt:
+          type: string
+          format: date-time
+          example: '1990-12-31T15:46:19.384990Z'
+        createdBy:
+          $ref: '#/components/schemas/ProjectMemberId'
+        updatedAt:
+          type: string
+          format: date-time
+          example: '1990-12-31T15:46:19.384990Z'
+        updatedBy:
+          $ref: '#/components/schemas/ProjectMemberId'
+        name:
+          $ref: '#/components/schemas/ProjectName'
+        note:
+          $ref: '#/components/schemas/ProjectNote'
+        extractionModelId:
+          $ref: '#/components/schemas/ProjectExtractionModelId'
+        ocr:
+          oneOf:
+            - $ref: '#/components/schemas/ProjectOCRAbbyy'
+            - $ref: '#/components/schemas/ProjectOCRGoogle'
+          discriminator:
+            propertyName: engine
+            mapping:
+              abbyy: '#/components/schemas/ProjectOCRAbbyy'
+              google: '#/components/schemas/ProjectOCRGoogle'
+        completion:
+          $ref: '#/components/schemas/ProjectCompletion'
+        duplicates:
+          $ref: '#/components/schemas/ProjectDuplicates'
+        members:
+          oneOf:
+            - $ref: '#/components/schemas/ProjectAllMembers'
+            - $ref: '#/components/schemas/ProjectMembers'
+          discriminator:
+            propertyName: allow
+            mapping:
+              all: '#/components/schemas/ProjectAllMembers'
+              members: '#/components/schemas/ProjectMembers'
+    ProjectId:
+      title: ProjectId
+      description: Project ID
+      type: string
+      example: 63e6663823b4c1f5287398bb
+    ProjectName:
+      description: Project name
+      type: string
+      example: My Project
+      minLength: 1
+      maxLength: 60
+    ProjectNote:
+      description: Project note
+      type: string
+      example: My project description note
+      minLength: 1
+      maxLength: 1000
+    ProjectExtractionModelId:
+      title: ProjectExtractionModelId
+      description: Extraction Model id
+      type: string
+      example: 63e6663823b4c1f5287398bb
+    ProjectOCRAbbyy:
+      description: Abbyy OCR configuration
+      type: object
+      required:
+        - engine
+        - features
+        - languages
+      properties:
+        engine:
+          type: string
+          enum:
+            - abbyy
+        features:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProjectOCRAbbyyFeatures'
+        languages:
+          $ref: '#/components/schemas/ProjectOCRAbbyyLanguages'
+    ProjectOCRAbbyyFeatures:
+      type: string
+      enum:
+        - barcodes
+    ProjectOCRAbbyyLanguages:
+      description: Array of abbyy ocr languages used within a project
+      type: array
+      maxItems: 5
+      minItems: 1
+      items:
+        $ref: '#/components/schemas/ProjectOCRAbbyyLanguage'
+      example:
+        - German
+        - English
+    ProjectOCRAbbyyLanguage:
+      description: Abbyy ocr supported languages
+      type: string
+      enum:
+        - Arabic
+        - ArmenianEastern
+        - ArmenianGrabar
+        - ArmenianWestern
+        - Bulgarian
+        - Catalan
+        - ChinesePRC
+        - ChineseTaiwan
+        - Croatian
+        - Czech
+        - Danish
+        - Dutch
+        - DutchBelgian
+        - English
+        - Estonian
+        - Farsi
+        - Finnish
+        - French
+        - German
+        - Greek
+        - Hebrew
+        - Hungarian
+        - Icelandic
+        - Indonesian
+        - Irish
+        - Italian
+        - Japanese
+        - Korean
+        - KoreanHangul
+        - Latin
+        - Latvian
+        - Lithuanian
+        - Macedonian
+        - Malay
+        - Mongol
+        - Norwegian
+        - Polish
+        - PortugueseBrazilian
+        - PortugueseStandard
+        - Romanian
+        - Russian
+        - SerbianCyrillic
+        - SerbianLatin
+        - Slovenian
+        - Spanish
+        - Swedish
+        - Thai
+        - Turkish
+        - UighurCyrillic
+        - UighurLatin
+        - Ukrainian
+        - Vietnamese
+        - Welsh
+    ProjectOCRGoogle:
+      description: Google OCR configuration
+      type: object
+      required:
+        - engine
+        - features
+      properties:
+        engine:
+          type: string
+          enum:
+            - google
+        features:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProjectOCRGoogleFeatures'
+    ProjectOCRGoogleFeatures:
+      type: string
+      enum:
+        - barcodes
+        - disableBoxFilter
+        - plainText
+    ProjectCompletion:
+      description: |
+        ProjectCompletion type
+        * `automatic` - Mark documents as completed after succesfull validation
+        * `manual` - Mark documents to review after succesfull validation
+      type: string
+      enum:
+        - automatic
+        - manual
+      example: manual
+      default: manual
+    ProjectDuplicates:
+      description: |
+        How duplicates documents show be handle
+        * `allow` - Allow documents duplicates to be processed
+        * `fail` - Mark documents duplicates as failed
+      type: string
+      enum:
+        - allow
+        - fail
+      example: allow
+      default: fail
+    ProjectAllMembers:
+      title: ProjectAllMembers
+      description: Allow all users to access a project
+      type: object
+      properties:
+        allow:
+          type: string
+          enum:
+            - all
+    ProjectMembers:
+      title: ProjectMembers
+      description: Allow provided members to access project
+      type: object
+      properties:
+        allow:
+          type: string
+          enum:
+            - members
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProjectMemberId'
+    ProjectMemberId:
+      description: Project member id
+      type: string
+      example: 63e6663823b4c1f5287398bb
+    ProjectCreateRequest:
+      type: object
+      required:
+        - name
+        - ocr
+        - extractionModelId
+        - members
+      properties:
+        name:
+          $ref: '#/components/schemas/ProjectName'
+        note:
+          $ref: '#/components/schemas/ProjectNote'
+        ocr:
+          oneOf:
+            - $ref: '#/components/schemas/ProjectOCRAbbyy'
+            - $ref: '#/components/schemas/ProjectOCRGoogle'
+          discriminator:
+            propertyName: engine
+            mapping:
+              abbyy: '#/components/schemas/ProjectOCRAbbyy'
+              google: '#/components/schemas/ProjectOCRGoogle'
+        extractionModelId:
+          $ref: '#/components/schemas/ProjectExtractionModelId'
+        completion:
+          $ref: '#/components/schemas/ProjectCompletion'
+        duplicates:
+          $ref: '#/components/schemas/ProjectDuplicates'
+        members:
+          oneOf:
+            - $ref: '#/components/schemas/ProjectAllMembers'
+            - $ref: '#/components/schemas/ProjectMembers'
+          discriminator:
+            propertyName: allow
+            mapping:
+              all: '#/components/schemas/ProjectAllMembers'
+              members: '#/components/schemas/ProjectMembers'
+        schema:
+          $ref: '#/components/schemas/Schema'
+    ProjectListResponse:
+      title: ProjectListResponse
+      required:
+        - data
+        - totalCount
+        - limit
+        - offset
+      type: object
+      properties:
+        data:
+          title: Data
+          type: array
+          items:
+            $ref: '#/components/schemas/ProjectResponse'
+        limit:
+          title: limit
+          type: integer
+          example: 20
+        offset:
+          title: offset
+          type: integer
+          example: 0
+        totalCount:
+          title: Totalcount
+          type: integer
+          example: 1
+    Schema:
+      title: Schema
+      type: object
+      properties:
+        version:
+          title: Version
+          type: integer
+          example: 1
+        dataPoints:
+          title: DataPoints
+          type: array
+          items:
+            type: object
+            properties:
+              internalName:
+                type: string
+              displayName:
+                type: string
+              type:
+                type: string
+              normalization:
+                type: array
+                items:
+                  type: object
+              rules:
+                type: object
+          example:
+            - internalName: type
+              displayName: Type
+              type: string
+              source:
+                type: extractor
+              normalization: []
+              rules: {}
+            - internalName: number
+              displayName: Number
+              type: string
+              source:
+                type: extractor
+              normalization: []
+              rules: {}
+            - internalName: issuedAt
+              displayName: Issued At
+              type: date
+              preferDayOfMonth: last
+              source:
+                type: extractor
+              normalization: []
+              rules: {}
+            - internalName: deliveredAt
+              displayName: Delivered At
+              type: date
+              preferDayOfMonth: last
+              source:
+                type: extractor
+              normalization: []
+              rules: {}
+            - internalName: currency
+              displayName: Currency
+              type: string
+              source:
+                type: extractor
+              normalization: []
+              rules: {}
+        features:
+          type: object
+          properties:
+            derivation:
+              type: boolean
+              example: false
+        enrichment:
+          type: object
+        normalization:
+          type: object
+        validation:
+          type: object
+    Error:
+      required:
+        - detail
+        - status
+        - title
+      properties:
+        title:
+          description: A short summary of the error
+          type: string
+        detail:
+          description: A human readable explanation of the error.
+          type: string
+        status:
+          description: The HTTP status code.
+          type: integer
+          format: int32
+          minimum: 100
+          maximum: 599
+    document:
+      description: Reference to document uploaded to Hypatos Studio
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          description: Document id that was assigned during upload to Hypatos
+          type: string
+          example: 63cac12c37bb02accb396cae
+          pattern: ^[0-9a-fA-F]{24}$
+        type:
+          description: Document type that was assigned during upload to Hypatos
+          type: string
+          example: invoice
+          pattern: ^\S+$
+    CurrencyCode:
+      description: Three letter currency code as defined in ISO 4217
+      type: string
+      nullable: true
+      example: EUR
+      enum:
+        - AED
+        - AFN
+        - ALL
+        - AMD
+        - ANG
+        - AOA
+        - ARS
+        - AUD
+        - AWG
+        - AZN
+        - BAM
+        - BBD
+        - BDT
+        - BGN
+        - BHD
+        - BIF
+        - BMD
+        - BND
+        - BOB
+        - BOV
+        - BRL
+        - BSD
+        - BTN
+        - BWP
+        - BYN
+        - BZD
+        - CAD
+        - CDF
+        - CHE
+        - CHF
+        - CHW
+        - CLF
+        - CLP
+        - CNY
+        - COP
+        - COU
+        - CRC
+        - CUC
+        - CUP
+        - CVE
+        - CZK
+        - DJF
+        - DKK
+        - DOP
+        - DZD
+        - EGP
+        - ERN
+        - ETB
+        - EUR
+        - FJD
+        - FKP
+        - GBP
+        - GEL
+        - GHS
+        - GIP
+        - GMD
+        - GNF
+        - GTQ
+        - GYD
+        - HKD
+        - HNL
+        - HRK
+        - HTG
+        - HUF
+        - IDR
+        - ILS
+        - INR
+        - IQD
+        - IRR
+        - ISK
+        - JMD
+        - JOD
+        - JPY
+        - KES
+        - KGS
+        - KHR
+        - KMF
+        - KPW
+        - KRW
+        - KWD
+        - KYD
+        - KZT
+        - LAK
+        - LBP
+        - LKR
+        - LRD
+        - LSL
+        - LYD
+        - MAD
+        - MDL
+        - MGA
+        - MKD
+        - MMK
+        - MNT
+        - MOP
+        - MRU
+        - MUR
+        - MVR
+        - MWK
+        - MXN
+        - MXV
+        - MYR
+        - MZN
+        - NAD
+        - NGN
+        - NIO
+        - NOK
+        - NPR
+        - NZD
+        - OMR
+        - PAB
+        - PEN
+        - PGK
+        - PHP
+        - PKR
+        - PLN
+        - PYG
+        - QAR
+        - RON
+        - RSD
+        - RUB
+        - RWF
+        - SAR
+        - SBD
+        - SCR
+        - SDG
+        - SEK
+        - SGD
+        - SHP
+        - SLE
+        - SLL
+        - SOS
+        - SRD
+        - SSP
+        - STN
+        - SVC
+        - SYP
+        - SZL
+        - THB
+        - TJS
+        - TMT
+        - TND
+        - TOP
+        - TRY
+        - TTD
+        - TWD
+        - TZS
+        - UAH
+        - UGX
+        - USD
+        - USN
+        - UYI
+        - UYU
+        - UYW
+        - UZS
+        - VED
+        - VES
+        - VND
+        - VUV
+        - WST
+        - XAF
+        - XAG
+        - XAU
+        - XBA
+        - XBB
+        - XBC
+        - XBD
+        - XCD
+        - XDR
+        - XOF
+        - XPD
+        - XPF
+        - XPT
+        - XSU
+        - XTS
+        - XUA
+        - XXX
+        - YER
+        - ZAR
+        - ZMW
+        - ZWL
+        - null
+    LanguageCode:
+      description: Two letter language code as defined in ISO 639-1
+      type: string
+      nullable: true
+      example: en
+      enum:
+        - aa
+        - ab
+        - ae
+        - af
+        - ak
+        - am
+        - an
+        - ar
+        - as
+        - av
+        - ay
+        - az
+        - ba
+        - be
+        - bg
+        - bh
+        - bi
+        - bm
+        - bn
+        - bo
+        - br
+        - bs
+        - ca
+        - ce
+        - ch
+        - co
+        - cr
+        - cs
+        - cu
+        - cv
+        - cy
+        - da
+        - de
+        - dv
+        - dz
+        - ee
+        - el
+        - en
+        - eo
+        - es
+        - et
+        - eu
+        - fa
+        - ff
+        - fi
+        - fj
+        - fo
+        - fr
+        - fy
+        - ga
+        - gd
+        - gl
+        - gn
+        - gu
+        - gv
+        - ha
+        - he
+        - hi
+        - ho
+        - hr
+        - ht
+        - hu
+        - hy
+        - hz
+        - ia
+        - id
+        - ie
+        - ig
+        - ii
+        - ik
+        - io
+        - is
+        - it
+        - iu
+        - ja
+        - jv
+        - ka
+        - kg
+        - ki
+        - kj
+        - kk
+        - kl
+        - km
+        - kn
+        - ko
+        - kr
+        - ks
+        - ku
+        - kv
+        - kw
+        - ky
+        - la
+        - lb
+        - lg
+        - li
+        - ln
+        - lo
+        - lt
+        - lu
+        - lv
+        - mg
+        - mh
+        - mi
+        - mk
+        - ml
+        - mn
+        - mr
+        - ms
+        - mt
+        - my
+        - na
+        - nb
+        - nd
+        - ne
+        - ng
+        - nl
+        - nn
+        - 'no'
+        - nr
+        - nv
+        - ny
+        - oc
+        - oj
+        - om
+        - or
+        - os
+        - pa
+        - pi
+        - pl
+        - ps
+        - pt
+        - qu
+        - rm
+        - rn
+        - ro
+        - ru
+        - rw
+        - sa
+        - sc
+        - sd
+        - se
+        - sg
+        - si
+        - sk
+        - sl
+        - sm
+        - sn
+        - so
+        - sq
+        - sr
+        - ss
+        - st
+        - su
+        - sv
+        - sw
+        - ta
+        - te
+        - tg
+        - th
+        - ti
+        - tk
+        - tl
+        - tn
+        - to
+        - tr
+        - ts
+        - tt
+        - tw
+        - ty
+        - ug
+        - uk
+        - ur
+        - uz
+        - ve
+        - vi
+        - vo
+        - wa
+        - wo
+        - xh
+        - yi
+        - yo
+        - za
+        - zh
+        - zu
+        - null
+    languagedText:
+      type: object
+      properties:
+        text:
+          description: Text content
+          type: string
+          example: Fish & Chips
+        language:
+          $ref: '#/components/schemas/LanguageCode'
+    paymentTerms:
+      type: object
+      properties:
+        paymentTermKey:
+          description: Key of the payment term as defined in the source system
+          type: string
+          example: T10
+        descriptions:
+          description: Descriptions of the payment terms in different languages
+          type: array
+          items:
+            $ref: '#/components/schemas/languagedText'
+          example:
+            - text: Please pay us
+              language: en
+    customFields:
+      description: List of key value pairs containing custom fields from the source system
+      type: object
+      additionalProperties:
+        type: string
+    accountAssignment:
+      type: object
+      properties:
+        externalGlAccountId:
+          description: >-
+            External unique id of the general ledger account in the source
+            system
+          type: string
+          example: 0000100GL1
+        externalCostCenterId:
+          description: External unique id of the cost center in the source system
+          type: string
+          example: 0000100CO1
+        glAccountCode:
+          description: General ledger account code
+          type: string
+          example: GL1
+        costCenterCode:
+          description: Cost center code
+          type: string
+          example: CO1
+        quantity:
+          description: >-
+            Quantity of the invoice line (split of the quantity in case of
+            several accountAssignments)
+          type: number
+          example: 2
+    taxCode:
+      type: object
+      properties:
+        description:
+          description: Description of the type of tax in the source system
+          type: string
+          example: DEU - Standard (19%)
+        code:
+          description: Unique code of the type of tax in the source system
+          type: string
+          example: DEU_Standard
+    invoiceLine:
+      type: object
+      properties:
+        externalId:
+          description: External unique id of the invoice line in the source system
+          type: string
+          example: '00000001'
+          pattern: ^\S+$
+        externalCompanyId:
+          description: Company that the invoice line is assgined to
+          type: string
+          example: DE01
+        accountAssignments:
+          type: array
+          items:
+            $ref: '#/components/schemas/accountAssignment'
+        type:
+          description: type of the invoice line as defined in the source system
+          type: string
+          example: Service
+        quantity:
+          description: >-
+            Quantity of the invoice line (sum of all quantity splits in case of
+            several accountAssignments)
+          type: number
+          example: 2
+        netAmount:
+          description: Net amount of the invoice line
+          type: number
+          example: 1.23
+        totalTaxAmount:
+          description: Total tax amount of the invoice line
+          type: number
+          example: 1.23
+        grossAmount:
+          description: Gross amount of the invoice line
+          type: number
+          example: 100.01
+        unitOfMeasure:
+          description: Unit of measure of the invoice line
+          type: string
+          example: kg
+        unitPrice:
+          description: Price for one unit of the invoice line
+          type: number
+          example: 19.0123
+        taxCode:
+          $ref: '#/components/schemas/taxCode'
+        taxJurisdictionCode:
+          description: tax jurisdiction code assigned to the invoice
+          type: string
+          example: PA0000000
+        itemText:
+          description: Text describing the invoice line item
+          type: string
+          example: Virtual Event ABC
+        externalPurchaseOrderId:
+          description: Purchase order related to the invoice line item
+          type: string
+          example: '4500016221'
+        purchaseOrderLineNumber:
+          description: >-
+            Reference to the purchase order line item assigned to the invoice
+            line item
+          type: string
+          example: '00010'
+        centralBankIndicator:
+          description: >-
+            State Central Bank Indicator for reporting foreign payment
+            transactions according to the German Foreign Trade and Payments
+            Ordinance (Außenwirtschaftsverordnung - AWV)
+          type: string
+          example: '123'
+        customFields:
+          $ref: '#/components/schemas/customFields'
+    withholdingTax:
+      description: Withholding tax information related to a posted invoice
+      type: object
+      properties:
+        key:
+          description: >-
+            Key that the source system uses to clearly identify the type of
+            withholding tax that needs to be paid
+          type: string
+          example: WHT-432
+        baseAmount:
+          description: >-
+            Base amount that the tax rate of the specific withholding tax type
+            is applied to
+          type: number
+          example: 632.78
+        amount:
+          description: Tax amount that was paid for the specific withholding tax type
+          type: number
+          example: 21.39
+        currency:
+          $ref: '#/components/schemas/CurrencyCode'
+    invoice:
+      description: >-
+        Please notice one property of [documentId, documents] is required in
+        payload
+      required:
+        - externalId
+        - invoiceLines
+      type: object
+      properties:
+        externalId:
+          description: External unique id of the invoice in the source system
+          type: string
+          example: SUPPLIER_INVOICE-3-1
+          pattern: ^\S+$
+        documentId:
+          description: Document id that was assigned during upload to Hypatos
+          type: string
+          example: 63cac12c37bb02accb396cae
+          pattern: ^[0-9a-fA-F]{24}$
+        documents:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/document'
+        supplierInvoiceNumber:
+          description: Invoice number provided by the issuing supplier
+          type: string
+          example: '10000001'
+        invoiceNumber:
+          description: >-
+            Invoice number defined by the recipient company (not globally
+            unique)
+          type: string
+          example: '12345'
+        externalCompanyId:
+          description: External unique id of the company in the source system
+          type: string
+          example: DE01
+        externalSupplierId:
+          description: External unique id of the supplier in the source system
+          type: string
+          example: '0000100000'
+        externalBankAccountId:
+          description: >-
+            External unique id of the bank account that the invoice payment was
+            transferred to
+          type: string
+          example: '12341234'
+        fiscalYearLabel:
+          description: >-
+            Label used in the source system for the fiscal year that the invoice
+            was posted in
+          type: string
+          example: '2023'
+        issuedDate:
+          description: >-
+            Date when the invoice was issued by the supplier (printed on invoice
+            document)
+          type: string
+          format: date
+          example: '2000-12-31'
+        receivedDate:
+          description: Date when the invoice was recieved by the company
+          type: string
+          format: date
+          example: '2000-12-31'
+        postingDate:
+          description: Date when the invoice was posted in the source system
+          type: string
+          format: date
+          example: '2000-12-31'
+        isCanceled:
+          description: Indicator if the invoice is canceled
+          type: boolean
+          example: false
+        relatedInvoice:
+          description: externalInvoiceId of related invoice
+          type: string
+          example: SUPPLIER_INVOICE-3-2
+        currency:
+          $ref: '#/components/schemas/CurrencyCode'
+        totalNetAmount:
+          description: Total net amount of invoice (sum of line item net amounts)
+          type: number
+          example: 81
+        totalFreightCharges:
+          description: Sum of all freight charges
+          type: number
+          example: 9
+        totalOtherCharges:
+          description: Sum of all charges other than freight charges
+          type: number
+          example: 10
+        totalTaxAmount:
+          description: Total tax amount of invoice (sum of all taxes)
+          type: number
+          example: 19
+        totalGrossAmount:
+          description: >-
+            Total gross amount of invoice (total net amount + total freight
+            charges + total other charges + total tax amount)
+          type: number
+          example: 119
+        paymentTerms:
+          $ref: '#/components/schemas/paymentTerms'
+        externalApproverId:
+          description: >-
+            External unique id of the first approver of an invoice in the source
+            system
+          type: string
+          example: UserID#1234
+        customFields:
+          $ref: '#/components/schemas/customFields'
+        headerText:
+          description: Header Text describing the invoice
+          type: string
+          example: doc header text
+        type:
+          description: type of the invoice as defined in th source system
+          type: string
+          example: FI
+        invoiceLines:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/invoiceLine'
+        withholdingTax:
+          type: array
+          items:
+            $ref: '#/components/schemas/withholdingTax'
+    CountryCode:
+      description: Two letter country code as defined in ISO 3166-1 alpha-2
+      type: string
+      nullable: true
+      example: DE
+      enum:
+        - AF
+        - AX
+        - AL
+        - DZ
+        - AS
+        - AD
+        - AO
+        - AI
+        - AQ
+        - AG
+        - AR
+        - AM
+        - AW
+        - AU
+        - AT
+        - AZ
+        - BS
+        - BH
+        - BD
+        - BB
+        - BY
+        - BE
+        - BZ
+        - BJ
+        - BM
+        - BT
+        - BO
+        - BQ
+        - BA
+        - BW
+        - BV
+        - BR
+        - IO
+        - BN
+        - BG
+        - BF
+        - BI
+        - KH
+        - CM
+        - CA
+        - CV
+        - KY
+        - CF
+        - TD
+        - CL
+        - CN
+        - CX
+        - CC
+        - CO
+        - KM
+        - CG
+        - CD
+        - CK
+        - CR
+        - CI
+        - HR
+        - CU
+        - CW
+        - CY
+        - CZ
+        - DK
+        - DJ
+        - DM
+        - DO
+        - EC
+        - EG
+        - SV
+        - GQ
+        - ER
+        - EE
+        - ET
+        - FK
+        - FO
+        - FJ
+        - FI
+        - FR
+        - GF
+        - PF
+        - TF
+        - GA
+        - GM
+        - GE
+        - DE
+        - GH
+        - GI
+        - GR
+        - GL
+        - GD
+        - GP
+        - GU
+        - GT
+        - GG
+        - GN
+        - GW
+        - GY
+        - HT
+        - HM
+        - VA
+        - HN
+        - HK
+        - HU
+        - IS
+        - IN
+        - ID
+        - IR
+        - IQ
+        - IE
+        - IM
+        - IL
+        - IT
+        - JM
+        - JP
+        - JE
+        - JO
+        - KZ
+        - KE
+        - KI
+        - KP
+        - KR
+        - KW
+        - KG
+        - LA
+        - LV
+        - LB
+        - LS
+        - LR
+        - LY
+        - LI
+        - LT
+        - LU
+        - MO
+        - MK
+        - MG
+        - MW
+        - MY
+        - MV
+        - ML
+        - MT
+        - MH
+        - MQ
+        - MR
+        - MU
+        - YT
+        - MX
+        - FM
+        - MD
+        - MC
+        - MN
+        - ME
+        - MS
+        - MA
+        - MZ
+        - MM
+        - NA
+        - NR
+        - NP
+        - NL
+        - NC
+        - NZ
+        - NI
+        - NE
+        - NG
+        - NU
+        - NF
+        - MP
+        - 'NO'
+        - OM
+        - PK
+        - PW
+        - PS
+        - PA
+        - PG
+        - PY
+        - PE
+        - PH
+        - PN
+        - PL
+        - PT
+        - PR
+        - QA
+        - RE
+        - RO
+        - RU
+        - RW
+        - BL
+        - SH
+        - KN
+        - LC
+        - MF
+        - PM
+        - VC
+        - WS
+        - SM
+        - ST
+        - SA
+        - SN
+        - RS
+        - SC
+        - SL
+        - SG
+        - SX
+        - SK
+        - SI
+        - SB
+        - SO
+        - ZA
+        - GS
+        - SS
+        - ES
+        - LK
+        - SD
+        - SR
+        - SJ
+        - SZ
+        - SE
+        - CH
+        - SY
+        - TW
+        - TJ
+        - TZ
+        - TH
+        - TL
+        - TG
+        - TK
+        - TO
+        - TT
+        - TN
+        - TR
+        - TM
+        - TC
+        - TV
+        - UG
+        - UA
+        - AE
+        - GB
+        - US
+        - UM
+        - UY
+        - UZ
+        - VU
+        - VE
+        - VN
+        - VG
+        - VI
+        - WF
+        - EH
+        - YE
+        - ZM
+        - ZW
+        - null
+    vatId:
+      description: List of VAT IDs assigned to the company
+      type: object
+      properties:
+        id:
+          type: string
+        countryCode:
+          $ref: '#/components/schemas/CountryCode'
+      example:
+        - id: DE123456789
+          countryCode: DE
+    taxId:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+      example:
+        - id: 123-456-789
+          type: TIN
+    company:
+      required:
+        - name
+        - externalId
+      type: object
+      properties:
+        externalId:
+          description: External unique id of the company in the source system
+          type: string
+          example: DE01
+          pattern: ^\S+$
+        name:
+          description: Name of the company
+          type: string
+          example: Acmne Corp.
+          pattern: ^[\S ]*\S[\S ]*$
+        street:
+          description: Street and street number where the company is located
+          type: string
+          example: Hauptstr. 1
+        addressAdditional:
+          description: Additional address data (e.g. apartment or suite)
+          type: string
+          example: Eingang B
+        postcode:
+          description: Postcode where the company is located
+          type: string
+          example: '10001'
+        city:
+          description: City where the company is located
+          type: string
+          example: Berlin
+        state:
+          description: State where the company is located
+          type: string
+          example: Berlin
+        countryCode:
+          $ref: '#/components/schemas/CountryCode'
+        vatIds:
+          description: List of VAT IDs assigned to the company
+          type: array
+          example:
+            - id: DE123456789X
+              countryCode: DE
+          items:
+            $ref: '#/components/schemas/vatId'
+        taxIds:
+          description: List of Tax IDs assigned to the company
+          type: array
+          example:
+            - id: 123-456-789X
+              type: TIN
+          items:
+            $ref: '#/components/schemas/taxId'
+        customFields:
+          $ref: '#/components/schemas/customFields'
+    withholdingTaxInfo:
+      description: Withholding tax information related to a supplier
+      type: object
+      properties:
+        description:
+          description: Description of the type of withholding tax
+          type: string
+          example: Some very deep description of the type of withholding tax
+        key:
+          description: >-
+            Key that the source system uses to clearly identify the type of
+            withholding tax that needs to be paid
+          type: string
+          example: WHT-432
+    subsidiary:
+      type: object
+      properties:
+        externalCompanyId:
+          description: External unique id of the company that the subsidiary is assigned to
+          type: string
+          example: DE01
+        paymentTerms:
+          $ref: '#/components/schemas/paymentTerms'
+        blockedForPosting:
+          description: Indicator if the subsidiary is blocked for posting
+          type: boolean
+          example: false
+        blockedForPayment:
+          description: Indicator if the subsidiary is blocked for payment
+          type: boolean
+          example: false
+        enabledForAutoPosting:
+          description: Indicator if the subsidiary is enabled for auto posting
+          type: boolean
+          example: true
+        defaultGlAccountCode:
+          description: >-
+            Default general ledger account code that is assigned to the
+            subsidiary
+          type: string
+          example: 0000100GL1
+        withholdingTaxInfo:
+          type: array
+          items:
+            $ref: '#/components/schemas/withholdingTaxInfo'
+    bankAccount:
+      type: object
+      required:
+        - externalId
+      properties:
+        externalId:
+          description: External unique id of the bank account in the source system
+          type: string
+          example: '12341234'
+          pattern: ^\S+$
+        countryCode:
+          $ref: '#/components/schemas/CountryCode'
+        bankAccountNumber:
+          description: Bank account number of the bank account
+          type: string
+          example: '78090'
+        bankAccountHolder:
+          description: Name of the bank account holder
+          type: string
+          example: Maximilian Mustermann
+        iban:
+          description: IBAN of the bank account
+          type: string
+          example: DE91100000000123456789
+        bic:
+          description: Bank identifier code
+          type: string
+          example: CHASUS33XXX
+        bankName:
+          description: Name of the bank where the bank account is held
+          type: string
+          example: Deutsche Bank
+        bankStreet:
+          description: Street and street number where the bank is located
+          type: string
+          example: Hauptstr. 1
+        bankPostcode:
+          description: Postcode where the bank is located.
+          type: string
+          example: '10001'
+        bankCity:
+          description: City where the bank is located.
+          type: string
+          example: Berlin
+        isActive:
+          type: boolean
+          example: true
+    supplier:
+      type: object
+      required:
+        - name
+        - externalId
+      properties:
+        externalId:
+          description: External unique id of the supplier in the source system
+          type: string
+          example: '0000100000'
+          pattern: ^\S+$
+        name:
+          description: name of the supplier
+          type: string
+          example: Acmne Corp.
+          pattern: ^[\S ]*\S[\S ]*$
+        street:
+          description: Street and street number where the supplier is located
+          type: string
+          example: Hauptstr. 1
+        addressAdditional:
+          description: Additional address data (e.g. apartment or suite)
+          type: string
+          example: Eingang B
+        postcode:
+          description: Postcode where the supplier is located
+          type: string
+          example: '10001'
+        city:
+          description: City where the supplier is located
+          type: string
+          example: Berlin
+        state:
+          description: State where the company is located
+          type: string
+          example: Berlin
+        countryCode:
+          $ref: '#/components/schemas/CountryCode'
+        vatIds:
+          description: List of VAT IDs assigned to the supplier
+          type: array
+          example:
+            - id: DE123456789X
+              countryCode: DE
+          items:
+            $ref: '#/components/schemas/vatId'
+        taxIds:
+          description: List of Tax IDs assigned to the supplier
+          type: array
+          example:
+            - id: 123-456-789X
+              type: TIN
+          items:
+            $ref: '#/components/schemas/taxId'
+        blockedForPosting:
+          description: Indicator if the supplier is blocked for posting
+          type: boolean
+          example: false
+        blockedForPayment:
+          description: Indicator if the supplier is blocked for payment
+          type: boolean
+          example: false
+        defaultGlAccountCode:
+          description: Default general ledger account that is assigned to the supplier
+          type: string
+          example: 0000100GL1
+        supplierSubsidiaries:
+          type: array
+          items:
+            $ref: '#/components/schemas/subsidiary'
+        supplierBankAccounts:
+          type: array
+          items:
+            $ref: '#/components/schemas/bankAccount'
+        customFields:
+          $ref: '#/components/schemas/customFields'
+    purchaseOrderLine:
+      required:
+        - purchaseOrderLineNumber
+      type: object
+      properties:
+        purchaseOrderLineNumber:
+          description: >-
+            Number of the purchase order line assigned to the invoice line item
+            (unique within the purchase order)
+          type: string
+          example: '00010'
+        externalCompanyId:
+          description: Company that the purchase order line is assgined to
+          type: string
+          example: DE01
+        accountAssignments:
+          type: array
+          items:
+            $ref: '#/components/schemas/accountAssignment'
+        type:
+          description: type of the purchase order line as defined in the source system
+          type: string
+          example: Service
+        quantity:
+          description: >-
+            Quantity of the purchase order line (sum of all quantity splits in
+            case of several accountAssignments)
+          type: number
+          example: 2
+        status:
+          description: Status of purchase order line as defined in source system
+          type: string
+          example: OPEN
+        netAmount:
+          description: Net amount of the purchase order line
+          type: number
+          example: 1.23
+        totalTaxAmount:
+          description: Total tax amount of the purchase order line
+          type: number
+          example: 1.23
+        grossAmount:
+          description: Gross amount of the purchase order line
+          type: number
+          example: 100.01
+        unitOfMeasure:
+          description: Unit of measure of the purchase order line
+          type: string
+          example: kg
+        unitPrice:
+          description: Price for one unit of the purchase order line
+          type: number
+          example: 19.0123
+        taxCode:
+          $ref: '#/components/schemas/taxCode'
+        itemText:
+          description: Text describing the purchase order line
+          type: string
+          example: Dell Laptop Latitude D630
+        material:
+          type: object
+          properties:
+            description:
+              description: Description of the material
+              type: string
+              example: Dell Laptop Latitude D630
+            externalId:
+              description: >-
+                Id of the material as defined in the material master of the
+                company
+              type: string
+              example: 2a6300181f08402e710ea3f180214bc1
+              pattern: ^\S+$
+            supplierNumber:
+              description: Number of the material as defined by the supplier
+              type: string
+              example: '123456789'
+            type:
+              description: >-
+                Type of the material as defined in the material master of the
+                company
+              type: string
+              example: Operating Supplies
+            group:
+              description: >-
+                Group of the material as defined in the material master of the
+                company
+              type: string
+              example: Electronics
+        customFields:
+          $ref: '#/components/schemas/customFields'
+    purchaseOrder:
+      type: object
+      required:
+        - externalId
+      properties:
+        externalId:
+          description: External unique id of the purchase order in the source system
+          type: string
+          example: '4500016221'
+          pattern: ^\S+$
+        createdDate:
+          description: Date when the purchase order was created in the external system
+          type: string
+          format: date
+          example: '2000-12-31'
+        fiscalYearLabel:
+          description: >-
+            Label used in the source system for the fiscal year that the
+            purchase order was created in
+          type: string
+          example: '2023'
+        language:
+          allOf:
+            - $ref: '#/components/schemas/LanguageCode'
+            - description: >-
+                Language assigned to the purchase order. If the source system
+                allows for storing data of text fields in different languages,
+                the data should be transferred to Hypatos in the language that
+                is assigned to the purchase order (exception: for payment terms
+                all languages should be transferred).
+        externalCompanyId:
+          description: Company that the purchase order is assigned to
+          type: string
+          example: DE01
+        type:
+          description: type of the purchase order as defined in the source system
+          type: string
+          example: Service
+        externalSupplierId:
+          description: External unique id of the supplier in the source system
+          type: string
+          example: '0000100000'
+        status:
+          description: Status of purchase order as defined in source system
+          type: string
+          example: OPEN
+        currency:
+          $ref: '#/components/schemas/CurrencyCode'
+        totalNetAmount:
+          description: Total net amount of purchase order (sum of line item net amounts)
+          type: number
+          example: 81
+        totalFreightCharges:
+          description: Sum of all freight charges as defined on the purchase order
+          type: number
+          example: 9
+        totalOtherCharges:
+          description: >-
+            Sum of all charges other than freight charges as defined on the
+            purchase order
+          type: number
+          example: 10
+        totalTaxAmount:
+          description: Total tax amount of purchase order (sum of all taxes)
+          type: number
+          example: 19
+        totalGrossAmount:
+          description: >-
+            Total gross amount of purchase order (total net amount + total
+            freight charges + total other charges + total tax amount)
+          type: number
+          example: 119
+        paymentTerms:
+          $ref: '#/components/schemas/paymentTerms'
+        customFields:
+          $ref: '#/components/schemas/customFields'
+        purchaseOrderLines:
+          type: array
+          items:
+            $ref: '#/components/schemas/purchaseOrderLine'
+    languagedTextWithValue:
+      type: object
+      properties:
+        value:
+          description: Text Value
+          type: string
+          example: OE
+        labels:
+          type: array
+          items:
+            $ref: '#/components/schemas/languagedText'
+    glAccount:
+      type: object
+      required:
+        - externalId
+        - code
+      properties:
+        externalId:
+          description: >-
+            External unique id of the general ledger account in the source
+            system
+          type: string
+          example: 0000100GL1
+          pattern: ^\S+$
+        code:
+          description: Code of the general ledger account in the source system
+          type: string
+          example: GL1
+          pattern: ^\S([\S ]*\S)?$
+        companyAssignment:
+          description: List of externalCompanyIds that the approver is assigned to
+          type: array
+          example:
+            - DE01
+            - US01
+          items:
+            type: string
+        type:
+          $ref: '#/components/schemas/languagedTextWithValue'
+        category:
+          $ref: '#/components/schemas/languagedTextWithValue'
+        label:
+          description: Label describing the general ledger account
+          type: array
+          items:
+            $ref: '#/components/schemas/languagedText'
+          example:
+            - text: Entertainment Expenses
+              language: en
+        shortLabel:
+          description: Short label describing the general ledger account
+          type: array
+          items:
+            $ref: '#/components/schemas/languagedText'
+          example:
+            - text: Entertainment Exp.
+              language: en
+    costCenter:
+      type: object
+      required:
+        - externalId
+        - code
+      properties:
+        externalId:
+          description: External unique id of the cost center in the source system
+          type: string
+          example: 0000100CO1
+          pattern: ^\S+$
+        code:
+          description: Code of the cost center in the source system
+          type: string
+          example: CO1
+          pattern: ^\S([\S ]*\S)?$
+        companyAssignment:
+          description: List of externalCompanyIds that the approver is assigned to
+          type: array
+          example:
+            - DE01
+            - US01
+          items:
+            type: string
+        type:
+          $ref: '#/components/schemas/languagedTextWithValue'
+        category:
+          $ref: '#/components/schemas/languagedTextWithValue'
+        label:
+          description: Label describing the cost center
+          type: array
+          items:
+            $ref: '#/components/schemas/languagedText'
+          example:
+            - text: Sales Engineers
+              language: en
+        shortLabel:
+          description: Short label describing the cost center
+          type: array
+          items:
+            $ref: '#/components/schemas/languagedText'
+          example:
+            - text: Sales Eng.
+              language: en
+    approver:
+      type: object
+      required:
+        - externalId
+      properties:
+        externalId:
+          description: >-
+            External unique id of the first approver of an invoice in the source
+            system
+          type: string
+          example: UserID#1234
+          pattern: ^\S+$
+        companyAssignment:
+          description: List of externalCompanyIds that the approver is assigned to
+          type: array
+          example:
+            - DE01
+            - US01
+          items:
+            type: string
+        isActive:
+          type: boolean
+          example: true
+        firstName:
+          description: First name of the approving person
+          type: string
+          example: Koala
+        lastName:
+          description: Last name of the approving person
+          type: string
+          example: Hinze
+        email:
+          description: Email address of the approving person
+          type: string
+          format: email
+          example: accountant@sap.com
+        phoneNumber:
+          description: Phone number of the approving person
+          type: string
+          example: 491001234567891
+    customer:
+      type: object
+      required:
+        - name
+        - externalId
+      properties:
+        externalId:
+          description: External unique id of the customer in the source system
+          type: string
+          example: '0000100000'
+          pattern: ^\S+$
+        name:
+          description: name of the customer
+          type: string
+          example: Acmne Corp.
+          pattern: ^[\S ]*\S[\S ]*$
+        street:
+          description: Street and street number where the customer is located
+          type: string
+          example: Hauptstr. 1
+        addressAdditional:
+          description: Additional address data (e.g. apartment or suite)
+          type: string
+          example: Eingang B
+        postcode:
+          description: Postcode where the customer is located
+          type: string
+          example: '10001'
+        city:
+          description: City where the customer is located
+          type: string
+          example: Berlin
+        countryCode:
+          $ref: '#/components/schemas/CountryCode'
+        vatIds:
+          description: List of VAT IDs assigned to the customer
+          type: array
+          example:
+            - id: DE123456789X
+              countryCode: DE
+          items:
+            $ref: '#/components/schemas/vatId'
+        taxIds:
+          description: List of Tax IDs assigned to the customer
+          type: array
+          example:
+            - id: 123-456-789X
+              type: TIN
+          items:
+            $ref: '#/components/schemas/taxId'
+        blockedForPosting:
+          description: Indicator if the customer is blocked for posting
+          type: boolean
+          example: false
+        blockedForPayment:
+          description: Indicator if the customer is blocked for payment
+          type: boolean
+          example: false
+        customerSubsidiaries:
+          type: array
+          items:
+            $ref: '#/components/schemas/subsidiary'
+        customerBankAccounts:
+          type: array
+          items:
+            $ref: '#/components/schemas/bankAccount'
+        customFields:
+          $ref: '#/components/schemas/customFields'
+    EnrichmentInsertInvoiceIncludingInvoiceLinesResponse:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: string
+          example: 3a429dc8-56d4-42ef-a4cf-2ebc9ad1ef38
+    EmailsGetMergedContentByIdResponse:
+      type: string
+      format: binary
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: /auth/token
+          scopes:
+            companies.read: Read companies
+            documents.read: Read documents
+            documents.write: Edit your documents
+            enrichment.read: Read enrichment training data
+            enrichment.write: Create/edit enrichment training data
+            enrichment.delete: Delete enrichment training data
+            files.read: Uploading files for processing
+            files.write: Downloading uploaded files
+    Basic:
+      type: http
+      scheme: basic
+  headers:
+    x-ratelimit-limit:
+      description: >-
+        Indicates the request-quota associated to the client in the current
+        time-window followed by the description of the quota policy.
+      schema:
+        type: string
+      example: 10, 10;w=1
+    x-ratelimit-remaining:
+      description: The number of remaining requests in the current time-window
+      schema:
+        type: integer
+      example: 94
+    x-ratelimit-reset:
+      description: The number of seconds until quota reset of the current time-window
+      schema:
+        type: integer
+      example: 21
