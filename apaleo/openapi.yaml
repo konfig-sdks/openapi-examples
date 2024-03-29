@@ -1,0 +1,3687 @@
+openapi: 3.0.0
+info:
+  title: apaleo Inventory API
+  description: >-
+    Setup and manage <b>properties</b> (hotels, etc.) and all the entites in
+    them to rent out:
+
+    <b>Units</b> such as rooms, parking lots, beds, meeting rooms, etc. Units
+    can be combined into <b>groups</b> (single rooms, double rooms).
+  version: v1
+servers:
+  - url: api.apaleo.com
+tags:
+  - name: Unit
+  - name: UnitGroup
+  - name: Property
+  - name: UnitAttribute
+  - name: PropertyActions
+  - name: Types
+paths:
+  /inventory/v1/properties:
+    get:
+      tags:
+        - Property
+      summary: Get a properties list
+      operationId: Property_listGet
+      security:
+        - oauth2: []
+      description: >-
+        Get the list of properties.<br>You need to be authorized (no particular
+        scope required)
+      parameters:
+        - description: Filter result by property status
+          in: query
+          name: status
+          style: form
+          explode: false
+          schema:
+            type: array
+            items:
+              enum:
+                - Test
+                - Live
+              type: string
+        - description: >-
+            Include archived properties in the result. If not set, or set to
+            false, it only returns non-archived properties
+          in: query
+          name: includeArchived
+          schema:
+            type: boolean
+        - description: Filter result by country code
+          in: query
+          name: countryCode
+          style: form
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+        - description: >-
+            Page number, 1-based. Default value is 1 (if this is not set or not
+            positive). Results in 204 if there are no items on that page.
+          in: query
+          name: pageNumber
+          schema:
+            type: integer
+            default: 1
+        - description: >-
+            Page size. If this is not set or not positive, the pageNumber is
+            ignored and all items are returned.
+          in: query
+          name: pageSize
+          schema:
+            type: integer
+            format: int64
+        - description: >-
+            List of all embedded resources that should be expanded in the
+            response. Possible values are: actions. All other values will be
+            silently ignored.
+          in: query
+          name: expand
+          style: form
+          explode: false
+          schema:
+            type: array
+            items:
+              enum:
+                - actions
+              type: string
+      responses:
+        '200':
+          description: Return all properties.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PropertyListModel'
+        '204':
+          description: There are no properties found.
+        '400':
+          description: Bad request.
+        '401':
+          description: You are unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: The Request-URI could not be found.
+        '422':
+          description: Validation errors in the request body or query params.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageItemCollection'
+        '500':
+          description: An unexpected error occurred.
+        '503':
+          description: The server is currently unavailable. Please try later.
+    post:
+      tags:
+        - Property
+      summary: Creates a property
+      operationId: Property_create
+      security:
+        - oauth2:
+            - properties.create
+            - setup.manage
+            - admin
+      description: >-
+        Use this call to create a new property.<br>You must have at least one of
+        these scopes: 'properties.create, setup.manage'.
+      parameters:
+        - description: >-
+            Unique key for safely retrying requests without accidentally
+            performing the same operation twice. 
+
+            We'll always send back the same response for requests made with the
+            same key, 
+
+            and keys can't be reused with different request parameters. Keys
+            expire after 24 hours.
+          in: header
+          name: Idempotency-Key
+          schema:
+            type: string
+      requestBody:
+        $ref: '#/components/requestBodies/CreatePropertyModel'
+      responses:
+        '201':
+          description: Creation of the new property was successful.
+          headers:
+            Location:
+              description: The location of the created resource.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PropertyCreatedModel'
+        '400':
+          description: Bad request.
+        '401':
+          description: You are unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: The Request-URI could not be found.
+        '415':
+          description: Unsupported media type.
+        '422':
+          description: Validation errors in the request body or query params.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageItemCollection'
+        '500':
+          description: An unexpected error occurred.
+        '503':
+          description: The server is currently unavailable. Please try later.
+  /inventory/v1/properties/$count:
+    get:
+      tags:
+        - Property
+      summary: Return total count of properties
+      operationId: Property_getTotalCount
+      security:
+        - oauth2: []
+      description: >-
+        Return total count of properties<br>You need to be authorized (no
+        particular scope required)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CountModel'
+        '400':
+          description: Bad request.
+        '401':
+          description: You are unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: The Request-URI could not be found.
+        '422':
+          description: Validation errors in the request body or query params.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageItemCollection'
+        '500':
+          description: An unexpected error occurred.
+        '503':
+          description: The server is currently unavailable. Please try later.
+  /inventory/v1/properties/{id}:
+    head:
+      tags:
+        - Property
+      summary: Check if a property exists
+      operationId: Property_existsByIdHead
+      security:
+        - oauth2: []
+      description: >-
+        Check if a property exists by id.<br>You need to be authorized (no
+        particular scope required)
+      parameters:
+        - description: The id of the property.
+          in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The property exists.
+        '400':
+          description: Bad request.
+        '401':
+          description: You are unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: The Request-URI could not be found.
+        '500':
+          description: An unexpected error occurred.
+        '503':
+          description: The server is currently unavailable. Please try later.
+    get:
+      tags:
+        - Property
+      summary: Get a property
+      operationId: Property_getById
+      security:
+        - oauth2: []
+      description: >-
+        Get a property by id.<br>You need to be authorized (no particular scope
+        required)
+      parameters:
+        - description: The id of the property.
+          in: path
+          name: id
+          required: true
+          schema:
+            type: string
+        - description: >-
+            'all' or comma separated list of two-letter language codes (ISO
+            Alpha-2)
+          in: query
+          name: languages
+          style: form
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+        - description: >-
+            List of all embedded resources that should be expanded in the
+            response. Possible values are: actions. All other values will be
+            silently ignored.
+          in: query
+          name: expand
+          style: form
+          explode: false
+          schema:
+            type: array
+            items:
+              enum:
+                - actions
+              type: string
+      responses:
+        '200':
+          description: Return all the property data.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PropertyModel'
+        '400':
+          description: Bad request.
+        '401':
+          description: You are unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: The Request-URI could not be found.
+        '422':
+          description: Validation errors in the request body or query params.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageItemCollection'
+        '500':
+          description: An unexpected error occurred.
+        '503':
+          description: The server is currently unavailable. Please try later.
+    patch:
+      tags:
+        - Property
+      summary: Allows to modify property
+      operationId: Property_modifyDetails
+      security:
+        - oauth2:
+            - properties.manage
+            - setup.manage
+            - admin
+      description: "Here's a list of allowed operations:\r\n- Replace Name\r\n- Add, replace and remove Description\r\n- Replace CompanyName\r\n- Add, replace and remove ManagingDirectors\r\n- Replace CommercialRegisterEntry\r\n- Replace TaxId\r\n- Replace Location\r\n- Add, replace and remove BankAccount\r\n- Replace PaymentTerms\r\n- Set IsTemplate<br>You must have at least one of these scopes: 'properties.manage, setup.manage'."
+      parameters:
+        - description: The id of the property.
+          in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        $ref: '#/components/requestBodies/OperationArray'
+      responses:
+        '204':
+          description: Success
+        '400':
+          description: Bad request.
+        '401':
+          description: You are unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: The Request-URI could not be found.
+        '415':
+          description: Unsupported media type.
+        '422':
+          description: Validation errors in the request body or query params.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageItemCollection'
+        '500':
+          description: An unexpected error occurred.
+        '503':
+          description: The server is currently unavailable. Please try later.
+  /inventory/v1/property-actions/{id}/clone:
+    post:
+      tags:
+        - PropertyActions
+      summary: Clones a property
+      operationId: PropertyActions_cloneProperty
+      security:
+        - oauth2:
+            - properties.create
+            - setup.manage
+            - admin
+      description: "Use this call to clone a specific property.\r\nThis operation creates a new property with inventory and rate plans from the specified property.<br>You must have at least one of these scopes: 'properties.create, setup.manage'."
+      parameters:
+        - description: The id of the property.
+          in: path
+          name: id
+          required: true
+          schema:
+            type: string
+        - description: >-
+            Unique key for safely retrying requests without accidentally
+            performing the same operation twice. 
+
+            We'll always send back the same response for requests made with the
+            same key, 
+
+            and keys can't be reused with different request parameters. Keys
+            expire after 24 hours.
+          in: header
+          name: Idempotency-Key
+          schema:
+            type: string
+      requestBody:
+        $ref: '#/components/requestBodies/CreatePropertyModel'
+      responses:
+        '201':
+          description: Cloning of the existing property was successful.
+          headers:
+            Location:
+              description: The location of the created resource.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PropertyCreatedModel'
+        '400':
+          description: Bad request.
+        '401':
+          description: You are unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: The Request-URI could not be found.
+        '415':
+          description: Unsupported media type.
+        '422':
+          description: Validation errors in the request body or query params.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageItemCollection'
+        '500':
+          description: An unexpected error occurred.
+        '503':
+          description: The server is currently unavailable. Please try later.
+  /inventory/v1/property-actions/{id}/archive:
+    put:
+      tags:
+        - PropertyActions
+      summary: Archive a property
+      operationId: PropertyActions_archiveProperty
+      security:
+        - oauth2:
+            - properties.manage
+            - setup.manage
+            - admin
+      description: "Use this endpoint to archive an existing live property\r\nThis operation set the IsArchived flag to true<br>You must have at least one of these scopes: 'properties.manage, setup.manage'."
+      parameters:
+        - description: The id of the property
+          in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: No Content
+        '400':
+          description: Bad request.
+        '401':
+          description: You are unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: The Request-URI could not be found.
+        '422':
+          description: Validation errors in the request body or query params.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageItemCollection'
+        '500':
+          description: An unexpected error occurred.
+        '503':
+          description: The server is currently unavailable. Please try later.
+  /inventory/v1/property-actions/{id}/set-live:
+    put:
+      tags:
+        - PropertyActions
+      summary: Move property to live
+      operationId: PropertyActions_moveToLive
+      security:
+        - oauth2:
+            - properties.manage
+            - setup.manage
+            - admin
+      description: "Use this endpoint to move an existing test property to live\r\nThis operation changes the property status to 'Live'<br>You must have at least one of these scopes: 'properties.manage, setup.manage'."
+      parameters:
+        - description: The id of the property
+          in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: No Content
+        '400':
+          description: Bad request.
+        '401':
+          description: You are unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: The Request-URI could not be found.
+        '422':
+          description: Validation errors in the request body or query params.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageItemCollection'
+        '500':
+          description: An unexpected error occurred.
+        '503':
+          description: The server is currently unavailable. Please try later.
+  /inventory/v1/property-actions/{id}/reset:
+    put:
+      tags:
+        - PropertyActions
+      summary: Reset a test property and delete all transactional data
+      operationId: PropertyActions_resetPropertyData
+      security:
+        - oauth2:
+            - properties.manage
+            - setup.manage
+            - admin
+      description: "Use this endpoint to delete all transactional data related to some test property\r\nThis operation deletes all transactional data related to the specified property. The property must be in 'Test' status.<br>You must have at least one of these scopes: 'properties.manage, setup.manage'."
+      parameters:
+        - description: The id of the property
+          in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: No Content
+        '400':
+          description: Bad request.
+        '401':
+          description: You are unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: The Request-URI could not be found.
+        '422':
+          description: Validation errors in the request body or query params.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageItemCollection'
+        '500':
+          description: An unexpected error occurred.
+        '503':
+          description: The server is currently unavailable. Please try later.
+  /inventory/v1/types/countries:
+    get:
+      tags:
+        - Types
+      summary: Returns a list of supported countries.
+      operationId: Types_supportedCountriesList
+      security:
+        - oauth2: []
+      description: >-
+        Returns a list of ISO country codes that could be used to create
+        properties.<br>You need to be authorized (no particular scope required)
+      responses:
+        '200':
+          description: Success.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CountryListModel'
+        '400':
+          description: Bad request.
+        '401':
+          description: You are unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: The Request-URI could not be found.
+        '422':
+          description: Validation errors in the request body or query params.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageItemCollection'
+        '500':
+          description: An unexpected error occurred.
+        '503':
+          description: The server is currently unavailable. Please try later.
+  /inventory/v1/units/{id}:
+    patch:
+      tags:
+        - Unit
+      summary: Allows to patch unit
+      operationId: Unit_updateProperties
+      security:
+        - oauth2:
+            - units.manage
+            - setup.manage
+            - admin
+      description: "Here's a list of allowed operations:\r\n- Set unit condition\r\n- Set unit description\r\n- Set unit name\r\n- Set unit unitGroupId\r\n- Set unit maxPersons\r\n- Add unit attribute\r\n- Remove unit attribute<br>You must have at least one of these scopes: 'units.manage, setup.manage'."
+      parameters:
+        - description: The id of the unit.
+          in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        $ref: '#/components/requestBodies/OperationArray'
+      responses:
+        '200':
+          description: Success
+        '204':
+          description: The unit was successfully modified.
+        '400':
+          description: Bad request.
+        '401':
+          description: You are unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: The Request-URI could not be found.
+        '415':
+          description: Unsupported media type.
+        '422':
+          description: Validation errors in the request body or query params.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageItemCollection'
+        '500':
+          description: An unexpected error occurred.
+        '503':
+          description: The server is currently unavailable. Please try later.
+    get:
+      tags:
+        - Unit
+      summary: Get a unit
+      operationId: Unit_getById
+      security:
+        - oauth2:
+            - units.read
+            - setup.read
+            - setup.manage
+            - admin
+      description: >-
+        Get a unit by id.<br>You must have at least one of these scopes:
+        'units.read, setup.read, setup.manage'.
+      parameters:
+        - description: The id of the unit.
+          in: path
+          name: id
+          required: true
+          schema:
+            type: string
+        - description: >-
+            'all' or comma separated list of two-letter language codes (ISO
+            Alpha-2)
+          in: query
+          name: languages
+          style: form
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+        - description: >-
+            List of all embedded resources that should be expanded in the
+            response. Possible values are: property, unitGroup, connectedUnits.
+            All other values will be silently ignored.
+          in: query
+          name: expand
+          style: form
+          explode: false
+          schema:
+            type: array
+            items:
+              enum:
+                - property
+                - unitGroup
+                - connectedUnits
+              type: string
+      responses:
+        '200':
+          description: Return all the unit data.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnitModel'
+        '400':
+          description: Bad request.
+        '401':
+          description: You are unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: The Request-URI could not be found.
+        '422':
+          description: Validation errors in the request body or query params.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageItemCollection'
+        '500':
+          description: An unexpected error occurred.
+        '503':
+          description: The server is currently unavailable. Please try later.
+    head:
+      tags:
+        - Unit
+      summary: Check if a unit exists
+      operationId: Unit_existsByIdHead
+      security:
+        - oauth2:
+            - units.read
+            - setup.read
+            - setup.manage
+            - admin
+      description: >-
+        Check if a unit exists by id.<br>You must have at least one of these
+        scopes: 'units.read, setup.read, setup.manage'.
+      parameters:
+        - description: The id of the unit.
+          in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The unit exists.
+        '400':
+          description: Bad request.
+        '401':
+          description: You are unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: The Request-URI could not be found.
+        '500':
+          description: An unexpected error occurred.
+        '503':
+          description: The server is currently unavailable. Please try later.
+    delete:
+      tags:
+        - Unit
+      summary: Delete a unit
+      operationId: Unit_deleteById
+      security:
+        - oauth2:
+            - units.delete
+            - setup.manage
+            - admin
+      description: >-
+        Use this call to delete a unit.<br>You must have at least one of these
+        scopes: 'units.delete, setup.manage'.
+      parameters:
+        - description: The id of the unit.
+          in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Deletion of the unit was successful.
+        '400':
+          description: Bad request.
+        '401':
+          description: You are unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: The Request-URI could not be found.
+        '422':
+          description: Validation errors in the request body or query params.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageItemCollection'
+        '500':
+          description: An unexpected error occurred.
+        '503':
+          description: The server is currently unavailable. Please try later.
+  /inventory/v1/units:
+    patch:
+      tags:
+        - Unit
+      summary: Allows to patch one or more units
+      operationId: Unit_updateUnitsAttributes
+      security:
+        - oauth2:
+            - units.manage
+            - setup.manage
+            - admin
+      description: "Here's a list of allowed operations:\r\n- Set unit condition\r\n- Set unit description\r\n- Set unit name\r\n- Set unit unitGroupId\r\n- Set unit maxPersons\r\n- Add unit attribute\r\n- Remove unit attribute<br>You must have at least one of these scopes: 'units.manage, setup.manage'."
+      parameters:
+        - in: query
+          name: unitIds
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+      requestBody:
+        $ref: '#/components/requestBodies/OperationArray'
+      responses:
+        '204':
+          description: Units were successfully modified.
+        '400':
+          description: Bad request.
+        '401':
+          description: You are unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: The Request-URI could not be found.
+        '415':
+          description: Unsupported media type.
+        '422':
+          description: Validation errors in the request body or query params.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageItemCollection'
+        '500':
+          description: An unexpected error occurred.
+        '503':
+          description: The server is currently unavailable. Please try later.
+    get:
+      tags:
+        - Unit
+      summary: Get a units list
+      operationId: Unit_listUnits
+      security:
+        - oauth2:
+            - units.read
+            - setup.read
+            - setup.manage
+            - admin
+      description: >-
+        Get the list of units.<br>You must have at least one of these scopes:
+        'units.read, setup.read, setup.manage'.
+      parameters:
+        - description: Return units for specific property
+          in: query
+          name: propertyId
+          schema:
+            type: string
+        - description: >-
+            Return units for the specific unit group - <b>DEPRECATED: This
+            property will be removed 20.04.2022. Use `UnitGroupIds` instead</b>
+          in: query
+          name: unitGroupId
+          schema:
+            type: string
+        - description: Return units with the specific unit groups
+          in: query
+          name: unitGroupIds
+          style: form
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+        - description: Return units with the specific unit attributes
+          in: query
+          name: unitAttributeIds
+          style: form
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+        - description: Return only occupied or vacant units
+          in: query
+          name: isOccupied
+          schema:
+            type: boolean
+        - description: Return units with the specific maintenance type
+          in: query
+          name: maintenanceType
+          schema:
+            type: string
+            enum:
+              - OutOfService
+              - OutOfOrder
+              - OutOfInventory
+        - description: Return units with a specific condition
+          in: query
+          name: condition
+          schema:
+            type: string
+            enum:
+              - Clean
+              - CleanToBeInspected
+              - Dirty
+        - description: >-
+            This will filter all units where the provided text is contained in
+            the unit name. The search is case insensitive.
+          in: query
+          name: textSearch
+          schema:
+            type: string
+        - description: >-
+            Page number, 1-based. Default value is 1 (if this is not set or not
+            positive). Results in 204 if there are no items on that page.
+          in: query
+          name: pageNumber
+          schema:
+            type: integer
+            default: 1
+        - description: >-
+            Page size. If this is not set or not positive, the pageNumber is
+            ignored and all items are returned.
+          in: query
+          name: pageSize
+          schema:
+            type: integer
+            format: int64
+        - description: >-
+            List of all embedded resources that should be expanded in the
+            response. Possible values are: property, unitGroup, connectedUnits.
+            All other values will be silently ignored.
+          in: query
+          name: expand
+          style: form
+          explode: false
+          schema:
+            type: array
+            items:
+              enum:
+                - property
+                - unitGroup
+                - connectedUnits
+              type: string
+      responses:
+        '200':
+          description: Return all units.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnitListModel'
+        '204':
+          description: No units were found.
+        '400':
+          description: Bad request.
+        '401':
+          description: You are unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: The Request-URI could not be found.
+        '422':
+          description: Validation errors in the request body or query params.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageItemCollection'
+        '500':
+          description: An unexpected error occurred.
+        '503':
+          description: The server is currently unavailable. Please try later.
+    post:
+      tags:
+        - Unit
+      summary: Create a unit
+      operationId: Unit_create
+      security:
+        - oauth2:
+            - units.create
+            - setup.manage
+            - admin
+      description: >-
+        Use this call to create a new unit.<br>You must have at least one of
+        these scopes: 'units.create, setup.manage'.
+      parameters:
+        - description: >-
+            Unique key for safely retrying requests without accidentally
+            performing the same operation twice. 
+
+            We'll always send back the same response for requests made with the
+            same key, 
+
+            and keys can't be reused with different request parameters. Keys
+            expire after 24 hours.
+          in: header
+          name: Idempotency-Key
+          schema:
+            type: string
+      requestBody:
+        description: The definition of the unit.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUnitModel'
+        required: true
+      responses:
+        '201':
+          description: Creation of the new unit was successful.
+          headers:
+            Location:
+              description: The location of the created resource.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnitCreatedModel'
+        '400':
+          description: Bad request.
+        '401':
+          description: You are unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: The Request-URI could not be found.
+        '415':
+          description: Unsupported media type.
+        '422':
+          description: Validation errors in the request body or query params.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageItemCollection'
+        '500':
+          description: An unexpected error occurred.
+        '503':
+          description: The server is currently unavailable. Please try later.
+  /inventory/v1/units/$count:
+    get:
+      tags:
+        - Unit
+      summary: Returns number of units
+      operationId: Unit_getCount
+      security:
+        - oauth2:
+            - units.read
+            - setup.read
+            - setup.manage
+            - admin
+      description: >-
+        Returns number of units matching the filter criteria<br>You must have at
+        least one of these scopes: 'units.read, setup.read, setup.manage'.
+      parameters:
+        - description: Return units for specific property
+          in: query
+          name: propertyId
+          schema:
+            type: string
+        - description: >-
+            Return units for the specific unit group - <b>DEPRECATED: This
+            property will be removed 20.04.2022. Use `UnitGroupIds` instead</b>
+          in: query
+          name: unitGroupId
+          schema:
+            type: string
+        - description: Return units with the specific unit groups
+          in: query
+          name: unitGroupIds
+          style: form
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+        - description: Return units with the specific unit attributes
+          in: query
+          name: unitAttributeIds
+          style: form
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+        - description: Return only occupied or vacant units
+          in: query
+          name: isOccupied
+          schema:
+            type: boolean
+        - description: Return units with the specific maintenance type
+          in: query
+          name: maintenanceType
+          schema:
+            type: string
+            enum:
+              - OutOfService
+              - OutOfOrder
+              - OutOfInventory
+        - description: Return units with a specific condition
+          in: query
+          name: condition
+          schema:
+            type: string
+            enum:
+              - Clean
+              - CleanToBeInspected
+              - Dirty
+        - description: >-
+            This will filter all units where the provided text is contained in
+            the unit name. The search is case insensitive.
+          in: query
+          name: textSearch
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CountModel'
+        '400':
+          description: Bad request.
+        '401':
+          description: You are unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: The Request-URI could not be found.
+        '422':
+          description: Validation errors in the request body or query params.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageItemCollection'
+        '500':
+          description: An unexpected error occurred.
+        '503':
+          description: The server is currently unavailable. Please try later.
+  /inventory/v1/units/bulk:
+    post:
+      tags:
+        - Unit
+      summary: Create multiple units
+      operationId: Unit_bulkCreateUnits
+      security:
+        - oauth2:
+            - units.create
+            - setup.manage
+            - admin
+      description: >-
+        Use this call to create multiple units, following a naming rule.<br>You
+        must have at least one of these scopes: 'units.create, setup.manage'.
+      parameters:
+        - description: >-
+            Unique key for safely retrying requests without accidentally
+            performing the same operation twice. 
+
+            We'll always send back the same response for requests made with the
+            same key, 
+
+            and keys can't be reused with different request parameters. Keys
+            expire after 24 hours.
+          in: header
+          name: Idempotency-Key
+          schema:
+            type: string
+      requestBody:
+        description: The definition of the units.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BulkCreateUnitsModel'
+        required: true
+      responses:
+        '200':
+          description: Success.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BulkUnitsCreatedModel'
+        '400':
+          description: Bad request.
+        '401':
+          description: You are unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: The Request-URI could not be found.
+        '415':
+          description: Unsupported media type.
+        '422':
+          description: Validation errors in the request body or query params.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageItemCollection'
+        '500':
+          description: An unexpected error occurred.
+        '503':
+          description: The server is currently unavailable. Please try later.
+  /inventory/v1/unit-attributes/{id}:
+    get:
+      tags:
+        - UnitAttribute
+      summary: Get unit attribute by id
+      operationId: UnitAttribute_getById
+      security:
+        - oauth2:
+            - unitattributes.read
+            - setup.read
+            - setup.manage
+            - admin
+      description: >-
+        Get unit attribute by id<br>You must have at least one of these scopes:
+        'unitattributes.read, setup.read, setup.manage'.
+      parameters:
+        - description: The id of the unit attribute
+          in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Returns unit attribute with specified id
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnitAttributeDefinitionModel'
+        '400':
+          description: Bad request.
+        '401':
+          description: You are unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: The Request-URI could not be found.
+        '422':
+          description: Validation errors in the request body or query params.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageItemCollection'
+        '500':
+          description: An unexpected error occurred.
+        '503':
+          description: The server is currently unavailable. Please try later.
+    patch:
+      tags:
+        - UnitAttribute
+      summary: Allows to modify unit attribute
+      operationId: UnitAttribute_modifyDescription
+      security:
+        - oauth2:
+            - unitattributes.manage
+            - setup.manage
+            - admin
+      description: "Here's a list of allowed operations:\r\n- Replace / Remove Description<br>You must have at least one of these scopes: 'unitattributes.manage, setup.manage'."
+      parameters:
+        - description: Id of unit attribute
+          in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        $ref: '#/components/requestBodies/OperationArray'
+      responses:
+        '204':
+          description: No Content
+        '400':
+          description: Bad request.
+        '401':
+          description: You are unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: The Request-URI could not be found.
+        '415':
+          description: Unsupported media type.
+        '422':
+          description: Validation errors in the request body or query params.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageItemCollection'
+        '500':
+          description: An unexpected error occurred.
+        '503':
+          description: The server is currently unavailable. Please try later.
+    delete:
+      tags:
+        - UnitAttribute
+      summary: Deletes unit attribute
+      operationId: UnitAttribute_deleteById
+      security:
+        - oauth2:
+            - unitattributes.delete
+            - setup.manage
+            - admin
+      description: >-
+        Deletes unit attribute<br>You must have at least one of these scopes:
+        'unitattributes.delete, setup.manage'.
+      parameters:
+        - description: Id of unit attribute
+          in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+        '400':
+          description: Bad request.
+        '401':
+          description: You are unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: The Request-URI could not be found.
+        '422':
+          description: Validation errors in the request body or query params.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageItemCollection'
+        '500':
+          description: An unexpected error occurred.
+        '503':
+          description: The server is currently unavailable. Please try later.
+    head:
+      tags:
+        - UnitAttribute
+      summary: Check if a unit attribute exists
+      operationId: UnitAttribute_checkExistsHead
+      security:
+        - oauth2:
+            - unitattributes.read
+            - setup.read
+            - setup.manage
+            - admin
+      description: >-
+        Check if a unit attribute exists<br>You must have at least one of these
+        scopes: 'unitattributes.read, setup.read, setup.manage'.
+      parameters:
+        - description: The id of the unit attribute.
+          in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The unit attribute exists.
+        '400':
+          description: Bad request.
+        '401':
+          description: You are unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: The Request-URI could not be found.
+        '500':
+          description: An unexpected error occurred.
+        '503':
+          description: The server is currently unavailable. Please try later.
+  /inventory/v1/unit-attributes:
+    get:
+      tags:
+        - UnitAttribute
+      summary: Get unit attribute list
+      operationId: UnitAttribute_listAttributes
+      security:
+        - oauth2:
+            - unitattributes.read
+            - setup.read
+            - setup.manage
+            - admin
+      description: >-
+        Get unit attribute list<br>You must have at least one of these scopes:
+        'unitattributes.read, setup.read, setup.manage'.
+      parameters:
+        - description: >-
+            Page number, 1-based. Default value is 1 (if this is not set or not
+            positive). Results in 204 if there are no items on that page.
+          in: query
+          name: pageNumber
+          schema:
+            type: integer
+            default: 1
+        - description: >-
+            Page size. If this is not set or not positive, the pageNumber is
+            ignored and all items are returned.
+          in: query
+          name: pageSize
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Returns unit attribute list for given account
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnitAttributeDefinitionListModel'
+        '204':
+          description: No unit attributes present for given account
+        '400':
+          description: Bad request.
+        '401':
+          description: You are unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: The Request-URI could not be found.
+        '422':
+          description: Validation errors in the request body or query params.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageItemCollection'
+        '500':
+          description: An unexpected error occurred.
+        '503':
+          description: The server is currently unavailable. Please try later.
+    post:
+      tags:
+        - UnitAttribute
+      summary: Create a unit attribute
+      operationId: UnitAttribute_createNewAttribute
+      security:
+        - oauth2:
+            - unitattributes.create
+            - setup.manage
+            - admin
+      description: >-
+        Use this call to create a new unit attribute.<br>You must have at least
+        one of these scopes: 'unitattributes.create, setup.manage'.
+      parameters:
+        - description: >-
+            Unique key for safely retrying requests without accidentally
+            performing the same operation twice. 
+
+            We'll always send back the same response for requests made with the
+            same key, 
+
+            and keys can't be reused with different request parameters. Keys
+            expire after 24 hours.
+          in: header
+          name: Idempotency-Key
+          schema:
+            type: string
+      requestBody:
+        description: The unit attribute.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUnitAttributeDefinitionModel'
+        required: true
+      responses:
+        '201':
+          description: Creation of the new unit attribute was successful.
+          headers:
+            Location:
+              description: The location of the created resource.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnitAttributeDefinitionCreatedModel'
+        '400':
+          description: Bad request.
+        '401':
+          description: You are unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: The Request-URI could not be found.
+        '415':
+          description: Unsupported media type.
+        '422':
+          description: Validation errors in the request body or query params.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageItemCollection'
+        '500':
+          description: An unexpected error occurred.
+        '503':
+          description: The server is currently unavailable. Please try later.
+  /inventory/v1/unit-groups:
+    post:
+      tags:
+        - UnitGroup
+      summary: Create a unit group
+      operationId: UnitGroup_createNewGroup
+      security:
+        - oauth2:
+            - unitgroups.create
+            - setup.manage
+            - admin
+      description: >-
+        Use this call to create a new unit group.<br>You must have at least one
+        of these scopes: 'unitgroups.create, setup.manage'.
+      parameters:
+        - description: >-
+            Unique key for safely retrying requests without accidentally
+            performing the same operation twice. 
+
+            We'll always send back the same response for requests made with the
+            same key, 
+
+            and keys can't be reused with different request parameters. Keys
+            expire after 24 hours.
+          in: header
+          name: Idempotency-Key
+          schema:
+            type: string
+      requestBody:
+        description: The definition of the unit group.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUnitGroupModel'
+        required: true
+      responses:
+        '201':
+          description: Creation of the new unit group was successful.
+          headers:
+            Location:
+              description: The location of the created resource.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnitGroupCreatedModel'
+        '400':
+          description: Bad request.
+        '401':
+          description: You are unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: The Request-URI could not be found.
+        '415':
+          description: Unsupported media type.
+        '422':
+          description: Validation errors in the request body or query params.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageItemCollection'
+        '500':
+          description: An unexpected error occurred.
+        '503':
+          description: The server is currently unavailable. Please try later.
+    get:
+      tags:
+        - UnitGroup
+      summary: Get all unit groups, or all unit groups for a property
+      operationId: UnitGroup_getAll
+      security:
+        - oauth2:
+            - unitgroups.read
+            - setup.read
+            - setup.manage
+            - admin
+      description: >-
+        Get the list of unit groups.<br>You must have at least one of these
+        scopes: 'unitgroups.read, setup.read, setup.manage'.
+      parameters:
+        - description: Return unit groups for specific property
+          in: query
+          name: propertyId
+          schema:
+            type: string
+        - in: query
+          name: unitGroupTypes
+          style: form
+          explode: false
+          schema:
+            type: array
+            items:
+              enum:
+                - BedRoom
+                - MeetingRoom
+                - EventSpace
+                - ParkingLot
+                - Other
+              type: string
+        - description: >-
+            Page number, 1-based. Default value is 1 (if this is not set or not
+            positive). Results in 204 if there are no items on that page.
+          in: query
+          name: pageNumber
+          schema:
+            type: integer
+            default: 1
+        - description: >-
+            Page size. If this is not set or not positive, the pageNumber is
+            ignored and all items are returned.
+          in: query
+          name: pageSize
+          schema:
+            type: integer
+            format: int64
+        - description: >-
+            List of all embedded resources that should be expanded in the
+            response. Possible values are: property, connectedUnitGroups. All
+            other values will be silently ignored.
+          in: query
+          name: expand
+          style: form
+          explode: false
+          schema:
+            type: array
+            items:
+              enum:
+                - property
+                - connectedUnitGroups
+              type: string
+      responses:
+        '200':
+          description: Return all unit groups.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnitGroupListModel'
+        '204':
+          description: There are no unit groups found.
+        '400':
+          description: Bad request.
+        '401':
+          description: You are unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: The Request-URI could not be found.
+        '422':
+          description: Validation errors in the request body or query params.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageItemCollection'
+        '500':
+          description: An unexpected error occurred.
+        '503':
+          description: The server is currently unavailable. Please try later.
+  /inventory/v1/unit-groups/$count:
+    get:
+      tags:
+        - UnitGroup
+      summary: Returns number of unit groups
+      operationId: UnitGroup_getCount
+      security:
+        - oauth2:
+            - unitgroups.read
+            - setup.read
+            - setup.manage
+            - admin
+      description: >-
+        Returns number of unit groups matching the filter criteria<br>You must
+        have at least one of these scopes: 'unitgroups.read, setup.read,
+        setup.manage'.
+      parameters:
+        - description: Return unit groups for specific property
+          in: query
+          name: propertyId
+          schema:
+            type: string
+        - in: query
+          name: unitGroupTypes
+          style: form
+          explode: false
+          schema:
+            type: array
+            items:
+              enum:
+                - BedRoom
+                - MeetingRoom
+                - EventSpace
+                - ParkingLot
+                - Other
+              type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CountModel'
+        '400':
+          description: Bad request.
+        '401':
+          description: You are unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: The Request-URI could not be found.
+        '422':
+          description: Validation errors in the request body or query params.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageItemCollection'
+        '500':
+          description: An unexpected error occurred.
+        '503':
+          description: The server is currently unavailable. Please try later.
+  /inventory/v1/unit-groups/{id}:
+    head:
+      tags:
+        - UnitGroup
+      summary: Check if a unit group exists
+      operationId: UnitGroup_checkExistsByIdHead
+      security:
+        - oauth2:
+            - unitgroups.read
+            - setup.read
+            - setup.manage
+            - admin
+      description: >-
+        Check if a unit group exists by id.<br>You must have at least one of
+        these scopes: 'unitgroups.read, setup.read, setup.manage'.
+      parameters:
+        - description: The id of the unit group.
+          in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The unit group exists.
+        '400':
+          description: Bad request.
+        '401':
+          description: You are unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: The Request-URI could not be found.
+        '500':
+          description: An unexpected error occurred.
+        '503':
+          description: The server is currently unavailable. Please try later.
+    get:
+      tags:
+        - UnitGroup
+      summary: Get a unit group
+      operationId: UnitGroup_getById
+      security:
+        - oauth2:
+            - unitgroups.read
+            - setup.read
+            - setup.manage
+            - admin
+      description: >-
+        Get a unit group by id.<br>You must have at least one of these scopes:
+        'unitgroups.read, setup.read, setup.manage'.
+      parameters:
+        - description: The id of the unit group.
+          in: path
+          name: id
+          required: true
+          schema:
+            type: string
+        - description: >-
+            'all' or comma separated list of two-letter language codes (ISO
+            Alpha-2)
+          in: query
+          name: languages
+          style: form
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+        - description: >-
+            List of all embedded resources that should be expanded in the
+            response. Possible values are: property, connectedUnitGroups. All
+            other values will be silently ignored.
+          in: query
+          name: expand
+          style: form
+          explode: false
+          schema:
+            type: array
+            items:
+              enum:
+                - property
+                - connectedUnitGroups
+              type: string
+      responses:
+        '200':
+          description: Return all the unit group data.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnitGroupModel'
+        '400':
+          description: Bad request.
+        '401':
+          description: You are unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: The Request-URI could not be found.
+        '422':
+          description: Validation errors in the request body or query params.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageItemCollection'
+        '500':
+          description: An unexpected error occurred.
+        '503':
+          description: The server is currently unavailable. Please try later.
+    put:
+      tags:
+        - UnitGroup
+      summary: Replace a unit group
+      operationId: UnitGroup_updateGroup
+      security:
+        - oauth2:
+            - unitgroups.manage
+            - setup.manage
+            - admin
+      description: >-
+        Use this call to modify a unit group.<br>You must have at least one of
+        these scopes: 'unitgroups.manage, setup.manage'.
+      parameters:
+        - description: The id of the unit group.
+          in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: The definition of the unit group.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReplaceUnitGroupModel'
+        required: true
+      responses:
+        '200':
+          description: Success
+        '204':
+          description: Replace of the unit group was successful.
+        '400':
+          description: Bad request.
+        '401':
+          description: You are unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: The Request-URI could not be found.
+        '415':
+          description: Unsupported media type.
+        '422':
+          description: Validation errors in the request body or query params.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageItemCollection'
+        '500':
+          description: An unexpected error occurred.
+        '503':
+          description: The server is currently unavailable. Please try later.
+    delete:
+      tags:
+        - UnitGroup
+      summary: Delete a unit group
+      operationId: UnitGroup_deleteById
+      security:
+        - oauth2:
+            - unitgroups.delete
+            - setup.manage
+            - admin
+      description: >-
+        Use this call to delete a unit group.<br>You must have at least one of
+        these scopes: 'unitgroups.delete, setup.manage'.
+      parameters:
+        - description: The id of the unit group.
+          in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Deletion of the unit group was successful.
+        '400':
+          description: Bad request.
+        '401':
+          description: You are unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: The Request-URI could not be found.
+        '422':
+          description: Validation errors in the request body or query params.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageItemCollection'
+        '500':
+          description: An unexpected error occurred.
+        '503':
+          description: The server is currently unavailable. Please try later.
+components:
+  requestBodies:
+    CreatePropertyModel:
+      description: The definition of the property.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CreatePropertyModel'
+      required: true
+    OperationArray:
+      description: >-
+        Define the list of operations to be applied to the resource. Learn more
+        about JSON Patch here: http://jsonpatch.com/.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PropertyModifyDetailsRequest'
+      required: true
+  securitySchemes:
+    oauth2:
+      type: oauth2
+      flows:
+        implicit:
+          authorizationUrl: https://identity.apaleo.com/connect/authorize
+          scopes:
+            admin: Full access
+            reservations.import: Import reservations
+  schemas:
+    AddressModel:
+      required:
+        - addressLine1
+        - city
+        - countryCode
+        - postalCode
+      type: object
+      properties:
+        addressLine1:
+          minLength: 1
+          type: string
+        addressLine2:
+          type: string
+        postalCode:
+          minLength: 1
+          type: string
+        city:
+          minLength: 1
+          type: string
+        regionCode:
+          type: string
+        countryCode:
+          type: string
+    BankAccountModel:
+      type: object
+      properties:
+        iban:
+          type: string
+        bic:
+          type: string
+        bank:
+          type: string
+    BulkCreateUnitsModel:
+      required:
+        - units
+      type: object
+      properties:
+        units:
+          type: array
+          items:
+            $ref: '#/components/schemas/CreateUnitModel'
+      example: |-
+        {
+          "units": [
+            {
+              "propertyId": "MUC",
+              "name": "A.201",
+              "description": {
+                "en": "Single room",
+                "de": "Einzelzimmer"
+              },
+              "unitGroupId": "MUC-SGL",
+              "maxPersons": 1,
+              "condition": "Clean",
+              "attributes": [],
+              "connectedUnits": []
+            },
+            {
+              "propertyId": "MUC",
+              "name": "A.103",
+              "description": {
+                "en": "Double room",
+                "de": "Doppelzimmer"
+              },
+              "unitGroupId": "MUC-DBL",
+              "maxPersons": 2,
+              "condition": "Clean",
+              "attributes": [],
+              "connectedUnits": []
+            },
+            {
+              "propertyId": "MUC",
+              "name": "S.102",
+              "description": {
+                "en": "Suite room",
+                "de": "Suite Zimmer"
+              },
+              "unitGroupId": "MUC-SUI",
+              "maxPersons": 3,
+              "condition": "Clean",
+              "attributes": [],
+              "connectedUnits": [
+                {
+                  "unitId": "MUC-MTA"
+                },
+                {
+                  "unitId": "MUC-JQI"
+                }
+              ]
+            }
+          ]
+        }
+    BulkUnitsCreatedModel:
+      required:
+        - ids
+      type: object
+      properties:
+        ids:
+          description: The unit ids
+          type: array
+          items:
+            type: string
+      example: |-
+        {
+          "ids": [
+            "MUC-CFP",
+            "MUC-XTA",
+            "MUC-CPZ"
+          ]
+        }
+    ConnectedUnitGroupModel:
+      required:
+        - description
+        - id
+        - memberCount
+        - name
+      type: object
+      properties:
+        description:
+          description: The description for the unit group
+          minLength: 1
+          type: string
+        id:
+          description: The unit group id
+          type: string
+        name:
+          description: The name for the unit group
+          minLength: 1
+          type: string
+        memberCount:
+          description: The number of units taken from this connected unit group
+          format: int32
+          type: integer
+        maxPersons:
+          description: Maximum number of persons for the unit group
+          format: int32
+          type: integer
+    ConnectedUnitModel:
+      required:
+        - condition
+        - description
+        - id
+        - maxPersons
+        - name
+        - unitGroupId
+      type: object
+      properties:
+        description:
+          description: The description for the unit
+          minLength: 1
+          type: string
+        id:
+          description: The unit id
+          type: string
+        name:
+          description: The name for the unit
+          minLength: 1
+          type: string
+        unitGroupId:
+          description: The unit group id
+          type: string
+        condition:
+          description: The current status of the unit
+          enum:
+            - Clean
+            - CleanToBeInspected
+            - Dirty
+          type: string
+        maxPersons:
+          description: Maximum number of persons for the unit
+          format: int32
+          type: integer
+    CountModel:
+      required:
+        - count
+      type: object
+      properties:
+        count:
+          format: int64
+          type: integer
+      example: |-
+        {
+          "count": 50
+        }
+    CountryListModel:
+      required:
+        - countryCodes
+      type: object
+      properties:
+        countryCodes:
+          description: List of ISO country codes.
+          type: array
+          items:
+            type: string
+      example: |-
+        {
+          "countryCodes": [
+            "DE",
+            "US"
+          ]
+        }
+    CreateAddressModel:
+      required:
+        - addressLine1
+        - city
+        - countryCode
+        - postalCode
+      type: object
+      properties:
+        addressLine1:
+          minLength: 1
+          type: string
+        addressLine2:
+          type: string
+        postalCode:
+          minLength: 1
+          type: string
+        city:
+          minLength: 1
+          type: string
+        regionCode:
+          description: The ISO 3166-2 code
+          maxLength: 6
+          minLength: 2
+          type: string
+        countryCode:
+          description: The country code, in ISO 3166-1 alpha-2 code
+          maxLength: 2
+          minLength: 2
+          type: string
+    CreateConnectedUnitGroupModel:
+      required:
+        - memberCount
+        - unitGroupId
+      type: object
+      properties:
+        unitGroupId:
+          description: The connected unit group id
+          type: string
+        memberCount:
+          description: The number of units for this connected unit group
+          format: int32
+          maximum: 2147483647
+          minimum: 1
+          type: integer
+    CreateConnectedUnitModel:
+      required:
+        - unitId
+      type: object
+      properties:
+        unitId:
+          description: The connected unit id
+          type: string
+    CreatePropertyModel:
+      required:
+        - code
+        - commercialRegisterEntry
+        - companyName
+        - currencyCode
+        - defaultCheckInTime
+        - defaultCheckOutTime
+        - location
+        - name
+        - paymentTerms
+        - taxId
+        - timeZone
+      type: object
+      properties:
+        description:
+          description: The description for the property
+          type: object
+          additionalProperties:
+            type: string
+        code:
+          description: >-
+            The code for the property that can be shown in reports and table
+            views
+          maxLength: 10
+          minLength: 3
+          pattern: ^[a-zA-Z0-9_]*$
+          type: string
+        name:
+          description: The name for the property
+          type: object
+          additionalProperties:
+            type: string
+        companyName:
+          description: The legal name of the company running the property.
+          minLength: 1
+          type: string
+        managingDirectors:
+          description: >-
+            The managing director(s) of the company, as they should appear on
+            invoices
+          type: string
+        commercialRegisterEntry:
+          description: >-
+            The entry in the Commercial Reigster of the company running the
+            property, as it should appear on invoices
+          minLength: 1
+          type: string
+        taxId:
+          description: >-
+            The Tax-ID of the company running the property, as it should appear
+            on invoices
+          minLength: 1
+          type: string
+        location:
+          $ref: '#/components/schemas/CreateAddressModel'
+        bankAccount:
+          $ref: '#/components/schemas/BankAccountModel'
+        paymentTerms:
+          description: The payment terms used for all rate plans
+          type: object
+          additionalProperties:
+            type: string
+        timeZone:
+          description: "The time zone name of the property from the IANA Time Zone Database.\r\n(see: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)"
+          minLength: 1
+          type: string
+        defaultCheckInTime:
+          description: >-
+            The default check-in time<br />A time (without fractional second
+            part) as defined in the <a
+            href="https://en.wikipedia.org/wiki/ISO_8601">ISO8601:2004</a>
+          type: string
+        defaultCheckOutTime:
+          description: >-
+            The default check-out time<br />A time (without fractional second
+            part) as defined in the <a
+            href="https://en.wikipedia.org/wiki/ISO_8601">ISO8601:2004</a>
+          type: string
+        currencyCode:
+          description: The currency a property works with.
+          type: string
+      example: |-
+        {
+          "code": "MUC",
+          "name": {
+            "en": "Demo Hotel Munich",
+            "de": "Demo Hotel München"
+          },
+          "companyName": "Hotel Münchner GmbH",
+          "managingDirectors": "Franz-Josef Gruber",
+          "commercialRegisterEntry": "Amtsgericht München, HRB 279336",
+          "taxId": "DE311053702",
+          "description": {
+            "en": "This is the demo hotel Munich",
+            "de": "Dies ist das Demo Hotel München"
+          },
+          "location": {
+            "addressLine1": "Marienplatz 1",
+            "postalCode": "80331",
+            "city": "München",
+            "countryCode": "DE"
+          },
+          "bankAccount": {
+            "iban": "DE44 5001 0517 5407 3249 31",
+            "bic": "SSKMDEMMXXX",
+            "bank": "Stadtsparkasse München"
+          },
+          "paymentTerms": {
+            "en": "Pay on checkout",
+            "de": "Zahlung bei Checkout"
+          },
+          "timeZone": "Europe/Berlin",
+          "defaultCheckInTime": "17:00:00",
+          "defaultCheckOutTime": "11:00:00",
+          "currencyCode": "EUR"
+        }
+    CreateUnitAttributeDefinitionModel:
+      required:
+        - name
+      type: object
+      properties:
+        description:
+          description: The description of the unit attribute
+          type: string
+        name:
+          description: The name of the unit attribute
+          maxLength: 50
+          minLength: 1
+          type: string
+      example: |-
+        {
+          "name": "Floor 1",
+          "description": "Floor number"
+        }
+    CreateUnitAttributeModel:
+      required:
+        - id
+      type: object
+      properties:
+        id:
+          description: Id of unit attribute
+          type: string
+    CreateUnitGroupModel:
+      required:
+        - code
+        - description
+        - maxPersons
+        - name
+        - propertyId
+      type: object
+      properties:
+        description:
+          description: The description for the unit group
+          type: object
+          additionalProperties:
+            type: string
+        code:
+          description: >-
+            The code for the unit group that can be shown in reports and table
+            views
+          maxLength: 10
+          minLength: 3
+          pattern: ^[a-zA-Z0-9_]*$
+          type: string
+        propertyId:
+          description: The id of the property where unit group will be created
+          type: string
+        name:
+          description: The name for the unit group
+          type: object
+          additionalProperties:
+            type: string
+        maxPersons:
+          description: Maximum number of persons for the unit group
+          format: int32
+          maximum: 2147483647
+          minimum: 1
+          type: integer
+        rank:
+          description: "The unit group rank\r\nRestrictions:\r\n- Should be greater or equal to one"
+          format: int32
+          maximum: 2147483647
+          minimum: 1
+          type: integer
+        type:
+          description: The unit group type
+          enum:
+            - BedRoom
+            - MeetingRoom
+            - EventSpace
+            - ParkingLot
+          type: string
+        connectedUnitGroups:
+          description: The list of connected unit groups this unit group is composed of
+          type: array
+          items:
+            $ref: '#/components/schemas/CreateConnectedUnitGroupModel'
+      example: |-
+        {
+          "code": "DBL",
+          "propertyId": "MUC",
+          "name": {
+            "en": "Double Room",
+            "de": "Doppelzimmer"
+          },
+          "description": {
+            "en": "This is a nice room with as kingsize bed and flat screen",
+            "de": "Dies ist ein schönes Zimmer mit Kingsize-Bett und Flachbildschirm"
+          },
+          "maxPersons": 4,
+          "rank": 1,
+          "type": "BedRoom"
+        }
+    CreateUnitModel:
+      required:
+        - description
+        - maxPersons
+        - name
+        - propertyId
+      type: object
+      properties:
+        description:
+          description: The description for the unit
+          type: object
+          additionalProperties:
+            type: string
+        propertyId:
+          description: The id of the property where the unit will be created
+          type: string
+        name:
+          description: The name for the unit
+          minLength: 1
+          type: string
+        unitGroupId:
+          description: The id of the unit group
+          type: string
+        maxPersons:
+          description: Maximum number of persons for the unit
+          format: int32
+          maximum: 2147483647
+          minimum: 1
+          type: integer
+        condition:
+          description: Condition of the unit
+          enum:
+            - Clean
+            - CleanToBeInspected
+            - Dirty
+          type: string
+        attributes:
+          description: Collection of user defined attributes of unit
+          type: array
+          items:
+            $ref: '#/components/schemas/CreateUnitAttributeModel'
+        connectedUnits:
+          description: The list of units this unit is composed of
+          type: array
+          items:
+            $ref: '#/components/schemas/CreateConnectedUnitModel'
+      example: |-
+        {
+          "propertyId": "MUC",
+          "name": "S.102",
+          "description": {
+            "en": "Suite room",
+            "de": "Suite Zimmer"
+          },
+          "unitGroupId": "MUC-SUI",
+          "maxPersons": 3,
+          "condition": "Clean",
+          "attributes": [],
+          "connectedUnits": [
+            {
+              "unitId": "MUC-MTA"
+            },
+            {
+              "unitId": "MUC-JQI"
+            }
+          ]
+        }
+    EmbeddedPropertyModel:
+      required:
+        - id
+      type: object
+      properties:
+        description:
+          description: The description for the property
+          type: string
+          readOnly: true
+        id:
+          description: The property id
+          type: string
+        code:
+          description: >-
+            The code for the property that can be shown in reports and table
+            views
+          type: string
+        name:
+          description: The name for the property
+          type: string
+    EmbeddedUnitGroupModel:
+      required:
+        - id
+      type: object
+      properties:
+        description:
+          description: The description for the unit group
+          type: string
+        id:
+          description: The unit group id
+          type: string
+        code:
+          description: >-
+            The code for the unit group that can be shown in reports and table
+            views
+          type: string
+        name:
+          description: The name for the unit group
+          type: string
+        type:
+          description: The unit group type
+          enum:
+            - BedRoom
+            - MeetingRoom
+            - EventSpace
+            - ParkingLot
+            - Other
+          type: string
+    EmbeddedUnitModel:
+      required:
+        - id
+      type: object
+      properties:
+        description:
+          description: The description for the unit
+          type: string
+        id:
+          description: The unit id
+          type: string
+        name:
+          description: The name for the unit
+          type: string
+        unitGroupId:
+          description: The unit group id
+          type: string
+    MessageItemCollection:
+      type: object
+      properties:
+        messages:
+          type: array
+          items:
+            type: string
+          readOnly: true
+    Operation:
+      type: object
+      properties:
+        value: {}
+        path:
+          type: string
+        op:
+          type: string
+        from:
+          type: string
+    PropertyCreatedModel:
+      required:
+        - id
+      type: object
+      properties:
+        id:
+          description: The property id
+          type: string
+      example: |-
+        {
+          "id": "MUC"
+        }
+    PropertyItemModel:
+      required:
+        - code
+        - commercialRegisterEntry
+        - companyName
+        - created
+        - currencyCode
+        - id
+        - isArchived
+        - isTemplate
+        - location
+        - name
+        - paymentTerms
+        - status
+        - taxId
+        - timeZone
+      type: object
+      properties:
+        description:
+          description: The description for the property
+          type: string
+        id:
+          description: The property id
+          type: string
+        code:
+          description: >-
+            The code for the property that can be shown in reports and table
+            views
+          type: string
+        propertyTemplateId:
+          description: >-
+            The id of the property used as a template while creating the
+            property
+          type: string
+        isTemplate:
+          description: Whether the property can be used as a template for other properties
+          type: boolean
+        name:
+          description: The name for the property
+          minLength: 1
+          type: string
+        companyName:
+          description: The legal name of the company running the property.
+          minLength: 1
+          type: string
+        managingDirectors:
+          description: >-
+            The managing director(s) of the company, as they should appear on
+            invoices
+          type: string
+        commercialRegisterEntry:
+          description: >-
+            The entry in the Commercial Register of the company running the
+            property, as it should appear on invoices
+          minLength: 1
+          type: string
+        taxId:
+          description: >-
+            The Tax-ID of the company running the property, as it should appear
+            on invoices
+          minLength: 1
+          type: string
+        location:
+          $ref: '#/components/schemas/AddressModel'
+        bankAccount:
+          $ref: '#/components/schemas/BankAccountModel'
+        paymentTerms:
+          description: The payment terms used for all rate plans
+          type: object
+          additionalProperties:
+            type: string
+        timeZone:
+          description: "The time zone name of the property from the IANA Time Zone Database.\r\n(see: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)"
+          minLength: 1
+          type: string
+        currencyCode:
+          description: The currency a property works with.
+          type: string
+        created:
+          description: >-
+            Date of creation<br />A date and time (without fractional second
+            part) in UTC or with UTC offset as defined in <a
+            href="https://en.wikipedia.org/wiki/ISO_8601">ISO8601:2004</a>
+          format: date-time
+          type: string
+        status:
+          description: The status of the property
+          enum:
+            - Test
+            - Live
+          type: string
+        isArchived:
+          description: Is the property archived
+          type: boolean
+        actions:
+          description: The list of actions for this property
+          type: array
+          items:
+            $ref: >-
+              #/components/schemas/ActionModel_PropertyAction_NotAllowedPropertyActionReason_
+    PropertyListModel:
+      required:
+        - count
+        - properties
+      type: object
+      properties:
+        properties:
+          description: List of properties
+          type: array
+          items:
+            $ref: '#/components/schemas/PropertyItemModel'
+        count:
+          description: Total count of items
+          format: int64
+          type: integer
+      example: |-
+        {
+          "properties": [
+            {
+              "id": "MUC",
+              "code": "MUC",
+              "isTemplate": true,
+              "name": "Demo Hotel Munich",
+              "description": "This is the demo hotel Munich",
+              "companyName": "Company",
+              "commercialRegisterEntry": "CRE",
+              "taxId": "Tax",
+              "location": {
+                "addressLine1": "Marienplatz 1",
+                "postalCode": "80331",
+                "city": "München",
+                "countryCode": "DE"
+              },
+              "paymentTerms": {
+                "de": "Zahlbar bei Check In",
+                "en": "Payment on check-in"
+              },
+              "timeZone": "Europe/Berlin",
+              "currencyCode": "EUR",
+              "created": "0001-01-01T00:00:00Z",
+              "status": "Test",
+              "isArchived": false
+            },
+            {
+              "id": "BER",
+              "code": "BER",
+              "propertyTemplateId": "MUC",
+              "isTemplate": false,
+              "name": "Demo Hotel Berlin",
+              "description": "This is the demo hotel Berlin",
+              "companyName": "Company",
+              "commercialRegisterEntry": "CRE",
+              "taxId": "Tax",
+              "location": {
+                "addressLine1": "Mohrenstraße 30",
+                "postalCode": "10117",
+                "city": "Berlin",
+                "countryCode": "DE"
+              },
+              "paymentTerms": {
+                "de": "Zahlbar bei Check In",
+                "en": "Payment on check-in"
+              },
+              "timeZone": "Europe/Berlin",
+              "currencyCode": "EUR",
+              "created": "0001-01-01T00:00:00Z",
+              "status": "Test",
+              "isArchived": false
+            }
+          ],
+          "count": 0
+        }
+    PropertyModel:
+      description: With this request you can create a new property
+      required:
+        - code
+        - commercialRegisterEntry
+        - companyName
+        - created
+        - currencyCode
+        - id
+        - isArchived
+        - isTemplate
+        - location
+        - name
+        - paymentTerms
+        - status
+        - taxId
+        - timeZone
+      type: object
+      properties:
+        description:
+          description: The description for the property
+          type: object
+          additionalProperties:
+            type: string
+        id:
+          description: The property id
+          type: string
+        code:
+          description: >-
+            The code for the property that can be shown in reports and table
+            views
+          type: string
+        propertyTemplateId:
+          description: >-
+            The id of the property used as a template while creating the
+            property
+          type: string
+        isTemplate:
+          description: Whether the property can be used as a template for other properties
+          type: boolean
+        name:
+          description: The name for the property
+          type: object
+          additionalProperties:
+            type: string
+        companyName:
+          description: The legal name of the company running the property.
+          minLength: 1
+          type: string
+        managingDirectors:
+          description: >-
+            The managing director(s) of the company, as they should appear on
+            invoices
+          type: string
+        commercialRegisterEntry:
+          description: >-
+            The entry in the Commercial Register of the company running the
+            property, as it should appear on invoices
+          minLength: 1
+          type: string
+        taxId:
+          description: >-
+            The Tax-ID of the company running the property, as it should appear
+            on invoices
+          minLength: 1
+          type: string
+        location:
+          $ref: '#/components/schemas/AddressModel'
+        bankAccount:
+          $ref: '#/components/schemas/BankAccountModel'
+        paymentTerms:
+          description: The payment terms used for all rate plans
+          type: object
+          additionalProperties:
+            type: string
+        timeZone:
+          description: "The time zone name of the property from the IANA Time Zone Database.\r\n(see: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)"
+          minLength: 1
+          type: string
+        currencyCode:
+          description: The currency a property works with.
+          type: string
+        created:
+          description: >-
+            Date of creation<br />A date and time (without fractional second
+            part) in UTC or with UTC offset as defined in <a
+            href="https://en.wikipedia.org/wiki/ISO_8601">ISO8601:2004</a>
+          format: date-time
+          type: string
+        status:
+          description: The status of the property
+          enum:
+            - Test
+            - Live
+          type: string
+        isArchived:
+          description: Is the property archived
+          type: boolean
+        actions:
+          description: The list of actions for this property
+          type: array
+          items:
+            $ref: >-
+              #/components/schemas/ActionModel_PropertyAction_NotAllowedPropertyActionReason_
+      example: |-
+        {
+          "id": "MUC",
+          "code": "MUC",
+          "propertyTemplateId": "BER",
+          "isTemplate": false,
+          "name": {
+            "en": "Demo Hotel Munich",
+            "de": "Demo Hotel München"
+          },
+          "description": {
+            "en": "This is the demo hotel Munich",
+            "de": "Dies ist das Demo Hotel München"
+          },
+          "companyName": "Hotel Münchner GmbH",
+          "managingDirectors": "Franz-Josef Gruber",
+          "commercialRegisterEntry": "Amtsgericht München, HRB 279336",
+          "taxId": "DE311053702",
+          "location": {
+            "addressLine1": "Marienplatz 1",
+            "postalCode": "80331",
+            "city": "München",
+            "countryCode": "DE"
+          },
+          "bankAccount": {
+            "iban": "DE44 5001 0517 5407 3249 31",
+            "bic": "SSKMDEMMXXX",
+            "bank": "Stadtsparkasse München"
+          },
+          "paymentTerms": {
+            "en": "Pay on checkout",
+            "de": "Zahlung bei Checkout"
+          },
+          "timeZone": "Europe/Berlin",
+          "currencyCode": "EUR",
+          "created": "0001-01-01T00:00:00Z",
+          "status": "Test",
+          "isArchived": false
+        }
+    ReplaceConnectedUnitGroupModel:
+      required:
+        - memberCount
+        - unitGroupId
+      type: object
+      properties:
+        unitGroupId:
+          description: The connected unit group id
+          type: string
+        memberCount:
+          description: The number of units for this connected unit group
+          format: int32
+          maximum: 2147483647
+          minimum: 1
+          type: integer
+    ReplaceUnitGroupModel:
+      required:
+        - description
+        - name
+      type: object
+      properties:
+        description:
+          description: The description for the unit group
+          type: object
+          additionalProperties:
+            type: string
+        name:
+          description: The name for the unit group
+          type: object
+          additionalProperties:
+            type: string
+        maxPersons:
+          description: "Maximum number of persons for the unit group.\r\nIf this value is increased, the surcharges for the related rate plans must be specified in order for the rate plans to be sellable for the new possible occupancies."
+          format: int32
+          type: integer
+        rank:
+          description: "The unit group rank\r\nRestrictions:\r\n- Should be greater or equal to one"
+          format: int32
+          maximum: 2147483647
+          minimum: 1
+          type: integer
+        connectedUnitGroups:
+          description: The list of connected unit groups this unit group is composed of
+          type: array
+          items:
+            $ref: '#/components/schemas/ReplaceConnectedUnitGroupModel'
+      example: |-
+        {
+          "name": {
+            "en": "Double Room",
+            "de": "Doppelzimmer"
+          },
+          "description": {
+            "en": "This is a nice room with as kingsize bed and flat screen",
+            "de": "Dies ist ein schönes Zimmer mit Kingsize-Bett und Flachbildschirm"
+          },
+          "maxPersons": 4,
+          "rank": 2
+        }
+    UnitAttributeDefinitionCreatedModel:
+      required:
+        - id
+      type: object
+      properties:
+        id:
+          description: The unit attribute id
+          type: string
+      example: |-
+        {
+          "id": "FLOOR"
+        }
+    UnitAttributeDefinitionListModel:
+      required:
+        - count
+        - unitAttributes
+      type: object
+      properties:
+        unitAttributes:
+          description: List of unit attributes
+          type: array
+          items:
+            $ref: '#/components/schemas/UnitAttributeDefinitionModel'
+        count:
+          description: Total count of items
+          format: int64
+          type: integer
+      example: |-
+        {
+          "unitAttributes": [
+            {
+              "id": "KQOSXHLS",
+              "name": "Floor 1",
+              "description": "Floor number"
+            },
+            {
+              "id": "ADVFSSUL",
+              "name": "Street view",
+              "description": "View from the room"
+            }
+          ],
+          "count": 2
+        }
+    UnitAttributeDefinitionModel:
+      required:
+        - id
+        - name
+      type: object
+      properties:
+        description:
+          description: The description of the unit attribute
+          type: string
+        id:
+          description: The id of the unit attribute
+          type: string
+        name:
+          description: The name of the unit attribute
+          minLength: 1
+          type: string
+      example: |-
+        {
+          "id": "KQOSXHLS",
+          "name": "Floor 1",
+          "description": "Floor number"
+        }
+    UnitAttributeModel:
+      required:
+        - id
+        - name
+      type: object
+      properties:
+        description:
+          description: Description of unit attribute
+          type: string
+        id:
+          description: Id of unit attribute
+          type: string
+        name:
+          description: The name of the unit attribute
+          minLength: 1
+          type: string
+    UnitCreatedModel:
+      required:
+        - id
+      type: object
+      properties:
+        id:
+          description: The unit id
+          type: string
+      example: |-
+        {
+          "id": "MUC-CFP"
+        }
+    UnitGroupCreatedModel:
+      required:
+        - id
+      type: object
+      properties:
+        id:
+          description: The unit group id
+          type: string
+      example: |-
+        {
+          "id": "MUC-DBL"
+        }
+    UnitGroupItemModel:
+      required:
+        - code
+        - description
+        - id
+        - memberCount
+        - name
+        - property
+        - type
+      type: object
+      properties:
+        description:
+          description: The description for the unit group
+          minLength: 1
+          type: string
+        id:
+          description: The unit group id
+          type: string
+        code:
+          description: >-
+            The code for the unit group that can be shown in reports and table
+            views
+          type: string
+        name:
+          description: The name for the unit group
+          minLength: 1
+          type: string
+        memberCount:
+          description: Number of units in this group
+          format: int32
+          type: integer
+        maxPersons:
+          description: Maximum number of persons for the unit group
+          format: int32
+          type: integer
+        rank:
+          description: The unit group rank
+          format: int32
+          type: integer
+        type:
+          description: The unit group type
+          enum:
+            - BedRoom
+            - MeetingRoom
+            - EventSpace
+            - ParkingLot
+            - Other
+          type: string
+        property:
+          $ref: '#/components/schemas/EmbeddedPropertyModel'
+        connectedUnitGroups:
+          description: The list of connected unit groups this unit group is composed of
+          type: array
+          items:
+            $ref: '#/components/schemas/ConnectedUnitGroupModel'
+    UnitGroupListModel:
+      required:
+        - count
+        - unitGroups
+      type: object
+      properties:
+        unitGroups:
+          description: List of unit groups
+          type: array
+          items:
+            $ref: '#/components/schemas/UnitGroupItemModel'
+        count:
+          description: Total count of items
+          format: int64
+          type: integer
+      example: |-
+        {
+          "unitGroups": [
+            {
+              "id": "MUC-DBL",
+              "code": "DBL",
+              "name": "Double Room",
+              "description": "This is a nice room with as kingsize bed and flat screen",
+              "memberCount": 2,
+              "maxPersons": 4,
+              "rank": 2,
+              "type": "BedRoom",
+              "property": {
+                "id": "MUC",
+                "code": "MUC",
+                "name": "Demo Hotel Munich",
+                "description": "This is the demo hotel Munich"
+              }
+            },
+            {
+              "id": "BER-SUIT",
+              "code": "SUIT",
+              "name": "Suite Room",
+              "description": "This is a nice suite with two rooms combined",
+              "memberCount": 1,
+              "maxPersons": 3,
+              "rank": 1,
+              "type": "BedRoom",
+              "property": {
+                "id": "BER",
+                "code": "BER",
+                "name": "Demo Hotel Berlin",
+                "description": "This is the demo hotel Berlin"
+              },
+              "connectedUnitGroups": [
+                {
+                  "id": "BER-SGL",
+                  "name": "Single room",
+                  "description": "This is a nice room with a single bed",
+                  "memberCount": 2,
+                  "maxPersons": 1
+                },
+                {
+                  "id": "BER-DBL",
+                  "name": "Double room",
+                  "description": "This is a nice room with as kingsize bed and flat screen",
+                  "memberCount": 1,
+                  "maxPersons": 2
+                }
+              ]
+            }
+          ],
+          "count": 0
+        }
+    UnitGroupModel:
+      required:
+        - code
+        - description
+        - id
+        - maxPersons
+        - memberCount
+        - name
+        - property
+        - type
+      type: object
+      properties:
+        description:
+          description: The description for the unit group
+          type: object
+          additionalProperties:
+            type: string
+        id:
+          description: The unit group id
+          type: string
+        code:
+          description: >-
+            The code for the unit group that can be shown in reports and table
+            views
+          type: string
+        property:
+          $ref: '#/components/schemas/EmbeddedPropertyModel'
+        name:
+          description: The name for the unit group
+          type: object
+          additionalProperties:
+            type: string
+        memberCount:
+          description: Number of units in this group
+          format: int32
+          type: integer
+        maxPersons:
+          description: Maximum number of persons for the unit group
+          format: int32
+          type: integer
+        rank:
+          description: The unit group rank
+          format: int32
+          type: integer
+        type:
+          description: The unit group type
+          enum:
+            - BedRoom
+            - MeetingRoom
+            - EventSpace
+            - ParkingLot
+            - Other
+          type: string
+        connectedUnitGroups:
+          description: The list of connected unit groups this unit group is composed of
+          type: array
+          items:
+            $ref: '#/components/schemas/ConnectedUnitGroupModel'
+      example: |-
+        {
+          "id": "MUC-DBL",
+          "code": "DBL",
+          "property": {
+            "id": "MUC",
+            "code": "MUC",
+            "name": "Demo Hotel Munich",
+            "description": "This is the demo hotel Munich"
+          },
+          "name": {
+            "en": "Double Room",
+            "de": "Doppelzimmer"
+          },
+          "memberCount": 0,
+          "description": {
+            "en": "This is a nice room with as kingsize bed and flat screen",
+            "de": "Dies ist ein schönes Zimmer mit Kingsize-Bett und Flachbildschirm"
+          },
+          "maxPersons": 4,
+          "rank": 2,
+          "type": "BedRoom"
+        }
+    UnitItemMaintenanceModel:
+      required:
+        - id
+        - type
+      type: object
+      properties:
+        id:
+          description: The id for the scheduled maintenance
+          type: string
+        type:
+          description: "The type of maintenance that is planned for the unit. A small repair (OutOfService),\r\na bigger disfunction that does not allow to sell the unit (OutOfOrder) or is it\r\neven under construction and should reduce the house count (OutOfInventory)"
+          enum:
+            - OutOfService
+            - OutOfOrder
+            - OutOfInventory
+          type: string
+    UnitItemModel:
+      required:
+        - created
+        - description
+        - id
+        - maxPersons
+        - name
+        - property
+        - status
+      type: object
+      properties:
+        description:
+          description: The description for the unit
+          minLength: 1
+          type: string
+        id:
+          description: The unit id
+          type: string
+        name:
+          description: The name for the unit
+          minLength: 1
+          type: string
+        property:
+          $ref: '#/components/schemas/EmbeddedPropertyModel'
+        unitGroup:
+          $ref: '#/components/schemas/EmbeddedUnitGroupModel'
+        connectingUnit:
+          $ref: '#/components/schemas/EmbeddedUnitModel'
+        status:
+          $ref: '#/components/schemas/UnitItemStatusModel'
+        maxPersons:
+          description: Maximum number of persons for the unit
+          format: int32
+          type: integer
+        created:
+          description: >-
+            Date of creation<br />A date and time (without fractional second
+            part) in UTC or with UTC offset as defined in <a
+            href="https://en.wikipedia.org/wiki/ISO_8601">ISO8601:2004</a>
+          format: date-time
+          type: string
+        attributes:
+          description: Collection of user defined attributes of unit
+          type: array
+          items:
+            $ref: '#/components/schemas/UnitAttributeModel'
+        connectedUnits:
+          description: Collection of connected units
+          type: array
+          items:
+            $ref: '#/components/schemas/ConnectedUnitModel'
+    UnitItemStatusModel:
+      required:
+        - condition
+        - isOccupied
+      type: object
+      properties:
+        isOccupied:
+          type: boolean
+        condition:
+          enum:
+            - Clean
+            - CleanToBeInspected
+            - Dirty
+          type: string
+        maintenance:
+          $ref: '#/components/schemas/UnitItemMaintenanceModel'
+    UnitListModel:
+      required:
+        - count
+        - units
+      type: object
+      properties:
+        units:
+          description: List of units
+          type: array
+          items:
+            $ref: '#/components/schemas/UnitItemModel'
+        count:
+          description: Total count of items
+          format: int64
+          type: integer
+      example: |-
+        {
+          "units": [
+            {
+              "id": "MUC-MTA",
+              "name": "A.101",
+              "description": "Single room",
+              "property": {
+                "id": "MUC",
+                "code": "MUC",
+                "name": "Demo Hotel Munich",
+                "description": "This is the demo hotel Munich"
+              },
+              "unitGroup": {
+                "id": "MUC-SGL",
+                "code": "SGL",
+                "name": "Single",
+                "description": "Single",
+                "type": "BedRoom"
+              },
+              "connectingUnit": {
+                "id": "MUC-QKY",
+                "name": "S.101",
+                "description": "Suite room",
+                "unitGroupId": "MUC-SUI"
+              },
+              "status": {
+                "isOccupied": true,
+                "condition": "Dirty",
+                "maintenance": {
+                  "id": "MUC-MTA-SGHZD",
+                  "type": "OutOfService"
+                }
+              },
+              "maxPersons": 1,
+              "created": "0001-01-01T00:00:00Z",
+              "attributes": [
+                {
+                  "id": "GRTDTLDD",
+                  "name": "Floor 2",
+                  "description": "Floor number"
+                },
+                {
+                  "id": "KQOSXHLS",
+                  "name": "Street view",
+                  "description": "View from the room"
+                }
+              ],
+              "connectedUnits": []
+            },
+            {
+              "id": "MUC-JQI",
+              "name": "A.102",
+              "description": "Double room",
+              "property": {
+                "id": "MUC",
+                "code": "MUC",
+                "name": "Demo Hotel Munich",
+                "description": "This is the demo hotel Munich"
+              },
+              "unitGroup": {
+                "id": "MUC-DBL",
+                "code": "DBL",
+                "name": "Double",
+                "description": "Double",
+                "type": "BedRoom"
+              },
+              "connectingUnit": {
+                "id": "MUC-QKY",
+                "name": "S.101",
+                "description": "Suite room",
+                "unitGroupId": "MUC-SUI"
+              },
+              "status": {
+                "isOccupied": false,
+                "condition": "Clean",
+                "maintenance": {
+                  "id": "MUC-JQI-GSZGK",
+                  "type": "OutOfOrder"
+                }
+              },
+              "maxPersons": 2,
+              "created": "0001-01-01T00:00:00Z",
+              "attributes": [
+                {
+                  "id": "GRTDTLDD",
+                  "name": "Floor 2",
+                  "description": "Floor number"
+                }
+              ],
+              "connectedUnits": []
+            },
+            {
+              "id": "MUC-QKY",
+              "name": "S.101",
+              "description": "Suite room",
+              "property": {
+                "id": "MUC",
+                "code": "MUC",
+                "name": "Demo Hotel Munich",
+                "description": "This is the demo hotel Munich"
+              },
+              "unitGroup": {
+                "id": "MUC-SUI",
+                "code": "SUI",
+                "name": "Suite",
+                "description": "Suite",
+                "type": "BedRoom"
+              },
+              "status": {
+                "isOccupied": false,
+                "condition": "Clean",
+                "maintenance": {
+                  "id": "MUC-JQI-GSZGK",
+                  "type": "OutOfOrder"
+                }
+              },
+              "maxPersons": 3,
+              "created": "0001-01-01T00:00:00Z",
+              "attributes": [
+                {
+                  "id": "GRTDTLDD",
+                  "name": "Floor 2",
+                  "description": "Floor number"
+                }
+              ],
+              "connectedUnits": [
+                {
+                  "id": "MUC-MTA",
+                  "name": "A.101",
+                  "description": "Single room",
+                  "unitGroupId": "MUC-SGL",
+                  "condition": "Clean",
+                  "maxPersons": 1
+                },
+                {
+                  "id": "MUC-JQI",
+                  "name": "A.102",
+                  "description": "Double room",
+                  "unitGroupId": "MUC-DBL",
+                  "condition": "Clean",
+                  "maxPersons": 2
+                }
+              ]
+            }
+          ],
+          "count": 3
+        }
+    UnitMaintenanceModel:
+      required:
+        - from
+        - id
+        - to
+        - type
+      type: object
+      properties:
+        description:
+          description: The description text for the maintenance
+          type: string
+        id:
+          description: The id for the scheduled maintenance
+          type: string
+        from:
+          description: >-
+            Date and time the scheduled maintenance window starts<br />A date
+            and time (without fractional second part) in UTC or with UTC offset
+            as defined in <a
+            href="https://en.wikipedia.org/wiki/ISO_8601">ISO8601:2004</a>
+          format: date-time
+          type: string
+        to:
+          description: >-
+            Date and time the scheduled maintenance window ends<br />A date and
+            time (without fractional second part) in UTC or with UTC offset as
+            defined in <a
+            href="https://en.wikipedia.org/wiki/ISO_8601">ISO8601:2004</a>
+          format: date-time
+          type: string
+        type:
+          description: "The type of maintenance that is planned for the unit. A small repair (OutOfService),\r\na bigger disfunction that does not allow to sell the unit (OutOfOrder) or is it\r\neven under construction and should reduce the house count (OutOfInventory)"
+          enum:
+            - OutOfService
+            - OutOfOrder
+            - OutOfInventory
+          type: string
+    UnitModel:
+      required:
+        - created
+        - description
+        - id
+        - maxPersons
+        - name
+        - property
+        - status
+      type: object
+      properties:
+        description:
+          description: The description for the unit
+          type: object
+          additionalProperties:
+            type: string
+        id:
+          description: The unit id
+          type: string
+        name:
+          description: The name for the unit
+          minLength: 1
+          type: string
+        property:
+          $ref: '#/components/schemas/EmbeddedPropertyModel'
+        unitGroup:
+          $ref: '#/components/schemas/EmbeddedUnitGroupModel'
+        connectingUnit:
+          $ref: '#/components/schemas/EmbeddedUnitModel'
+        status:
+          $ref: '#/components/schemas/UnitStatusModel'
+        maxPersons:
+          description: Maximum number of persons for the unit
+          format: int32
+          type: integer
+        created:
+          description: >-
+            Date of creation<br />A date and time (without fractional second
+            part) in UTC or with UTC offset as defined in <a
+            href="https://en.wikipedia.org/wiki/ISO_8601">ISO8601:2004</a>
+          format: date-time
+          type: string
+        attributes:
+          description: Collection of user defined attributes of unit
+          type: array
+          items:
+            $ref: '#/components/schemas/UnitAttributeModel'
+        connectedUnits:
+          description: Collection of connected units
+          type: array
+          items:
+            $ref: '#/components/schemas/ConnectedUnitModel'
+      example: |-
+        {
+          "id": "MUC-MTA",
+          "name": "A.101",
+          "description": {
+            "en": "First Floor Room 1",
+            "de": "1.OG Zimmer 1"
+          },
+          "property": {
+            "id": "MUC",
+            "code": "MUC",
+            "name": "Demo Hotel Munich",
+            "description": "This is the demo hotel Munich"
+          },
+          "unitGroup": {
+            "id": "MUC-DBL",
+            "code": "DBL",
+            "name": "Double",
+            "description": "Double",
+            "type": "BedRoom"
+          },
+          "connectingUnit": {
+            "id": "MUC-QKY",
+            "name": "S.101",
+            "description": "Suite room",
+            "unitGroupId": "MUC-SUI"
+          },
+          "status": {
+            "isOccupied": false,
+            "condition": "Clean",
+            "maintenance": {
+              "id": "MUC-MTA-SGHZD",
+              "from": "2024-03-27T17:47:08.3345144+01:00",
+              "to": "2024-03-29T17:47:08.3345144+01:00",
+              "type": "OutOfService",
+              "description": "The remote control for the TV needs to be replaced."
+            }
+          },
+          "maxPersons": 2,
+          "created": "0001-01-01T00:00:00Z",
+          "attributes": [
+            {
+              "id": "KQOSXHLS",
+              "name": "Floor 3",
+              "description": "Floor number"
+            },
+            {
+              "id": "ADVFSSUL",
+              "name": "Street view",
+              "description": "View from the room"
+            }
+          ],
+          "connectedUnits": []
+        }
+    UnitStatusModel:
+      required:
+        - condition
+        - isOccupied
+      type: object
+      properties:
+        isOccupied:
+          type: boolean
+        condition:
+          enum:
+            - Clean
+            - CleanToBeInspected
+            - Dirty
+          type: string
+        maintenance:
+          $ref: '#/components/schemas/UnitMaintenanceModel'
+    ActionModel_PropertyAction_NotAllowedPropertyActionReason_:
+      required:
+        - action
+        - isAllowed
+      type: object
+      properties:
+        action:
+          enum:
+            - Delete
+            - Archive
+            - SetLive
+            - Reset
+          type: string
+        isAllowed:
+          type: boolean
+        reasons:
+          type: array
+          items:
+            $ref: >-
+              #/components/schemas/ActionReasonModel_NotAllowedPropertyActionReason_
+    ActionReasonModel_NotAllowedPropertyActionReason_:
+      required:
+        - code
+        - message
+      type: object
+      properties:
+        code:
+          enum:
+            - DeleteNotAllowedForPropertyNotInStatusTest
+            - ArchiveNotAllowedForPropertyNotInStatusLive
+            - ArchiveNotAllowedForPropertyWhichIsAlreadyArchived
+            - SetToLiveNotAllowedForPropertyNotInStatusTest
+            - SetToLiveNotAllowedForPropertyInNonLiveAccount
+            - ResetNotAllowedForPropertyNotInStatusTest
+          type: string
+        message:
+          minLength: 1
+          type: string
+    PropertyModifyDetailsRequest:
+      type: array
+      items:
+        $ref: '#/components/schemas/Operation'

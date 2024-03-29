@@ -1,0 +1,519 @@
+openapi: 3.0.0
+info:
+  title: Telintel SMS Gateway HTTP API
+  description: >-
+    This service is intended for live traffic, it is scoped for notification
+    systems. It works synchronously (the answer of each message will contain the
+    termination answer, and the message ID), but it may receive several requests
+    simultaneously. Telintel LTD provides an HTTP API to send and receive SMS.
+    It requires an application capable of reading JSON objects, GET/POST
+    request, Authentication credentials (login and password that can be obtained
+    through your Telintel sales manager) and enough credit to complete the
+    procedure.
+
+    Please note: the IP address where the requests will be sent must be
+    reported, as the account will bind with that IP address. If a delivery
+    receipt (DLR) is required for each SMS submission (where applicable) or a
+    short code or long number has been purchased and the receipt of each inbound
+    mobile originated (MO) message is desired, then a CallBack URL must be setup
+    with the Telintel Support team.
+  version: 1.0.0
+  contact:
+    name: Telintel
+    url: https://telintel.com/
+  x-konfig-ignore:
+    potential-incorrect-type: true
+servers:
+  - description: HTTP (non-SSL)
+    url: http://smsapi.telintel.net:8080/SmppUtilsWeb
+  - description: HTTPS (SSL) *recommended*
+    url: https://smsapi.telintel.net:8443/SmppUtilsWeb
+tags:
+  - description: >-
+      The Send Single SMS API is designed to send a single SMS, the answer is
+      synchronously.
+    name: Send Single SMS
+  - description: >-
+      The Send Mass SMS API is designed to be used when sending simultaneous
+      transactions is not an option and a large quantity of messages needs to be
+      sent in a short period of time.
+    name: Send Mass SMS
+  - description: >-
+      Telintel will send a delivery receipt (where applicable) for each SMS
+      submission. In order for Telintel to return this result a Callback URL
+      must be registered in our platform. Ask a Telintel Support Team associate
+      to register your callback URL.
+    name: Delivery Receipt
+  - description: >-
+      If a short code or a long number have been purchased and inbound messages
+      are required then a CallBack URL for inbound messages must be setup in
+      order for Telintel to send a request for each mobile originated (MO)
+      message. Please consult the Telintel Support Team to add URL information
+      to the Telintel system.
+    name: Receive message
+paths:
+  /HttpSmppServiceTypeV2/HttpServiceType:
+    post:
+      tags:
+        - Send Single SMS
+      operationId: SendSingleSms_messageDelivery
+      description: The request will contain a JSON object in the body of the request.
+      requestBody:
+        description: body
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendSingleSmsMessageDeliveryRequest'
+      responses:
+        '200':
+          description: Succesfull request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SendSingleSmsMessageDeliveryResponse'
+  /HttpMassSmppGatewayV2/HttpMassService:
+    post:
+      tags:
+        - Send Mass SMS
+      operationId: SendMassSms_notificationService
+      description: The request will contain a JSON object in the body of the request.
+      requestBody:
+        description: body
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendMassSmsNotificationServiceRequest'
+      responses:
+        '200':
+          description: Succesfull request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SendMassSmsNotificationServiceResponse'
+  /Delivery:
+    post:
+      tags:
+        - Delivery Receipt
+      operationId: DeliveryReceipt_confirmDeliveryReceipt
+      description: >-
+        The request parameters are sent via a GET (default) to your CallBack
+        URL. Telintel will be expecting a response 200 OK response, or it will
+        keep retrying until the Delivery Receipt expires (up to 24 hours).
+      requestBody:
+        description: body
+        content:
+          application/json:
+            schema:
+              $ref: >-
+                #/components/schemas/DeliveryReceiptConfirmDeliveryReceiptRequest
+      responses:
+        '200':
+          description: Succesfull request
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/DeliveryReceiptConfirmDeliveryReceiptResponse
+  /MO:
+    post:
+      tags:
+        - Receive message
+      operationId: ReceiveMessage_callbackResponse
+      description: >-
+        The request parameters are sent via a GET (default) to your Callback URL
+        and Telintel will be expecting a response 200 OK response, or it will
+        keep retrying for 24 hours.
+      requestBody:
+        description: body
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReceiveMessageCallbackResponseRequest'
+      responses:
+        '200':
+          description: Succesfull request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReceiveMessageCallbackResponseResponse'
+components:
+  schemas:
+    SendSingleSMSRequest:
+      type: object
+      properties:
+        username:
+          description: >-
+            The API username. This can be obtained from your sales account
+            manager. 
+          type: string
+        password:
+          description: >-
+            The API password. This can be obtained from your sales account
+            manager
+          type: string
+        destinationNumber:
+          description: >-
+            The recipient MSISDN. The destination number must be in
+            international format and contain only digit values (ex:17858716500
+            when sending to the USA).
+          type: integer
+        message:
+          description: >-
+            The body of the SMS message. The system support concatenated
+            messages, and will split it automatically, this happens when the
+            maximum length of the datacoding is reached, please reference the
+            datacoding parameter below.
+          type: string
+        from:
+          description: >-
+            The Sender ID to use in the SMS. The Sender ID may be a telephone
+            number (including country code) or it may be alphanumeric (ex:
+            Telintel). If an alphanumeric string is used the maximum length is
+            11 characters. Destination restrictions may apply.
+          type: string
+        datacoding:
+          description: >-
+            The alphabet to send the message, use as follows: 1= ASCII (160
+            character max) 2= ASCII Latin (160 character max) 8= UTF-16 (70
+            character max) Default = GSM 7 Bits codification (160 characters
+            max) If message length is larger than the proposed per  datacoding,
+            concatenated messages will be sent, and each part will be billed
+            individually.
+          type: integer
+        serviceType:
+          description: >-
+            A string that can be used to indicate different accounts for
+            separate billing purposes. Please consult your Telintel sales
+            manager for more details on how to set up.
+          type: string
+    SendSingleSMSResponse:
+      type: object
+      properties:
+        succeded:
+          description: If the send message command succeeded
+          type: boolean
+        transactionDetails:
+          description: A human readable description of the transaction.
+          type: string
+        errorCodeId:
+          description: An integer representing the return code of the response / error.
+          type: integer
+        messageId:
+          description: A unique ID of the message that was submitted
+          type: string
+    SendMassSMSRequest:
+      type: object
+      properties:
+        username:
+          description: >-
+            The API username. This can be obtained from your sales account
+            manager. 
+          type: string
+        password:
+          description: >-
+            The API password. This can be obtained from your sales account
+            manager
+          type: string
+        smppUtilsMassInformationRequestItemList:
+          description: >-
+            An object for destinationNumber (numeric), message (string), from
+            (string), and datacoding (numeric, integer). Example:
+            {"smppUtilsMassInformationRequestItemList":[{"datacoding":1,"destinationNumber":"17865555555","
+            from":"17865555550","message":"Test Message 1"}
+          type: string
+    SendMassSMSResponse:
+      type: object
+      properties:
+        succeded:
+          description: If the send message command succeeded
+          type: boolean
+        transactionDetails:
+          description: A human readable description of the transaction.
+          type: string
+        errorCodeId:
+          description: An integer representing the return code of the response / error.
+          type: integer
+    DeliveryReceiptRequest:
+      type: object
+      properties:
+        id:
+          description: The unique message ID reference assigned to eachsubmitted SMS.
+          type: string
+        submitted:
+          description: 1 = Message was submitted 0 = Message was not submitted
+          type: integer
+        delivered:
+          description: 1 = Message was delivered 0 = Message was not delivered
+          type: integer
+        submitDate:
+          description: >-
+            Submit date, used in the following format: YYYY-MM-DD HH:MM:SS 
+            Example: 2015-08-04 14:26:57
+          type: string
+        doneDate:
+          description: >-
+            Message processed end date, used in the following format: YYYY-MM-DD
+            HH:MM:SS Example:2015-08-04 14:26:57
+          type: string
+        finalStatus:
+          description: DELIVRD, EXPIRED, DELETED, UNDELIV, ACCEPTD, UNKNOWN, REJECTD
+          type: string
+        error:
+          description: >-
+            Where appropriate, this holds a network error code defining the
+            reason for the failure of message delivery.
+          type: string
+        text:
+          description: The first 20 characters of the sent message.
+          type: string
+        mcc:
+          description: The MCC value for the network
+          type: string
+        mnc:
+          description: The MCC value for the network
+          type: string
+    ReceiveMessageRequest:
+      type: object
+      properties:
+        serviceType:
+          description: >-
+            The service type parameter is optional. It is used to indicate the
+            SMS Application service associated with the message. Set to NULL for
+            default settings. Please consult your Telintel sales manager for
+            more details on how to set up.
+          type: string
+        originTypeOfNumber:
+          description: >-
+            Type of Number for the origin / source address. This setting is used
+            to tell your application the format of the address. If specified,
+            the available options for TON are: 0 = Unknown 1 = International, 2=
+            National, 3= Network Specific, 4= Subscriber Number, 5= Alphanumeric
+            6=Abbreviated
+          type: integer
+        originNumberingPlanIndicator:
+          description: >-
+            The Numbering Plan Identification setting to tell your application
+            the numbering plan associated to the origin / source address. f
+            specified, the available options for NPI are: 0 = Unknown 1 =
+            ISDN/telephone numbering plan (E163/E164) 3 = Data numbering plan
+            (X.121) 4 = Telex numbering plan (F.69) 6 = Land Mobile (E.212) 8 =
+            National numbering plan 9 = Private numbering plan 10 = ERMES
+            numbering plan (ETSI DE/PS 3 01-3) 13 = Internet (IP) 18 = WAP
+            Client Id (to be defined by WAP Forum)
+          type: integer
+        sourceAddress:
+          description: >-
+            The mobile handset number where the request was made / where the
+            message originated. The Source address may be numeric or
+            alphanumeric (ex: Telintel). Maximum variables = 21
+          type: string
+        destinationTypeOfNumber:
+          description: >-
+            Type of Number for the destination number / address. This setting is
+            used to tell your application the format of the address. If
+            specified, the available options for TON are: 0 = Unknown 1 =
+            International 2= National 3= Network Specific 4= Subscriber Number
+            5= Alphanumeric 6= Abbreviated
+          type: integer
+        destinationNumberingPlanIndicator:
+          description: >-
+            Numbering Plan Identification setting to tell your application the
+            numbering plan associated to the destination number / address. If
+            specified, the available options for NPI are: 0 = Unknown 1 =
+            ISDN/telephone numbering plan (E163/E164) 3 = Data numbering plan
+            (X.121) 4 = Telex numbering plan (F.69) 6 = Land Mobile (E.212) 8 =
+            National numbering plan 9 = Private numbering plan 10 = ERMES
+            numbering plan (ETSI DE/PS 3 01-3) 13 = Internet (IP) 18 = WAP
+            Client Id (to be defined by WAP Forum)
+          type: integer
+        destinationAddress:
+          description: >-
+            The destination number entered into the mobile handset / address for
+            the SMS.
+          type: string
+        esmeClass:
+          description: >-
+            ESM Class parameter is used to indicate special message attributes
+            associated with the SMS.
+          type: string
+        protocolId:
+          description: >-
+            Protocol Identifier, network specific field. GSM, set according to
+            GSM 03.40 [GSM 03.40]. ANSI-136 (TDMA) for Mobile Terminated
+            messages, this field is not used and is ig- nored. ANSI-136 (TDMA)
+            for Mobile Originated messages, this value should be set to NULL.
+            IS-95 (CDMA) for Mobile Terminated messages, this field is not used
+            and is ig- nored. IS-95 (CDMA) for Mobile Originated messages, this
+            value should be set to NULL.
+          type: integer
+        PriorityFlag:
+          description: >-
+            The priority flag parameter allows the application to assign a
+            priority level to the SMS. Priority Levels supported: 0 = Level 0
+            (lowest) priority 1 = Level 1 priority 2 = Level 2 priority 3 =
+            Level 3 (highest) priority
+          type: integer
+        shortMessage:
+          description: The short message parameter contains the message data.
+          type: string
+    SendSingleSmsMessageDeliveryRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          example: testhttp
+        password:
+          type: string
+          example: passthttp
+        destinationNumber:
+          type: string
+          example: '573005555555'
+        message:
+          type: string
+          example: testMessage
+        from:
+          type: string
+          example: '573121112222'
+        serviceType:
+          type: string
+          example: serviceTypeTest
+        datacoding:
+          type: integer
+          example: 1
+    SendMassSmsNotificationServiceRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          example: testhttp
+        password:
+          type: string
+          example: passthttp
+        serviceType:
+          type: string
+          example: testhttp
+        smppUtilsMassInformationRequestItemList:
+          type: array
+          items:
+            type: object
+            properties:
+              datacoding:
+                type: integer
+                example: 1
+              destinationNumber:
+                type: string
+                example: '573005555555'
+              message:
+                type: string
+                example: testMessage
+              from:
+                type: string
+                example: '573121112222'
+    DeliveryReceiptConfirmDeliveryReceiptRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          example: smsId
+        submitted:
+          type: integer
+          example: 1
+        delivered:
+          type: integer
+          example: 1
+        submitDate:
+          type: string
+          example: '2015-08-04 14:26:57'
+        doneDate:
+          type: string
+          example: '2015-08-04 14:26:57'
+        finalStatus:
+          type: string
+          example: DELIVRD
+        error:
+          type: integer
+          example: 0
+        text:
+          type: string
+          example: text message
+        mcc:
+          type: integer
+          example: 123
+        mnc:
+          type: string
+          example: '321'
+    ReceiveMessageCallbackResponseRequest:
+      type: object
+      properties:
+        serviceType:
+          type: string
+          example: ''
+        originTypeOfNumber:
+          type: string
+          example: NATIONAL
+        originNumberingPlanIndicator:
+          type: string
+          example: ISDN
+        sourceAddress:
+          type: string
+          example: '573005555555'
+        destinationTypeOfNumber:
+          type: string
+          example: INTERNATIONAL
+        destinationNumberingPlanIndicator:
+          type: string
+          example: ISDN
+        destinationAddress:
+          type: string
+          example: '86865'
+        esmeClass:
+          type: string
+          example: '0'
+        protocolId:
+          type: integer
+          example: 0
+        PriorityFlag:
+          type: string
+          example: '0'
+        shortMessage:
+          type: string
+          example: Sae 1234 456
+    SendSingleSmsMessageDeliveryResponse:
+      type: object
+      properties:
+        succeded:
+          type: boolean
+          example: true
+        transactionDetails:
+          type: string
+          example: transaction ok
+        errorCodeId:
+          type: integer
+          example: 0
+        messageId:
+          type: string
+          example: '123456'
+    SendMassSmsNotificationServiceResponse:
+      type: object
+      properties:
+        succeded:
+          type: boolean
+          example: true
+        transactionDetails:
+          type: string
+          example: transaction ok
+        errorCodeId:
+          type: integer
+          example: 0
+    DeliveryReceiptConfirmDeliveryReceiptResponse:
+      type: object
+      properties:
+        succeded:
+          type: boolean
+          example: true
+    ReceiveMessageCallbackResponseResponse:
+      type: object
+      properties:
+        succeded:
+          type: boolean
+          example: true
