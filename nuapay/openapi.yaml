@@ -1,0 +1,3554 @@
+openapi: 3.0.0
+info:
+  title: Nuapay TPP API Specification
+  description: >-
+    Swagger Spec for the Nuapay TPP OpenBanking/PSD2. Provides PISP and Banks
+    Endpoints
+  version: 1.16.1
+  contact:
+    name: Nuapay
+    email: api.support@nuapay.com
+  license:
+    name: Nuapay
+    url: https://sentenial.com
+  x-logo:
+    backgroundColor: '#FFFFFF'
+    url: https://www.nuapay.com/wp-content/uploads/2018/04/nuapay.svg
+servers:
+  - url: https://api.nuapay.com/tpp
+tags:
+  - description: |-
+      Payment initiation endpoints allow a merchant to,
+      - Initiate payment requests in Open Banking
+      - Retrieve the status of a previously initiated payment request
+    name: PISP Service
+  - description: |-
+      Bank endpoints allow a merchant to,
+      - Retrieve a list of banks that support the Open Banking scheme
+      - View details of a specific bank that supports the Open Banking scheme
+    name: Bank Service
+paths:
+  /bankfamilies:
+    get:
+      tags:
+        - Bank Service
+      summary: View Bank Families
+      operationId: BankService_viewBankFamilies
+      security:
+        - MerchantOAuth2:
+            - openbanking_aisp
+            - openbanking_pisp
+        - MerchantApiKey: []
+        - PartnerOAuth2:
+            - openbanking_aisp
+            - openbanking_pisp
+        - PartnerApiKey: []
+      description: Get list of Bank Families
+      parameters:
+        - description: Page number
+          name: pagenumber
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 1
+        - description: Page size
+          name: pagesize
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 20
+        - name: supportedcurrencies
+          in: query
+          required: false
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - EUR
+                - GBP
+                - PLN
+                - BGN
+                - HRK
+                - CZK
+                - DKK
+                - HUF
+                - RON
+                - SEK
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedListBankFamiliesResponseEnvelope'
+              examples:
+                response:
+                  value:
+                    uri: /bankFamilies
+                    data:
+                      - id: 8ww64y0phx
+                        uri: /bankFamilies/8ww64y0phx
+                        name: Nuapay France
+                        logo: >-
+                          https://www.nuapay.com/wp-content/uploads/2018/04/nuapay.svg
+                        supportedCurrencies:
+                          - EUR
+                      - id: 1xf48y2zds
+                        uri: /bankFamilies/1xf48y2zds
+                        name: Nuapay UK
+                        logo: >-
+                          https://www.nuapay.com/wp-content/uploads/2018/04/nuapay.svg
+                        supportedCurrencies:
+                          - GBP
+                    page:
+                      pageNumber: 1
+                      pageSize: 10
+                      totalElements: 2
+                      totalPages: 1
+                    sort: []
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: T0000
+                    returnDescription: Validation errors occurred. Please see details.
+                    details:
+                      description: Page  is invalid
+                      code: T0001
+                      field: page
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: null
+                    returnDescription: null
+                    details: null
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: null
+                    returnDescription: null
+                    details: null
+        '405':
+          description: Method Not Allowed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: null
+                    returnDescription: null
+                    details: null
+        '429':
+          description: Too Many Requests
+          x-sentenial:
+            enriched: 'true'
+          headers:
+            Retry-After:
+              description: Number in seconds to wait
+              schema:
+                type: integer
+                format: int32
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: null
+                    returnDescription: null
+                    details: null
+  /bankfamilies/{bankfamilyId}:
+    get:
+      tags:
+        - Bank Service
+      summary: View Bank Family
+      operationId: BankService_getBankFamily
+      security:
+        - MerchantOAuth2:
+            - openbanking_aisp
+            - openbanking_pisp
+        - MerchantApiKey: []
+        - PartnerOAuth2:
+            - openbanking_aisp
+            - openbanking_pisp
+        - PartnerApiKey: []
+      description: View Bank Family Details
+      parameters:
+        - description: Bank Family id returned by Get Bank Families endpoint.
+          name: bankfamilyId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BankFamilyResponseEnvelope'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: T0000
+                    returnDescription: Validation errors occurred. Please see details.
+                    details:
+                      description: Page  is invalid
+                      code: T0001
+                      field: page
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: null
+                    returnDescription: null
+                    details: null
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: null
+                    returnDescription: null
+                    details: null
+        '405':
+          description: Method Not Allowed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: null
+                    returnDescription: null
+                    details: null
+        '429':
+          description: Too Many Requests
+          x-sentenial:
+            enriched: 'true'
+          headers:
+            Retry-After:
+              description: Number in seconds to wait
+              schema:
+                type: integer
+                format: int32
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: null
+                    returnDescription: null
+                    details: null
+  /banks:
+    get:
+      tags:
+        - Bank Service
+      summary: Retrieve Banks
+      operationId: BankService_getSupportedBanks
+      security:
+        - MerchantOAuth2:
+            - openbanking_aisp
+            - openbanking_pisp
+        - MerchantApiKey: []
+        - PartnerOAuth2:
+            - openbanking_aisp
+            - openbanking_pisp
+        - PartnerApiKey: []
+      description: Get Supported Banks On This TPP
+      parameters:
+        - description: >-
+            CountryCode - ISO country code - indicates where bank is domiciled
+            (ISO 3166 Alpha-2)
+          name: country
+          in: query
+          required: false
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+        - description: >-
+            Allows to filter the banks that requires debtor account to be
+            provided when initiating payment.
+          name: debtoraccountrequired
+          in: query
+          required: false
+          schema:
+            type: boolean
+        - description: Page number
+          name: pagenumber
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 1
+        - description: Page size
+          name: pagesize
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 20
+        - name: supportedcurrencies
+          in: query
+          required: false
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - EUR
+                - GBP
+                - PLN
+                - BGN
+                - HRK
+                - CZK
+                - DKK
+                - HUF
+                - RON
+                - SEK
+        - description: Allows filtering by Bank Family via the Bank Family Id.
+          name: bankfamilyid
+          in: query
+          required: false
+          schema:
+            type: string
+        - description: Allows filtering by Banks without an associated Bank Family.
+          name: excludebankfamily
+          in: query
+          required: false
+          schema:
+            type: boolean
+        - description: >-
+            Filter the bank list by service provided returns both AISPs and
+            PISPs, 'AISP' returns only AISPs and 'PISP' returns only PISPs. When
+            not provided returns all banks regardless of service.
+          name: services
+          in: query
+          required: false
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - AISP
+                - PISP
+        - description: >-
+            Filter the bank list by payment method. When not provided or false,
+            returns the full list of banks. When true, the only banks that
+            supports SEPA Instant Payments are returned.
+          name: sepainstantreachability
+          in: query
+          required: false
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BanksResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: T0000
+                    returnDescription: Validation errors occurred. Please see details.
+                    details:
+                      description: Page  is invalid
+                      code: T0001
+                      field: page
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: null
+                    returnDescription: null
+                    details: null
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: null
+                    returnDescription: null
+                    details: null
+        '405':
+          description: Method Not Allowed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: null
+                    returnDescription: null
+                    details: null
+        '429':
+          description: Too Many Requests
+          x-sentenial:
+            enriched: 'true'
+          headers:
+            Retry-After:
+              description: Number in seconds to wait
+              schema:
+                type: integer
+                format: int32
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: null
+                    returnDescription: null
+                    details: null
+  /payments:
+    post:
+      tags:
+        - PISP Service
+      summary: Create Payment
+      operationId: PispService_makePayment
+      security:
+        - MerchantOAuth2:
+            - openbanking_pisp
+        - MerchantApiKey: []
+      description: Create a payment request POST endpoint
+      parameters:
+        - description: >-
+            Every request will be processed only once per Idempotency-Key.  The
+            Idempotency Key will be valid for 24 hours.
+          name: Idempotency-Key
+          in: header
+          x-sentenial:
+            enriched: 'true'
+          required: false
+          schema:
+            type: string
+            maxLength: 50
+        - description: Client ID of the PSU in the ASPSP client interface.
+          name: PSU-ID
+          in: header
+          required: false
+          schema:
+            type: string
+        - description: The PSU's IP address if the PSU is currently logged in with the TPP.
+          name: Customer-IP-Address
+          in: header
+          required: false
+          schema:
+            type: string
+            maxLength: 50
+      requestBody:
+        description: Create a Payment Request
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentRequest'
+        required: true
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentResponseEnvelope'
+              examples:
+                response:
+                  value:
+                    uri: /payments/re27gry2dw
+                    data:
+                      id: re27gry2dw
+                      uri: /payments/re27gry2dw
+                      endToEndIdentification: endToEndIdentification123
+                      debtorAccount:
+                        identification: 60161331926819
+                        name: null
+                        schemeName: SortCodeAccountNumber
+                        secondaryIdentification: null
+                    risk:
+                      paymentContextCode: Other
+                      merchantCategoryCode: null
+                      merchantCustomerIdentification: null
+                      deliveryAddress: null
+                    remittanceInformation:
+                      reference: reference123
+                      unstructured: null
+                    status: PENDING_APPROVAL
+                    amount: 99.99
+                    currency: GBP
+                    countryCode: GB
+                    language: en
+                    email: client@example.com
+                    orderDetails:
+                      items:
+                        - description: Dublin(DUB) to London(LCY) - Adult Fare
+                          name: Flights Outbound
+                          quantity: 2
+                          amount: 50
+                        - description: Dublin(DUB) to London(LCY) - Adult Fare
+                          name: Flights Return
+                          quantity: 2
+                          amount: 50
+                        - description: Dublin(DUB) to London(LCY) - Adult Fare
+                          name: Flights Return
+                          quantity: 2
+                          amount: 30
+                        - description: null
+                          name: Discounts
+                          quantity: null
+                          amount: -5
+                        - description: null
+                          name: Total
+                          quantity: null
+                          amount: 125
+                    integrationType: SELF_HOSTED
+                    merchantPostAuthUrl: https://merchant.openbanking.com/result
+                    bankId: lyboxy9bqp
+                    aspspAuthUrl: >-
+                      https://any-aspsp.com/openbanking/authorize?response_type=code+id_token&scope=openid+payments&client_id=377aaa6a-70bf-4e95-ac19-2bac5270bacd&redirect_uri=https%3A%2F%2Fapi.nuapay.com%2Ftpp%2Fpayment-requests%2Foauth&state=df78b5f6-12c0-4646-b47c-4362217acb0a&nonce=bea92693-19da-4609-858e-86c79e908a08&request=eyJraWQiOiI2QlJZamgtc0VRUTNmNWlzc0lxWU9WNGNXdVUiLCJ0eXAiOiJKV1QiLCJhbGciOiJQUzI1NiJ9.eyJpc3MiOiIzNzdhYWE2YS03MGJmLTRlOTUtYWMxOS0yYmFjNTI3MGJhY2QiLCJyZXNwb25zZV90eXBlIjoiY29kZSBpZF90b2tlbiIsIm5vbmNlIjoiYmVhOTI2OTMtMTlkYS00NjA5LTg1OGUtODZjNzllOTA4YTA4IiwiY2xpZW50X2lkIjoiMzc3YWFhNmEtNzBiZi00ZTk1LWFjMTktMmJhYzUyNzBiYWNkIiwibWF4X2FnZSI6ODY0MDAsImF1ZCI6Imh0dHBzOlwvXC9hdXRob3Jpc2UtYXBpLmxsb3lkc2JhbmsuY28udWtcL3Byb2QwMVwvY2hhbm5lbFwvbHlkcyIsInNjb3BlIjoib3BlbmlkIHBheW1lbnRzIiwiY2xhaW1zIjp7InVzZXJpbmZvIjp7Im9wZW5iYW5raW5nX2ludGVudF9pZCI6eyJ2YWx1ZSI6IjY0YWQ5NWEwLWUzMWYtNGNiOC04NjM3LTdjOGRmOTc3MTJmOSIsImVzc2VudGlhbCI6dHJ1ZX19LCJpZF90b2tlbiI6eyJvcGVuYmFua2luZ19pbnRlbnRfaWQiOnsidmFsdWUiOiI2NGFkOTVhMC1lMzFmLTRjYjgtODYzNy03YzhkZjk3NzEyZjkiLCJlc3NlbnRpYWwiOnRydWV9LCJhY3IiOnsiZXNzZW50aWFsIjp0cnVlLCJ2YWx1ZXMiOlsidXJuOm9wZW5iYW5raW5nOnBzZDI6c2NhIiwidXJuOm9wZW5iYW5raW5nOnBzZDI6Y2EiXX19fSwicmVkaXJlY3RfdXJpIjoiaHR0cHM6XC9cL2FwaS5udWFwYXkuY29tXC90cHBcL3BheW1lbnQtcmVxdWVzdHNcL29hdXRoIiwic3RhdGUiOiJkZjc4YjVmNi0xMmMwLTQ2NDYtYjQ3Yy00MzYyMjE3YWNiMGEiLCJleHAiOjE1NzU0NTg3MTYsImlhdCI6MTU3NTQ1ODQxNiwianRpIjoiNDQyYmY4N2YtYzIxNC00NjgxLTk3ODYtZjIwZGM1YjIzOWYxIn0.IyeHKQQeU6x32CdUllkskLFWEjkJZKzvp8D4ZOwtlN3v32qmbh4hkGtwNilqZetqqq1ESB1InzfyAlb5S3GyZ_1pTV5UmFqsY60w4jIvSVQXmxKyCYIDrdgTvfa3IYOtA3vStpRpnHyXZfke7mBLGM0nn3YLEmujQ88T1kzq8v9rKTUKwgAE-NYLsYnXNg8dNlrl_lvXVou-J26keS5EaYMVSwHRXcZ8Vp51Hro5L3Py5KyG270RL-7AfJCrEOcvwKbHWOYthoZj1FcuuJWoCT80H1rtkw80vI8QpaQHhp8xYOGft4n6uf2WBhUVb9eBrl9B0GtWe3opBeFXzOtKyg
+                    cutOffDateTime: null
+                    expectedExecutionDateTime: null
+                    expectedSettlementDateTime: null
+                    merchantId: gabxwwv2l5
+                    creationDateTime: '2020-05-01T08:25:29.291Z'
+                    debtorBankName: Bank Name
+                    multiAuthorisation:
+                      status: null
+                      numberRequired: null
+                      numberReceived: null
+                      lastUpdateDateTime: null
+                      expirationDateTime: null
+                    links:
+                      - id: re27gry2dwX
+                        resourceType: refunds
+                        uri: /payments/re27gry2dw/refunds
+                      - id: re27gry2dwX
+                        resourceType: history
+                        uri: /payments/re27gry2dw/history
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: T0000
+                    returnDescription: Validation errors occurred. Please see details.
+                    details:
+                      description: Field is invalid
+                      code: T0004
+                      field: email
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: null
+                    returnDescription: null
+                    details: null
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: null
+                    returnDescription: null
+                    details: null
+        '405':
+          description: Method Not Allowed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: null
+                    returnDescription: null
+                    details: null
+        '415':
+          description: Unsupported Media Type
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: null
+                    returnDescription: null
+                    details: null
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: T0000
+                    returnDescription: Validation errors occurred. Please see details.
+                    details:
+                      description: Amount has to be greater than 0.
+                      code: T0016
+                      field: amount
+        '429':
+          description: Too Many Requests
+          x-sentenial:
+            enriched: 'true'
+          headers:
+            Retry-After:
+              description: Number in seconds to wait
+              schema:
+                type: integer
+                format: int32
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: null
+                    returnDescription: null
+                    details: null
+    get:
+      tags:
+        - PISP Service
+      summary: List payments
+      operationId: PispService_listPayments
+      security:
+        - MerchantOAuth2:
+            - openbanking_pisp
+        - MerchantApiKey: []
+        - PartnerOAuth2:
+            - openbanking_pisp
+        - PartnerApiKey: []
+      description: GET payments list endpoint
+      parameters:
+        - description: >-
+            Submission from date time in the format, 'yyyy-MM-dd'T'HH:mm:ss',
+            maximum date from/to date range is 30 days. If neither from/to date
+            is provided returns results for the last 30 days.
+          name: fromdatetime
+          in: query
+          required: false
+          schema:
+            type: string
+        - description: >-
+            Submission to date time in the format, 'yyyy-MM-dd'T'HH:mm:ss',
+            maximum date from/to date range is 30 days. If neither from/to date
+            is provided returns results for the last 30 days.
+          name: todatetime
+          in: query
+          required: false
+          schema:
+            type: string
+        - description: >-
+            When provided only payments with amount equal or higher than
+            provided amount will be returned
+          name: fromamount
+          in: query
+          required: false
+          schema:
+            type: number
+            minimum: 0
+            maximum: 999999999.99
+        - description: >-
+            When provided only payments with amount equal or smaller than 
+            provided amount will be returned
+          name: toamount
+          in: query
+          required: false
+          schema:
+            type: number
+            minimum: 0
+            maximum: 999999999.99
+        - description: >-
+            This is used in UI flows to get payment details. Applicable for
+            payments created with REDIRECT, CHECKOUT integration type.
+          name: userinterfacepaymentid
+          in: query
+          required: false
+          schema:
+            type: string
+        - description: >-
+            A number of statuses can be queried within a single request by
+            providing multiple occurences of the parameter. If not provided all
+            statuses will be returned
+          name: paymentstatus
+          in: query
+          required: false
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - PENDING
+                - PENDING_APPROVAL
+                - OAUTH_CALLBACK_COMPLETE
+                - AUTHORISED
+                - DECLINED
+                - SETTLEMENT_REJECTED
+                - SETTLEMENT_PENDING
+                - SETTLEMENT_IN_PROGRESS
+                - SETTLEMENT_COMPLETE
+                - CONSENT_API_REJECTED
+                - TIMEOUT
+                - CONSENT_TIMEOUT
+                - UNEXPECTED_ERROR
+                - UNKNOWN
+                - PAYMENT_RECEIVED
+        - description: Payer name. This parameter supports searching with wildcards
+          name: payername
+          in: query
+          required: false
+          schema:
+            type: string
+        - description: Payer e-mail. This parameter supports searching with wildcards
+          name: payeremail
+          in: query
+          required: false
+          schema:
+            type: string
+        - description: >-
+            Payment reference will attempt to match endToEndIdentification,
+            remittanceInformation.reference and
+            remittanceInformation.unstructured. Will return all matches and
+            partial matches if using wildcard searches. This parameter supports
+            searching with wildcards
+          name: reference
+          in: query
+          required: false
+          schema:
+            type: string
+        - description: Currency
+          name: currency
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - EUR
+              - GBP
+              - PLN
+              - BGN
+              - HRK
+              - CZK
+              - DKK
+              - HUF
+              - RON
+              - SEK
+        - description: Page number
+          name: pagenumber
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 1
+        - description: Page size
+          name: pagesize
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 20
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedListPaymentResponseEnvelope'
+              examples:
+                response:
+                  value:
+                    uri: /payments
+                    data:
+                      - id: ybo8zayk2q
+                        uri: /payments/ybo8zayk2q
+                        merchantId: b0zaq1klpt
+                        creationDateTime: '2019-02-28T10:43:07.00Z'
+                        amount: 99.99
+                        countryCode: GB
+                        currency: GBP
+                        email: client@example.com
+                        language: en
+                        remittanceInformation:
+                          unstructured: The Remittance Information
+                        endToEndIdentification: endToEndIdentification
+                        orderDetails:
+                          items:
+                            - description: Dublin(DUB) to London(LCY) - Adult Fare
+                              name: Flights Outbound
+                              quantity: 2
+                              amount: 50
+                            - description: Dublin(DUB) to London(LCY) - Adult Fare
+                              name: Flights Return
+                              quantity: 2
+                              amount: 50
+                            - description: Dublin(DUB) to London(LCY) - Adult Fare
+                              name: Flights Return
+                              quantity: 2
+                              amount: 30
+                            - description: null
+                              name: Discounts
+                              quantity: null
+                              amount: -5
+                            - description: null
+                              name: Total
+                              quantity: null
+                              amount: 125
+                        integrationType: CHECKOUT
+                        merchantPostAuthUrl: null
+                        bankId: null
+                        bankName: null
+                        aspspAuthUrl: null
+                        status: PENDING_APPROVAL
+                        debtorBankName: Test Bank Name
+                        debtorAccount:
+                          identification: GB29NWBK60161331926819
+                          schemeName: IBAN
+                        links:
+                          - id: null
+                            resourceType: refunds
+                            uri: /payments/ybo8zayk2q/refunds
+                          - id: null
+                            resourceType: history
+                            uri: /payment/{paymentId}/history
+                    page:
+                      pageNumber: 1
+                      pageSize: 10
+                      totalElements: 1
+                      totalPages: 1
+                    sort: []
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: T0000
+                    returnDescription: Validation errors occurred. Please see details.
+                    details:
+                      description: Field is invalid
+                      code: T0002
+                      field: fromdatetime
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: null
+                    returnDescription: null
+                    details: null
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: null
+                    returnDescription: null
+                    details: null
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: null
+                    returnDescription: null
+                    details: null
+        '405':
+          description: Method Not Allowed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: null
+                    returnDescription: null
+                    details: null
+        '429':
+          description: Too Many Requests
+          x-sentenial:
+            enriched: 'true'
+          headers:
+            Retry-After:
+              description: Number in seconds to wait
+              schema:
+                type: integer
+                format: int32
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: null
+                    returnDescription: null
+                    details: null
+  /payments/callback:
+    post:
+      tags:
+        - PISP Service
+      summary: Forward Payment Callback
+      operationId: PispService_forwardPaymentCallback
+      security:
+        - MerchantOAuth2:
+            - openbanking_callback
+        - PartnerOAuth2:
+            - openbanking_callback
+      description: Forward Payment Callback POST endpoint
+      parameters:
+        - description: >-
+            Every request will be processed only once per Idempotency-Key.  The
+            Idempotency Key will be valid for 24 hours.
+          name: Idempotency-Key
+          in: header
+          required: false
+          x-sentenial:
+            enriched: 'true'
+          schema:
+            type: string
+            maxLength: 50
+      requestBody:
+        description: Create a Payment Callback Request
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PispServiceForwardPaymentCallbackRequest'
+        required: true
+      responses:
+        '200':
+          description: Ok
+          headers:
+            Location:
+              description: >-
+                Holds uri of payment that was mapped using provided callback
+                parameters
+              schema:
+                type: string
+            ASPSP-SCA-Redirect-URL:
+              description: Holds url of the ASPSP SCA redirect for pre-authorisation flow.
+              schema:
+                type: string
+        '202':
+          description: ACCEPTED
+          headers:
+            Location:
+              description: >-
+                Holds uri of payment that was mapped using provided callback
+                parameters
+              schema:
+                type: string
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: T0000
+                    returnDescription: Validation errors occurred. Please see details.
+                    details:
+                      description: Field is invalid
+                      code: T0004
+                      field: email
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: null
+                    returnDescription: null
+                    details: null
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: null
+                    returnDescription: null
+                    details: null
+        '405':
+          description: Method Not Allowed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: null
+                    returnDescription: null
+                    details: null
+        '415':
+          description: Unsupported Media Type
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: null
+                    returnDescription: null
+                    details: null
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: T0000
+                    returnDescription: Validation errors occurred. Please see details.
+                    details:
+                      description: No payment matched based on provided parameters.
+                      code: XXXXX
+                      field: null
+        '429':
+          description: Too Many Requests
+          headers:
+            Retry-After:
+              description: Number in seconds to wait
+              schema:
+                type: integer
+                format: int32
+          x-sentenial:
+            enriched: 'true'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: null
+                    returnDescription: null
+                    details: null
+  /payments/{paymentId}:
+    get:
+      tags:
+        - PISP Service
+      summary: Retrieve Payment
+      operationId: PispService_getPayment
+      security:
+        - MerchantOAuth2:
+            - openbanking_pisp
+        - MerchantApiKey: []
+      description: GET Payment details endpoint
+      parameters:
+        - description: The ID of the payment for which you want to retrieve details
+          name: paymentId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentResponseEnvelope'
+              examples:
+                response:
+                  value:
+                    uri: /payments/ybo8zayk2q
+                    data:
+                      id: ybo8zayk2qX
+                      uri: /payments/ybo8zayk2q
+                      merchantId: b0zaq1klpt
+                      creationDateTime: '2019-02-28T10:43:07.00Z'
+                      amount: 99.99
+                      countryCode: GB
+                      currency: GBP
+                      email: client@example.com
+                      language: en
+                      remittanceInformation:
+                        unstructured: The Remittance Information
+                      endToEndIdentification: endToEndIdentification
+                      orderDetails:
+                        items:
+                          - description: Dublin(DUB) to London(LCY) - Adult Fare
+                            name: Flights Outbound
+                            quantity: 2
+                            amount: 50
+                          - description: Dublin(DUB) to London(LCY) - Adult Fare
+                            name: Flights Return
+                            quantity: 2
+                            amount: 50
+                          - description: Dublin(DUB) to London(LCY) - Adult Fare
+                            name: Flights Return
+                            quantity: 2
+                            amount: 30
+                          - description: null
+                            name: Discounts
+                            quantity: null
+                            amount: -5
+                          - description: null
+                            name: Total
+                            quantity: null
+                            amount: 125
+                      integrationType: CHECKOUT
+                      merchantPostAuthUrl: null
+                      bankId: null
+                      bankName: null
+                      aspspAuthUrl: null
+                      status: PENDING_APPROVAL
+                      debtorAccount:
+                        identification: GB29NWBK60161331926819
+                        schemeName: IBAN
+                      links:
+                        - id: null
+                          resourceType: refunds
+                          uri: /payments/ybo8zayk2q/refunds
+                        - id: null
+                          resourceType: history
+                          uri: /payment/{paymentId}/history
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: null
+                    returnDescription: null
+                    details: null
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: null
+                    returnDescription: null
+                    details: null
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: null
+                    returnDescription: null
+                    details: null
+        '405':
+          description: Method Not Allowed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: null
+                    returnDescription: null
+                    details: null
+        '429':
+          description: Too Many Requests
+          x-sentenial:
+            enriched: 'true'
+          headers:
+            Retry-After:
+              description: Number in seconds to wait
+              schema:
+                type: integer
+                format: int32
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: null
+                    returnDescription: null
+                    details: null
+    patch:
+      tags:
+        - PISP Service
+      summary: Retry Payment
+      operationId: PispService_retryPaymentPatch
+      security:
+        - MerchantOAuth2:
+            - openbanking_pisp
+      description: Retry Payment
+      parameters:
+        - description: The ID of the payment that you want to retry
+          name: paymentId
+          in: path
+          required: true
+          schema:
+            type: string
+        - description: The PSU's IP address if the PSU is currently logged in with the TPP.
+          name: Customer-IP-Address
+          in: header
+          required: false
+          schema:
+            type: string
+      requestBody:
+        description: Retry Payment Request
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetBankPaymentRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentResponseEnvelope'
+              examples:
+                response:
+                  value:
+                    uri: /payments/ybo8zayk2q
+                    data:
+                      id: ybo8zayk2qX
+                      uri: /payments/ybo8zayk2q
+                      merchantId: b0zaq1klpt
+                      creationDateTime: '2019-02-28T10:43:07.00Z'
+                      amount: 99.99
+                      countryCode: GB
+                      currency: GBP
+                      email: client@example.com
+                      language: en
+                      remittanceInformation:
+                        unstructured: The Remittance Information
+                      endToEndIdentification: endToEndIdentification
+                      orderDetails:
+                        items:
+                          - description: Dublin(DUB) to London(LCY) - Adult Fare
+                            name: Flights Outbound
+                            quantity: 2
+                            amount: 50
+                          - description: Dublin(DUB) to London(LCY) - Adult Fare
+                            name: Flights Return
+                            quantity: 2
+                            amount: 50
+                          - description: Dublin(DUB) to London(LCY) - Adult Fare
+                            name: Flights Return
+                            quantity: 2
+                            amount: 30
+                          - description: null
+                            name: Discounts
+                            quantity: null
+                            amount: -5
+                          - description: null
+                            name: Total
+                            quantity: null
+                            amount: 125
+                      integrationType: CHECKOUT
+                      merchantPostAuthUrl: null
+                      bankId: lyboxy9bqp
+                      bankName: Nuapay
+                      aspspAuthUrl: null
+                      status: PENDING_APPROVAL
+                      debtorAccount:
+                        identification: GB29NWBK60161331926819
+                        schemeName: IBAN
+                      links:
+                        - id: null
+                          resourceType: refunds
+                          uri: /payments/ybo8zayk2q/refunds
+                        - id: null
+                          resourceType: history
+                          uri: /payment/{paymentId}/history
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: T0000
+                    returnDescription: Validation errors occurred. Please see details.
+                    details:
+                      description: Field is invalid
+                      code: T0004
+                      field: bankId
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: null
+                    returnDescription: null
+                    details: null
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: null
+                    returnDescription: null
+                    details: null
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: null
+                    returnDescription: null
+                    details: null
+        '405':
+          description: Method Not Allowed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: null
+                    returnDescription: null
+                    details: null
+        '415':
+          description: Unsupported Media Type
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: null
+                    returnDescription: null
+                    details: null
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: T0000
+                    returnDescription: Validation errors occurred. Please see details.
+                    details:
+                      - description: The payment can't be processed with provided bank.
+                        code: TBD
+                        field: bankId
+                      - description: Bank cannot be found.
+                        code: TBD
+                        field: bankId
+        '429':
+          description: Too Many Requests
+          x-sentenial:
+            enriched: 'true'
+          headers:
+            Retry-After:
+              description: Number in seconds to wait
+              schema:
+                type: integer
+                format: int32
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: null
+                    returnDescription: null
+                    details: null
+  /payments/{paymentId}/history:
+    get:
+      tags:
+        - PISP Service
+      summary: Retrieve Payment  History
+      operationId: PispService_getPaymentHistory
+      security:
+        - MerchantOAuth2:
+            - openbanking_pisp_read
+        - MerchantApiKey: []
+      description: Retrieve Payment History
+      parameters:
+        - description: >-
+            The ID of the payment for which you want to retrieve audit trail
+            history
+          name: paymentId
+          in: path
+          required: true
+          schema:
+            type: string
+        - description: Page number
+          name: pagenumber
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 1
+        - description: Page size
+          name: pagesize
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 20
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentHistoryResponseEnvelope'
+              examples:
+                response:
+                  value:
+                    uri: /payments/ybo8zayk2q/history
+                    data:
+                      - status: PENDING
+                        createDateTime: '2019-02-28T10:43:07+00:00'
+                      - status: PENDING_APPROVAL
+                        createDateTime: '2019-02-28T10:44:07+01:00'
+                    page:
+                      pageNumber: 1
+                      pageSize: 10
+                      totalElements: 1
+                      totalPages: 1
+                    sort: []
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: T0000
+                    returnDescription: Validation errors occurred. Please see details.
+                    details:
+                      description: Page Number is invalid
+                      code: T0001
+                      field: page
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: null
+                    returnDescription: null
+                    details: null
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: null
+                    returnDescription: null
+                    details: null
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: null
+                    returnDescription: null
+                    details: null
+        '405':
+          description: Method Not Allowed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: null
+                    returnDescription: null
+                    details: null
+        '429':
+          description: Too Many Requests
+          x-sentenial:
+            enriched: 'true'
+          headers:
+            Retry-After:
+              description: Number in seconds to wait
+              schema:
+                type: integer
+                format: int32
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: null
+                    returnDescription: null
+                    details: null
+  /payments/{paymentId}/refunds:
+    post:
+      tags:
+        - PISP Service
+      summary: Refund Payment
+      operationId: PispService_refundPayment
+      security:
+        - MerchantOAuth2:
+            - openbanking_refund
+        - MerchantApiKey: []
+      description: Refund a payment using POST
+      parameters:
+        - description: The ID of the payment which you want to refund
+          name: paymentId
+          in: path
+          required: true
+          schema:
+            type: string
+        - description: >-
+            Every request will be processed only once per x-idempotency-key. 
+            The Idempotency Key will be valid for 24 hours.
+          name: Idempotency-Key
+          x-sentenial:
+            enriched: true
+          in: header
+          required: false
+          schema:
+            type: string
+            maxLength: 50
+      requestBody:
+        description: Refund an exising payment
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentRefundRequest'
+        required: true
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentRefundResponseEnvelope'
+              examples:
+                response:
+                  value:
+                    uri: /payments/ybo8zayk2q/refunds/azo4kal13b
+                    data:
+                      id: azo4kal13b
+                      uri: /payments/ybo8zayk2q/refunds/azo4kal13b
+                      creationDateTime: '2019-02-28T10:43:07.00Z'
+                      lastUpdateDateTime: '2019-02-28T10:43:07.00Z'
+                      status: REFUND_PENDING
+                      refundAmount: 100.01
+                      compensationAmount: 10.01
+                      currency: GBP
+                      remittanceInformation:
+                        reference: reference
+                        unstructured: unstructuredRemittanceInfo
+                      endToEndIdentification: endToEndIdentification
+                      errorDetails: null
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: T0000
+                    returnDescription: Validation errors occurred. Please see details.
+                    details:
+                      description: Field is invalid
+                      code: T0004
+                      field: email
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: null
+                    returnDescription: null
+                    details: null
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: null
+                    returnDescription: null
+                    details: null
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: null
+                    returnDescription: null
+                    details: null
+        '405':
+          description: Method Not Allowed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: null
+                    returnDescription: null
+                    details: null
+        '415':
+          description: Unsupported Media Type
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: null
+                    returnDescription: null
+                    details: null
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: T0000
+                    returnDescription: Validation errors occurred. Please see details.
+                    details:
+                      description: Amount has to be greater than 0.
+                      code: T0016
+                      field: amount
+        '429':
+          description: Too Many Requests
+          x-sentenial:
+            enriched: 'true'
+          headers:
+            Retry-After:
+              description: Number in seconds to wait
+              schema:
+                type: integer
+                format: int32
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: null
+                    returnDescription: null
+                    details: null
+    get:
+      tags:
+        - PISP Service
+      summary: List Payment Refunds
+      operationId: PispService_getPaymentRefunds
+      security:
+        - MerchantOAuth2:
+            - openbanking_refund_read
+        - MerchantApiKey: []
+      description: List refunds using GET
+      parameters:
+        - description: The ID of the payment for which you want to list refunds
+          name: paymentId
+          in: path
+          required: true
+          schema:
+            type: string
+        - description: >-
+            Submission from date time in the format, 'yyyy-MM-dd'T'HH:mm:ss',
+            maximum create date from/to create date range is 30 days. If neither
+            from/to date is provided returns results for the last 30 days.
+          name: fromcreationdatetime
+          in: query
+          required: false
+          schema:
+            type: string
+        - description: >-
+            Submission to date time in the format, 'yyyy-MM-dd'T'HH:mm:ss',
+            maximum create date from/to create date range is 30 days. If neither
+            from/to date is provided returns results for the last 30 days.
+          name: tocreationdatetime
+          in: query
+          required: false
+          schema:
+            type: string
+        - description: >-
+            When provided only payments with amount equal or higher than
+            provided amount will be returned
+          name: fromrefundamount
+          in: query
+          required: false
+          schema:
+            type: number
+            minimum: 0
+            maximum: 999999999.99
+        - description: >-
+            When provided only payments with amount equal or smaller than 
+            provided amount will be returned
+          name: torefundamount
+          in: query
+          required: false
+          schema:
+            type: number
+            minimum: 0
+            maximum: 999999999.99
+        - description: >-
+            A number of statuses can be queried within a single request by
+            providing multiple occurences of the parameter. If not provided all
+            statuses will be returned
+          name: refundstatus
+          in: query
+          required: false
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - ALL
+                - REFUND_REJECTED
+                - REFUND_COMPLETE
+                - REFUND_PENDING
+        - description: Page number
+          name: pagenumber
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 1
+        - description: Page size
+          name: pagesize
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 20
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentRefundListResponseEnvelope'
+              examples:
+                response:
+                  value:
+                    uri: /payments/ybo8zayk2q/refunds/
+                    data:
+                      - id: azo4kal13bX
+                        uri: /payments/ybo8zayk2q/refunds/azo4kal13b
+                        creationDateTime: '2019-02-28T10:43:07.00Z'
+                        lastUpdateDateTime: '2019-02-28T10:43:07.00Z'
+                        status: REFUND_PENDING
+                        refundAmount: 100.01
+                        compensationAmount: 10.01
+                        currency: GBP
+                        remittanceInformation:
+                          reference: reference
+                          unstructured: unstructuredRemittanceInfo
+                        endToEndIdentification: endToEndIdentification
+                        errorDetails: null
+                    page:
+                      pageNumber: 1
+                      pageSize: 10
+                      totalElements: 1
+                      totalPages: 1
+                    sort: []
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: T0000
+                    returnDescription: Validation errors occurred. Please see details.
+                    details:
+                      description: Field is invalid
+                      code: T0004
+                      field: email
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: null
+                    returnDescription: null
+                    details: null
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: null
+                    returnDescription: null
+                    details: null
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: null
+                    returnDescription: null
+                    details: null
+        '405':
+          description: Method Not Allowed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: null
+                    returnDescription: null
+                    details: null
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: T0000
+                    returnDescription: Validation errors occurred. Please see details.
+                    details:
+                      description: Amount has to be greater than 0.
+                      code: T0016
+                      field: amount
+        '429':
+          description: Too Many Requests
+          headers:
+            Retry-After:
+              description: Number in seconds to wait
+              schema:
+                type: integer
+                format: int32
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: null
+                    returnDescription: null
+                    details: null
+  /payments/{paymentId}/refunds/{refundId}:
+    get:
+      tags:
+        - PISP Service
+      summary: Retrieve Refund
+      operationId: PispService_getRefund
+      security:
+        - MerchantOAuth2:
+            - openbanking_refund_read
+        - MerchantApiKey: []
+      description: GET Refund details endpoint
+      parameters:
+        - description: The ID of the payment for which you want to retrieve details
+          name: paymentId
+          in: path
+          required: true
+          schema:
+            type: string
+        - description: The ID of the refund for which you want to retrieve details
+          name: refundId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentRefundResponseEnvelope'
+              examples:
+                response:
+                  value:
+                    uri: /payments/ybo8zayk2q/refunds/azo4kal13b
+                    data:
+                      id: azo4kal13bX
+                      uri: /payments/ybo8zayk2q/refunds/azo4kal13b
+                      creationDateTime: '2019-02-28T10:43:07.00Z'
+                      lastUpdateDateTime: '2019-02-28T10:43:07.00Z'
+                      status: REFUND_REJECTED
+                      refundAmount: 100.01
+                      compensationAmount: 10.01
+                      currency: GBP
+                      remittanceInformation:
+                        reference: reference
+                        unstructured: unstructuredRemittanceInfo
+                      endToEndIdentification: endToEndIdentification
+                      errorDetails:
+                        - '5008'
+                        - '5016'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: null
+                    returnDescription: null
+                    details: null
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: null
+                    returnDescription: null
+                    details: null
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: null
+                    returnDescription: null
+                    details: null
+        '405':
+          description: Method Not Allowed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: null
+                    returnDescription: null
+                    details: null
+        '429':
+          description: Too Many Requests
+          x-sentenial:
+            enriched: 'true'
+          headers:
+            Retry-After:
+              description: Number in seconds to wait
+              schema:
+                type: integer
+                format: int32
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                response:
+                  value:
+                    returnCode: null
+                    returnDescription: null
+                    details: null
+components:
+  securitySchemes:
+    MerchantApiKey:
+      type: http
+      scheme: basic
+    PartnerApiKey:
+      type: http
+      scheme: basic
+    MerchantOAuth2:
+      type: oauth2
+      flows:
+        password:
+          tokenUrl: https://api.nuapay.com/oauth/token_key
+          scopes:
+            openbanking_pisp: Payment Initiation Service Provider access
+            openbanking_pisp_read: Read Account and Payment Information  access
+            openbanking_refund: Open Banking Refund access
+            openbanking_refund_read: Read Open Banking Refunds access
+            openbanking_callback: Open Banking callback forwarding access
+    PartnerOAuth2:
+      type: oauth2
+      flows:
+        password:
+          tokenUrl: https://api.nuapay.com/oauth/token_key
+          scopes:
+            openbanking_aisp: Account Information Service Provider access
+            openbanking_pisp: Payment Initiation Service Provider access
+            openbanking_pisp_read: Read Account and Payment Information  access
+            openbanking_callback: Open Banking callback forwarding access
+  schemas:
+    Address:
+      description: Postal Address Details.
+      type: object
+      properties:
+        streetName:
+          description: Name of a street or thoroughfare.
+          type: string
+          minLength: 1
+          maxLength: 70
+        buildingNumber:
+          description: Number that identifies the position of a building on a street.
+          type: string
+          minLength: 1
+          maxLength: 16
+        postCode:
+          description: >-
+            Identifier consisting of a group of letters and/or numbers that is
+            added to a postal address to assist the sorting of mail.
+          type: string
+          minLength: 1
+          maxLength: 16
+        townName:
+          description: >-
+            Name of a built-up area, with defined boundaries, and a local
+            government.
+          type: string
+          minLength: 1
+          maxLength: 35
+        country:
+          description: ISO 3166 ALPHA2 country code.
+          type: string
+          pattern: ^[A-Z]{2,2}$
+        addressLine:
+          description: >-
+            Information that locates and identifies a specific address, as
+            defined by postal services, presented in free format text.
+          items:
+            type: string
+            minLength: 1
+            maxLength: 70
+          type: array
+          minItems: 0
+          maxItems: 2
+    Bank:
+      title: Bank
+      type: object
+      required:
+        - id
+        - uri
+        - logo
+        - name
+        - supportedCurrencies
+        - country
+        - countries
+        - debtorAccountRequired
+        - services
+      properties:
+        id:
+          description: The Banks Id
+          type: string
+        uri:
+          description: Uri to Bank Resource
+          type: string
+        name:
+          description: The Banks Name
+          type: string
+        logo:
+          description: The Banks Logo http location
+          type: string
+        supportedCurrencies:
+          description: Holds list of payment currencies that the bank can process.
+          type: array
+          items:
+            description: ISO currency code.
+            type: string
+        country:
+          description: >-
+            The main country the bank operates. ISO country code - indicates
+            where the Bank is located (ISO 3166 Alpha-2)
+          type: string
+        countries:
+          description: Holds the list of countries the bank operates.
+          type: array
+          items:
+            description: >-
+              ISO country code - indicates where the Bank is located (ISO 3166
+              Alpha-2)
+            type: string
+        debtorAccountRequired:
+          description: TRUE if debtorAccount is required by Aspsp.
+          type: boolean
+        lastUpdateDateTime:
+          description: Last date and time when bank's settings were updated.
+          type: string
+          format: date-time
+        bankMetaData:
+          $ref: '#/components/schemas/BankMetaData'
+        services:
+          description: >-
+            AISP if bank provides only AISP services and PISP if bank provides
+            only PISP services.
+          type: array
+          items:
+            description: Either AISP or PISP.
+            type: string
+        links:
+          type: array
+          items:
+            $ref: '#/components/schemas/RestResponseLink'
+    BankMetaData:
+      description: >-
+        Array containing additional bank meta data, includes parameters that are
+        either required, optional or not supported at a specific bank
+      type: object
+      properties:
+        debtorAddress:
+          description: >-
+            Indicates if 'Debtor Address' is required by the bank. Returns
+            either, 'required', 'optional' or 'notSupported'.
+          type: string
+        creditorAddress:
+          description: >-
+            Indicates if 'Creditor Address' is required by the bank. Returns
+            either, 'required', 'optional' or 'notSupported'.
+          type: string
+        remittanceInformation:
+          description: >-
+            Indicates if 'Remittance Information' is required by the bank.
+            Returns either, 'required', 'optional' or 'notSupported'.
+          type: string
+        psuId:
+          description: >-
+            Indicates if 'PSU-ID' is required by the bank. Returns either,
+            'required', 'optional' or 'notSupported'.
+          type: string
+        customerIpAddress:
+          description: >-
+            Indicates if 'Customer IP Address' is required by the bank. Returns
+            either, 'required', 'optional' or 'notSupported'.
+          type: string
+        sepaInstantReachability:
+          description: Indicates if SEPA instant payments are supported by the bank.
+          type: boolean
+        minimumPaymentValue:
+          description: >-
+            Indicates the minimum payment value accepted by the bank. A value of
+            0.00 indicates this parameter is not supported by the bank.
+          type: number
+        maximumPaymentValue:
+          description: >-
+            Indicates the maximum payment value accepted by the bank. A value of
+            0.00 indicates this parameter is not supported by the bank.
+          type: number
+    BanksResponse:
+      title: BanksResponse
+      type: object
+      required:
+        - data
+        - uri
+        - page
+        - sort
+      properties:
+        uri:
+          description: Holds queried resource uri.
+          type: string
+        data:
+          description: Banks collection
+          type: array
+          items:
+            $ref: '#/components/schemas/Bank'
+        page:
+          $ref: '#/components/schemas/RestResponsePaginationDetails'
+        sort:
+          type: array
+          items:
+            type: string
+      example:
+        uri: /banks
+        data:
+          - id: 8ow24y2pdx
+            uri: /banks/8ow24y2pdx
+            name: Nuapay
+            logo: https://www.nuapay.com/wp-content/uploads/2018/04/nuapay.svg
+            supportedCurrencies:
+              - GBP
+              - EUR
+            country: GB
+            countries:
+              - GB
+              - IE
+            debtorAccountRequired: false
+            lastUpdateDateTime: '2019-02-28T10:43:07.00Z'
+            bankMetaData:
+              debtorAddress: required
+              creditorAddress: required
+              remittanceInformation: optional
+              psuId: notSupported
+              customerIpAddress: notSupported
+              sepaInstantReachability: true
+              minimumPaymentValue: 0.01
+              maximumPaymentValue: 9999.99
+            services:
+              - AISP
+              - PISP
+            links:
+              - id: 8ww64y0phxX
+                resourceType: bankFamily
+                uri: /bankFamilies/8ww64y0phx
+        page:
+          pageNumber: 1
+          pageSize: 10
+          totalElements: 1
+          totalPages: 1
+        sort: []
+    BankFamilyResponse:
+      title: BankFamilyResponse
+      type: object
+      required:
+        - id
+        - uri
+        - name
+        - logo
+        - supportedCurrencies
+      properties:
+        id:
+          description: The Banks Family Id, used to group branches belong to the same Bank
+          type: string
+        uri:
+          description: Uri to Bank Family Resource
+          type: string
+        name:
+          description: The Bank Family Name
+          type: string
+        logo:
+          description: The Bank Family Logo http location
+          type: string
+        supportedCurrencies:
+          description: Holds list of payment currencies that the Bank Family can process.
+          type: array
+          items:
+            description: ISO currency code.
+            type: string
+        links:
+          type: array
+          items:
+            $ref: '#/components/schemas/RestResponseLink'
+    BankFamilyResponseEnvelope:
+      title: BankFamilyResponseEnvelope
+      type: object
+      required:
+        - data
+        - uri
+      properties:
+        uri:
+          description: Holds queried resource uri.
+          type: string
+        data:
+          description: Bank Family collection
+          type: array
+          items:
+            $ref: '#/components/schemas/BankFamilyResponse'
+      example:
+        uri: /bankFamily/
+        data:
+          id: 8ww64y0phxX
+          uri: /bankFamilies/8ww64y0phx
+          name: Nuapay France
+          logo: https://www.nuapay.com/wp-content/uploads/2018/04/nuapay.svg
+          supportedCurrencies:
+            - EUR
+    CreditorAccount:
+      title: CreditorAccount
+      description: >-
+        Unambiguous identification of the account of the creditor to which a
+        credit entry will be made as a result of the transaction.
+      type: object
+      required:
+        - identification
+        - schemeName
+      properties:
+        identification:
+          description: >-
+            Identification assigned by an institution to identify an account.
+            This identification is known by the account owner.
+          type: string
+          minLength: 1
+          maxLength: 34
+        name:
+          description: >-
+            Name of the account, as assigned by the account servicing
+            institution, in agreement with the account owner in order to provide
+            an additional means of identification of the account. Usage - The
+            account name is different from the account owner name. The account
+            name is used in certain user communities to provide a means of
+            identifying the account, in addition to the account owner's identity
+            and the account number.
+          type: string
+          minLength: 1
+          maxLength: 70
+        schemeName:
+          description: >-
+            Name of the identification scheme, in a coded form as published in
+            an external list.
+          type: string
+          enum:
+            - IBAN
+            - SortCodeAccountNumber
+        secondaryIdentification:
+          description: >-
+            Identification assigned by an institution to identify an account.
+            This identification is known by the account owner.
+          type: string
+          minLength: 1
+          maxLength: 34
+    DebtorAccount:
+      title: DebtorAccount
+      description: >-
+        Unambiguous identification of the account of the debtor to which a debit
+        entry will be made as a result of the transaction.
+      type: object
+      required:
+        - identification
+        - schemeName
+      properties:
+        identification:
+          description: >-
+            Identification assigned by an institution to identify an account.
+            This identification is known by the account owner.
+          type: string
+          minLength: 1
+          maxLength: 34
+        name:
+          description: >-
+            Name of the account, as assigned by the account servicing
+            institution, in agreement with the account owner in order to provide
+            an additional means of identification of the account. Usage: The
+            account name is different from the account owner name. The account
+            name is used in certain user communities to provide a means of
+            identifying the account, in addition to the account owner's identity
+            and the account number.
+          type: string
+          minLength: 1
+          maxLength: 70
+        schemeName:
+          description: >-
+            Name of the identification scheme, in a coded form as published in
+            an external list.
+          type: string
+          enum:
+            - IBAN
+            - SortCodeAccountNumber
+        secondaryIdentification:
+          description: >-
+            Identification assigned by an institution to identify an account.
+            This identification is known by the account owner.
+          type: string
+          minLength: 1
+          maxLength: 34
+    DeliveryAddress:
+      title: DeliveryAddress
+      description: >-
+        Information that locates and identifies a specific address, as defined
+        by postal services or in free format text.
+      type: object
+      required:
+        - country
+        - townName
+      properties:
+        addressLine:
+          description: >-
+            Information that locates and identifies a specific address, as
+            defined by postal services, that is presented in free format text.
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 70
+          maxItems: 2
+          minItems: 0
+        streetName:
+          description: Name of a street or thoroughfare.
+          type: string
+          minLength: 1
+          maxLength: 70
+        buildingNumber:
+          description: Number that identifies the position of a building on a street.
+          type: string
+          minLength: 1
+          maxLength: 16
+        postCode:
+          description: >-
+            Identifier consisting of a group of letters and/or numbers that is
+            added to a postal address to assist the sorting of mail.
+          type: string
+          minLength: 1
+          maxLength: 16
+        townName:
+          description: >-
+            Name of a built-up area, with defined boundaries, and a local
+            government.
+          type: string
+          minLength: 1
+          maxLength: 35
+        countrySubDivision:
+          description: >-
+            Identifies a subdivision of a country, for instance state, region,
+            county.
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 35
+          maxItems: 2
+          minItems: 0
+        country:
+          description: Nation with its own government, occupying a particular territory.
+          type: string
+          pattern: ^[A-Z]{2,2}$
+    ErrorDetail:
+      title: ErrorDetail
+      type: object
+      properties:
+        description:
+          description: Error description
+          type: string
+        code:
+          description: Error code
+          type: string
+        field:
+          description: JSON path to request object property the error is related to
+          type: string
+    ErrorResponse:
+      title: ErrorResponse
+      type: object
+      properties:
+        details:
+          description: Holds list of input validation errors
+          type: array
+          items:
+            $ref: '#/components/schemas/ErrorDetail'
+        returnCode:
+          description: Error type code
+          type: string
+        returnDescription:
+          description: Error type description
+          type: string
+    Items:
+      title: Items
+      type: object
+      properties:
+        description:
+          description: Brief description of the item being purchased by the PSU
+          type: string
+          minLength: 1
+          maxLength: 254
+        name:
+          description: The name of the item being purchased by the PSU.
+          type: string
+          minLength: 1
+          maxLength: 35
+        quantity:
+          description: Quantiy of the particular item being purchased by the PSU.
+          type: integer
+          format: int32
+        amount:
+          description: Amount of payment in the specified currency at the specified rate.
+          type: number
+          minimum: -999999999999.99
+          maximum: 999999999999.99
+          exclusiveMinimum: false
+          exclusiveMaximum: false
+    MultiAuthorisation:
+      description: The multiple authorisation flow response from the ASPSP.
+      type: object
+      properties:
+        status:
+          description: Specifies the status of the authorisation flow in code form.
+          type: string
+          enum:
+            - AUTHORISED
+            - AWAITING_FURTHER_AUTHORISATION
+            - REJECTED
+        numberRequired:
+          description: >-
+            Number of authorisations required for payment order (total required
+            at the start of the multi authorisation journey).
+          type: integer
+          format: int32
+        numberReceived:
+          description: Number of authorisations received.
+          type: integer
+          format: int32
+        lastUpdateDateTime:
+          description: Last date and time at the authorisation flow was updated.
+          type: string
+          format: date-time
+        expirationDateTime:
+          description: >-
+            Date and time at which the requested authorisation flow must be
+            completed.
+          type: string
+          format: date-time
+      required:
+        - status
+    OrderDetails:
+      title: OrderDetails
+      description: Holds Order Details related to payment amount.
+      type: object
+      properties:
+        items:
+          description: Holds list of the line items to be returned to the TPP UI
+          type: array
+          items:
+            $ref: '#/components/schemas/Items'
+    PaginatedListPaymentResponseEnvelope:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/PaymentResponse'
+        page:
+          $ref: '#/components/schemas/RestResponsePaginationDetails'
+        sort:
+          type: array
+          items:
+            type: string
+        uri:
+          description: resource Uri
+          type: string
+    PaginatedListBankFamiliesResponseEnvelope:
+      title: PaginatedListBankFamiliesResponseEnvelope
+      type: object
+      required:
+        - uri
+        - data
+        - page
+        - sort
+      properties:
+        uri:
+          description: resource Uri
+          type: string
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/BankFamilyResponse'
+        page:
+          $ref: '#/components/schemas/RestResponsePaginationDetails'
+        sort:
+          type: array
+          items:
+            type: string
+    PaymentRefundListResponseEnvelope:
+      type: object
+      required:
+        - data
+        - uri
+      properties:
+        uri:
+          description: resource Uri
+          type: string
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/PaymentRefundResponse'
+        page:
+          $ref: '#/components/schemas/RestResponsePaginationDetails'
+        sort:
+          type: array
+          items:
+            type: string
+    PaymentHistoryResponseEnvelope:
+      type: object
+      required:
+        - data
+        - uri
+      properties:
+        uri:
+          description: resource Uri.
+          type: string
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/PaymentHistoryEvent'
+        page:
+          $ref: '#/components/schemas/RestResponsePaginationDetails'
+        sort:
+          type: array
+          items:
+            type: string
+    PaymentHistoryEvent:
+      type: object
+      required:
+        - createDateTime
+        - status
+      properties:
+        id:
+          type: string
+        links:
+          type: array
+          items:
+            $ref: '#/components/schemas/RestResponseLink'
+        uri:
+          type: string
+        status:
+          description: paymentStatus
+          type: string
+          enum:
+            - PENDING
+            - PENDING_APPROVAL
+            - OAUTH_CALLBACK_COMPLETE
+            - AUTHORISED
+            - DECLINED
+            - SETTLEMENT_REJECTED
+            - SETTLEMENT_PENDING
+            - SETTLEMENT_IN_PROGRESS
+            - SETTLEMENT_COMPLETE
+            - CONSENT_API_REJECTED
+            - TIMEOUT
+            - CONSENT_TIMEOUT
+            - UNEXPECTED_ERROR
+            - UNKNOWN
+            - PAYMENT_RECEIVED
+        createDateTime:
+          description: >-
+            Date and time when a status has changed. An example is below:
+            2019-02-28T10:43:07+00:00
+          type: string
+          format: date-time
+    PaymentRequest:
+      title: PaymentRequest
+      type: object
+      required:
+        - amount
+        - countryCode
+        - currency
+      properties:
+        amount:
+          description: amount
+          type: number
+          minimum: 0.01
+          maximum: 999999999999.99
+          exclusiveMinimum: false
+          exclusiveMaximum: false
+        currency:
+          description: transaction currency
+          type: string
+          enum:
+            - GBP
+            - EUR
+            - PLN
+            - BGN
+            - HRK
+            - CZK
+            - DKK
+            - HUF
+            - RON
+            - SEK
+        countryCode:
+          description: >-
+            countryCode - ISO country code - indicates where customer is
+            domiciled (ISO 3166 Alpha-2)
+          type: string
+          pattern: ^[A-Z]{2}$
+        language:
+          description: >-
+            the customers preferred language, defaults to en ISO 639-1:
+            two-letter codes, one per language
+          type: string
+          pattern: ^[a-z]{2}$
+        email:
+          description: Email address where payment status notifications will be sent to
+          type: string
+          minLength: 1
+          maxLength: 254
+          pattern: .*@.*
+        orderDetails:
+          $ref: '#/components/schemas/OrderDetails'
+        integrationType:
+          description: >-
+            Allows to specify if the UI integration is done via Checkout,
+            Redirect or it is Self Hosted by the merchant.
+          type: string
+          enum:
+            - CHECKOUT
+            - SELF_HOSTED
+            - SELF_HOSTED_CALLBACK
+            - REDIRECT
+        merchantPostAuthUrl:
+          description: >-
+            The merchant url to redirect PSU post authorization step. The field
+            is required for following integration types SELF_HOSTED,
+            SELF_HOSTED_CALLBACK, REDIRECT.
+          type: string
+          minLength: 1
+          maxLength: 255
+        bankId:
+          description: >-
+            The bank id returned by List Banks API. This is the bank where PSU
+            holds its account
+          type: string
+          minLength: 1
+          maxLength: 10
+        endToEndIdentification:
+          description: >-
+            Unique identification assigned by the initiating party to
+            unambiguously identify the transaction.
+          type: string
+          minLength: 1
+          maxLength: 35
+        paymentTimeout:
+          description: A time in which the PSU can authorise the payment in seconds
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 7776000
+          exclusiveMinimum: false
+          exclusiveMaximum: false
+        remittanceInformation:
+          $ref: '#/components/schemas/RemittanceInformation'
+        requestedExecutionDate:
+          description: >-
+            Date the payment should be executed on. Defaults to current
+            processing date. Future date allowed only for EUR payments processed
+            by French Banks under STET standard.
+          type: string
+          format: date
+        debtorAccount:
+          $ref: '#/components/schemas/DebtorAccount'
+        debtorAddress:
+          $ref: '#/components/schemas/Address'
+        creditorAccount:
+          $ref: '#/components/schemas/CreditorAccount'
+        creditorAddress:
+          $ref: '#/components/schemas/Address'
+        paymentScheme:
+          description: >-
+            Allows to select payment scheme the payment should be initiated
+            with. Defaults to UK Faster Payments for GBP, SEPA Credit Transfer
+            for EUR, ELIXIR for PLN & DOMESTIC_PAYMENT for every other currency.
+          type: string
+          enum:
+            - UK_FASTER_PAYMENT
+            - SEPA_CREDIT_TRANSFER
+            - SEPA_INSTANT_CREDIT_TRANSFER
+            - ELIXIR_STANDARD_CREDIT_TRANSFER
+            - ELIXIR_EXPRESS_CREDIT_TRANSFER
+            - DOMESTIC_PAYMENT
+        risk:
+          $ref: '#/components/schemas/Risk'
+        merchantDisplayName:
+          description: Sets the Merchant's display name on the payment UI.
+          type: string
+          minLength: 1
+          maxLength: 70
+      example:
+        amount: 99.99
+        countryCode: GB
+        currency: GBP
+        email: client@example.com
+        language: en
+        endToEndIdentification: endToEndIdentification123
+        remittanceInformation:
+          reference: reference123
+        orderDetails:
+          items:
+            - description: Dublin(DUB) to London(LCY) - Adult Fare
+              name: Flights Outbound
+              quantity: 2
+              amount: 50
+            - description: Dublin(DUB) to London(LCY) - Adult Fare
+              name: Flights Return
+              quantity: 2
+              amount: 50
+            - description: Dublin(DUB) to London(LCY) - Adult Fare
+              name: Flights Return
+              quantity: 2
+              amount: 30
+            - description: null
+              name: Discounts
+              quantity: null
+              amount: -5
+            - description: null
+              name: Total
+              quantity: null
+              amount: 125
+        integrationType: SELF_HOSTED
+        merchantPostAuthUrl: https://merchant.openbanking.com/result
+        bankId: lyboxy9bqp
+        debtorAccount:
+          identification: 60161331926819
+          schemeName: SortCodeAccountNumber
+    PaymentResponse:
+      title: PaymentResponse
+      type: object
+      required:
+        - amount
+        - countryCode
+        - currency
+        - id
+        - merchantId
+        - organisationId
+        - creationDateTime
+        - uri
+        - status
+        - paymentTimeout
+      properties:
+        id:
+          description: id, this is used to get updates on the payment
+          type: string
+        userInterfacePaymentId:
+          description: >-
+            userInterfacePaymentId, this is used in UI flows to get updates on
+            the payment
+          type: string
+        uri:
+          description: Location of the resource
+          type: string
+        merchantId:
+          description: The ID of the merchant associated to the payment
+          type: string
+        organisationId:
+          description: Id of the Merchant Organisation.
+          type: string
+        creationDateTime:
+          description: Creation date and time for the payment resource
+          type: string
+          format: date-time
+        status:
+          description: paymentStatus, the latest payment status
+          type: string
+          enum:
+            - PENDING
+            - PENDING_APPROVAL
+            - OAUTH_CALLBACK_COMPLETE
+            - AUTHORISED
+            - DECLINED
+            - SETTLEMENT_REJECTED
+            - SETTLEMENT_PENDING
+            - SETTLEMENT_IN_PROGRESS
+            - SETTLEMENT_COMPLETE
+            - CONSENT_API_REJECTED
+            - TIMEOUT
+            - CONSENT_TIMEOUT
+            - UNEXPECTED_ERROR
+            - UNKNOWN
+            - PAYMENT_RECEIVED
+        amount:
+          description: Amount of the payment
+          type: number
+          minimum: 0.01
+          maximum: 999999999999.99
+          exclusiveMinimum: false
+          exclusiveMaximum: false
+        currency:
+          description: Transaction currency
+          type: string
+          enum:
+            - GBP
+            - EUR
+            - PLN
+            - BGN
+            - HRK
+            - CZK
+            - DKK
+            - HUF
+            - RON
+            - SEK
+        countryCode:
+          description: >-
+            countryCode - ISO country code - indicates where customer is
+            domiciled (ISO 3166 Alpha-2)
+          type: string
+          pattern: ^[A-Z]{2}$
+        language:
+          description: >-
+            the customers preferred language, defaults to en ISO 639-1:
+            two-letter codes, one per language
+          type: string
+          pattern: ^[a-z]{2}$
+        email:
+          description: Email address where payment status notifications will be sent to
+          type: string
+          minLength: 1
+          maxLength: 254
+          pattern: .*@.*
+        orderDetails:
+          $ref: '#/components/schemas/OrderDetails'
+        integrationType:
+          description: >-
+            Allows to specify if the UI integration is done via Checkout,
+            Redirect or it is Self Hosted by the merchant.
+          type: string
+          enum:
+            - CHECKOUT
+            - SELF_HOSTED
+            - SELF_HOSTED_CALLBACK
+            - REDIRECT
+        merchantPostAuthUrl:
+          description: >-
+            The merchant url to redirect PSU post authorization step. The field
+            is required for following integration types SELF_HOSTED,
+            SELF_HOSTED_CALLBACK, REDIRECT.
+          type: string
+          minLength: 1
+          maxLength: 255
+        bankId:
+          description: >-
+            The bank id returned by List Banks API. This is the bank where PSU
+            holds its account
+          type: string
+          minLength: 1
+          maxLength: 10
+        aspspAuthUrl:
+          description: >-
+            The ASPSP url to redirect the PSU to for authorization of the
+            payment
+          type: string
+          minLength: 1
+          maxLength: 2048
+        endToEndIdentification:
+          description: >-
+            Unique identification assigned by the initiating party to
+            unambiguously identify the transaction
+          type: string
+          minLength: 1
+          maxLength: 35
+        remittanceInformation:
+          $ref: '#/components/schemas/RemittanceInformation'
+        requestedExecutionDate:
+          description: Date that the payment has been requested to be executed on.
+          type: string
+          format: date
+        debtorBankName:
+          description: The name of the debtor bank
+          type: string
+          minLength: 1
+          maxLength: 70
+        debtorAccount:
+          $ref: '#/components/schemas/DebtorAccount'
+        debtorAddress:
+          $ref: '#/components/schemas/Address'
+        creditorAccount:
+          $ref: '#/components/schemas/CreditorAccount'
+        creditorAddress:
+          $ref: '#/components/schemas/Address'
+        paymentScheme:
+          description: >-
+            Allows to select payment scheme the payment should be initiated
+            with. Defaults to UK Faster Payments for GBP, SEPA Credit Transfer
+            for EUR, ELIXIR for PLN & DOMESTIC_PAYMENT for every other currency.
+          type: string
+          enum:
+            - UK_FASTER_PAYMENT
+            - SEPA_CREDIT_TRANSFER
+            - SEPA_INSTANT_CREDIT_TRANSFER
+            - ELIXIR_STANDARD_CREDIT_TRANSFER
+            - ELIXIR_EXPRESS_CREDIT_TRANSFER
+            - DOMESTIC_PAYMENT
+        risk:
+          $ref: '#/components/schemas/Risk'
+        merchantDisplayName:
+          description: Sets the Merchant's display name on the payment UI.
+          type: string
+          minLength: 1
+          maxLength: 70
+        cutOffDateTime:
+          description: Specified cut-off date and time for the payment consent.
+          type: string
+          format: date-time
+        expectedExecutionDateTime:
+          description: Expected execution date and time for the payment resource.
+          type: string
+          format: date-time
+        expectedSettlementDateTime:
+          description: Expected settlement date and time for the payment resource.
+          type: string
+          format: date-time
+        paymentTimeout:
+          description: A time in which the PSU can authorise the payment in seconds
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 7776000
+          exclusiveMinimum: false
+          exclusiveMaximum: false
+        psuId:
+          description: Client ID of the PSU in the ASPSP client interface.
+          type: string
+          minLength: 1
+          maxLength: 60
+        multiAuthorisation:
+          $ref: '#/components/schemas/MultiAuthorisation'
+        links:
+          type: array
+          items:
+            $ref: '#/components/schemas/RestResponseLink'
+    PaymentResponseEnvelope:
+      title: PaymentResponseEnvelope
+      type: object
+      required:
+        - data
+        - uri
+      properties:
+        uri:
+          description: Holds resource uri.
+          type: string
+        data:
+          $ref: '#/components/schemas/PaymentResponse'
+      example:
+        uri: /payments/re27gry2dw
+        data:
+          id: re27gry2dwX
+          uri: /payments/re27gry2dw
+          endToEndIdentification: endToEndIdentification123
+          debtorAccount:
+            identification: 60161331926819
+            name: null
+            schemeName: SortCodeAccountNumber
+            secondaryIdentification: null
+          risk:
+            paymentContextCode: Other
+            merchantCategoryCode: null
+            merchantCustomerIdentification: null
+            deliveryAddress: null
+          remittanceInformation:
+            reference: reference123
+            unstructured: null
+          status: PENDING_APPROVAL
+          amount: 99.99
+          currency: GBP
+          countryCode: GB
+          language: en
+          email: client@example.com
+          orderDetails:
+            items:
+              - description: Dublin(DUB) to London(LCY) - Adult Fare
+                name: Flights Outbound
+                quantity: 2
+                amount: 50
+              - description: Dublin(DUB) to London(LCY) - Adult Fare
+                name: Flights Return
+                quantity: 2
+                amount: 50
+              - description: Dublin(DUB) to London(LCY) - Adult Fare
+                name: Flights Return
+                quantity: 2
+                amount: 30
+              - description: null
+                name: Discounts
+                quantity: 0
+                amount: -5
+              - description: null
+                name: Total
+                quantity: 0
+                amount: 125
+          integrationType: SELF_HOSTED
+          merchantPostAuthUrl: https://merchant.openbanking.com/result
+          bankId: lyboxy9bqp
+          aspspAuthUrl: >-
+            https://any-aspsp.com/openbanking/authorize?response_type=code+id_token&scope=openid+payments&client_id=377aaa6a-70bf-4e95-ac19-2bac5270bacd&redirect_uri=https%3A%2F%2Fapi.nuapay.com%2Ftpp%2Fpayment-requests%2Foauth&state=df78b5f6-12c0-4646-b47c-4362217acb0a&nonce=bea92693-19da-4609-858e-86c79e908a08&request=eyJraWQiOiI2QlJZamgtc0VRUTNmNWlzc0lxWU9WNGNXdVUiLCJ0eXAiOiJKV1QiLCJhbGciOiJQUzI1NiJ9.eyJpc3MiOiIzNzdhYWE2YS03MGJmLTRlOTUtYWMxOS0yYmFjNTI3MGJhY2QiLCJyZXNwb25zZV90eXBlIjoiY29kZSBpZF90b2tlbiIsIm5vbmNlIjoiYmVhOTI2OTMtMTlkYS00NjA5LTg1OGUtODZjNzllOTA4YTA4IiwiY2xpZW50X2lkIjoiMzc3YWFhNmEtNzBiZi00ZTk1LWFjMTktMmJhYzUyNzBiYWNkIiwibWF4X2FnZSI6ODY0MDAsImF1ZCI6Imh0dHBzOlwvXC9hdXRob3Jpc2UtYXBpLmxsb3lkc2JhbmsuY28udWtcL3Byb2QwMVwvY2hhbm5lbFwvbHlkcyIsInNjb3BlIjoib3BlbmlkIHBheW1lbnRzIiwiY2xhaW1zIjp7InVzZXJpbmZvIjp7Im9wZW5iYW5raW5nX2ludGVudF9pZCI6eyJ2YWx1ZSI6IjY0YWQ5NWEwLWUzMWYtNGNiOC04NjM3LTdjOGRmOTc3MTJmOSIsImVzc2VudGlhbCI6dHJ1ZX19LCJpZF90b2tlbiI6eyJvcGVuYmFua2luZ19pbnRlbnRfaWQiOnsidmFsdWUiOiI2NGFkOTVhMC1lMzFmLTRjYjgtODYzNy03YzhkZjk3NzEyZjkiLCJlc3NlbnRpYWwiOnRydWV9LCJhY3IiOnsiZXNzZW50aWFsIjp0cnVlLCJ2YWx1ZXMiOlsidXJuOm9wZW5iYW5raW5nOnBzZDI6c2NhIiwidXJuOm9wZW5iYW5raW5nOnBzZDI6Y2EiXX19fSwicmVkaXJlY3RfdXJpIjoiaHR0cHM6XC9cL2FwaS5udWFwYXkuY29tXC90cHBcL3BheW1lbnQtcmVxdWVzdHNcL29hdXRoIiwic3RhdGUiOiJkZjc4YjVmNi0xMmMwLTQ2NDYtYjQ3Yy00MzYyMjE3YWNiMGEiLCJleHAiOjE1NzU0NTg3MTYsImlhdCI6MTU3NTQ1ODQxNiwianRpIjoiNDQyYmY4N2YtYzIxNC00NjgxLTk3ODYtZjIwZGM1YjIzOWYxIn0.IyeHKQQeU6x32CdUllkskLFWEjkJZKzvp8D4ZOwtlN3v32qmbh4hkGtwNilqZetqqq1ESB1InzfyAlb5S3GyZ_1pTV5UmFqsY60w4jIvSVQXmxKyCYIDrdgTvfa3IYOtA3vStpRpnHyXZfke7mBLGM0nn3YLEmujQ88T1kzq8v9rKTUKwgAE-NYLsYnXNg8dNlrl_lvXVou-J26keS5EaYMVSwHRXcZ8Vp51Hro5L3Py5KyG270RL-7AfJCrEOcvwKbHWOYthoZj1FcuuJWoCT80H1rtkw80vI8QpaQHhp8xYOGft4n6uf2WBhUVb9eBrl9B0GtWe3opBeFXzOtKyg
+          cutOffDateTime: null
+          expectedExecutionDateTime: null
+          expectedSettlementDateTime: null
+          merchantId: gabxwwv2l5
+          creationDateTime: '2020-05-01T08:25:29.291Z'
+          debtorBankName: Bank Name
+          psuId: 12345678-UE3212
+          multiAuthorisation:
+            status: null
+            numberRequired: null
+            numberReceived: null
+            lastUpdateDateTime: null
+            expirationDateTime: null
+          links:
+            - id: re27gry2dwX
+              resourceType: refunds
+              uri: /payments/re27gry2dw/refunds
+            - id: re27gry2dwX
+              resourceType: history
+              uri: /payments/re27gry2dw/history
+    PaymentRefundRequest:
+      type: object
+      required:
+        - refundAmount
+        - currency
+      properties:
+        refundAmount:
+          type: number
+          minimum: 0.01
+          maximum: 999999999999.99
+          exclusiveMinimum: false
+          exclusiveMaximum: false
+        compensationAmount:
+          type: number
+          minimum: 0.01
+          maximum: 999999999999.99
+          exclusiveMinimum: false
+          exclusiveMaximum: false
+        currency:
+          description: Transaction currency, must match original payment currency
+          type: string
+          enum:
+            - GBP
+            - EUR
+        endToEndIdentification:
+          description: >-
+            Unique identification assigned by the initiating party to
+            unambiguously identify the transaction. Note that the field length
+            is limited to 31 characters for payments in GBP currency, processed
+            via UK Faster Payments scheme
+          type: string
+          minLength: 1
+          maxLength: 35
+        remittanceInformation:
+          $ref: '#/components/schemas/RemittanceInformation'
+    PaymentRefundResponseEnvelope:
+      title: refundPaymentResponseEnvelope
+      type: object
+      required:
+        - data
+        - uri
+      properties:
+        uri:
+          description: Holds resource uri.
+          type: string
+        data:
+          $ref: '#/components/schemas/PaymentRefundResponse'
+      example:
+        uri: /payments/ybo8zayk2q/refunds/azo4kal13b
+        data:
+          id: azo4kal13bX
+          uri: /payments/ybo8zayk2q/refunds/azo4kal13b
+          creationDateTime: '2019-02-28T10:43:07.00Z'
+          lastUpdateDateTime: '2019-02-28T10:43:07.00Z'
+          reference: reference
+          status: REFUND_PENDING
+          refundAmount: 100.01
+          compensationAmount: 10.01
+          currency: GBP
+          remittanceInformation:
+            unstructured: unstructuredRemittanceInfo
+    PaymentRefundResponse:
+      title: PaymentRefundResponse
+      type: object
+      required:
+        - refundAmount
+        - currency
+        - id
+        - uri
+        - reference
+        - status
+        - creationDateTime
+      properties:
+        id:
+          description: id, this is used to get updates on the payment
+          type: string
+        uri:
+          description: Holds resource uri.
+          type: string
+        creationDateTime:
+          description: Date and time when refund was created.
+          type: string
+          format: date-time
+        lastUpdateDateTime:
+          description: Date and time when refund was last updated.
+          type: string
+          format: date-time
+        status:
+          description: paymentStatus, the latest payment status
+          type: string
+          enum:
+            - REFUND_PENDING
+            - REFUND_COMPLETE
+            - REFUND_REJECTED
+            - UNKNOWN
+        refundAmount:
+          description: amount
+          type: number
+          minimum: 0.01
+          maximum: 999999999999.99
+        compensationAmount:
+          description: amount
+          type: number
+          minimum: 0.01
+          maximum: 999999999999.99
+        currency:
+          description: transaction currency
+          type: string
+          enum:
+            - GBP
+            - EUR
+        remittanceInformation:
+          $ref: '#/components/schemas/RemittanceInformation'
+        endToEndIdentification:
+          description: >-
+            Unique identification assigned by the initiating party to
+            unambiguously identify the transaction.
+          type: string
+          maxLength: 35
+        errorDetails:
+          description: List of error codes associated to the refund request
+          type: array
+          items:
+            description: Payment error code(s)
+            type: string
+        links:
+          type: array
+          items:
+            $ref: '#/components/schemas/RestResponseLink'
+    RemittanceInformation:
+      title: RemittanceInformation
+      description: >-
+        Information supplied to enable the matching of an entry with the items
+        that the transfer is intended to settle, such as commercial invoices in
+        an accounts receivable system.
+      type: object
+      properties:
+        reference:
+          description: >-
+            Unique reference, as assigned by the creditor, to unambiguously
+            refer to the payment transaction.  Usage: If available, the
+            initiating party should provide this reference in the structured
+            remittance information, to enable reconciliation by the creditor
+            upon receipt of the amount of money. If the business context
+            requires the use of a creditor reference or a payment remit
+            identification, and only one identifier can be passed through the
+            end-to-end chain, the creditor's reference or payment remittance
+            identification should be quoted in the end-to-end transaction
+            identification. OB: The Faster Payments Scheme can only accept 18
+            characters for the ReferenceInformation field - which is where this
+            ISO field will be mapped.
+          type: string
+          minLength: 1
+          maxLength: 35
+        unstructured:
+          description: >-
+            Information supplied to enable the matching/reconciliation of an
+            entry with the items that the payment is intended to settle, such as
+            commercial invoices in an accounts receivable system, in an
+            unstructured form. 120 characters are available for client use. 20
+            characters are reserved for internal use.
+          type: string
+          minLength: 1
+          maxLength: 140
+    RestResponsePaginationDetails:
+      type: object
+      properties:
+        pageNumber:
+          description: Page Number
+          type: integer
+          format: int32
+        pageSize:
+          description: Page Size
+          type: integer
+          format: int32
+        totalElements:
+          description: Total Number of elements returned. Response parameter only
+          type: integer
+          format: int32
+        totalPages:
+          description: Total Number of pages returned. Response parameter only
+          type: integer
+          format: int32
+    Risk:
+      title: Risk
+      description: Risk
+      type: object
+      properties:
+        paymentContextCode:
+          description: Specifies the payment context.
+          type: string
+          enum:
+            - BillingGoodsAndServicesInAdvance
+            - BillingGoodsAndServicesInArrears
+            - PispPayee
+            - EcommerceMerchantInitiatedPayment
+            - FaceToFacePointOfSale
+            - TransferToSelf
+            - TransferToThirdParty
+            - BillPayment
+            - EcommerceGoods
+            - EcommerceServices
+            - Other
+            - PartyToParty
+        merchantCategoryCode:
+          description: >-
+            Category code conforms to ISO 18245, related to the type of services
+            or goods the merchant provides for the transaction.
+          type: string
+          minLength: 3
+          maxLength: 4
+        merchantCustomerIdentification:
+          description: The unique customer identifier of the PSU with the merchant.
+          type: string
+          minLength: 1
+          maxLength: 70
+        deliveryAddress:
+          $ref: '#/components/schemas/DeliveryAddress'
+        contractPresentIndicator:
+          description: Indicates if Payee has a contractual relationship with the PISP.
+          type: boolean
+        paymentPurposeCode:
+          description: >-
+            Category code, related to the type of services or goods that
+            corresponds to the underlying purpose of the payment that conforms
+            to Recommended UK Purpose Code in ISO 20022 Payment Messaging List
+          type: string
+          minLength: 3
+          maxLength: 4
+        beneficiaryPrepopulatedIndicator:
+          description: >-
+            Indicates if PISP has immutably prepopulated payment details in for
+            the PSU.
+          type: boolean
+        beneficiaryAccountType:
+          description: Specifies the extended type of account.
+          type: string
+          enum:
+            - Business
+            - BusinessSavingsAccount
+            - Charity
+            - Collection
+            - Corporate
+            - Ewallet
+            - Government
+            - Investment
+            - ISA
+            - JointPersonal
+            - Pension
+            - Personal
+            - PersonalSavingsAccount
+            - Premier
+            - Wealth
+    RestResponseLink:
+      type: object
+      properties:
+        id:
+          description: Encoded Id of linked resource
+          type: string
+        resourceType:
+          description: |-
+            Available link types,
+            - settings
+            - refunds
+            - history
+            - audit
+            - bankFamily
+          type: string
+        uri:
+          description: Resource URI
+          type: string
+    SetBankPaymentRequest:
+      type: object
+      required:
+        - bankId
+      properties:
+        bankId:
+          description: >-
+            The bank id returned by List Banks API. This is the bank where PSU
+            holds its account
+          type: string
+          minLength: 1
+          maxLength: 10
+        psuId:
+          description: Client ID of the PSU in the ASPSP client interface.
+          type: string
+          minLength: 1
+          maxLength: 60
+        debtorAccount:
+          $ref: '#/components/schemas/DebtorAccount'
+      example:
+        bankId: ybo8zd8j2q
+        psuId: 12345678-UE3212
+        debtorAccount:
+          identification: GB29NWBK60161331926819
+          schemeName: IBAN
+    PispServiceForwardPaymentCallbackRequest:
+      type: object
+      additionalProperties:
+        type: string
+      example:
+        code: KaIpmx
+        state: 3410742c-304d-4311-a54f-323f1f20f96f
+        id_token: >-
+          eyJraWQiOiJOdWFwYXlCYW5rX0tleUlEIiwiYWxnIjoiUlMyNTYifQ.eyJzdWIiOiJjZDBlNDkxNC1jNjRlLTQyODQtYTg0ZS0yYzc2NGI3NzU5MWYiLCJhdWQiOiJ0ZXN0IiwiY19oYXNoIjoiU2VWM1ZYU3YyVHNMVXhLdVdLWE9PUSIsImFjciI6WyJ1cm46b3BlbmJhbmtpbmc6cHNkMjpzY2EiXSwic19oYXNoIjoicjNHcm53YjFzNXZYaHRwOU1oYm1zdyIsIm9wZW5iYW5raW5nX2ludGVudF9pZCI6ImNkMGU0OTE0LWM2NGUtNDI4NC1hODRlLTJjNzY0Yjc3NTkxZiIsImtpZCI6Ik51YXBheUJhbmtfS2V5SUQiLCJpc3MiOiJodHRwczpcL1wvYXBpLmFscGhhbmJhbmsuY29tIiwiZXhwIjoxNTUzMDA4MTkwLCJpYXQiOjE1NTMwMDc1OTAsIm5vbmNlIjoiODJiMTNjMzYtZTIzOC00MDA2LTkzMjQtNDJhZmQ2YjMwOTJlIiwianRpIjoiNGI4ODk3NjQtOWQwMy00YWM1LTg2MDgtOGMzZGU2NzU2N2VkIn0.fRBht6BQtqNxbUKmeoNqzWyFykTVX6zMCLcqvnPt1m665l9a8Zuwa4oaY_-2pULshjwD9yptgRdQ8KbkQ1SddwQacZYwUvzzbE1kV6GwhuwvGNU9TihPvh55eE3nY9kYJywn5m6hgC0x81m1MhMeAikanNZIia7rryB30CKxDMt0sL-5CvnFdyr2_csjuXotekC_weDsY4WNqCu5LfZhVk0IixXNiDXFxxnR9qNOjQ5fTljITWoPQ0G1KYfW3DOs4Nb23oZe8b-RxLebD9R2kBiIWh79oGOg-8RZz36FDNSn5Skt1KAz_c9bv7Vbt-au6VY1_tPdvZ8sgd44M__rZQ
