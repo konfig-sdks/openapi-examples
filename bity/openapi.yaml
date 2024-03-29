@@ -1,0 +1,2309 @@
+openapi: 3.0.3
+info:
+  title: Bity Exchange API
+  description: >
+    The present document gives the technical details enabling one to make
+
+    request to and understand the responses of the Exchange API. Should you
+
+    want to know what is possible to do with the API, please consult the
+
+    product guide or have a look at the
+
+    [product page](https://go.bity.com/Exchange API).
+
+
+    Version 2 of the Exchange API (this version) is stable and should be
+
+    considered reliable. However, Bity reserves itself the right to correct
+
+    bugs in these API endpoints without considering such corrections as being
+
+    breaking changes.
+
+
+    Connection to the API happens over HTTP/1.1 (RFC 7231) and HTTP State
+
+    Management (RFC 6265) is required. Most libraries and user-agents allowing
+
+    HTTP requests to be performed already implements that for you as long as
+
+    cookies are not disabled and that you are requesting credentials to be
+
+    included in the requests.
+
+
+    API clients of registered partners add an optional `Client-ID` header to
+
+    the requests. This enables partners to benefit from profit sharing. See the
+
+    [corresponding section of the product
+    guide](https://doc.bity.com/exchange/guide.html#financial-partners)
+
+    for more details.
+
+
+    End-users can access the order status page via
+
+    [https://go.bity.com/order-status](https://go.bity.com/order-status). A
+
+    link to the status of a specific order can be constructed by appending the
+
+    order identifier to `https://go.bity.com/order-status?id=`. The order
+
+    status page allows to contact the Bity Support Team about a specific order.
+
+
+    The OpenAPI definition in YAML format is available
+
+    [here](https://doc.bity.com/exchange/exchange_api_v2.openapi.yaml).
+  version: 2.4.1
+  contact:
+    name: Bity SA
+    url: https://bity.com/
+  license:
+    name: Bity
+    url: https://go.bity.com/legal
+  termsOfService: https://go.bity.com/legal
+  x-konfig-ignore:
+    potential-incorrect-type: true
+servers:
+  - description: Bity Exchange API version 2
+    url: https://exchange.api.bity.com/v2
+tags:
+  - name: Orders
+  - name: Currencies
+paths:
+  /currencies:
+    summary: Get currencies
+    description: Available currencies are those exclusively supported by Bity.
+    get:
+      tags:
+        - Currencies
+      summary: List currencies
+      operationId: get_currencies
+      security:
+        - {}
+      parameters:
+        - description: >-
+            Comma-separated list of tags. Currencies that contain all tags will
+            be filtered.
+          explode: false
+          in: query
+          name: tags
+          required: false
+          schema:
+            items:
+              $ref: '#/components/schemas/CurrencyTag'
+            type: array
+          style: form
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              examples:
+                Filtered currencies:
+                  description: List currencies filtering by "fiat".
+                  value:
+                    currencies:
+                      - tags:
+                          - fiat
+                        code: CHF
+                        input_methods:
+                          - input_object_type: bank_account
+                            name: bank_transfer
+                          - input_object_type: online_instant_payment
+                            name: online_instant_payment
+                        max_digits_in_decimal_part: 2
+                      - tags:
+                          - fiat
+                        code: EUR
+                        input_methods:
+                          - input_object_type: bank_account
+                            name: bank_transfer
+                          - input_object_type: online_instant_payment
+                            name: online_instant_payment
+                        max_digits_in_decimal_part: 2
+                List currencies:
+                  description: List currencies without any filter.
+                  value:
+                    currencies:
+                      - tags:
+                          - crypto
+                        code: BTC
+                        input_methods:
+                          - input_object_type: crypto_address
+                            name: crypto_transaction
+                        max_digits_in_decimal_part: 8
+                      - tags:
+                          - fiat
+                        code: CHF
+                        input_methods:
+                          - input_object_type: bank_account
+                            name: bank_transfer
+                          - input_object_type: online_instant_payment
+                            name: online_instant_payment
+                        max_digits_in_decimal_part: 2
+                      - tags:
+                          - crypto
+                          - ethereum
+                        code: ETH
+                        input_methods:
+                          - input_object_type: crypto_address
+                            name: crypto_transaction
+                        max_digits_in_decimal_part: 18
+                      - tags:
+                          - fiat
+                        code: EUR
+                        input_methods:
+                          - input_object_type: bank_account
+                            name: bank_transfer
+                          - input_object_type: online_instant_payment
+                            name: online_instant_payment
+                        max_digits_in_decimal_part: 2
+                      - tags:
+                          - crypto
+                          - ethereum
+                          - erc20
+                        code: USDC
+                        input_methods:
+                          - input_object_type: crypto_address
+                            name: crypto_transaction
+                        max_digits_in_decimal_part: 6
+              schema:
+                $ref: '#/components/schemas/CurrenciesResponse'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+  /currencies/{currency_code}:
+    summary: Get a single currency
+    description: Obtain information about a specified currency.
+    get:
+      tags:
+        - Currencies
+      summary: Get a single currency
+      operationId: Currencies_getByCode
+      security:
+        - {}
+      parameters:
+        - description: >-
+            Currency code identifying the currency about which to return
+            information.
+          in: path
+          name: currency_code
+          required: true
+          schema:
+            $ref: '#/components/schemas/CurrencyCode'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              examples:
+                CHF:
+                  description: Details of the CHF currency
+                  value:
+                    tags:
+                      - fiat
+                    code: CHF
+                    input_methods:
+                      - input_object_type: bank_account
+                        name: bank_transfer
+                      - input_object_type: online_instant_payment
+                        name: online_instant_payment
+                    max_digits_in_decimal_part: 2
+              schema:
+                $ref: '#/components/schemas/CurrencyDetails'
+        '404':
+          description: Currency not found or unsupported
+        '429':
+          $ref: '#/components/responses/RateLimited'
+  /orders:
+    get:
+      tags:
+        - Orders
+      summary: List previously placed orders
+      operationId: list_orders
+      security:
+        - {}
+        - bity_account_oauth:
+            - https://auth.bity.com/scopes/exchange.history
+        - bity_account_oauth:
+            - https://auth.bity.com/scopes/exchange.audit
+        - bity_account_client_oauth:
+            - https://auth.bity.com/scopes/exchange.history
+        - bity_account_client_oauth:
+            - https://auth.bity.com/scopes/exchange.audit
+        - client_oauth:
+            - https://auth.bity.com/scopes/exchange.client-history
+        - client_oauth:
+            - https://auth.bity.com/scopes/exchange.client-history-full
+      description: |
+        Get a list of previously placed orders. Depending on the authentication
+        method used different orders will be returned.
+
+        When the `bity_account_oauth` or `bity_account_client_oauth` security
+        schemes are used, which orders are visible depends on the scope of the
+        access token.
+      parameters:
+        - description: >-
+            Number of the page to retrieve, defaults to the first page (1). See
+            also the `Link` header in the 200 response.
+          in: query
+          name: page
+          required: false
+          schema:
+            minimum: 1
+            type: number
+        - description: Number of orders to include in a page. When not specified, 100.
+          in: query
+          name: page_size
+          required: false
+          schema:
+            maximum: 100
+            minimum: 1
+            type: number
+        - description: |
+            When specified, restrict the orders listing to orders with a
+            specific status.
+
+            The currently understood values are:
+
+            - `finalized`: Only include orders that have reached a final state.
+            - `ongoing`: Only include orders that are not finalized.
+          in: query
+          name: status
+          required: false
+          schema:
+            enum:
+              - finalized
+              - ongoing
+            type: string
+      responses:
+        '200':
+          description: Successful operation.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListOrdersResponse'
+          headers:
+            Link:
+              $ref: '#/components/headers/Link'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+    post:
+      tags:
+        - Orders
+      summary: Place an order
+      operationId: place_order
+      security:
+        - {}
+        - bity_account_oauth:
+            - https://auth.bity.com/scopes/exchange.place
+        - bity_account_client_oauth:
+            - https://auth.bity.com/scopes/exchange.place
+        - client_oauth: []
+      description: |
+        It is possible to specify amount in the input or output in which case
+        the corresponding input or output amount will be computed.
+
+        The input or output amount can be estimated beforehand using the
+        dedicated endpoint, see "Estimate the amount of an order".
+
+        The input object must in principle contain the IBAN or crypto-address
+        which will be used to pay the order. In some cases, this is optional.
+        See "Estimate the amount of an order" to figure out if this information
+        can be omitted or not. Omitting the information increases the number of
+        situations were we can be required to cancel an order uppon
+        reception of the funds. To ensure a reliable execution of your order,
+        the crypto-address or IBAN must be provided and the paiment must be
+        made from the provided object.
+      requestBody:
+        content:
+          application/json:
+            examples:
+              Buy CHF with ETH:
+                description: |
+                  Request to place an order for buying CHF with ETH.
+                value:
+                  input:
+                    amount: '0.5'
+                    crypto_address: '0xf35074bbd0a9aee46f4ea137971feec024ab7048'
+                    currency: ETH
+                    type: crypto_address
+                  output:
+                    bic_swift: XXXXCHXXXXX
+                    currency: CHF
+                    iban: CH3600000000000000000
+                    owner:
+                      address: Brückenstrasse 12
+                      city: Bern
+                      country: CH
+                      name: John Doe
+                      zip: '3000'
+                    type: bank_account
+              Buy ETH with CHF and a credit card:
+                description: |
+                  Request to place an order for buying ETH with CHF. The CHF
+                  payment is to be made with a credit card.
+                value:
+                  input:
+                    amount: '0.5'
+                    currency: CHF
+                    type: online_instant_payment
+                  output:
+                    crypto_address: '0xf35074bbd0a9aee46f4ea137971feec024ab7048'
+                    currency: ETH
+                    type: crypto_address
+            schema:
+              $ref: '#/components/schemas/PlaceOrderRequest'
+      responses:
+        '201':
+          description: |
+            The order has been successfully created.
+
+            The `Location` header contains the URI (which can be relative) at
+            which the order status and details can be retrieved. That is the
+            `Location` header is meant to be interpreted as per RFC 7231 section
+            7.1.2.
+          headers:
+            Location:
+              description: URL to use for retrieving the details of the order.
+              schema:
+                type: string
+        '400':
+          description: >
+            Following cases:
+
+
+            - Unsupported currency pair.
+
+            - Quota exceeded for the bank account or crypto-address.
+
+            - Provided input payment address cannot be used currently. Please
+            try again later.
+
+            - Internal error.
+        '429':
+          $ref: '#/components/responses/RateLimited'
+  /orders/estimate:
+    summary: Estimate the input or output amounts of an order before placing it
+    description: |
+      Gets an accurate estimation for the output amount given an input amount
+      and vice-versa. It however does not take into account all the limitations
+      (such as currently consumed quota) that are enforced when an order is
+      placed. As such, obtaining an estimation does not guarantee that the
+      corresponding order can be placed.
+
+      The response also contains the minimum amount allowed for placing an
+      order with this pair. When the amount in the request is too small, an
+      estimation for the minimum amount is performed instead.
+    post:
+      tags:
+        - Orders
+      summary: Estimate the amount of an order
+      operationId: Orders_calculateAmountEstimate
+      security:
+        - {}
+        - bity_account_oauth: []
+        - bity_account_client_oauth:
+            - https://auth.bity.com/scopes/exchange.place
+        - client_oauth: []
+      description: |
+        The endpoint is similar to the endpoints allowing an order to be placed.
+        However, only the currencies and the input or output amount are
+        necessary in the request.
+
+        Providing optional information, such as `type` in the `input` and
+        `output` objects will result in a more precise estimate being returned.
+      requestBody:
+        content:
+          application/json:
+            examples:
+              Estimate for buying BTC with a credit card:
+                description: |
+                  Request an estimate for buying BTC, with 200 CHF paid via
+                  credit card.
+                value:
+                  input:
+                    amount: '200'
+                    currency: CHF
+                    type: online_instant_payment
+                  output:
+                    currency: BTC
+                    type: crypto_address
+              Estimate input amount:
+                description: Estimation the input amount for a given output amount.
+                value:
+                  input:
+                    currency: BTC
+                  output:
+                    amount: '0.5'
+                    currency: ETH
+              Estimate output amount:
+                description: Estimating the output amount for a given input amount.
+                value:
+                  input:
+                    amount: '1.00000000'
+                    currency: BTC
+                  output:
+                    currency: EUR
+            schema:
+              $ref: '#/components/schemas/AmountEstimateRequest'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              examples:
+                Estimate:
+                  description: |
+                    Example response to a request specifying the input or output
+                    amount.
+                  value:
+                    input:
+                      amount: '415.45'
+                      currency: CHF
+                      object_information_optional: true
+                      type: online_instant_payment
+                    ordering_requirements:
+                      account:
+                        satisfied: true
+                      account_quota:
+                        satisfied: true
+                      kyc:
+                        satisfied: true
+                    output:
+                      amount: '0.01000000'
+                      currency: BTC
+                      minimum_amount: '0.00020204'
+                      type: crypto_address
+                    price_breakdown:
+                      customer_trading_fee:
+                        amount: '3.32'
+                        currency: CHF
+                      instant_payment_fee:
+                        amount: '15.79'
+                        currency: CHF
+                      output_transaction_cost:
+                        amount: '0.00003972'
+                        currency: BTC
+              schema:
+                $ref: '#/components/schemas/AmountEstimate'
+        '400':
+          description: >-
+            Malformed request. <br> Invalid currency code. <br> Invalid currency
+            pair. <br> Invalid amount.
+        '429':
+          $ref: '#/components/responses/RateLimited'
+  /orders/estimate/multiple:
+    post:
+      tags:
+        - Orders
+      summary: Perform several estimations in one request
+      operationId: Orders_performMultipleEstimations
+      security:
+        - {}
+        - bity_account_oauth: []
+        - bity_account_client_oauth:
+            - https://auth.bity.com/scopes/exchange.place
+        - client_oauth: []
+      description: >-
+        This endpoint is equivalent to `/orders/estimate` except that several
+        estimations can be performed in a single request.
+      requestBody:
+        content:
+          application/json:
+            examples:
+              CHF to BTC and ETH:
+                description: |
+                  Request estimates for CHF→BTC and CHF→ETH.
+                value:
+                  - input:
+                      amount: '200'
+                      currency: CHF
+                    output:
+                      currency: BTC
+                  - input:
+                      amount: '200'
+                      currency: CHF
+                    output:
+                      currency: ETH
+            schema:
+              $ref: '#/components/schemas/OrdersPerformMultipleEstimationsRequest'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              examples:
+                CHF to BTC and ETH:
+                  description: |
+                    Estimates for CHF→BTC and CHF→ETH.
+                  value:
+                    - input:
+                        amount: '200.00'
+                        currency: CHF
+                        minimum_amount: '10.00'
+                        object_information_optional: false
+                        type: bank_account
+                      output:
+                        amount: '0.00493540'
+                        currency: BTC
+                        type: crypto_address
+                      price_breakdown:
+                        customer_trading_fee:
+                          amount: '1.60'
+                          currency: CHF
+                        non-verified_fee:
+                          amount: '0.80'
+                          currency: CHF
+                        output_transaction_cost:
+                          amount: '0.00003972'
+                          currency: BTC
+                    - input:
+                        amount: '200.00'
+                        currency: CHF
+                        minimum_amount: '10.00'
+                        object_information_optional: false
+                        type: bank_account
+                      output:
+                        amount: '0.089742853056898515'
+                        currency: ETH
+                        type: crypto_address
+                      price_breakdown:
+                        customer_trading_fee:
+                          amount: '1.60'
+                          currency: CHF
+                        non-verified_fee:
+                          amount: '0.80'
+                          currency: CHF
+                        output_transaction_cost:
+                          amount: '0.002167105536687000'
+                          currency: ETH
+              schema:
+                $ref: '#/components/schemas/OrdersPerformMultipleEstimationsResponse'
+        '400':
+          description: >-
+            This endpoint can produce the same errors as `/orders/estimate` in
+            addition to refusing to perform too many estimations in a single
+            call.
+        '429':
+          $ref: '#/components/responses/RateLimited'
+  /orders/{order_uuid}:
+    summary: Order details
+    get:
+      tags:
+        - Orders
+      summary: Get the details of an order
+      operationId: Orders_getOrderDetails
+      security:
+        - {}
+        - bity_account_oauth:
+            - https://auth.bity.com/scopes/exchange.audit
+        - bity_account_oauth:
+            - https://auth.bity.com/scopes/exchange.history
+        - bity_account_oauth:
+            - https://auth.bity.com/scopes/exchange.place
+        - bity_account_client_oauth:
+            - https://auth.bity.com/scopes/exchange.audit
+        - bity_account_client_oauth:
+            - https://auth.bity.com/scopes/exchange.history
+        - bity_account_client_oauth:
+            - https://auth.bity.com/scopes/exchange.place
+        - client_oauth: []
+      description: |
+        Please note the following:
+
+        - If the amount paid is not exactly the input amount, we can be
+          required to cancel the order, or the output amount will be adjusted
+          and extra fees could be charged.
+        - If it is sent in multiple transactions, we can be required to cancel
+          the order and extra processing fees could be charged.
+
+        ### Minimal details
+
+        When the request does not include sufficient credentials, only minimal
+        information is returned. If you are unexpectedly receiving only minimal
+        details, please double check which security scheme you are using and
+        used to place the order. When no security scheme is used, please make
+        sure you are making all the requests to the correct URLs and that
+        cookies are accepted and handled according to RFC 6265. Most user
+        agents handle that for you but cookies must not be disabled and you may
+        have to request the user-agent to include credentials in the request.
+
+        The full information is returned when one of the following is true:
+
+        - No security scheme is used and the order was placed while
+          unauthenticated, in the same session.
+        - The `bity_account_oauth` or `bity_account_oauth_client` security
+          scheme are used, the scope includes
+          `https://auth.bity.com/scopes/exchange.place` or
+          `https://auth.bity.com/scopes/exchange.history`, and the OAuth client
+          is the client having placed the order.
+        - The `bity_account_oauth` or `bity_account_oauth_client` security
+          scheme are used and the scope includes
+          `https://auth.bity.com/scopes/exchange.audit`.
+        - The `client_oauth` security scheme is used and the OAuth client is
+          the client having placed the order.
+
+        ### Output address signature
+
+        When the customer is not authenticated or has not gone through the KYC
+        process, crypto-to-crypto and fiat-to-crypto orders require the
+        signature of a message by the output address for the order to become
+        executable. When such a signature is required "message_to_sign" is
+        included in the response. The price will not be fixed and the payment
+        details will not be provided before the signature of the message is
+        submitted.
+
+        ### Input and output objects
+
+        The input type and output type can be one of "crypto_address" or
+        "bank_account".
+
+        - In case it is "crypto_address" the object additionally contains
+          "crypto_address".
+        - In case it is "bank_account" the object additionally contains "iban".
+
+        Whenever the input object contains iban or crypto_address, the input
+        must be paid from the corresponding object. If this is not the case, we
+        can be required to cancel the order and perform a refund uppon
+        reception of the funds and extra fees can be charged.
+
+        ### Payment details
+
+        This object describes how to pay the input amount.
+
+        There are two different possible types of payment details:
+        `"crypto_address"` and `"bank_account"`. Both types are described
+        bellow. The amount and the associated currency is found in the input
+        object.
+
+        #### Crypto-address
+
+        When the payment must be made to a crypto-address, the `type` is
+        `"crypto_address"` and the address to use as a destination address
+        is found in the `"crypto_address"` attribute. If the payment details
+        contain a `"memo"`, the cryptocurrency transaction must include it.
+
+        #### Bank account
+
+        When the payment must be made to a bank account, the type is
+        `"bank_account"`.
+
+        In most cases the banks involved in sending, transmitting and receiving
+        the payment will require the IBAN, SWIFT code and the bank account
+        owner name and address to process the payment. This is reflected by the
+        information provided in the response:
+
+        - `"iban"`: The IBAN to which the payment must be made.
+        - `"owner"`: An object containing information about the owner of the
+          bank account. It can contain the following properties: "name",
+          "address", "address_complement", "zip", "city", "state", "country".
+          The country is formatted as a two-letter country code.
+        - `"swift_bic"` The SWIFT code (also known as BIC) of the bank account
+          at which the bank account is located.
+
+        ### Amounts
+
+        When `timestamp_price_guaranteed` is not present or has elapsed, the
+        amounts (input, output and price breakdown) are an estimation of the
+        amounts that would have been used should the order have been executed
+        at the time the order details were retrieved.
+
+        When `timestamp_price_guaranteed` is present and has not elapsed, the
+        amounts correspond to the amounts that will be used provided that the
+        exact input amount is received before `timestamp_price_guaranteed`
+        elapses.
+      parameters:
+        - description: ID of the order.
+          in: path
+          name: order_uuid
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Order successfully retrieved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrdersGetOrderDetailsResponse'
+        '400':
+          description: Order with such ID not found.
+        '429':
+          $ref: '#/components/responses/RateLimited'
+  /orders/{order_uuid}/bank_transfer_qr_bill:
+    get:
+      tags:
+        - Orders
+      summary: Get the QR-bill of an order where the input is bank_transfer.
+      operationId: Orders_getQrBill
+      security:
+        - {}
+        - bity_account_oauth:
+            - https://auth.bity.com/scopes/exchange.place
+        - bity_account_client_oauth:
+            - https://auth.bity.com/scopes/exchange.place
+        - client_oauth: []
+      description: |
+        Retrieve a QR-bill that can be used to record a payment for the order in
+        e-banking systems.
+
+        Note that scanning the QR-bill will not ensure that the payment will be
+        made from the correct bank account. The user still need to choose the
+        correct bank account with which to pay the order in case the order was
+        created with information of the input bank account.
+      parameters:
+        - description: Identifier of the order for which to retrieve the QR-bill image.
+          in: path
+          name: order_uuid
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Image of the QR-bill.
+          content:
+            application/pdf: {}
+            image/*: {}
+        '404':
+          description: >-
+            The specified order does not exist, its input is not bank_transfer
+            or the order's input currency is not fiat.
+  /orders/{order_uuid}/cancel:
+    post:
+      tags:
+        - Orders
+      summary: Cancel an order
+      operationId: cancel_order
+      security:
+        - {}
+        - bity_account_oauth:
+            - https://auth.bity.com/scopes/exchange.place
+        - bity_account_client_oauth:
+            - https://auth.bity.com/scopes/exchange.place
+        - client_oauth: []
+      description: |
+        Attempt to cancel an order.
+
+        If a payment is received after the order has been cancelled, Bity is
+        free to choose what to do at its own discretion. Bity will generally
+        attempt to perform a refund to the same crypto-address or IBAN having
+        performed the payment. Various unpredictable fees may apply. It is very
+        highly recommended to not cancel orders for which a payment has already
+        been sent.
+
+        This functionality is meant for the customer to cancel orders for which
+        no payment has been made and will be made. In particular, it is not
+        meant to cancel orders for which a payment has already been made or
+        will be made at a later time, and will result in an unpredictable
+        outcome if used in such situation.
+      parameters:
+        - description: Identifier of the order to attempt to cancel
+          in: path
+          name: order_uuid
+          required: true
+          schema:
+            type: string
+      responses:
+        '202':
+          description: |
+            The request to cancel the order is being processed asynchronously.
+
+            It is at this time not possible to know whether the cancellation
+            attempt will be successful or not.
+        '204':
+          description: The cancellation attempt was successful.
+        '400':
+          description: The cancellation attempt was unsuccessful.
+        '429':
+          $ref: '#/components/responses/RateLimited'
+  /orders/{order_uuid}/duplicate:
+    post:
+      tags:
+        - Orders
+      summary: Duplicate an order
+      operationId: duplicate_order
+      security:
+        - {}
+        - bity_account_oauth:
+            - https://auth.bity.com/scopes/exchange.place
+        - bity_account_client_oauth:
+            - https://auth.bity.com/scopes/exchange.place
+        - client_oauth: []
+      description: |
+        This endpoint places a new order with the same amount, same input
+        object, same ouput object and same payment details as an already
+        executed one.
+
+        It is only possible to duplicate orders of which the full order details
+        are accessible.
+      parameters:
+        - description: ID of the order to duplicate.
+          in: path
+          name: order_uuid
+          required: true
+          schema:
+            type: string
+      responses:
+        '201':
+          description: |
+            The order has been successfully created.
+
+            The `Location` header contains the URI (which can be relative) at
+            which the order status and details can be retrieved. That is, the
+            `Location` header is meant to be interpreted as per RFC 7231
+            section 7.1.2.
+        '400':
+          description: >-
+            This operation can return the same errors as the `place_order`
+            operation (POST /orders).
+        '429':
+          $ref: '#/components/responses/RateLimited'
+  /orders/{order_uuid}/execute:
+    post:
+      tags:
+        - Orders
+      summary: Execute order
+      operationId: execute_order
+      security:
+        - {}
+        - bity_account_oauth:
+            - https://auth.bity.com/scopes/exchange.place
+        - bity_account_client_oauth:
+            - https://auth.bity.com/scopes/exchange.place
+        - client_oauth: []
+      description: |
+        This operation is only valid when the order input type is
+        `bity_account`.
+
+        Calling this endpoint indicates that the system can now proceed with
+        the execution of the order. Compared to other input types, calling
+        this endpoint is equivalent to paying the order.
+      parameters:
+        - description: Identifier of the order to attempt to execute
+          in: path
+          name: order_uuid
+          required: true
+          schema:
+            type: string
+      responses:
+        '202':
+          description: The order has been paid, execution is ongoing
+        '400':
+          description: Bad request
+  /orders/{order_uuid}/signature:
+    post:
+      tags:
+        - Orders
+      summary: Sign proof of wallet ownership message
+      operationId: Orders_submitSignature
+      security:
+        - {}
+        - bity_account_oauth:
+            - https://auth.bity.com/scopes/exchange.place
+        - bity_account_client_oauth:
+            - https://auth.bity.com/scopes/exchange.place
+        - client_oauth: []
+      description: |
+        Submit the signature of the message provided in the order details.
+
+        The body of the request must contain the signature of the message.
+        The message to sign is located in the `body` property of the
+        `message_to_sign` object of the order details.
+
+        Once the signature is verified to be correct (204 response), the
+        order becomes executable and the order details will contain the
+        `payment_details` object which provides the information to use to pay
+        the order.
+
+        Do not build the URL of this endpoint but instead use the value of
+        `signature_submission_url` included along the message to be signed in
+        the order details.
+      parameters:
+        - description: ID of the order.
+          in: path
+          name: order_uuid
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          '*/*':
+            examples:
+              bitcoin:
+                description: Example Bitcoin signature.
+                value: >-
+                  INLD1TamPfjszILEL+Q2DanJeldExqZ5YahJxS3FxqBfL9zDt+wtqgTRcB72Bq9H88meKlGl3WoPEplwBcYF52A=
+              ethereum:
+                description: Example Ethereum signature.
+                value: >-
+                  0x7709bc9c45926cc4d9791d868ad6c81883b624db44fbae1e62c0e6cc6c19784b74eb7
+            schema:
+              $ref: '#/components/schemas/OrdersSubmitSignatureRequest'
+          text/plain:
+            examples:
+              bitcoin:
+                description: Example Bitcoin signature.
+                value: >-
+                  INLD1TamPfjszILEL+Q2DanJeldExqZ5YahJxS3FxqBfL9zDt+wtqgTRcB72Bq9H88meKlGl3WoPEplwBcYF52A=
+              ethereum:
+                description: Example Ethereum signature.
+                value: >-
+                  0x7709bc9c45926cc4d9791d868ad6c81883b624db44fbae1e62c0e6cc6c19784b74eb7
+            schema:
+              $ref: '#/components/schemas/OrdersSubmitSignatureRequest1'
+      responses:
+        '204':
+          description: >-
+            The signature is correct, the order details now contain
+            `payment_details`.
+        '400':
+          description: The signature is invalid.
+        '404':
+          description: >-
+            The associated order could not be found or there is no message to
+            sign.
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '502':
+          description: Internal error.
+        '503':
+          description: Internal error.
+        '504':
+          description: Internal error.
+  /pairs:
+    summary: Get and filter currency pairs
+    description: Available currency pairs are those exclusively supported by Bity.
+    get:
+      tags:
+        - Currencies
+      summary: List currency pairs
+      operationId: Currencies_getList
+      security:
+        - {}
+      description: >-
+        Gets a list of all the currency pairs that can be traded through the
+        Bity platform.
+      parameters:
+        - description: >-
+            Retrieve all pairs for given input currency code. This parameter can
+            be repeated several times to match many input currencies.
+          in: query
+          name: input
+          required: false
+          schema:
+            type: string
+        - description: >-
+            Retrieve all pairs for given output currency code. This parameter
+            can be repeated several times to match many output currencies.
+          in: query
+          name: output
+          required: false
+          schema:
+            type: string
+        - description: Retrieve all pairs that are enabled for trading or not.
+          allowEmptyValue: true
+          in: query
+          name: enabled
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              examples:
+                normal_case:
+                  description: List currency pairs without any filter.
+                  value:
+                    pairs:
+                      - enabled: true
+                        input: BTC
+                        output: CHF
+                      - enabled: true
+                        input: CHF
+                        output: BTC
+                      - enabled: true
+                        input: ETH
+                        output: REP
+                      - enabled: true
+                        input: EUR
+                        output: ETH
+              schema:
+                $ref: '#/components/schemas/CurrencyPairsResponse'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+components:
+  responses:
+    RateLimited:
+      description: Rate-limited (request ignored)
+      headers:
+        Retry-After:
+          description: |
+            Number of seconds after which a new request will be allowed.
+          schema:
+            type: integer
+  callbacks: {}
+  headers:
+    Link:
+      description: >-
+        When applicable, links to the first, previous, next and last pages,
+        formatted as per RFC 5988.
+      schema:
+        type: string
+  links: {}
+  schemas:
+    Amount:
+      description: Decimal number as a string
+      example: '12.34'
+      type: string
+    AmountEstimate:
+      properties:
+        input:
+          $ref: '#/components/schemas/AmountEstimateInput'
+        ordering_requirements:
+          $ref: '#/components/schemas/OrderingRequirements'
+        output:
+          $ref: '#/components/schemas/AmountEstimateOutput'
+        price_breakdown:
+          $ref: '#/components/schemas/PriceBreakdown'
+      required:
+        - input
+        - output
+        - price_breakdown
+      type: object
+    AmountEstimateInput:
+      properties:
+        amount:
+          $ref: '#/components/schemas/InputAmount'
+        currency:
+          $ref: '#/components/schemas/CurrencyCode'
+        minimum_amount:
+          $ref: '#/components/schemas/Amount'
+        object_information_optional:
+          description: >-
+            When true, indicates that it is not required to provide information
+            about the object which is going to pay the order. In order to not
+            provide information about the input object, do not include
+            `bic_swift`, `crypto_address`, `iban`, `owner` and `type` in the
+            input object.
+          type: boolean
+        type:
+          $ref: '#/components/schemas/OrderInputType'
+      required:
+        - amount
+        - currency
+        - type
+      type: object
+    AmountEstimateOutput:
+      properties:
+        amount:
+          $ref: '#/components/schemas/OutputAmount'
+        currency:
+          $ref: '#/components/schemas/CurrencyCode'
+        minimum_amount:
+          $ref: '#/components/schemas/Amount'
+        type:
+          $ref: '#/components/schemas/OrderOutputType'
+      required:
+        - amount
+        - currency
+        - type
+      type: object
+    AmountEstimateRequest:
+      oneOf:
+        - $ref: '#/components/schemas/InputAmountEstimateRequest'
+        - $ref: '#/components/schemas/OutputAmountEstimateRequest'
+    AmountEstimateRequestCommon:
+      properties:
+        fix_invalid_amount:
+          description: |
+            When `true`, the server may adjust the specified amount and perform
+            an estimation for that adjusted amount instead of returning an error
+            response indicating that the specified amount is invalid.
+
+            For instance, when this option is `true`, the server will correct an
+            amount of "70.123 EUR" to "70.12 EUR".
+
+            This option defaults to `false`.
+
+            Regardless of the value of this option, the server may return an
+            estimate for a different amount in case the specified amount is too
+            large or too small.
+          type: boolean
+        partner_fee:
+          $ref: '#/components/schemas/PartnerFee'
+      type: object
+    AmountEstimateRequestInputCommon:
+      description: |
+        When `type` is not specified, it defaults to `"bank_account"` for fiat
+        currencies and `"crypto_address"` for crypto currencies.
+      properties:
+        currency:
+          $ref: '#/components/schemas/CurrencyCode'
+        type:
+          $ref: '#/components/schemas/OrderInputType'
+      required:
+        - currency
+      type: object
+    AmountEstimateRequestOutputCommon:
+      description: |
+        When `type` is not specified, it defaults to `"bank_account"` for fiat
+        currencies and `"crypto_address"` for crypto currencies.
+      properties:
+        currency:
+          $ref: '#/components/schemas/CurrencyCode'
+        type:
+          $ref: '#/components/schemas/OrderOutputType'
+      required:
+        - currency
+      type: object
+    ClientValue:
+      description: >-
+        An arbitrary integer provided by the API client. The property is shown
+        in the order details and in the reporting API.
+      type: integer
+    CountryCode:
+      description: Two-letter country code (ISO 3166-1 alpha-2).
+      example: CH
+      type: string
+    Currencies:
+      items:
+        $ref: '#/components/schemas/CurrencyDetails'
+      type: array
+    CurrenciesResponse:
+      properties:
+        currencies:
+          $ref: '#/components/schemas/Currencies'
+      required:
+        - currencies
+      type: object
+    CurrencyCode:
+      example: BTC
+      type: string
+    CurrencyDetails:
+      example:
+        tags:
+          - crypto
+          - ethereum
+        code: ETH
+        max_digits_in_decimal_part: 18
+      properties:
+        tags:
+          $ref: '#/components/schemas/CurrencyTags'
+        code:
+          $ref: '#/components/schemas/CurrencyCode'
+        input_methods:
+          items:
+            $ref: '#/components/schemas/CurrencyDetailsInputMethod'
+          type: array
+        max_digits_in_decimal_part:
+          description: >-
+            The maximum number of digits in the fractional part of values
+            represented with decimal numbers.
+          type: integer
+      required:
+        - code
+        - input_methods
+        - tags
+      type: object
+    CurrencyDetailsInputMethod:
+      properties:
+        input_object_type:
+          $ref: '#/components/schemas/OrderInputType'
+        name:
+          type: string
+      required:
+        - name
+        - input_object_type
+      type: object
+    CurrencyPair:
+      example:
+        enabled: true
+        input: BTC
+        output: CHF
+      properties:
+        enabled:
+          type: boolean
+        input:
+          $ref: '#/components/schemas/CurrencyCode'
+        output:
+          $ref: '#/components/schemas/CurrencyCode'
+      required:
+        - input
+        - output
+        - enabled
+      type: object
+    CurrencyPairs:
+      items:
+        $ref: '#/components/schemas/CurrencyPair'
+      type: array
+    CurrencyPairsResponse:
+      properties:
+        pairs:
+          $ref: '#/components/schemas/CurrencyPairs'
+      required:
+        - pairs
+      type: object
+    CurrencyTag:
+      enum:
+        - crypto
+        - erc20
+        - ethereum
+        - fiat
+      type: string
+    CurrencyTags:
+      items:
+        $ref: '#/components/schemas/CurrencyTag'
+      type: array
+    InputAmount:
+      description: |
+        Decimal number. Input amount of the exchange; amount to be sent by
+        the customer.
+
+        The input amount is all inclusive. Costs and fees are included.
+      type: string
+    InputAmountEstimateRequest:
+      allOf:
+        - $ref: '#/components/schemas/AmountEstimateRequestCommon'
+        - properties:
+            input:
+              $ref: '#/components/schemas/AmountEstimateRequestInputCommon'
+            output:
+              $ref: '#/components/schemas/InputAmountEstimateRequestOutput'
+          required:
+            - input
+            - output
+          type: object
+    InputAmountEstimateRequestOutput:
+      allOf:
+        - $ref: '#/components/schemas/AmountEstimateRequestOutputCommon'
+        - properties:
+            amount:
+              $ref: '#/components/schemas/OutputAmount'
+          required:
+            - amount
+          type: object
+    MessageToSign:
+      description: |
+        A message to be signed. The signature must be sent in the body of a
+        POST request to the URL specified by `signature_submission_url`. This
+        endpoint returns a 204 status code uppon submission of a valid
+        signature.
+
+        The message must be encoded as UTF-8 and the resulting sequence of
+        bytes signed. Make sure to keep the message intact, including all white
+        spaces. Use "eth_sign" with Ethereum addresses and "signmessage" with
+        Bitcoin addresses. Keep the signature in the format provided by those
+        calls (at the time of writing it is an hexadecimal string for Ethereum
+        and base64 string for Bitcoin).
+      properties:
+        body:
+          type: string
+        signature_submission_url:
+          type: string
+      required:
+        - body
+        - signature_submission_url
+      type: object
+    Order:
+      example:
+        id: 209a6210-4ea3-43e4-ba92-73aac60fb10c
+        input:
+          amount: '0.5'
+          crypto_address: '0x24305d091f79ee490a34de080b0db5773be5bef4'
+          currency: ETH
+          type: crypto_address
+        output:
+          amount: '104.95'
+          bic_swift: BCNNCH22
+          currency: CHF
+          iban: CH3600000000000000000
+          owner:
+            address: Rue des Fahrys 2
+            city: Neuchatel
+            country: CH
+            name: John Doe
+          type: bank_account
+        payment_details:
+          crypto_address: '0xf35074bbd0a9aee46f4ea137971feec024ab7048'
+          type: crypto_address
+        timestamp_cancelled: '2019-01-25T01:06:11.632Z'
+        timestamp_created: '2019-01-24T13:14:07.368Z'
+      properties:
+        client_value:
+          $ref: '#/components/schemas/ClientValue'
+        id:
+          description: Unique identifier of the order.
+          type: string
+        input:
+          $ref: '#/components/schemas/OrderInput'
+        message_to_sign:
+          $ref: '#/components/schemas/MessageToSign'
+        output:
+          $ref: '#/components/schemas/OrderOutput'
+        payment_details:
+          $ref: '#/components/schemas/PaymentDetails'
+        price_breakdown:
+          $ref: '#/components/schemas/PriceBreakdown'
+        timestamp_awaiting_payment_since:
+          $ref: '#/components/schemas/OrderTimestampAwaitingPaymentSince'
+        timestamp_cancelled:
+          $ref: '#/components/schemas/OrderTimestampCancelled'
+        timestamp_created:
+          $ref: '#/components/schemas/OrderTimestampCreated'
+        timestamp_executed:
+          $ref: '#/components/schemas/OrderTimestampExecuted'
+        timestamp_payment_received:
+          $ref: '#/components/schemas/OrderTimestampPaymentReceived'
+        timestamp_price_guaranteed:
+          $ref: '#/components/schemas/OrderTimestampPriceGuaranteed'
+      required:
+        - id
+        - input
+        - output
+        - price_breakdown
+        - timestamp_created
+      type: object
+    OrderId:
+      description: Unique identifier of the order.
+      example: 7037ca0b-a0ad-4d62-9ec7-8a41e4b9675c
+      type: string
+    OrderInput:
+      oneOf:
+        - $ref: '#/components/schemas/OrderInputBankAccount'
+        - $ref: '#/components/schemas/OrderInputBityAccount'
+        - $ref: '#/components/schemas/OrderInputCryptoAddress'
+        - $ref: '#/components/schemas/OrderInputOnlineInstantPayment'
+        - $ref: '#/components/schemas/OrderInputUnknown'
+    OrderInputBankAccount:
+      properties:
+        amount:
+          $ref: '#/components/schemas/InputAmount'
+        bic_swift:
+          description: |
+            BIC code of the bank account that will be used to pay the order.
+          type: string
+        currency:
+          $ref: '#/components/schemas/CurrencyCode'
+        iban:
+          description: |
+            IBAN of the bank account that will be used to pay the order.
+
+            If present the order must be paid from the specified bank
+            account.
+          type: string
+        owner:
+          description: |
+            Information about the owner of the bank account that will pay
+            the order.
+          properties:
+            address:
+              type: string
+            address_complement:
+              type: string
+            city:
+              type: string
+            country:
+              $ref: '#/components/schemas/CountryCode'
+            name:
+              type: string
+            state:
+              type: string
+            zip:
+              type: string
+          type: object
+        type:
+          enum:
+            - bank_account
+          type: string
+      required:
+        - currency
+        - type
+      type: object
+    OrderInputBityAccount:
+      properties:
+        amount:
+          $ref: '#/components/schemas/InputAmount'
+        currency:
+          $ref: '#/components/schemas/CurrencyCode'
+        type:
+          enum:
+            - bity_account
+          type: string
+      required:
+        - currency
+        - type
+      type: object
+    OrderInputCryptoAddress:
+      properties:
+        amount:
+          $ref: '#/components/schemas/InputAmount'
+        crypto_address:
+          description: |-
+            Crypto-address that will be used to pay the order.
+            If present the order must be paid from the specified crypto-address.
+          type: string
+        currency:
+          $ref: '#/components/schemas/CurrencyCode'
+        related_crypto_transactions:
+          $ref: '#/components/schemas/RelatedCryptoTransactions'
+        type:
+          enum:
+            - crypto_address
+          type: string
+      required:
+        - currency
+        - type
+      type: object
+    OrderInputOnlineInstantPayment:
+      properties:
+        amount:
+          $ref: '#/components/schemas/InputAmount'
+        currency:
+          $ref: '#/components/schemas/CurrencyCode'
+        type:
+          enum:
+            - online_instant_payment
+          type: string
+      required:
+        - currency
+        - type
+      type: object
+    OrderInputType:
+      description: |
+        Type of the input of an order.
+
+        The enumeration is non-exhaustive.
+      enum:
+        - bank_account
+        - bity_account
+        - crypto_address
+        - online_instant_payment
+      type: string
+    OrderInputUnknown:
+      properties:
+        amount:
+          $ref: '#/components/schemas/InputAmount'
+        currency:
+          $ref: '#/components/schemas/CurrencyCode'
+        type:
+          not:
+            $ref: '#/components/schemas/OrderInputType'
+          type: string
+      required:
+        - currency
+        - type
+      type: object
+    OrderMinimal:
+      description: >-
+        Minimal information of a previously placed order. This information can
+        be retrieved without authentication.
+      example:
+        id: f4e05c68-8a70-4678-b97c-ea30dc0daaa3
+        timestamp_awaiting_payment_since: '2019-02-01T10:02:00.000Z'
+        timestamp_created: '2019-02-01T10:00:00.000Z'
+        timestamp_price_guaranteed: '2020-02-01T10:12:00.000Z'
+      properties:
+        id:
+          $ref: '#/components/schemas/OrderId'
+        timestamp_awaiting_payment_since:
+          $ref: '#/components/schemas/OrderTimestampAwaitingPaymentSince'
+        timestamp_cancelled:
+          $ref: '#/components/schemas/OrderTimestampCancelled'
+        timestamp_created:
+          $ref: '#/components/schemas/OrderTimestampCreated'
+        timestamp_executed:
+          $ref: '#/components/schemas/OrderTimestampExecuted'
+        timestamp_payment_received:
+          $ref: '#/components/schemas/OrderTimestampPaymentReceived'
+        timestamp_price_guaranteed:
+          $ref: '#/components/schemas/OrderTimestampPriceGuaranteed'
+      required:
+        - id
+        - timestamp_created
+      type: object
+    OrderOutput:
+      oneOf:
+        - $ref: '#/components/schemas/OrderOutputBankAccount'
+        - $ref: '#/components/schemas/OrderOutputBityAccount'
+        - $ref: '#/components/schemas/OrderOutputCryptoAddress'
+        - $ref: '#/components/schemas/OrderOutputUnknown'
+    OrderOutputBankAccount:
+      properties:
+        amount:
+          $ref: '#/components/schemas/OutputAmount'
+        bic_swift:
+          description: |
+            BIC code of the bank account to which the output of the order is
+            sent.
+          type: string
+        currency:
+          $ref: '#/components/schemas/CurrencyCode'
+        iban:
+          description: |
+            IBAN of the bank account to which the output of the order is sent.
+          type: string
+        owner:
+          allOf:
+            - description: |
+                Information about the owner of the bank account to which the
+                output of the order is sent.
+              properties:
+                name:
+                  type: string
+              type: object
+            - $ref: '#/components/schemas/PostalAddress'
+        type:
+          enum:
+            - bank_account
+          type: string
+      required:
+        - currency
+        - type
+      type: object
+    OrderOutputBityAccount:
+      properties:
+        amount:
+          $ref: '#/components/schemas/OutputAmount'
+        currency:
+          $ref: '#/components/schemas/CurrencyCode'
+        type:
+          enum:
+            - bity_account
+          type: string
+      required:
+        - currency
+        - type
+      type: object
+    OrderOutputCryptoAddress:
+      properties:
+        amount:
+          $ref: '#/components/schemas/OutputAmount'
+        crypto_address:
+          description: |
+            Crypto-address to which the output of the order is sent.
+          type: string
+        currency:
+          $ref: '#/components/schemas/CurrencyCode'
+        related_crypto_transactions:
+          $ref: '#/components/schemas/RelatedCryptoTransactions'
+        type:
+          enum:
+            - crypto_address
+          type: string
+      required:
+        - currency
+        - type
+      type: object
+    OrderOutputType:
+      description: |
+        Type of the output of an order.
+
+        The enumeration is non-exhaustive.
+      enum:
+        - bank_account
+        - bity_account
+        - crypto_address
+      type: string
+    OrderOutputUnknown:
+      properties:
+        amount:
+          $ref: '#/components/schemas/OutputAmount'
+        currency:
+          $ref: '#/components/schemas/CurrencyCode'
+        type:
+          not:
+            $ref: '#/components/schemas/OrderOutputType'
+          type: string
+      required:
+        - currency
+        - type
+      type: object
+    OrderTimestampAwaitingPaymentSince:
+      description: >-
+        Date and time at which the order became executable and at which the
+        payment information was made available.
+      format: date-time
+      type: string
+    OrderTimestampCancelled:
+      description: Date and time at which the order was cancelled.
+      format: date-time
+      type: string
+    OrderTimestampCreated:
+      description: >-
+        Date and time at which the client submitted the initial information
+        regarding this order.
+      format: date-time
+      type: string
+    OrderTimestampExecuted:
+      description: Date and time at which the output amount was sent.
+      format: date-time
+      type: string
+    OrderTimestampPaymentReceived:
+      description: >-
+        Date and time at which the input amount is confirmed to have been
+        received.
+      format: date-time
+      type: string
+    OrderTimestampPriceGuaranteed:
+      description: |
+        When present, the price is locked until the current time exceeds
+        that particular timestamp. If the payment of the appropriate input
+        amount is received before the indicated time, then the currently
+        shown output amount will be sent. If the payment is received at a
+        later time, execution of the order will use the market price
+        instead.
+
+        When absent, indicates that the price has not been locked yet.
+      format: date-time
+      type: string
+    OrderingRequirementAccount:
+      allOf:
+        - $ref: '#/components/schemas/OrderingRequirementCommon'
+        - description: |
+            Usage of a Bity account is required.
+          type: object
+    OrderingRequirementAccountQuota:
+      allOf:
+        - $ref: '#/components/schemas/OrderingRequirementCommon'
+        - description: |
+            The amounts are suitable for the current Bity account quota.
+          type: object
+    OrderingRequirementCommon:
+      properties:
+        satisfied:
+          type: boolean
+      type: object
+    OrderingRequirementKyc:
+      allOf:
+        - $ref: '#/components/schemas/OrderingRequirementCommon'
+        - description: |
+            The Bity account has made sufficient progress through the KYC
+            process.
+          type: object
+    OrderingRequirements:
+      description: |
+        Non-exhaustive list of requirements that need to be met in order to
+        successfully place an order with parameters corresponding to the
+        ones present in this response.
+
+        Note that the list being non-exhaustive also means that the absence
+        of a requirement in this list does not imply that the absent
+        requirement is irrelevant.
+      properties:
+        account:
+          $ref: '#/components/schemas/OrderingRequirementAccount'
+        account_quota:
+          $ref: '#/components/schemas/OrderingRequirementAccountQuota'
+        kyc:
+          $ref: '#/components/schemas/OrderingRequirementKyc'
+      type: object
+    OutputAmount:
+      description: |
+        Decimal number. Output amount of the exchange; amount to be received by
+        the output object.
+
+        The output amount is all inclusive. Costs and fees are included.
+      type: string
+    OutputAmountEstimateRequest:
+      allOf:
+        - $ref: '#/components/schemas/AmountEstimateRequestCommon'
+        - description: |
+            Request an estimate of the output amount based on a specified input
+            amount.
+          properties:
+            input:
+              $ref: '#/components/schemas/OutputAmountEstimateRequestInput'
+            output:
+              $ref: '#/components/schemas/AmountEstimateRequestOutputCommon'
+          required:
+            - input
+            - output
+          type: object
+    OutputAmountEstimateRequestInput:
+      allOf:
+        - $ref: '#/components/schemas/AmountEstimateRequestInputCommon'
+        - properties:
+            amount:
+              $ref: '#/components/schemas/InputAmount'
+          required:
+            - amount
+          type: object
+    Pagination:
+      properties:
+        current:
+          description: Current page number
+          type: number
+        first:
+          description: Page number of the first page
+          type: number
+        last:
+          description: Page number of the last page
+          type: number
+      required:
+        - current
+      type: object
+    PartnerFee:
+      description: >-
+        -> An additional fee perceived on behalf of the partner placing the
+        order, expressed as a factor of the amount received from the customer.
+      properties:
+        factor:
+          anyOf:
+            - type: number
+            - type: string
+      required:
+        - factor
+      type: object
+    PaymentDetails:
+      oneOf:
+        - $ref: '#/components/schemas/PaymentDetailsBankAccount'
+        - $ref: '#/components/schemas/PaymentDetailsCryptoAddress'
+        - $ref: '#/components/schemas/PaymentDetailsOnlineInstantPayment'
+    PaymentDetailsBankAccount:
+      description: |
+        Payment details when the input type is `bank_account`.
+
+        The bank account information details contained in this object must be
+        used to perform a bank transfer to pay the order.
+      properties:
+        account_number:
+          type: string
+        bank_address:
+          type: string
+        bank_code:
+          type: string
+        iban:
+          description: |
+            IBAN of the bank account to which the order must be paid.
+          type: string
+        recipient:
+          description: |
+            Do not use, this property is present for backward compatibility.
+
+            Use `recipient_name` and `recipient_postal_address` instead.
+          type: string
+        recipient_name:
+          description: Name of the recipient of the payment.
+          type: string
+        recipient_postal_address:
+          description: Postal address of the recipient of the payment.
+          items:
+            type: string
+          type: array
+        reference:
+          description: >-
+            The  reference (also known as communication or message to the
+            recipient) that must be included in the bank transfer.
+          type: string
+        swift_bic:
+          description: |
+            BIC code of the bank account to which the order must be paid.
+          type: string
+        type:
+          enum:
+            - bank_account
+          type: string
+      required:
+        - iban
+        - recipient_name
+        - recipient_postal_address
+        - type
+      type: object
+    PaymentDetailsCryptoAddress:
+      description: |
+        Payment details when the input type is `crypto_address`.
+      properties:
+        crypto_address:
+          description: |
+            Crypto-address to which to send the payment for the order.
+          type: string
+        memo:
+          description: |
+            When this property is present, the crypto-transaction paying
+            the order must include this exact value as the memo.
+          type: string
+        type:
+          enum:
+            - crypto_address
+          type: string
+      required:
+        - crypto_address
+        - type
+      type: object
+    PaymentDetailsOnlineInstantPayment:
+      description: |
+        Payment details when then input type is `online_instant_payment`.
+      properties:
+        payment_ui_url:
+          type: string
+        type:
+          enum:
+            - online_instant_payment
+          type: string
+      required:
+        - payment_ui_url
+        - type
+      type: object
+    PlaceOrderRequest:
+      description: |
+        Exactly one of `input.amount` or `output.amount` must be specified.
+      properties:
+        client_value:
+          $ref: '#/components/schemas/ClientValue'
+        contact_person:
+          description: >-
+            Information of a contact person to be used in case something
+            unforeseen happens with the order. This information is optional. The
+            customer can always get in touch with support via the order status
+            page.
+          properties:
+            email:
+              type: string
+          type: object
+        input:
+          $ref: '#/components/schemas/PlaceOrderRequestInput'
+        output:
+          $ref: '#/components/schemas/PlaceOrderRequestOutput'
+        partner_fee:
+          $ref: '#/components/schemas/PartnerFee'
+      required:
+        - input
+        - output
+      type: object
+    PlaceOrderRequestInput:
+      oneOf:
+        - $ref: '#/components/schemas/PlaceOrderRequestInputBankAccount'
+        - $ref: '#/components/schemas/PlaceOrderRequestInputBityAccount'
+        - $ref: '#/components/schemas/PlaceOrderRequestInputCryptoAddress'
+        - $ref: '#/components/schemas/PlaceOrderRequestInputOnlineInstantPayment'
+    PlaceOrderRequestInputBankAccount:
+      allOf:
+        - $ref: '#/components/schemas/PlaceOrderRequestInputCommon'
+        - description: |
+            Input information for an order to be paid via a bank transfer.
+
+            When the details of the bank account are present, the order must be
+            paid from the corresponding bank account.
+
+            The `input.object_information_optional` property in the amount
+            estimate response indicates whether it is allowed to omit the
+            details of the bank account.
+          properties:
+            iban:
+              description: |
+                IBAN of the bank account that will be used to pay the order.
+              type: string
+            owner:
+              description: |
+                Information about the owner of the bank account that will pay
+                the order.
+              properties:
+                address:
+                  type: string
+                address_complement:
+                  type: string
+                city:
+                  type: string
+                country:
+                  $ref: '#/components/schemas/CountryCode'
+                name:
+                  type: string
+                state:
+                  type: string
+                zip:
+                  type: string
+              type: object
+            type:
+              enum:
+                - bank_account
+              type: string
+          required:
+            - type
+          type: object
+    PlaceOrderRequestInputBityAccount:
+      allOf:
+        - $ref: '#/components/schemas/PlaceOrderRequestInputCommon'
+        - properties:
+            type:
+              enum:
+                - bity_account
+              type: string
+          required:
+            - type
+          type: object
+    PlaceOrderRequestInputCommon:
+      properties:
+        amount:
+          $ref: '#/components/schemas/InputAmount'
+        currency:
+          $ref: '#/components/schemas/CurrencyCode'
+      required:
+        - currency
+      type: object
+    PlaceOrderRequestInputCryptoAddress:
+      allOf:
+        - $ref: '#/components/schemas/PlaceOrderRequestInputCommon'
+        - description: >
+            Input information for an order to be paid via a crypto transaction.
+
+
+            When the details of the crypto-address are present, the order must
+            be
+
+            paid from the corresponding crypto-address.
+
+
+            The `input.object_information_optional` property in the amount
+
+            estimate response indicates whether it is allowed to omit the
+
+            details of the crypto-address.
+          properties:
+            crypto_address:
+              description: |
+                Crypto-address that will be used to pay the order.
+              type: string
+            type:
+              enum:
+                - crypto_address
+              type: string
+          required:
+            - type
+          type: object
+    PlaceOrderRequestInputOnlineInstantPayment:
+      allOf:
+        - $ref: '#/components/schemas/PlaceOrderRequestInputCommon'
+        - description: |
+            Input object for an order to be paid via credit card or another
+            form of electronic online paymint.
+          properties:
+            type:
+              enum:
+                - online_instant_payment
+              type: string
+          type: object
+    PlaceOrderRequestOutput:
+      oneOf:
+        - $ref: '#/components/schemas/PlaceOrderRequestOutputBankAccount'
+        - $ref: '#/components/schemas/PlaceOrderRequestOutputBityAccount'
+        - $ref: '#/components/schemas/PlaceOrderRequestOutputCryptoAddress'
+    PlaceOrderRequestOutputBankAccount:
+      allOf:
+        - $ref: '#/components/schemas/PlaceOrderRequestOutputCommon'
+        - description: |
+            Output object for an order where the result of the exchange is sent
+            to a bank account via a bank transfer.
+          properties:
+            bic_swift:
+              type: string
+            iban:
+              type: string
+            owner:
+              allOf:
+                - description: |
+                    Information about the owner of the bank account to which the
+                    output of the order is sent.
+                  properties:
+                    name:
+                      type: string
+                  type: object
+                - $ref: '#/components/schemas/PostalAddress'
+            qr_reference:
+              $ref: '#/components/schemas/QrReference'
+            reference:
+              description: >
+                The length and the set of supported characters varies depending
+                on
+
+                the banks and networks involved. To avoid producing the
+
+                "invalid_bank_account_reference" error, keep the reference short
+
+                (32 characters or less is recommended) and use only simple
+
+                characters (using only characters in a-z, A-Z, 0-9 and space is
+
+                recommended).
+              type: string
+            structured_creditor_reference:
+              $ref: '#/components/schemas/StructuredCreditorReference'
+            type:
+              enum:
+                - bank_account
+              type: string
+            ultimate_debtor:
+              allOf:
+                - description: |
+                    Information about the ultimate debtor.
+                  properties:
+                    name:
+                      type: string
+                  type: object
+                - $ref: '#/components/schemas/PostalAddress'
+          required:
+            - iban
+            - owner
+            - type
+          type: object
+    PlaceOrderRequestOutputBityAccount:
+      allOf:
+        - $ref: '#/components/schemas/PlaceOrderRequestOutputCommon'
+        - properties:
+            type:
+              enum:
+                - bity_account
+              type: string
+          type: object
+    PlaceOrderRequestOutputCommon:
+      properties:
+        amount:
+          $ref: '#/components/schemas/OutputAmount'
+        currency:
+          $ref: '#/components/schemas/CurrencyCode'
+      required:
+        - currency
+      type: object
+    PlaceOrderRequestOutputCryptoAddress:
+      allOf:
+        - $ref: '#/components/schemas/PlaceOrderRequestOutputCommon'
+        - description: |
+            Output object for an order where the result of the exchange is sent
+            to a crypto-address.
+          properties:
+            crypto_address:
+              description: Crypto-address to which the output of the order is sent.
+              type: string
+            type:
+              enum:
+                - crypto_address
+              type: string
+          required:
+            - crypto_address
+            - type
+          type: object
+    PostalAddress:
+      anyOf:
+        - $ref: '#/components/schemas/PostalAddressLegacy'
+        - $ref: '#/components/schemas/PostalAddressStructured'
+    PostalAddressLegacy:
+      properties:
+        address:
+          type: string
+        address_complement:
+          type: string
+        city:
+          type: string
+        country:
+          $ref: '#/components/schemas/CountryCode'
+        state:
+          type: string
+        zip:
+          type: string
+      type: object
+    PostalAddressStructured:
+      properties:
+        building_name:
+          type: string
+        building_number:
+          type: string
+        country:
+          $ref: '#/components/schemas/CountryCode'
+        country_subdivision:
+          description: |
+            Identifies a subdivision of the country such as a state or region.
+          type: string
+        department:
+          description: |
+            Identifies a part of large organization or large building.
+          type: string
+        district_name:
+          description: |
+            Identifies a subdivision of the country subdivision.
+          type: string
+        floor:
+          type: string
+        post_box:
+          type: string
+        post_code:
+          type: string
+        room:
+          type: string
+        street_name:
+          type: string
+        subdepartment:
+          description: >
+            Identifies a subdivision within a department of a large organization
+            or large building.
+          type: string
+        town_location_name:
+          description: |
+            Identifies a location within a town.
+          type: string
+        town_name:
+          type: string
+      type: object
+    PriceBreakdown:
+      properties:
+        customer_trading_fee:
+          description: The customer trading fee applied to this order.
+          properties:
+            amount:
+              $ref: '#/components/schemas/Amount'
+            currency:
+              $ref: '#/components/schemas/CurrencyCode'
+          required:
+            - amount
+            - currency
+          type: object
+        instant_payment_fee:
+          description: The instant payment fee applied to this order.
+          properties:
+            amount:
+              $ref: '#/components/schemas/Amount'
+            currency:
+              $ref: '#/components/schemas/CurrencyCode'
+          required:
+            - amount
+            - currency
+          type: object
+        non-verified_fee:
+          description: The non-verified fee applied to this order.
+          properties:
+            amount:
+              $ref: '#/components/schemas/Amount'
+            currency:
+              $ref: '#/components/schemas/CurrencyCode'
+          required:
+            - amount
+            - currency
+          type: object
+        output_transaction_cost:
+          description: |
+            Execution cost of the output transaction. Includes crypto
+            transaction fees, bank transaction fees, etc.
+          properties:
+            amount:
+              $ref: '#/components/schemas/Amount'
+            currency:
+              $ref: '#/components/schemas/CurrencyCode'
+          required:
+            - amount
+            - currency
+          type: object
+        partner_fee:
+          description: >-
+            -> Additional fee perceived on behalf of the partner having placed
+            the order.
+          properties:
+            amount:
+              $ref: '#/components/schemas/Amount'
+            currency:
+              $ref: '#/components/schemas/CurrencyCode'
+          required:
+            - amount
+            - currency
+          type: object
+      type: object
+    QrReference:
+      description: |
+        QR Bill reference (QR reference)
+      type: string
+    RelatedCryptoTransactions:
+      description: |
+        Non-exhaustive list of related crypto transactions.
+      items:
+        properties:
+          hash:
+            description: |
+              Crypto-transaction hash
+            type: string
+          status:
+            description: |
+              Status of the crypto transaction.
+
+              Non-exhaustive list of possible values:
+              - `confirmed`: The crypto transaction is confirmed.
+              - `waiting_for_sufficient_confirmations`: The crypto
+                transaction is not yet confirmed.
+            type: string
+        required:
+          - hash
+          - status
+        type: object
+      type: array
+    StructuredCreditorReference:
+      description: |
+        Structured creditor reference (ISO 11649).
+      type: string
+    OrdersPerformMultipleEstimationsRequest:
+      items:
+        $ref: '#/components/schemas/AmountEstimateRequest'
+      type: array
+    OrdersSubmitSignatureRequest:
+      type: string
+    OrdersSubmitSignatureRequest1:
+      type: string
+    ListOrdersResponse:
+      properties:
+        orders:
+          items:
+            $ref: '#/components/schemas/Order'
+          type: array
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+      required:
+        - orders
+      type: object
+    OrdersPerformMultipleEstimationsResponse:
+      items:
+        $ref: '#/components/schemas/AmountEstimate'
+      type: array
+    OrdersGetOrderDetailsResponse:
+      anyOf:
+        - $ref: '#/components/schemas/Order'
+        - $ref: '#/components/schemas/OrderMinimal'
+  securitySchemes:
+    bity_account_client_oauth:
+      flows:
+        clientCredentials:
+          scopes:
+            https://auth.bity.com/scopes/exchange.audit: List and consult all orders associated to a Bity account.
+            https://auth.bity.com/scopes/exchange.history: >-
+              List and consult orders associated to a Bity account and
+              previously placed by the client.
+            https://auth.bity.com/scopes/exchange.place: >-
+              Place orders for a Bity account and consult the details of orders
+              the client previously placed.
+          tokenUrl: https://connect.bity.com/oauth2/token
+      type: oauth2
+    bity_account_oauth:
+      flows:
+        authorizationCode:
+          authorizationUrl: https://connect.bity.com/oauth2/auth
+          scopes:
+            https://auth.bity.com/scopes/exchange.audit: List and consult all orders associated to a Bity account.
+            https://auth.bity.com/scopes/exchange.history: >-
+              List and consult orders associated to a Bity account and
+              previously placed by the client.
+            https://auth.bity.com/scopes/exchange.place: >-
+              Place orders for a Bity account and consult the details of orders
+              the client previously placed.
+          tokenUrl: https://connect.bity.com/oauth2/token
+      type: oauth2
+    client_oauth:
+      flows:
+        clientCredentials:
+          scopes:
+            https://auth.bity.com/scopes/exchange.client-history: >-
+              List and consult orders placed by the authenticated client that
+              have not yet been cancelled or executed, or that have been
+              cancelled or executed recently.
+            https://auth.bity.com/scopes/exchange.client-history-full: List and consult orders placed by the authenticated client.
+          tokenUrl: https://connect.bity.com/oauth2/token
+      type: oauth2
