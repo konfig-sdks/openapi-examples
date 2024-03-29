@@ -1,0 +1,4700 @@
+openapi: 3.0.0
+info:
+  title: Labrinth
+  description: >
+    This documentation doesn't provide a way to test our API. In order to
+    facilitate testing, we recommend the following tools:
+
+
+    - [cURL](https://curl.se/) (recommended, command-line)
+
+    - [ReqBIN](https://reqbin.com/) (recommended, online)
+
+    - [Postman](https://www.postman.com/downloads/)
+
+    - [Insomnia](https://insomnia.rest/)
+
+    - Your web browser, if you don't need to send headers or a request body
+
+
+    Once you have a working client, you can test that it works by making a `GET`
+    request to `https://staging-api.modrinth.com/`:
+
+
+    ```json
+
+    {
+      "about": "Welcome traveler!",
+      "documentation": "https://docs.modrinth.com",
+      "name": "modrinth-labrinth",
+      "version": "2.7.0"
+    }
+
+    ```
+
+
+    If you got a response similar to the one above, you can use the Modrinth
+    API!
+
+    When you want to go live using the production API, use `api.modrinth.com`
+    instead of `staging-api.modrinth.com`.
+
+
+    ## Authentication
+
+    This API has two options for authentication: personal access tokens and
+    [OAuth2](https://en.wikipedia.org/wiki/OAuth).
+
+    All tokens are tied to a Modrinth user and use the `Authorization` header of
+    the request.
+
+
+    Example:
+
+    ```
+
+    Authorization:
+    mrp_RNtLRSPmGj2pd1v1ubi52nX7TJJM9sznrmwhAuj511oe4t1jAqAQ3D6Wc8Ic
+
+    ```
+
+
+    You do not need a token for most requests. Generally speaking, only the
+    following types of requests require a token:
+
+    - those which create data (such as version creation)
+
+    - those which modify data (such as editing a project)
+
+    - those which access private data (such as draft projects, notifications,
+    emails, and payout data)
+
+
+    Each request requiring authentication has a certain scope. For example, to
+    view the email of the user being requested, the token must have the
+    `USER_READ_EMAIL` scope.
+
+    You can find the list of available scopes [on
+    GitHub](https://github.com/modrinth/labrinth/blob/master/src/models/pats.rs#L15).
+    Making a request with an invalid scope will return a 401 error.
+
+
+    Please note that certain scopes and requests cannot be completed with a
+    personal access token or using OAuth.
+
+    For example, deleting a user account can only be done through Modrinth's
+    frontend.
+
+
+    ### OAuth2
+
+    Applications interacting with the authenticated API should create an OAuth2
+    application.
+
+    You can do this in [the developer
+    settings](https://modrinth.com/settings/applications).
+
+
+    Once you have created a client, use the following URL to have a user
+    authorize your client:
+
+    ```
+
+    https://modrinth.com/auth/authorize?client_id=<CLIENT_ID>&redirect_uri=<CALLBACK_URL>&scope=<SCOPE_ONE>+<SCOPE_TWO>+<SCOPE_THREE>
+
+    ```
+
+
+    Then, use the following URL to get the token:
+
+    ```
+
+    https://api.modrinth.com/_internal/oauth/token
+
+    ```
+
+
+    This route will be changed in the future to move the `_internal` part to
+    `v3`.
+
+
+    ### Personal access tokens
+
+    Personal access tokens (PATs) can be generated in from [the user
+    settings](https://modrinth.com/settings/account).
+
+
+    ### GitHub tokens
+
+    For backwards compatibility purposes, some types of GitHub tokens also work
+    for authenticating a user with Modrinth's API, granting all scopes.
+
+    **We urge any application still using GitHub tokens to start using personal
+    access tokens for security and reliability purposes.**
+
+    GitHub tokens will cease to function to authenticate with Modrinth's API as
+    soon as version 3 of the API is made generally available.
+
+
+    ## Cross-Origin Resource Sharing
+
+    This API features Cross-Origin Resource Sharing (CORS) implemented in
+    compliance with the [W3C spec](https://www.w3.org/TR/cors/).
+
+    This allows for cross-domain communication from the browser.
+
+    All responses have a wildcard same-origin which makes them completely public
+    and accessible to everyone, including any code on any site.
+
+
+    ## Identifiers
+
+    The majority of items you can interact with in the API have a unique
+    eight-digit base62 ID.
+
+    Projects, versions, users, threads, teams, and reports all use this same way
+    of identifying themselves.
+
+    Version files use the sha1 or sha512 file hashes as identifiers.
+
+
+    Each project and user has a friendlier way of identifying them; slugs and
+    usernames, respectively.
+
+    While unique IDs are constant, slugs and usernames can change at any moment.
+
+    If you want to store something in the long term, it is recommended to use
+    the unique ID.
+
+
+    ## Ratelimits
+
+    The API has a ratelimit defined per IP. Limits and remaining amounts are
+    given in the response headers.
+
+    - `X-Ratelimit-Limit`: the maximum number of requests that can be made in a
+    minute
+
+    - `X-Ratelimit-Remaining`: the number of requests remaining in the current
+    ratelimit window
+
+    - `X-Ratelimit-Reset`: the time in seconds until the ratelimit window resets
+
+
+    Ratelimits are the same no matter whether you use a token or not.
+
+    The ratelimit is currently 300 requests per minute. If you have a use case
+    requiring a higher limit, please [contact us](mailto:admin@modrinth.com).
+
+
+    ## User Agents
+
+    To access the Modrinth API, you **must** use provide a uniquely-identifying
+    `User-Agent` header.
+
+    Providing a user agent that only identifies your HTTP client library (such
+    as "okhttp/4.9.3") increases the likelihood that we will block your traffic.
+
+    It is recommended, but not required, to include contact information in your
+    user agent.
+
+    This allows us to contact you if we would like a change in your
+    application's behavior without having to block your traffic.
+
+    - Bad: `User-Agent: okhttp/4.9.3`
+
+    - Good: `User-Agent: project_name`
+
+    - Better: `User-Agent: github_username/project_name/1.56.0`
+
+    - Best: `User-Agent: github_username/project_name/1.56.0 (launcher.com)` or
+    `User-Agent: github_username/project_name/1.56.0 (contact@launcher.com)`
+
+
+    ## Versioning
+
+    Modrinth follows a simple pattern for its API versioning.
+
+    In the event of a breaking API change, the API version in the URL path is
+    bumped, and migration steps will be published below.
+
+
+    When an API is no longer the current one, it will immediately be considered
+    deprecated.
+
+    No more support will be provided for API versions older than the current
+    one.
+
+    It will be kept for some time, but this amount of time is not certain.
+
+
+    We will exercise various tactics to get people to update their
+    implementation of our API.
+
+    One example is by adding something like `STOP USING THIS API` to various
+    data returned by the API.
+
+
+    Once an API version is completely deprecated, it will permanently return a
+    410 error.
+
+    Please ensure your application handles these 410 errors.
+
+
+    ### Migrations
+
+    Inside the following spoiler, you will be able to find all changes between
+    versions of the Modrinth API, accompanied by tips and a guide to migrate
+    applications to newer versions.
+
+
+    Here, you can also find changes for
+    [Minotaur](https://github.com/modrinth/minotaur), Modrinth's official Gradle
+    plugin. Major versions of Minotaur directly correspond to major versions of
+    the Modrinth API.
+
+
+    <details><summary>API v1 to API v2</summary>
+
+
+    These bullet points cover most changes in the v2 API, but please note that
+    fields containing `mod` in most contexts have been shifted to `project`. 
+    For example, in the search route, the field `mod_id` was renamed to
+    `project_id`.
+
+
+    - The search route has been moved from `/api/v1/mod` to `/v2/search`
+
+    - New project fields: `project_type` (may be `mod` or `modpack`),
+    `moderation_message` (which has a `message` and `body`), `gallery`
+
+    - New search facet: `project_type`
+
+    - Alphabetical sort removed (it didn't work and is not possible due to
+    limits in MeiliSearch)
+
+    - New search fields: `project_type`, `gallery`
+      - The gallery field is an array of URLs to images that are part of the project's gallery
+    - The gallery is a new feature which allows the user to upload images
+    showcasing their mod to the CDN which will be displayed on their mod page
+
+    - Internal change: Any project file uploaded to Modrinth is now validated to
+    make sure it's a valid Minecraft mod, Modpack, etc.
+      - For example, a Forge 1.17 mod with a JAR not containing a mods.toml will not be allowed to be uploaded to Modrinth
+    - In project creation, projects may not upload a mod with no versions to
+    review, however they can be saved as a draft
+      - Similarly, for version creation, a version may not be uploaded without any files
+    - Donation URLs have been enabled
+
+    - New project status: `archived`. Projects with this status do not appear in
+    search
+
+    - Tags (such as categories, loaders) now have icons (SVGs) and specific
+    project types attached
+
+    - Dependencies have been wiped and replaced with a new system
+
+    - Notifications now have a `type` field, such as `project_update`
+
+
+    Along with this, project subroutes (such as `/v2/project/{id}/version`) now
+    allow the slug to be used as the ID. This is also the case with user routes.
+
+
+    </details><details><summary>Minotaur v1 to Minotaur v2</summary>
+
+
+    Minotaur 2.x introduced a few breaking changes to how your buildscript is
+    formatted.
+
+
+    First, instead of registering your own `publishModrinth` task, Minotaur now
+    automatically creates a `modrinth` task. As such, you can replace the `task
+    publishModrinth(type: TaskModrinthUpload) {` line with just `modrinth {`.
+
+
+    To declare supported Minecraft versions and mod loaders, the `gameVersions`
+    and `loaders` arrays must now be used. The syntax for these are pretty
+    self-explanatory.
+
+
+    Instead of using `releaseType`, you must now use `versionType`. This was
+    actually changed in v1.2.0, but very few buildscripts have moved on from
+    v1.1.0.
+
+
+    Dependencies have been changed to a special DSL. Create a `dependencies`
+    block within the `modrinth` block, and then use
+    `scope.type("project/version")`. For example,
+    `required.project("fabric-api")` adds a required project dependency on
+    Fabric API.
+
+
+    You may now use the slug anywhere that a project ID was previously required.
+
+
+    </details>
+  version: v2.7.0/15cf3fc
+  termsOfService: https://modrinth.com/legal/terms
+  contact:
+    name: Modrinth Support
+    url: https://support.modrinth.com
+    email: support@modrinth.com
+  x-konfig-ignore:
+    object-with-no-properties: true
+servers:
+  - description: Production server
+    url: https://api.modrinth.com/v2
+  - description: Staging server
+    url: https://staging-api.modrinth.com/v2
+tags:
+  - description: >-
+      Projects are what Modrinth is centered around, be it mods, modpacks,
+      resource packs, etc.
+    name: projects
+    x-displayName: Projects
+  - description: Versions contain download links to files with additional metadata.
+    name: versions
+    x-displayName: Versions
+  - description: >-
+      Users can create projects, join teams, access notifications, manage
+      settings, and follow projects. Admins and moderators have more advanced
+      permissions such as reviewing new projects.
+    name: users
+    x-displayName: Users
+  - description: >-
+      Threads are a way of communicating between users and moderators, for the
+      purposes of project reviews and reports.
+    name: threads
+    x-displayName: Threads
+  - description: >-
+      Tags are common and reusable lists of metadata types such as categories or
+      versions. Some can be applied to projects and/or versions.
+    name: tags
+    x-displayName: Tags
+  - description: >-
+      Through teams, user permissions limit how team members can modify
+      projects.
+    name: teams
+    x-displayName: Teams
+  - description: >-
+      Notifications are sent to users for various reasons, including for project
+      updates, team invites, and moderation purposes.
+    name: notifications
+    x-displayName: Notifications
+  - description: >-
+      Versions can contain multiple files, and these routes help manage those
+      files.
+    name: version-files
+    x-displayName: Version Files
+  - name: misc
+    x-displayName: Miscellaneous
+  - description: |
+      <SchemaDefinition schemaRef="#/components/schemas/Project" />
+    name: project_model
+    x-displayName: Project Model
+  - description: |
+      <SchemaDefinition schemaRef="#/components/schemas/ProjectResult" />
+    name: project_result_model
+    x-displayName: Search Result Model
+  - description: |
+      <SchemaDefinition schemaRef="#/components/schemas/Version" />
+    name: version_model
+    x-displayName: Version Model
+  - description: |
+      <SchemaDefinition schemaRef="#/components/schemas/User" />
+    name: user_model
+    x-displayName: User Model
+  - description: |
+      <SchemaDefinition schemaRef="#/components/schemas/TeamMember" />
+    name: team_member_model
+    x-displayName: Team Member Model
+paths:
+  /search:
+    get:
+      tags:
+        - projects
+      summary: Search projects
+      operationId: Projects_find
+      parameters:
+        - description: The query to search for
+          in: query
+          name: query
+          schema:
+            type: string
+            example: gravestones
+        - description: >
+            Facets are an essential concept for understanding how to filter out
+            results.
+
+
+            These are the most commonly used facet types:
+
+            - `project_type`
+
+            - `categories` (loaders are lumped in with categories in search)
+
+            - `versions`
+
+            - `client_side`
+
+            - `server_side`
+
+            - `open_source`
+
+
+            Several others are also available for use, though these should not
+            be used outside very specific use cases.
+
+            - `title`
+
+            - `author`
+
+            - `follows`
+
+            - `project_id`
+
+            - `license`
+
+            - `downloads`
+
+            - `color`
+
+            - `created_timestamp`
+
+            - `modified_timestamp`
+
+
+            In order to then use these facets, you need a value to filter by, as
+            well as an operation to perform on this value.
+
+            The most common operation is `:` (same as `=`), though you can also
+            use `!=`, `>=`, `>`, `<=`, and `<`.
+
+            Join together the type, operation, and value, and you've got your
+            string.
+
+            ```
+
+            {type} {operation} {value}
+
+            ```
+
+
+            Examples:
+
+            ```
+
+            categories = adventure
+
+            versions != 1.20.1
+
+            downloads <= 100
+
+            ```
+
+
+            You then join these strings together in arrays to signal `AND` and
+            `OR` operators.
+
+
+            ##### OR
+
+            All elements in a single array are considered to be joined by OR
+            statements.  
+
+            For example, the search `[["versions:1.16.5", "versions:1.17.1"]]`
+            translates to `Projects that support 1.16.5 OR 1.17.1`.
+
+
+            ##### AND
+
+            Separate arrays are considered to be joined by AND statements.  
+
+            For example, the search `[["versions:1.16.5"],
+            ["project_type:modpack"]]` translates to `Projects that support
+            1.16.5 AND are modpacks`.
+          in: query
+          name: facets
+          schema:
+            type: string
+          example: >-
+            [["categories:forge"],["versions:1.17.1"],["project_type:mod"],["license:mit"]]
+        - description: The sorting method used for sorting search results
+          in: query
+          name: index
+          schema:
+            type: string
+            enum:
+              - relevance
+              - downloads
+              - follows
+              - newest
+              - updated
+            default: relevance
+            example: downloads
+        - description: The offset into the search. Skips this number of results
+          in: query
+          name: offset
+          schema:
+            type: integer
+            default: 0
+            example: 20
+        - description: The number of results returned by the search
+          in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+            example: 20
+            minimum: 0
+            maximum: 100
+      responses:
+        '200':
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchResults'
+        '400':
+          description: Request was invalid, see given error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidInputError'
+  /project/{id|slug}:
+    parameters:
+      - $ref: '#/components/parameters/ProjectIdentifier'
+    get:
+      tags:
+        - projects
+      summary: Get a project
+      operationId: Projects_getProjectByIdOrSlug
+      responses:
+        '200':
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '404':
+          description: >-
+            The requested item(s) were not found or no authorization to access
+            the requested item(s)
+    patch:
+      tags:
+        - projects
+      summary: Modify a project
+      operationId: Projects_updateProjectByIdOrSlug
+      security:
+        - TokenAuth:
+            - PROJECT_WRITE
+      requestBody:
+        description: Modified project fields
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditableProject'
+      responses:
+        '204':
+          description: Expected response to a valid request
+        '401':
+          description: >-
+            Incorrect token scopes or no authorization to access the requested
+            item(s)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthError'
+        '404':
+          description: >-
+            The requested item(s) were not found or no authorization to access
+            the requested item(s)
+    delete:
+      tags:
+        - projects
+      summary: Delete a project
+      operationId: Projects_removeBySlug
+      security:
+        - TokenAuth:
+            - PROJECT_DELETE
+      responses:
+        '204':
+          description: Expected response to a valid request
+        '400':
+          description: Request was invalid, see given error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidInputError'
+        '401':
+          description: >-
+            Incorrect token scopes or no authorization to access the requested
+            item(s)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthError'
+  /projects:
+    parameters:
+      - $ref: '#/components/parameters/MultipleProjectIdentifier'
+    get:
+      tags:
+        - projects
+      summary: Get multiple projects
+      operationId: Projects_listProjects
+      responses:
+        '200':
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectsListProjectsResponse'
+    patch:
+      tags:
+        - projects
+      summary: Bulk-edit multiple projects
+      operationId: Projects_bulkEdit
+      security:
+        - TokenAuth:
+            - PROJECT_WRITE
+      requestBody:
+        description: Fields to edit on all projects specified
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchProjectsBody'
+      responses:
+        '204':
+          description: Expected response to a valid request
+        '400':
+          description: Request was invalid, see given error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidInputError'
+        '401':
+          description: >-
+            Incorrect token scopes or no authorization to access the requested
+            item(s)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthError'
+  /projects_random:
+    get:
+      tags:
+        - projects
+      summary: Get a list of random projects
+      operationId: Projects_getRandomList
+      parameters:
+        - description: The number of random projects to return
+          in: query
+          name: count
+          required: true
+          schema:
+            type: integer
+            example: 70
+            minimum: 0
+            maximum: 100
+      responses:
+        '200':
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectsGetRandomListResponse'
+        '400':
+          description: Request was invalid, see given error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidInputError'
+  /project:
+    post:
+      tags:
+        - projects
+      summary: Create a project
+      operationId: Projects_createNewProject
+      security:
+        - TokenAuth:
+            - PROJECT_CREATE
+      requestBody:
+        description: New project
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CreateProjectBody'
+      responses:
+        '200':
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '400':
+          description: Request was invalid, see given error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidInputError'
+        '401':
+          description: >-
+            Incorrect token scopes or no authorization to access the requested
+            item(s)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthError'
+  /project/{id|slug}/icon:
+    parameters:
+      - $ref: '#/components/parameters/ProjectIdentifier'
+    patch:
+      tags:
+        - projects
+      summary: Change project's icon
+      operationId: Projects_changeProjectIcon
+      security:
+        - TokenAuth:
+            - PROJECT_WRITE
+      description: The new icon may be up to 256KiB in size.
+      parameters:
+        - description: Image extension
+          in: query
+          name: ext
+          required: true
+          schema:
+            type: string
+            enum:
+              - png
+              - jpg
+              - jpeg
+              - bmp
+              - gif
+              - webp
+              - svg
+              - svgz
+              - rgb
+      requestBody:
+        $ref: '#/components/requestBodies/Image'
+      responses:
+        '204':
+          description: Expected response to a valid request
+        '400':
+          description: Request was invalid, see given error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidInputError'
+    delete:
+      tags:
+        - projects
+      summary: Delete project's icon
+      operationId: Projects_deleteProjectIcon
+      security:
+        - TokenAuth:
+            - PROJECT_WRITE
+      responses:
+        '204':
+          description: Expected response to a valid request
+        '400':
+          description: Request was invalid, see given error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidInputError'
+        '401':
+          description: >-
+            Incorrect token scopes or no authorization to access the requested
+            item(s)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthError'
+  /project/{id|slug}/check:
+    parameters:
+      - $ref: '#/components/parameters/ProjectIdentifier'
+    get:
+      tags:
+        - projects
+      summary: Check project slug/ID validity
+      operationId: Projects_checkValidity
+      responses:
+        '200':
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectIdentifier'
+        '404':
+          description: >-
+            The requested item(s) were not found or no authorization to access
+            the requested item(s)
+  /project/{id|slug}/gallery:
+    parameters:
+      - $ref: '#/components/parameters/ProjectIdentifier'
+    post:
+      tags:
+        - projects
+      summary: Add a gallery image
+      operationId: Projects_addGalleryImage
+      security:
+        - TokenAuth:
+            - PROJECT_WRITE
+      description: >-
+        Modrinth allows you to upload files of up to 5MiB to a project's
+        gallery.
+      parameters:
+        - description: Image extension
+          in: query
+          name: ext
+          required: true
+          schema:
+            type: string
+            enum:
+              - png
+              - jpg
+              - jpeg
+              - bmp
+              - gif
+              - webp
+              - svg
+              - svgz
+              - rgb
+        - description: Whether an image is featured
+          in: query
+          name: featured
+          required: true
+          schema:
+            type: boolean
+        - description: Title of the image
+          in: query
+          name: title
+          schema:
+            type: string
+        - description: Description of the image
+          in: query
+          name: description
+          schema:
+            type: string
+        - description: Ordering of the image
+          in: query
+          name: ordering
+          schema:
+            type: integer
+      requestBody:
+        $ref: '#/components/requestBodies/Image'
+      responses:
+        '204':
+          description: Expected response to a valid request
+        '400':
+          description: Request was invalid, see given error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidInputError'
+        '401':
+          description: >-
+            Incorrect token scopes or no authorization to access the requested
+            item(s)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthError'
+        '404':
+          description: >-
+            The requested item(s) were not found or no authorization to access
+            the requested item(s)
+    patch:
+      tags:
+        - projects
+      summary: Modify a gallery image
+      operationId: Projects_modifyGalleryImage
+      security:
+        - TokenAuth:
+            - PROJECT_WRITE
+      parameters:
+        - description: URL link of the image to modify
+          in: query
+          name: url
+          required: true
+          schema:
+            type: string
+            format: uri
+        - description: Whether the image is featured
+          in: query
+          name: featured
+          schema:
+            type: boolean
+        - description: New title of the image
+          in: query
+          name: title
+          schema:
+            type: string
+        - description: New description of the image
+          in: query
+          name: description
+          schema:
+            type: string
+        - description: New ordering of the image
+          in: query
+          name: ordering
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Expected response to a valid request
+        '401':
+          description: >-
+            Incorrect token scopes or no authorization to access the requested
+            item(s)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthError'
+        '404':
+          description: >-
+            The requested item(s) were not found or no authorization to access
+            the requested item(s)
+    delete:
+      tags:
+        - projects
+      summary: Delete a gallery image
+      operationId: Projects_deleteGalleryImage
+      security:
+        - TokenAuth:
+            - PROJECT_WRITE
+      parameters:
+        - description: URL link of the image to delete
+          in: query
+          name: url
+          required: true
+          schema:
+            type: string
+            format: uri
+      responses:
+        '204':
+          description: Expected response to a valid request
+        '400':
+          description: Request was invalid, see given error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidInputError'
+        '401':
+          description: >-
+            Incorrect token scopes or no authorization to access the requested
+            item(s)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthError'
+  /project/{id|slug}/dependencies:
+    parameters:
+      - $ref: '#/components/parameters/ProjectIdentifier'
+    get:
+      tags:
+        - projects
+      summary: Get all of a project's dependencies
+      operationId: Projects_getDependencies
+      responses:
+        '200':
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectDependencyList'
+        '404':
+          description: >-
+            The requested item(s) were not found or no authorization to access
+            the requested item(s)
+  /project/{id|slug}/follow:
+    parameters:
+      - $ref: '#/components/parameters/ProjectIdentifier'
+    post:
+      tags:
+        - projects
+      summary: Follow a project
+      operationId: Projects_followProjectBySlug
+      security:
+        - TokenAuth:
+            - USER_WRITE
+      responses:
+        '204':
+          description: Expected response to a valid request
+        '400':
+          description: Request was invalid, see given error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidInputError'
+        '401':
+          description: >-
+            Incorrect token scopes or no authorization to access the requested
+            item(s)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthError'
+    delete:
+      tags:
+        - projects
+      summary: Unfollow a project
+      operationId: Projects_unfollowProject
+      security:
+        - TokenAuth:
+            - USER_WRITE
+      responses:
+        '204':
+          description: Expected response to a valid request
+        '400':
+          description: Request was invalid, see given error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidInputError'
+        '401':
+          description: >-
+            Incorrect token scopes or no authorization to access the requested
+            item(s)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthError'
+  /project/{id|slug}/schedule:
+    parameters:
+      - $ref: '#/components/parameters/ProjectIdentifier'
+    post:
+      tags:
+        - projects
+      summary: Schedule a project
+      operationId: Projects_scheduleProject
+      security:
+        - TokenAuth:
+            - PROJECT_WRITE
+      requestBody:
+        description: Information about date and requested status
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Schedule'
+      responses:
+        '204':
+          description: Expected response to a valid request
+        '400':
+          description: Request was invalid, see given error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidInputError'
+        '401':
+          description: >-
+            Incorrect token scopes or no authorization to access the requested
+            item(s)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthError'
+  /project/{id|slug}/version:
+    parameters:
+      - $ref: '#/components/parameters/ProjectIdentifier'
+    get:
+      tags:
+        - versions
+      summary: List project's versions
+      operationId: Versions_listProjectVersions
+      parameters:
+        - description: The types of loaders to filter for
+          in: query
+          name: loaders
+          required: false
+          schema:
+            type: string
+            example: '["fabric"]'
+        - description: The game versions to filter for
+          in: query
+          name: game_versions
+          required: false
+          schema:
+            type: string
+            example: '["1.18.1"]'
+        - description: Allows to filter for featured or non-featured versions only
+          in: query
+          name: featured
+          required: false
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VersionsListProjectVersionsResponse'
+        '404':
+          description: >-
+            The requested item(s) were not found or no authorization to access
+            the requested item(s)
+  /version/{id}:
+    parameters:
+      - $ref: '#/components/parameters/VersionIdentifier'
+    get:
+      tags:
+        - versions
+      summary: Get a version
+      operationId: Versions_getById
+      responses:
+        '200':
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Version'
+        '404':
+          description: >-
+            The requested item(s) were not found or no authorization to access
+            the requested item(s)
+    patch:
+      tags:
+        - versions
+      summary: Modify a version
+      operationId: Versions_modifyVersionById
+      security:
+        - TokenAuth:
+            - VERSION_WRITE
+      requestBody:
+        description: Modified version fields
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditableVersion'
+      responses:
+        '204':
+          description: Expected response to a valid request
+        '401':
+          description: >-
+            Incorrect token scopes or no authorization to access the requested
+            item(s)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthError'
+        '404':
+          description: >-
+            The requested item(s) were not found or no authorization to access
+            the requested item(s)
+    delete:
+      tags:
+        - versions
+      summary: Delete a version
+      operationId: Versions_deleteVersionById
+      security:
+        - TokenAuth:
+            - VERSION_DELETE
+      responses:
+        '204':
+          description: Expected response to a valid request
+        '401':
+          description: >-
+            Incorrect token scopes or no authorization to access the requested
+            item(s)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthError'
+        '404':
+          description: >-
+            The requested item(s) were not found or no authorization to access
+            the requested item(s)
+  /project/{id|slug}/version/{id|number}:
+    parameters:
+      - $ref: '#/components/parameters/ProjectIdentifier'
+      - description: The version ID or version number
+        name: id|number
+        in: path
+        required: true
+        schema:
+          type: string
+          example:
+            - IIJJKKLL
+    get:
+      tags:
+        - versions
+      summary: Get a version given a version number or ID
+      operationId: Versions_getByVersionIdOrNumber
+      description: >-
+        Please note that, if the version number provided matches multiple
+        versions, only the **oldest matching version** will be returned.
+      responses:
+        '200':
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Version'
+        '404':
+          description: >-
+            The requested item(s) were not found or no authorization to access
+            the requested item(s)
+  /version:
+    post:
+      tags:
+        - versions
+      summary: Create a version
+      operationId: Versions_createNewVersion
+      security:
+        - TokenAuth:
+            - VERSION_CREATE
+      description: >
+        This route creates a version on an existing project. There must be at
+        least one file attached to each new version, unless the new version's
+        status is `draft`. `.mrpack`, `.jar`, `.zip`, and `.litemod` files are
+        accepted.
+
+
+        The request is a [multipart
+        request](https://www.ietf.org/rfc/rfc2388.txt) with at least two form
+        fields: one is `data`, which includes a JSON body with the version
+        metadata as shown below, and at least one field containing an upload
+        file.
+
+
+        You can name the file parts anything you would like, but you must list
+        each of the parts' names in `file_parts`, and optionally, provide one to
+        use as the primary file in `primary_file`.
+      requestBody:
+        description: New version
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CreateVersionBody'
+      responses:
+        '200':
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Version'
+        '400':
+          description: Request was invalid, see given error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidInputError'
+        '401':
+          description: >-
+            Incorrect token scopes or no authorization to access the requested
+            item(s)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthError'
+  /version/{id}/schedule:
+    parameters:
+      - $ref: '#/components/parameters/VersionIdentifier'
+    post:
+      tags:
+        - versions
+      summary: Schedule a version
+      operationId: Versions_scheduleVersion
+      security:
+        - TokenAuth:
+            - VERSION_WRITE
+      requestBody:
+        description: Information about date and requested status
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Schedule'
+      responses:
+        '204':
+          description: Expected response to a valid request
+        '400':
+          description: Request was invalid, see given error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidInputError'
+        '401':
+          description: >-
+            Incorrect token scopes or no authorization to access the requested
+            item(s)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthError'
+  /versions:
+    parameters:
+      - description: The IDs of the versions
+        in: query
+        name: ids
+        schema:
+          type: string
+          example: '["AABBCCDD", "EEFFGGHH"]'
+        required: true
+    get:
+      tags:
+        - versions
+      summary: Get multiple versions
+      operationId: Versions_list
+      responses:
+        '200':
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VersionsListResponse'
+  /version/{id}/file:
+    parameters:
+      - $ref: '#/components/parameters/VersionIdentifier'
+    post:
+      tags:
+        - versions
+      summary: Add files to version
+      operationId: Versions_addFilesToVersion
+      security:
+        - TokenAuth:
+            - VERSION_WRITE
+      description: Project files are attached. `.mrpack` and `.jar` files are accepted.
+      requestBody:
+        description: New version files
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/VersionsAddFilesToVersionRequest'
+      responses:
+        '204':
+          description: Expected response to a valid request
+        '401':
+          description: >-
+            Incorrect token scopes or no authorization to access the requested
+            item(s)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthError'
+        '404':
+          description: >-
+            The requested item(s) were not found or no authorization to access
+            the requested item(s)
+  /version_file/{hash}:
+    parameters:
+      - $ref: '#/components/parameters/FileHashIdentifier'
+      - $ref: '#/components/parameters/AlgorithmIdentifier'
+    get:
+      tags:
+        - version-files
+      summary: Get version from hash
+      operationId: Versionfiles_getVersionFromHash
+      parameters:
+        - $ref: '#/components/parameters/MultipleHashQueryIdentifier'
+      responses:
+        '200':
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Version'
+        '404':
+          description: >-
+            The requested item(s) were not found or no authorization to access
+            the requested item(s)
+    delete:
+      tags:
+        - version-files
+      summary: Delete a file from its hash
+      operationId: Versionfiles_deleteByHash
+      security:
+        - TokenAuth:
+            - VERSION_WRITE
+      parameters:
+        - description: >-
+            Version ID to delete the version from, if multiple files of the same
+            hash exist
+          required: false
+          in: query
+          name: version_id
+          schema:
+            type: string
+            example:
+              - IIJJKKLL
+      responses:
+        '204':
+          description: Expected response to a valid request
+        '401':
+          description: >-
+            Incorrect token scopes or no authorization to access the requested
+            item(s)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthError'
+        '404':
+          description: >-
+            The requested item(s) were not found or no authorization to access
+            the requested item(s)
+  /version_file/{hash}/update:
+    parameters:
+      - $ref: '#/components/parameters/FileHashIdentifier'
+      - $ref: '#/components/parameters/AlgorithmIdentifier'
+    post:
+      tags:
+        - version-files
+      summary: Latest version of a project from a hash, loader(s), and game version(s)
+      operationId: Versionfiles_updateFromHashes
+      requestBody:
+        description: Parameters of the updated version requested
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetLatestVersionFromHashBody'
+      responses:
+        '200':
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Version'
+        '400':
+          description: Request was invalid, see given error
+        '404':
+          description: >-
+            The requested item(s) were not found or no authorization to access
+            the requested item(s)
+  /version_files:
+    post:
+      tags:
+        - version-files
+      summary: Get versions from hashes
+      operationId: Versionfiles_getVersionsFromHashes
+      description: >-
+        This is the same as [`/version_file/{hash}`](https://docs.modrinth.com)
+        except it accepts multiple hashes.
+      requestBody:
+        description: Hashes and algorithm of the versions requested
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HashList'
+      responses:
+        '200':
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HashVersionMap'
+        '400':
+          description: Request was invalid, see given error
+  /version_files/update:
+    post:
+      tags:
+        - version-files
+      summary: >-
+        Latest versions of multiple project from hashes, loader(s), and game
+        version(s)
+      operationId: Versionfiles_updateMultipleVersions
+      description: >-
+        This is the same as
+        [`/version_file/{hash}/update`](https://docs.modrinth.com) except it
+        accepts multiple hashes.
+      requestBody:
+        description: Parameters of the updated version requested
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetLatestVersionsFromHashesBody'
+      responses:
+        '200':
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HashVersionMap'
+        '400':
+          description: Request was invalid, see given error
+  /user/{id|username}:
+    parameters:
+      - $ref: '#/components/parameters/UserIdentifier'
+    get:
+      tags:
+        - users
+      summary: Get a user
+      operationId: Users_getUserByIdOrUsername
+      responses:
+        '200':
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: >-
+            The requested item(s) were not found or no authorization to access
+            the requested item(s)
+    patch:
+      tags:
+        - users
+      summary: Modify a user
+      operationId: Users_modifyUserPatch
+      security:
+        - TokenAuth:
+            - USER_WRITE
+      requestBody:
+        description: Modified user fields
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditableUser'
+      responses:
+        '204':
+          description: Expected response to a valid request
+        '401':
+          description: >-
+            Incorrect token scopes or no authorization to access the requested
+            item(s)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthError'
+        '404':
+          description: >-
+            The requested item(s) were not found or no authorization to access
+            the requested item(s)
+  /user:
+    get:
+      tags:
+        - users
+      summary: Get user from authorization header
+      operationId: Users_getUserFromAuthHeader
+      security:
+        - TokenAuth:
+            - USER_READ
+      responses:
+        '200':
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: >-
+            Incorrect token scopes or no authorization to access the requested
+            item(s)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthError'
+  /users:
+    parameters:
+      - description: The IDs of the users
+        in: query
+        name: ids
+        schema:
+          type: string
+          example: '["AABBCCDD", "EEFFGGHH"]'
+        required: true
+    get:
+      tags:
+        - users
+      summary: Get multiple users
+      operationId: Users_getMultipleUsers
+      responses:
+        '200':
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsersGetMultipleUsersResponse'
+  /user/{id|username}/icon:
+    parameters:
+      - $ref: '#/components/parameters/UserIdentifier'
+    patch:
+      tags:
+        - users
+      summary: Change user's avatar
+      operationId: Users_changeAvatar
+      security:
+        - TokenAuth:
+            - USER_WRITE
+      description: The new avatar may be up to 2MiB in size.
+      requestBody:
+        $ref: '#/components/requestBodies/Image'
+      responses:
+        '204':
+          description: Expected response to a valid request
+        '400':
+          description: Request was invalid, see given error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidInputError'
+        '404':
+          description: >-
+            The requested item(s) were not found or no authorization to access
+            the requested item(s)
+  /user/{id|username}/projects:
+    parameters:
+      - $ref: '#/components/parameters/UserIdentifier'
+    get:
+      tags:
+        - users
+      summary: Get user's projects
+      operationId: Users_getUserProjects
+      responses:
+        '200':
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsersGetUserProjectsResponse'
+        '404':
+          description: >-
+            The requested item(s) were not found or no authorization to access
+            the requested item(s)
+  /user/{id|username}/follows:
+    parameters:
+      - $ref: '#/components/parameters/UserIdentifier'
+    get:
+      tags:
+        - users
+      summary: Get user's followed projects
+      operationId: Users_getFollowedProjects
+      security:
+        - TokenAuth:
+            - USER_READ
+      responses:
+        '200':
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsersGetFollowedProjectsResponse'
+        '401':
+          description: >-
+            Incorrect token scopes or no authorization to access the requested
+            item(s)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthError'
+        '404':
+          description: >-
+            The requested item(s) were not found or no authorization to access
+            the requested item(s)
+  /user/{id|username}/payouts:
+    parameters:
+      - $ref: '#/components/parameters/UserIdentifier'
+    get:
+      tags:
+        - users
+      summary: Get user's payout history
+      operationId: Users_getPayouts
+      security:
+        - TokenAuth:
+            - PAYOUTS_READ
+      responses:
+        '200':
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserPayoutHistory'
+        '401':
+          description: >-
+            Incorrect token scopes or no authorization to access the requested
+            item(s)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthError'
+        '404':
+          description: >-
+            The requested item(s) were not found or no authorization to access
+            the requested item(s)
+    post:
+      tags:
+        - users
+      summary: Withdraw payout balance to PayPal or Venmo
+      operationId: Users_withdrawPayoutBalanceToPaypal
+      security:
+        - TokenAuth:
+            - PAYOUTS_WRITE
+      description: >-
+        Warning: certain amounts get withheld for fees. Please do not call this
+        API endpoint without first acknowledging the warnings on the
+        corresponding frontend page.
+      parameters:
+        - description: Amount to withdraw
+          name: amount
+          in: query
+          schema:
+            type: integer
+          required: true
+      responses:
+        '204':
+          description: Expected response to a valid request
+        '401':
+          description: >-
+            Incorrect token scopes or no authorization to access the requested
+            item(s)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthError'
+        '404':
+          description: >-
+            The requested item(s) were not found or no authorization to access
+            the requested item(s)
+  /user/{id|username}/notifications:
+    parameters:
+      - $ref: '#/components/parameters/UserIdentifier'
+    get:
+      tags:
+        - notifications
+      summary: Get user's notifications
+      operationId: Notifications_getUserNotifications
+      security:
+        - TokenAuth:
+            - NOTIFICATION_READ
+      responses:
+        '200':
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationsGetUserNotificationsResponse'
+        '401':
+          description: >-
+            Incorrect token scopes or no authorization to access the requested
+            item(s)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthError'
+        '404':
+          description: >-
+            The requested item(s) were not found or no authorization to access
+            the requested item(s)
+  /notification/{id}:
+    parameters:
+      - $ref: '#/components/parameters/NotificationIdentifier'
+    get:
+      tags:
+        - notifications
+      summary: Get notification from ID
+      operationId: Notifications_getById
+      security:
+        - TokenAuth:
+            - NOTIFICATION_READ
+      responses:
+        '200':
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notification'
+        '401':
+          description: >-
+            Incorrect token scopes or no authorization to access the requested
+            item(s)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthError'
+        '404':
+          description: >-
+            The requested item(s) were not found or no authorization to access
+            the requested item(s)
+    patch:
+      tags:
+        - notifications
+      summary: Mark notification as read
+      operationId: Notifications_markAsRead
+      security:
+        - TokenAuth:
+            - NOTIFICATION_WRITE
+      responses:
+        '204':
+          description: Expected response to a valid request
+        '401':
+          description: >-
+            Incorrect token scopes or no authorization to access the requested
+            item(s)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthError'
+        '404':
+          description: >-
+            The requested item(s) were not found or no authorization to access
+            the requested item(s)
+    delete:
+      tags:
+        - notifications
+      summary: Delete notification
+      operationId: Notifications_deleteById
+      security:
+        - TokenAuth:
+            - NOTIFICATION_WRITE
+      responses:
+        '204':
+          description: Expected response to a valid request
+        '401':
+          description: >-
+            Incorrect token scopes or no authorization to access the requested
+            item(s)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthError'
+        '404':
+          description: >-
+            The requested item(s) were not found or no authorization to access
+            the requested item(s)
+  /notifications:
+    parameters:
+      - description: The IDs of the notifications
+        in: query
+        name: ids
+        schema:
+          type: string
+          example: '["AABBCCDD", "EEFFGGHH"]'
+        required: true
+    get:
+      tags:
+        - notifications
+      summary: Get multiple notifications
+      operationId: Notifications_getMultiple
+      security:
+        - TokenAuth:
+            - NOTIFICATION_READ
+      responses:
+        '200':
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationsGetMultipleResponse'
+        '401':
+          description: >-
+            Incorrect token scopes or no authorization to access the requested
+            item(s)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthError'
+        '404':
+          description: >-
+            The requested item(s) were not found or no authorization to access
+            the requested item(s)
+    patch:
+      tags:
+        - notifications
+      summary: Mark multiple notifications as read
+      operationId: Notifications_markAsRead
+      security:
+        - TokenAuth:
+            - NOTIFICATION_WRITE
+      responses:
+        '204':
+          description: Expected response to a valid request
+        '401':
+          description: >-
+            Incorrect token scopes or no authorization to access the requested
+            item(s)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthError'
+        '404':
+          description: >-
+            The requested item(s) were not found or no authorization to access
+            the requested item(s)
+    delete:
+      tags:
+        - notifications
+      summary: Delete multiple notifications
+      operationId: Notifications_deleteMultiple
+      security:
+        - TokenAuth:
+            - NOTIFICATION_WRITE
+      responses:
+        '204':
+          description: Expected response to a valid request
+        '401':
+          description: >-
+            Incorrect token scopes or no authorization to access the requested
+            item(s)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthError'
+        '404':
+          description: >-
+            The requested item(s) were not found or no authorization to access
+            the requested item(s)
+  /report:
+    post:
+      tags:
+        - threads
+      summary: Report a project, user, or version
+      operationId: Threads_reportProjectUserVersion
+      security:
+        - TokenAuth:
+            - REPORT_CREATE
+      description: >-
+        Bring a project, user, or version to the attention of the moderators by
+        reporting it.
+      requestBody:
+        description: The report to be sent
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatableReport'
+      responses:
+        '200':
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Report'
+        '400':
+          description: Request was invalid, see given error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidInputError'
+        '401':
+          description: >-
+            Incorrect token scopes or no authorization to access the requested
+            item(s)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthError'
+    get:
+      tags:
+        - threads
+      summary: Get your open reports
+      operationId: Threads_getOpenReports
+      security:
+        - TokenAuth:
+            - REPORT_READ
+      parameters:
+        - in: query
+          name: count
+          schema:
+            type: integer
+            example: 100
+      responses:
+        '200':
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ThreadsGetOpenReportsResponse'
+        '401':
+          description: >-
+            Incorrect token scopes or no authorization to access the requested
+            item(s)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthError'
+        '404':
+          description: >-
+            The requested item(s) were not found or no authorization to access
+            the requested item(s)
+  /report/{id}:
+    parameters:
+      - $ref: '#/components/parameters/ReportIdentifier'
+    get:
+      tags:
+        - threads
+      summary: Get report from ID
+      operationId: Threads_getReportById
+      security:
+        - TokenAuth:
+            - REPORT_READ
+      responses:
+        '200':
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Report'
+        '401':
+          description: >-
+            Incorrect token scopes or no authorization to access the requested
+            item(s)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthError'
+        '404':
+          description: >-
+            The requested item(s) were not found or no authorization to access
+            the requested item(s)
+    patch:
+      tags:
+        - threads
+      summary: Modify a report
+      operationId: Threads_modifyReport
+      security:
+        - TokenAuth:
+            - REPORT_WRITE
+      requestBody:
+        description: What to modify about the report
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ThreadsModifyReportRequest'
+      responses:
+        '204':
+          description: Expected response to a valid request
+        '400':
+          description: Request was invalid, see given error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidInputError'
+        '401':
+          description: >-
+            Incorrect token scopes or no authorization to access the requested
+            item(s)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthError'
+        '404':
+          description: >-
+            The requested item(s) were not found or no authorization to access
+            the requested item(s)
+  /reports:
+    parameters:
+      - description: The IDs of the reports
+        in: query
+        name: ids
+        schema:
+          type: string
+          example: '["AABBCCDD", "EEFFGGHH"]'
+        required: true
+    get:
+      tags:
+        - threads
+      summary: Get multiple reports
+      operationId: Threads_getMultipleReports
+      security:
+        - TokenAuth:
+            - REPORT_READ
+      responses:
+        '200':
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ThreadsGetMultipleReportsResponse'
+        '401':
+          description: >-
+            Incorrect token scopes or no authorization to access the requested
+            item(s)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthError'
+        '404':
+          description: >-
+            The requested item(s) were not found or no authorization to access
+            the requested item(s)
+  /thread/{id}:
+    parameters:
+      - $ref: '#/components/parameters/ThreadIdentifier'
+    get:
+      tags:
+        - threads
+      summary: Get a thread
+      operationId: Threads_getThreadById
+      security:
+        - TokenAuth:
+            - THREAD_READ
+      responses:
+        '200':
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Thread'
+        '404':
+          description: >-
+            The requested item(s) were not found or no authorization to access
+            the requested item(s)
+    post:
+      tags:
+        - threads
+      summary: Send a text message to a thread
+      operationId: Threads_sendMessage
+      security:
+        - TokenAuth:
+            - THREAD_WRITE
+      requestBody:
+        description: >-
+          The message to be sent. Note that you only need the fields applicable
+          for the `text` type.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ThreadMessageBody'
+      responses:
+        '200':
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Thread'
+        '400':
+          description: Request was invalid, see given error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidInputError'
+        '404':
+          description: >-
+            The requested item(s) were not found or no authorization to access
+            the requested item(s)
+  /threads:
+    parameters:
+      - description: The IDs of the threads
+        in: query
+        name: ids
+        schema:
+          type: string
+          example: '["AABBCCDD", "EEFFGGHH"]'
+        required: true
+    get:
+      tags:
+        - threads
+      summary: Get multiple threads
+      operationId: Threads_listThreads
+      security:
+        - TokenAuth:
+            - THREAD_READ
+      responses:
+        '200':
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ThreadsListThreadsResponse'
+        '404':
+          description: >-
+            The requested item(s) were not found or no authorization to access
+            the requested item(s)
+  /message/{id}:
+    parameters:
+      - description: The ID of the message
+        name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          example:
+            - IIJJKKLL
+    delete:
+      tags:
+        - threads
+      summary: Delete a thread message
+      operationId: Threads_deleteThreadMessage
+      security:
+        - TokenAuth:
+            - THREAD_WRITE
+      responses:
+        '204':
+          description: Expected response to a valid request
+        '401':
+          description: >-
+            Incorrect token scopes or no authorization to access the requested
+            item(s)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthError'
+        '404':
+          description: >-
+            The requested item(s) were not found or no authorization to access
+            the requested item(s)
+  /project/{id|slug}/members:
+    parameters:
+      - $ref: '#/components/parameters/ProjectIdentifier'
+    get:
+      tags:
+        - teams
+      summary: Get a project's team members
+      operationId: Teams_getProjectMembers
+      responses:
+        '200':
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamsGetProjectMembersResponse'
+        '404':
+          description: >-
+            The requested item(s) were not found or no authorization to access
+            the requested item(s)
+  /team/{id}/members:
+    parameters:
+      - $ref: '#/components/parameters/TeamIdentifier'
+    get:
+      tags:
+        - teams
+      summary: Get a team's members
+      operationId: Teams_getTeamMembers
+      security:
+        - TokenAuth:
+            - PROJECT_READ
+      responses:
+        '200':
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamsGetTeamMembersResponse'
+    post:
+      tags:
+        - teams
+      summary: Add a user to a team
+      operationId: Teams_addUserToTeam
+      security:
+        - TokenAuth:
+            - PROJECT_WRITE
+      requestBody:
+        description: User to be added (must be the ID, usernames cannot be used here)
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserIdentifier'
+      responses:
+        '204':
+          description: Expected response to a valid request
+        '401':
+          description: >-
+            Incorrect token scopes or no authorization to access the requested
+            item(s)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthError'
+        '404':
+          description: >-
+            The requested item(s) were not found or no authorization to access
+            the requested item(s)
+  /teams:
+    parameters:
+      - description: The IDs of the teams
+        in: query
+        name: ids
+        schema:
+          type: string
+          example: '["AABBCCDD", "EEFFGGHH"]'
+        required: true
+    get:
+      tags:
+        - teams
+      summary: Get the members of multiple teams
+      operationId: Teams_getMembers
+      responses:
+        '200':
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamsGetMembersResponse'
+  /team/{id}/join:
+    parameters:
+      - $ref: '#/components/parameters/TeamIdentifier'
+    post:
+      tags:
+        - teams
+      summary: Join a team
+      operationId: Teams_joinTeam
+      security:
+        - TokenAuth:
+            - PROJECT_WRITE
+      responses:
+        '204':
+          description: Expected response to a valid request
+        '401':
+          description: >-
+            Incorrect token scopes or no authorization to access the requested
+            item(s)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthError'
+        '404':
+          description: >-
+            The requested item(s) were not found or no authorization to access
+            the requested item(s)
+  /team/{id}/members/{id|username}:
+    parameters:
+      - $ref: '#/components/parameters/TeamIdentifier'
+      - $ref: '#/components/parameters/UserIdentifier'
+    patch:
+      tags:
+        - teams
+      summary: Modify a team member's information
+      operationId: Teams_modifyMemberInfo
+      security:
+        - TokenAuth:
+            - PROJECT_WRITE
+      requestBody:
+        description: Contents to be modified
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ModifyTeamMemberBody'
+      responses:
+        '204':
+          description: Expected response to a valid request
+        '401':
+          description: >-
+            Incorrect token scopes or no authorization to access the requested
+            item(s)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthError'
+        '404':
+          description: >-
+            The requested item(s) were not found or no authorization to access
+            the requested item(s)
+    delete:
+      tags:
+        - teams
+      summary: Remove a member from a team
+      operationId: Teams_removeMember
+      security:
+        - TokenAuth:
+            - PROJECT_WRITE
+      responses:
+        '204':
+          description: Expected response to a valid request
+        '401':
+          description: >-
+            Incorrect token scopes or no authorization to access the requested
+            item(s)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthError'
+        '404':
+          description: >-
+            The requested item(s) were not found or no authorization to access
+            the requested item(s)
+  /team/{id}/owner:
+    parameters:
+      - $ref: '#/components/parameters/TeamIdentifier'
+    patch:
+      tags:
+        - teams
+      summary: Transfer team's ownership to another user
+      operationId: Teams_transferOwnership
+      security:
+        - TokenAuth:
+            - PROJECT_WRITE
+      requestBody:
+        description: New owner's ID
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserIdentifier'
+      responses:
+        '204':
+          description: Expected response to a valid request
+        '401':
+          description: >-
+            Incorrect token scopes or no authorization to access the requested
+            item(s)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthError'
+        '404':
+          description: >-
+            The requested item(s) were not found or no authorization to access
+            the requested item(s)
+  /tag/category:
+    get:
+      tags:
+        - tags
+      summary: Get a list of categories
+      operationId: Tags_listCategoriesWithIcons
+      description: Gets an array of categories, their icons, and applicable project types
+      responses:
+        '200':
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TagsListCategoriesWithIconsResponse'
+  /tag/loader:
+    get:
+      tags:
+        - tags
+      summary: Get a list of loaders
+      operationId: Tags_getLoaderList
+      description: Gets an array of loaders, their icons, and supported project types
+      responses:
+        '200':
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TagsGetLoaderListResponse'
+  /tag/game_version:
+    get:
+      tags:
+        - tags
+      summary: Get a list of game versions
+      operationId: Tags_listGameVersions
+      description: Gets an array of game versions and information about them
+      responses:
+        '200':
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TagsListGameVersionsResponse'
+  /tag/license:
+    get:
+      tags:
+        - tags
+      summary: Get a list of licenses
+      operationId: Tags_listLicenses
+      description: Deprecated - simply use SPDX IDs.
+      responses:
+        '200':
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TagsListLicensesResponse'
+      deprecated: true
+  /tag/license/{id}:
+    parameters:
+      - description: The license ID to get the text of
+        name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          example:
+            - LGPL-3.0-or-later
+    get:
+      tags:
+        - tags
+      summary: Get the text and title of a license
+      operationId: Tags_getLicenseTextTitle
+      responses:
+        '200':
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/License'
+        '400':
+          description: Request was invalid, see given error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidInputError'
+  /tag/donation_platform:
+    get:
+      tags:
+        - tags
+      summary: Get a list of donation platforms
+      operationId: Tags_listDonationPlatforms
+      description: Gets an array of donation platforms and information about them
+      responses:
+        '200':
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TagsListDonationPlatformsResponse'
+  /tag/report_type:
+    get:
+      tags:
+        - tags
+      summary: Get a list of report types
+      operationId: Tags_listReportTypes
+      description: Gets an array of valid report types
+      responses:
+        '200':
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TagsListReportTypesResponse'
+  /tag/project_type:
+    get:
+      tags:
+        - tags
+      summary: Get a list of project types
+      operationId: Tags_listProjectTypes
+      description: Gets an array of valid project types
+      responses:
+        '200':
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TagsListProjectTypesResponse'
+  /tag/side_type:
+    get:
+      tags:
+        - tags
+      summary: Get a list of side types
+      operationId: Tags_listSideTypes
+      description: Gets an array of valid side types
+      responses:
+        '200':
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TagsListSideTypesResponse'
+  /updates/{id|slug}/forge_updates.json:
+    servers:
+      - description: Production server
+        url: https://api.modrinth.com
+      - description: Staging server
+        url: https://staging-api.modrinth.com
+    parameters:
+      - $ref: '#/components/parameters/ProjectIdentifier'
+    get:
+      tags:
+        - misc
+      summary: Forge Updates JSON file
+      operationId: Misc_getForgeUpdatesJson
+      description: >
+        If you're a Forge mod developer, your Modrinth mods have an
+        automatically generated `updates.json` using the
+
+        [Forge Update
+        Checker](https://docs.minecraftforge.net/en/latest/misc/updatechecker/).
+
+
+        The only setup is to insert the URL into the `[[mods]]` section of your
+        `mods.toml` file as such:
+
+
+        ```toml
+
+        [[mods]]
+
+        # the other stuff here - ID, version, display name, etc. 
+
+        updateJSONURL =
+        "https://api.modrinth.com/updates/{slug|ID}/forge_updates.json"
+
+        ```
+
+
+        Replace `{slug|id}` with the slug or ID of your project.
+
+
+        Modrinth will handle the rest! When you update your mod, Forge will
+        notify your users that their copy of your mod is out of date.
+
+
+        Make sure that the version format you use for your Modrinth releases is
+        the same as the version format you use in your `mods.toml`.
+
+        If you use a format such as `1.2.3-forge` or `1.2.3+1.19` with your
+        Modrinth releases but your `mods.toml` only has `1.2.3`,
+
+        the update checker may not function properly.
+      responses:
+        '200':
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForgeUpdates'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidInputError'
+  /statistics:
+    get:
+      tags:
+        - misc
+      summary: Various statistics about this Modrinth instance
+      operationId: Misc_instanceStatistics
+      responses:
+        '200':
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Statistics'
+components:
+  parameters:
+    ProjectIdentifier:
+      description: The ID or slug of the project
+      name: id|slug
+      in: path
+      required: true
+      schema:
+        type: string
+        example:
+          - AABBCCDD
+          - my_project
+    MultipleProjectIdentifier:
+      description: The IDs and/or slugs of the projects
+      in: query
+      name: ids
+      schema:
+        type: string
+        example: '["AABBCCDD", "EEFFGGHH"]'
+      required: true
+    UserIdentifier:
+      description: The ID or username of the user
+      name: id|username
+      in: path
+      required: true
+      schema:
+        type: string
+        example:
+          - EEFFGGHH
+          - my_user
+    VersionIdentifier:
+      description: The ID of the version
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        example:
+          - IIJJKKLL
+    TeamIdentifier:
+      description: The ID of the team
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        example:
+          - MMNNOOPP
+    ReportIdentifier:
+      description: The ID of the report
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        example:
+          - RRSSTTUU
+    ThreadIdentifier:
+      description: The ID of the thread
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        example:
+          - QQRRSSTT
+    NotificationIdentifier:
+      description: The ID of the notification
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        example:
+          - NNOOPPQQ
+    AlgorithmIdentifier:
+      description: The algorithm of the hash
+      name: algorithm
+      in: query
+      required: true
+      schema:
+        type: string
+        enum:
+          - sha1
+          - sha512
+        example: sha512
+        default: sha1
+    MultipleHashQueryIdentifier:
+      description: Whether to return multiple results when looking for this hash
+      name: multiple
+      in: query
+      required: false
+      schema:
+        type: boolean
+        default: false
+    FileHashIdentifier:
+      description: >-
+        The hash of the file, considering its byte content, and encoded in
+        hexadecimal
+      name: hash
+      in: path
+      required: true
+      schema:
+        type: string
+        example: 619e250c133106bacc3e3b560839bd4b324dfda8
+  requestBodies:
+    Image:
+      content:
+        image/png:
+          schema:
+            $ref: '#/components/schemas/ProjectsChangeProjectIconRequest'
+        image/jpeg:
+          schema:
+            $ref: '#/components/schemas/ProjectsChangeProjectIconRequest1'
+        image/bmp:
+          schema:
+            $ref: '#/components/schemas/ProjectsChangeProjectIconRequest2'
+        image/gif:
+          schema:
+            $ref: '#/components/schemas/ProjectsChangeProjectIconRequest3'
+        image/webp:
+          schema:
+            $ref: '#/components/schemas/ProjectsChangeProjectIconRequest4'
+        image/svg:
+          schema:
+            $ref: '#/components/schemas/ProjectsChangeProjectIconRequest5'
+        image/svgz:
+          schema:
+            $ref: '#/components/schemas/ProjectsChangeProjectIconRequest6'
+        image/rgb:
+          schema:
+            $ref: '#/components/schemas/ProjectsChangeProjectIconRequest7'
+  schemas:
+    BaseVersion:
+      type: object
+      properties:
+        name:
+          description: The name of this version
+          type: string
+          example: Version 1.0.0
+        version_number:
+          description: The version number. Ideally will follow semantic versioning
+          type: string
+          example: 1.0.0
+        changelog:
+          description: The changelog for this version
+          type: string
+          example: 'List of changes in this version: ...'
+          nullable: true
+        dependencies:
+          description: A list of specific versions of projects that this version depends on
+          type: array
+          items:
+            $ref: '#/components/schemas/VersionDependency'
+        game_versions:
+          description: A list of versions of Minecraft that this version supports
+          type: array
+          items:
+            type: string
+          example:
+            - 1.16.5
+            - 1.17.1
+        version_type:
+          description: The release channel for this version
+          type: string
+          enum:
+            - release
+            - beta
+            - alpha
+          example: release
+        loaders:
+          description: The mod loaders that this version supports
+          type: array
+          items:
+            type: string
+          example:
+            - fabric
+            - forge
+        featured:
+          description: Whether the version is featured or not
+          type: boolean
+          example: true
+        status:
+          type: string
+          enum:
+            - listed
+            - archived
+            - draft
+            - unlisted
+            - scheduled
+            - unknown
+          example: listed
+        requested_status:
+          type: string
+          enum:
+            - listed
+            - archived
+            - draft
+            - unlisted
+          nullable: true
+    VersionDependency:
+      type: object
+      properties:
+        version_id:
+          description: The ID of the version that this version depends on
+          type: string
+          example: IIJJKKLL
+          nullable: true
+        project_id:
+          description: The ID of the project that this version depends on
+          type: string
+          example: QQRRSSTT
+          nullable: true
+        file_name:
+          description: >-
+            The file name of the dependency, mostly used for showing external
+            dependencies on modpacks
+          type: string
+          example: sodium-fabric-mc1.19-0.4.2+build.16.jar
+          nullable: true
+        dependency_type:
+          description: The type of dependency that this version has
+          type: string
+          enum:
+            - required
+            - optional
+            - incompatible
+            - embedded
+          example: required
+      required:
+        - dependency_type
+    EditableVersion:
+      allOf:
+        - $ref: '#/components/schemas/BaseVersion'
+        - type: object
+          properties:
+            primary_file:
+              description: The hash format and the hash of the new primary file
+              type: array
+              items:
+                type: string
+              example:
+                - sha1
+                - aaaabbbbccccddddeeeeffffgggghhhhiiiijjjj
+            file_types:
+              description: A list of file_types to edit
+              type: array
+              items:
+                $ref: '#/components/schemas/EditableFileType'
+    EditableFileType:
+      type: object
+      properties:
+        algorithm:
+          description: The hash algorithm of the hash specified in the hash field
+          type: string
+          example: sha1
+        hash:
+          description: The hash of the file you're editing
+          type: string
+          example: aaaabbbbccccddddeeeeffffgggghhhhiiiijjjj
+        file_type:
+          description: The hash algorithm of the file you're editing
+          type: string
+          enum:
+            - required-resource-pack
+            - optional-resource-pack
+          example: required-resource-pack
+          nullable: true
+      required:
+        - algorithm
+        - hash
+        - file_type
+    CreatableVersion:
+      allOf:
+        - $ref: '#/components/schemas/BaseVersion'
+        - type: object
+          properties:
+            project_id:
+              description: The ID of the project this version is for
+              type: string
+              example: AABBCCDD
+            file_parts:
+              description: >-
+                An array of the multipart field names of each file that goes
+                with this version
+              type: array
+              items:
+                type: string
+            primary_file:
+              description: The multipart field name of the primary file
+              type: string
+          required:
+            - file_parts
+            - project_id
+            - name
+            - version_number
+            - game_versions
+            - version_type
+            - loaders
+            - featured
+            - dependencies
+    CreateVersionBody:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/CreatableVersion'
+      required:
+        - data
+    Version:
+      allOf:
+        - $ref: '#/components/schemas/BaseVersion'
+        - type: object
+          properties:
+            id:
+              description: The ID of the version, encoded as a base62 string
+              type: string
+              example: IIJJKKLL
+            project_id:
+              description: The ID of the project this version is for
+              type: string
+              example: AABBCCDD
+            author_id:
+              description: The ID of the author who published this version
+              type: string
+              example: EEFFGGHH
+            date_published:
+              type: string
+              format: ISO-8601
+            downloads:
+              description: The number of times this version has been downloaded
+              type: integer
+            changelog_url:
+              description: >-
+                A link to the changelog for this version. Always null, only kept
+                for legacy compatibility.
+              type: string
+              deprecated: true
+              example: null
+              nullable: true
+            files:
+              description: A list of files available for download for this version
+              type: array
+              items:
+                $ref: '#/components/schemas/VersionFile'
+          required:
+            - id
+            - project_id
+            - author_id
+            - date_published
+            - downloads
+            - files
+            - name
+            - version_number
+            - game_versions
+            - version_type
+            - loaders
+            - featured
+    VersionFile:
+      type: object
+      properties:
+        hashes:
+          $ref: '#/components/schemas/VersionFileHashes'
+        url:
+          description: A direct link to the file
+          type: string
+          example: https://cdn.modrinth.com/data/AABBCCDD/versions/1.0.0/my_file.jar
+        filename:
+          description: The name of the file
+          type: string
+          example: my_file.jar
+        primary:
+          description: >-
+            Whether this file is the primary one for its version. Only a maximum
+            of one file per version will have this set to true. If there are not
+            any primary files, it can be inferred that the first file is the
+            primary one.
+          type: boolean
+          example: false
+        size:
+          description: The size of the file in bytes
+          type: integer
+          example: 1097270
+        file_type:
+          description: >-
+            The type of the additional file, used mainly for adding resource
+            packs to datapacks
+          type: string
+          enum:
+            - required-resource-pack
+            - optional-resource-pack
+          example: required-resource-pack
+          nullable: true
+      required:
+        - hashes
+        - url
+        - filename
+        - primary
+        - size
+    VersionFileHashes:
+      description: >-
+        A map of hashes of the file. The key is the hashing algorithm and the
+        value is the string version of the hash.
+      type: object
+      properties:
+        sha512:
+          type: string
+          example: >-
+            93ecf5fe02914fb53d94aa3d28c1fb562e23985f8e4d48b9038422798618761fe208a31ca9b723667a4e05de0d91a3f86bcd8d018f6a686c39550e21b198d96f
+        sha1:
+          type: string
+          example: c84dd4b3580c02b79958a0590afd5783d80ef504
+    GetLatestVersionFromHashBody:
+      type: object
+      properties:
+        loaders:
+          type: array
+          items:
+            type: string
+            example:
+              - fabric
+        game_versions:
+          type: array
+          items:
+            type: string
+          example:
+            - '1.18'
+            - 1.18.1
+      required:
+        - loaders
+        - game_versions
+    HashVersionMap:
+      description: A map from hashes to versions
+      type: object
+      additionalProperties:
+        $ref: '#/components/schemas/Version'
+    HashList:
+      description: A list of hashes and the algorithm used to create them
+      type: object
+      properties:
+        hashes:
+          type: array
+          items:
+            type: string
+          example:
+            - >-
+              ea0f38408102e4d2efd53c2cc11b88b711996b48d8922f76ea6abf731219c5bd1efe39ddf9cce77c54d49a62ff10fb685c00d2e4c524ab99d20f6296677ab2c4
+            - >-
+              925a5c4899affa4098d997dfa4a4cb52c636d539e94bc489d1fa034218cb96819a70eb8b01647a39316a59fcfe223c1a8c05ed2e2ae5f4c1e75fa48f6af1c960
+        algorithm:
+          type: string
+          enum:
+            - sha1
+            - sha512
+          example: sha512
+      required:
+        - hashes
+        - algorithm
+    GetLatestVersionsFromHashesBody:
+      allOf:
+        - $ref: '#/components/schemas/HashList'
+        - type: object
+          properties:
+            loaders:
+              type: array
+              items:
+                type: string
+              example:
+                - fabric
+            game_versions:
+              type: array
+              items:
+                type: string
+              example:
+                - '1.18'
+                - 1.18.1
+          required:
+            - loaders
+            - game_versions
+    BaseProject:
+      type: object
+      properties:
+        title:
+          description: The title or name of the project
+          type: string
+          example: My Project
+        description:
+          description: A short description of the project
+          type: string
+          example: A short description
+        slug:
+          description: >-
+            The slug of a project, used for vanity URLs. Regex:
+            ```^[\w!@$()`.+,"\-']{3,64}$```
+          type: string
+          example: my_project
+        categories:
+          description: A list of the categories that the project has
+          type: array
+          items:
+            type: string
+          example:
+            - technology
+            - adventure
+            - fabric
+        client_side:
+          description: The client side support of the project
+          type: string
+          enum:
+            - required
+            - optional
+            - unsupported
+          example: required
+        server_side:
+          description: The server side support of the project
+          type: string
+          enum:
+            - required
+            - optional
+            - unsupported
+          example: optional
+    ServerRenderedProject:
+      allOf:
+        - $ref: '#/components/schemas/BaseProject'
+        - type: object
+          properties:
+            project_type:
+              description: The project type of the project
+              type: string
+              enum:
+                - mod
+                - modpack
+                - resourcepack
+                - shader
+              example: mod
+            downloads:
+              description: The total number of downloads of the project
+              type: integer
+            icon_url:
+              description: The URL of the project's icon
+              type: string
+              example: >-
+                https://cdn.modrinth.com/data/AABBCCDD/b46513nd83hb4792a9a0e1fn28fgi6090c1842639.png
+              nullable: true
+            color:
+              description: >-
+                The RGB color of the project, automatically generated from the
+                project icon
+              type: integer
+              example: 8703084
+              nullable: true
+            thread_id:
+              description: The ID of the moderation thread associated with this project
+              type: string
+              example: TTUUVVWW
+            monetization_status:
+              type: string
+              enum:
+                - monetized
+                - demonetized
+                - force-demonetized
+          required:
+            - project_type
+            - downloads
+    ProjectResult:
+      allOf:
+        - $ref: '#/components/schemas/ServerRenderedProject'
+        - type: object
+          properties:
+            project_id:
+              description: The ID of the project
+              type: string
+              example: AABBCCDD
+            author:
+              description: The username of the project's author
+              type: string
+              example: my_user
+            display_categories:
+              description: >-
+                A list of the categories that the project has which are not
+                secondary
+              type: array
+              items:
+                type: string
+              example:
+                - technology
+                - fabric
+            versions:
+              description: A list of the minecraft versions supported by the project
+              type: array
+              items:
+                type: string
+              example:
+                - '1.8'
+                - 1.8.9
+            follows:
+              description: The total number of users following the project
+              type: integer
+            date_created:
+              description: The date the project was added to search
+              type: string
+              format: ISO-8601
+            date_modified:
+              description: The date the project was last modified
+              type: string
+              format: ISO-8601
+            latest_version:
+              description: The latest version of minecraft that this project supports
+              type: string
+              example: 1.8.9
+            license:
+              description: The SPDX license ID of a project
+              type: string
+              example: MIT
+            gallery:
+              description: All gallery images attached to the project
+              type: array
+              example:
+                - >-
+                  https://cdn.modrinth.com/data/AABBCCDD/images/009b7d8d6e8bf04968a29421117c59b3efe2351a.png
+                - >-
+                  https://cdn.modrinth.com/data/AABBCCDD/images/c21776867afb6046fdc3c21dbcf5cc50ae27a236.png
+              items:
+                type: string
+            featured_gallery:
+              description: The featured gallery image of the project
+              type: string
+              nullable: true
+          required:
+            - slug
+            - title
+            - description
+            - client_side
+            - server_side
+            - project_id
+            - author
+            - versions
+            - follows
+            - date_created
+            - date_modified
+            - license
+    NonSearchProject:
+      allOf:
+        - $ref: '#/components/schemas/BaseProject'
+        - type: object
+          properties:
+            body:
+              description: A long form description of the project
+              type: string
+              example: A long body describing my project in detail
+            status:
+              description: The status of the project
+              type: string
+              enum:
+                - approved
+                - archived
+                - rejected
+                - draft
+                - unlisted
+                - processing
+                - withheld
+                - scheduled
+                - private
+                - unknown
+              example: approved
+            requested_status:
+              description: >-
+                The requested status when submitting for review or scheduling
+                the project for release
+              type: string
+              enum:
+                - approved
+                - archived
+                - unlisted
+                - private
+                - draft
+              nullable: true
+            additional_categories:
+              description: A list of categories which are searchable but non-primary
+              type: array
+              items:
+                type: string
+              example:
+                - technology
+                - adventure
+                - fabric
+            issues_url:
+              description: >-
+                An optional link to where to submit bugs or issues with the
+                project
+              type: string
+              example: https://github.com/my_user/my_project/issues
+              nullable: true
+            source_url:
+              description: An optional link to the source code of the project
+              type: string
+              example: https://github.com/my_user/my_project
+              nullable: true
+            wiki_url:
+              description: >-
+                An optional link to the project's wiki page or other relevant
+                information
+              type: string
+              example: https://github.com/my_user/my_project/wiki
+              nullable: true
+            discord_url:
+              description: An optional invite link to the project's discord
+              type: string
+              example: https://discord.gg/AaBbCcDd
+              nullable: true
+            donation_urls:
+              description: A list of donation links for the project
+              type: array
+              items:
+                $ref: '#/components/schemas/ProjectDonationURL'
+    ProjectDonationURL:
+      type: object
+      properties:
+        id:
+          description: The ID of the donation platform
+          type: string
+          example: patreon
+        platform:
+          description: The donation platform this link is to
+          type: string
+          example: Patreon
+        url:
+          description: The URL of the donation platform and user
+          type: string
+          example: https://www.patreon.com/my_user
+    ModifiableProject:
+      allOf:
+        - $ref: '#/components/schemas/NonSearchProject'
+        - type: object
+          properties:
+            license_id:
+              description: The SPDX license ID of a project
+              type: string
+              example: LGPL-3.0-or-later
+            license_url:
+              description: The URL to this license
+              type: string
+              nullable: true
+    EditableProject:
+      allOf:
+        - $ref: '#/components/schemas/ModifiableProject'
+        - type: object
+          properties:
+            moderation_message:
+              description: The title of the moderators' message for the project
+              type: string
+              nullable: true
+            moderation_message_body:
+              description: The body of the moderators' message for the project
+              type: string
+              nullable: true
+    CreatableProject:
+      allOf:
+        - $ref: '#/components/schemas/ModifiableProject'
+        - type: object
+          properties:
+            project_type:
+              type: string
+              enum:
+                - mod
+                - modpack
+              example: modpack
+            initial_versions:
+              description: >-
+                A list of initial versions to upload with the created project.
+                Deprecated - please upload version files after initial upload.
+              type: array
+              items:
+                $ref: '#/components/schemas/EditableVersion'
+              deprecated: true
+            is_draft:
+              description: >-
+                Whether the project should be saved as a draft instead of being
+                sent to moderation for review. Deprecated - please always mark
+                this as true.
+              type: boolean
+              example: true
+              deprecated: true
+            gallery_items:
+              description: >-
+                Gallery images to be uploaded with the created project.
+                Deprecated - please upload gallery images after initial upload.
+              type: array
+              deprecated: true
+              items:
+                $ref: '#/components/schemas/CreatableProjectGalleryItem'
+          required:
+            - project_type
+            - slug
+            - title
+            - description
+            - body
+            - categories
+            - client_side
+            - server_side
+            - license_id
+    CreatableProjectGalleryItem:
+      type: object
+      nullable: true
+      properties:
+        title:
+          description: The title of the gallery image
+          type: string
+          example: My awesome screenshot!
+          nullable: true
+        description:
+          description: The description of the gallery image
+          type: string
+          example: This awesome screenshot shows all of the blocks in my mod!
+          nullable: true
+        item:
+          description: The name of the multipart item where the gallery media is located
+          type: string
+        featured:
+          description: Whether the image is featured in the gallery
+          type: boolean
+          example: true
+        ordering:
+          description: >-
+            The order of the gallery image. Gallery images are sorted by this
+            field and then alphabetically by title.
+          type: integer
+          example: 0
+    Project:
+      allOf:
+        - $ref: '#/components/schemas/NonSearchProject'
+        - $ref: '#/components/schemas/ServerRenderedProject'
+        - type: object
+          properties:
+            id:
+              description: The ID of the project, encoded as a base62 string
+              type: string
+              example: AABBCCDD
+            team:
+              description: The ID of the team that has ownership of this project
+              type: string
+              example: MMNNOOPP
+            body_url:
+              description: >-
+                The link to the long description of the project. Always null,
+                only kept for legacy compatibility.
+              type: string
+              deprecated: true
+              default: null
+              example: null
+              nullable: true
+            moderator_message:
+              $ref: '#/components/schemas/ModeratorMessage'
+            published:
+              description: The date the project was published
+              type: string
+              format: ISO-8601
+            updated:
+              description: The date the project was last updated
+              type: string
+              format: ISO-8601
+            approved:
+              description: The date the project's status was set to an approved status
+              type: string
+              format: ISO-8601
+              nullable: true
+            queued:
+              description: >-
+                The date the project's status was submitted to moderators for
+                review
+              type: string
+              format: ISO-8601
+              nullable: true
+            followers:
+              description: The total number of users following the project
+              type: integer
+            license:
+              $ref: '#/components/schemas/ProjectLicense'
+            versions:
+              description: >-
+                A list of the version IDs of the project (will never be empty
+                unless `draft` status)
+              type: array
+              items:
+                type: string
+              example:
+                - IIJJKKLL
+                - QQRRSSTT
+            game_versions:
+              description: A list of all of the game versions supported by the project
+              type: array
+              items:
+                type: string
+              example:
+                - '1.19'
+                - 1.19.1
+                - 1.19.2
+                - 1.19.3
+            loaders:
+              description: A list of all of the loaders supported by the project
+              type: array
+              items:
+                type: string
+              example:
+                - forge
+                - fabric
+                - quilt
+            gallery:
+              description: >-
+                A list of images that have been uploaded to the project's
+                gallery
+              type: array
+              items:
+                $ref: '#/components/schemas/GalleryImage'
+          required:
+            - id
+            - team
+            - published
+            - updated
+            - followers
+            - title
+            - description
+            - categories
+            - client_side
+            - server_side
+            - slug
+            - body
+            - status
+    ModeratorMessage:
+      description: A message that a moderator sent regarding the project
+      deprecated: true
+      type: object
+      properties:
+        message:
+          description: The message that a moderator has left for the project
+          type: string
+        body:
+          description: >-
+            The longer body of the message that a moderator has left for the
+            project
+          type: string
+          nullable: true
+      nullable: true
+      example: null
+    ProjectLicense:
+      description: The license of the project
+      type: object
+      properties:
+        id:
+          description: The SPDX license ID of a project
+          type: string
+          example: LGPL-3.0-or-later
+        name:
+          description: The long name of a license
+          type: string
+          example: GNU Lesser General Public License v3 or later
+        url:
+          description: The URL to this license
+          type: string
+          nullable: true
+    GalleryImage:
+      type: object
+      nullable: true
+      properties:
+        title:
+          description: The title of the gallery image
+          type: string
+          example: My awesome screenshot!
+          nullable: true
+        description:
+          description: The description of the gallery image
+          type: string
+          example: This awesome screenshot shows all of the blocks in my mod!
+          nullable: true
+        url:
+          description: The URL of the gallery image
+          type: string
+          example: >-
+            https://cdn.modrinth.com/data/AABBCCDD/images/009b7d8d6e8bf04968a29421117c59b3efe2351a.png
+        featured:
+          description: Whether the image is featured in the gallery
+          type: boolean
+          example: true
+        created:
+          description: The date and time the gallery image was created
+          type: string
+          format: ISO-8601
+        ordering:
+          description: >-
+            The order of the gallery image. Gallery images are sorted by this
+            field and then alphabetically by title.
+          type: integer
+          example: 0
+      required:
+        - url
+        - featured
+        - created
+    ProjectDependencyList:
+      type: object
+      properties:
+        projects:
+          description: Projects that the project depends upon
+          type: array
+          items:
+            $ref: '#/components/schemas/Project'
+        versions:
+          description: Versions that the project depends upon
+          type: array
+          items:
+            $ref: '#/components/schemas/Version'
+    PatchProjectsBody:
+      type: object
+      properties:
+        categories:
+          description: Set all of the categories to the categories specified here
+          type: array
+          items:
+            type: string
+        add_categories:
+          description: Add all of the categories specified here
+          type: array
+          items:
+            type: string
+        remove_categories:
+          description: Remove all of the categories specified here
+          type: array
+          items:
+            type: string
+        additional_categories:
+          description: >-
+            Set all of the additional categories to the categories specified
+            here
+          type: array
+          items:
+            type: string
+        add_additional_categories:
+          description: Add all of the additional categories specified here
+          type: array
+          items:
+            type: string
+        remove_additional_categories:
+          description: Remove all of the additional categories specified here
+          type: array
+          items:
+            type: string
+        donation_urls:
+          description: Set all of the donation links to the donation links specified here
+          type: array
+          items:
+            $ref: '#/components/schemas/ProjectDonationURL'
+        add_donation_urls:
+          description: Add all of the donation links specified here
+          type: array
+          items:
+            $ref: '#/components/schemas/ProjectDonationURL'
+        remove_donation_urls:
+          description: Remove all of the donation links specified here
+          type: array
+          items:
+            $ref: '#/components/schemas/ProjectDonationURL'
+        issues_url:
+          description: An optional link to where to submit bugs or issues with the projects
+          type: string
+          example: https://github.com/my_user/my_project/issues
+          nullable: true
+        source_url:
+          description: An optional link to the source code of the projects
+          type: string
+          example: https://github.com/my_user/my_project
+          nullable: true
+        wiki_url:
+          description: >-
+            An optional link to the projects' wiki page or other relevant
+            information
+          type: string
+          example: https://github.com/my_user/my_project/wiki
+          nullable: true
+        discord_url:
+          description: An optional invite link to the projects' discord
+          type: string
+          example: https://discord.gg/AaBbCcDd
+          nullable: true
+    CreateProjectBody:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/CreatableProject'
+        icon:
+          description: Project icon file
+          type: string
+          format: binary
+          enum:
+            - '*.png'
+            - '*.jpg'
+            - '*.jpeg'
+            - '*.bmp'
+            - '*.gif'
+            - '*.webp'
+            - '*.svg'
+            - '*.svgz'
+            - '*.rgb'
+      required:
+        - data
+    ProjectIdentifier:
+      type: object
+      properties:
+        id:
+          type: string
+          example: AABBCCDD
+    Schedule:
+      type: object
+      properties:
+        time:
+          type: string
+          format: ISO-8601
+          example: '2023-02-05T19:39:55.551839Z'
+        requested_status:
+          description: The requested status when scheduling the project for release
+          type: string
+          enum:
+            - approved
+            - archived
+            - unlisted
+            - private
+            - draft
+      required:
+        - time
+        - requested_status
+    SearchResults:
+      type: object
+      properties:
+        hits:
+          description: The list of results
+          type: array
+          items:
+            $ref: '#/components/schemas/ProjectResult'
+        offset:
+          description: The number of results that were skipped by the query
+          type: integer
+          example: 0
+        limit:
+          description: The number of results that were returned by the query
+          type: integer
+          example: 10
+        total_hits:
+          description: The total number of results that match the query
+          type: integer
+          example: 10
+      required:
+        - hits
+        - offset
+        - limit
+        - total_hits
+    UserIdentifier:
+      properties:
+        user_id:
+          type: string
+          example: EEFFGGHH
+      required:
+        - user_id
+    EditableUser:
+      type: object
+      properties:
+        username:
+          description: The user's username
+          type: string
+          example: my_user
+        name:
+          description: The user's display name
+          type: string
+          example: My User
+          nullable: true
+        email:
+          description: >-
+            The user's email (only displayed if requesting your own account).
+            Requires `USER_READ_EMAIL` PAT scope.
+          type: string
+          format: email
+          nullable: true
+        bio:
+          description: A description of the user
+          type: string
+          example: My short biography
+        payout_data:
+          $ref: '#/components/schemas/UserPayoutData'
+      required:
+        - username
+    UserPayoutData:
+      description: >-
+        Various data relating to the user's payouts status (you can only see
+        your own)
+      type: object
+      nullable: true
+      properties:
+        balance:
+          description: >-
+            The payout balance available for the user to withdraw (note, you
+            cannot modify this in a PATCH request)
+          type: integer
+          example: 10.11223344556678
+        payout_wallet:
+          description: The wallet that the user has selected
+          type: string
+          enum:
+            - paypal
+            - venmo
+          example: paypal
+        payout_wallet_type:
+          description: The type of the user's wallet
+          type: string
+          enum:
+            - email
+            - phone
+            - user_handle
+          example: email
+        payout_address:
+          description: The user's payout address
+          type: string
+          example: support@modrinth.com
+    User:
+      allOf:
+        - $ref: '#/components/schemas/EditableUser'
+        - type: object
+          properties:
+            id:
+              description: The user's ID
+              type: string
+              example: EEFFGGHH
+            avatar_url:
+              description: The user's avatar url
+              type: string
+              example: https://avatars.githubusercontent.com/u/11223344?v=1
+            created:
+              description: The time at which the user was created
+              type: string
+              format: ISO-8601
+            role:
+              description: The user's role
+              type: string
+              enum:
+                - admin
+                - moderator
+                - developer
+              example: developer
+            badges:
+              description: >
+                Any badges applicable to this user. These are currently unused
+                and undisplayed, and as such are subject to change
+
+
+                In order from first to seventh bit, the current bits are:
+
+                - (unused)
+
+                - EARLY_MODPACK_ADOPTER
+
+                - EARLY_RESPACK_ADOPTER
+
+                - EARLY_PLUGIN_ADOPTER
+
+                - ALPHA_TESTER
+
+                - CONTRIBUTOR
+
+                - TRANSLATOR
+              type: integer
+              format: bitfield
+              example: 63
+            auth_providers:
+              description: >-
+                A list of authentication providers you have signed up for (only
+                displayed if requesting your own account)
+              type: array
+              items:
+                type: string
+              example:
+                - github
+                - gitlab
+                - steam
+                - microsoft
+                - google
+                - discord
+              nullable: true
+            email_verified:
+              description: >-
+                Whether your email is verified (only displayed if requesting
+                your own account)
+              type: boolean
+              nullable: true
+            has_password:
+              description: >-
+                Whether you have a password associated with your account (only
+                displayed if requesting your own account)
+              type: boolean
+              nullable: true
+            has_totp:
+              description: >-
+                Whether you have TOTP two-factor authentication connected to
+                your account (only displayed if requesting your own account)
+              type: boolean
+              nullable: true
+            github_id:
+              description: >-
+                Deprecated - this is no longer public for security reasons and
+                is always null
+              deprecated: true
+              type: integer
+              example: null
+              nullable: true
+          required:
+            - id
+            - avatar_url
+            - created
+            - role
+    UserPayoutHistory:
+      type: object
+      properties:
+        all_time:
+          description: The all-time balance accrued by this user in USD
+          type: string
+          example: 10.11223344556678
+        last_month:
+          description: The amount in USD made by the user in the previous 30 days
+          type: string
+          example: 2.2244668800224465
+        payouts:
+          description: A history of all of the user's past transactions
+          type: array
+          items:
+            $ref: '#/components/schemas/UserPayoutHistoryEntry'
+    UserPayoutHistoryEntry:
+      type: object
+      properties:
+        created:
+          description: The date of this transaction
+          type: string
+          format: ISO-8601
+        amount:
+          description: The amount of this transaction in USD
+          type: integer
+          example: 10
+        status:
+          description: The status of this transaction
+          type: string
+          example: success
+    Notification:
+      type: object
+      properties:
+        title:
+          description: The title of the notification
+          type: string
+          example: '**My Project** has been updated!'
+        id:
+          description: The id of the notification
+          type: string
+          example: UUVVWWXX
+        user_id:
+          description: The id of the user who received the notification
+          type: string
+          example: EEFFGGHH
+        type:
+          description: The type of notification
+          type: string
+          enum:
+            - project_update
+            - team_invite
+            - status_change
+            - moderator_message
+          example: project_update
+          nullable: true
+        text:
+          description: The body text of the notification
+          type: string
+          example: 'The project, My Project, has released a new version: 1.0.0'
+        link:
+          description: A link to the related project or version
+          type: string
+          example: mod/AABBCCDD/version/IIJJKKLL
+        read:
+          description: Whether the notification has been read or not
+          type: boolean
+          example: false
+        created:
+          description: The time at which the notification was created
+          type: string
+          format: ISO-8601
+        actions:
+          description: A list of actions that can be performed
+          type: array
+          items:
+            $ref: '#/components/schemas/NotificationAction'
+      required:
+        - id
+        - user_id
+        - title
+        - text
+        - link
+        - read
+        - created
+        - actions
+    NotificationAction:
+      description: An action that can be performed on a notification
+      type: object
+      properties:
+        title:
+          description: The friendly name for this action
+          type: string
+          example: Accept
+        action_route:
+          description: The HTTP code and path to request in order to perform this action.
+          type: array
+          items:
+            type: string
+          example:
+            - POST
+            - team/{id}/join
+    CreatableReport:
+      type: object
+      properties:
+        report_type:
+          description: The type of the report being sent
+          type: string
+          example: copyright
+        item_id:
+          description: The ID of the item (project, version, or user) being reported
+          type: string
+          example: EEFFGGHH
+        item_type:
+          description: The type of the item being reported
+          type: string
+          enum:
+            - project
+            - user
+            - version
+          example: project
+        body:
+          description: The extended explanation of the report
+          type: string
+          example: This is a reupload of my mod, AABBCCDD!
+      required:
+        - report_type
+        - item_id
+        - item_type
+        - body
+    Report:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/CreatableReport'
+        - type: object
+          properties:
+            id:
+              description: The ID of the report
+              type: string
+              example: VVWWXXYY
+            reporter:
+              description: The ID of the user who reported the item
+              type: string
+              example: UUVVWWXX
+            created:
+              description: The time at which the report was created
+              type: string
+              format: ISO-8601
+            closed:
+              description: Whether the report is resolved
+              type: boolean
+            thread_id:
+              description: The ID of the moderation thread associated with this report
+              type: string
+              example: TTUUVVWW
+          required:
+            - reporter
+            - created
+            - closed
+            - thread_id
+    Thread:
+      type: object
+      properties:
+        id:
+          description: The ID of the thread
+          type: string
+          example: WWXXYYZZ
+        type:
+          type: string
+          enum:
+            - project
+            - report
+            - direct_message
+        project_id:
+          description: The ID of the associated project if a project thread
+          type: string
+          nullable: true
+        report_id:
+          description: The ID of the associated report if a report thread
+          type: string
+          nullable: true
+        messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/ThreadMessage'
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+      required:
+        - id
+        - type
+        - messages
+        - members
+    ThreadMessage:
+      type: object
+      properties:
+        id:
+          description: The ID of the message itself
+          type: string
+          example: MMNNOOPP
+        author_id:
+          description: The ID of the author
+          type: string
+          example: QQRRSSTT
+          nullable: true
+        body:
+          $ref: '#/components/schemas/ThreadMessageBody'
+        created:
+          description: The time at which the message was created
+          type: string
+          format: ISO-8601
+      required:
+        - id
+        - body
+        - created
+    ThreadMessageBody:
+      description: >-
+        The contents of the message. **Fields will vary depending on message
+        type.**
+      type: object
+      properties:
+        type:
+          description: The type of message
+          type: string
+          enum:
+            - status_change
+            - text
+            - thread_closure
+            - deleted
+          example: status_change
+        body:
+          description: The actual message text. **Only present for `text` message type**
+          type: string
+          example: This is the text of the message.
+        private:
+          description: >-
+            Whether the message is only visible to moderators. **Only present
+            for `text` message type**
+          type: boolean
+          example: false
+        replying_to:
+          description: >-
+            The ID of the message being replied to by this message. **Only
+            present for `text` message type**
+          type: string
+          nullable: true
+          example: SSTTUUVV
+        old_status:
+          description: >-
+            The old status of the project. **Only present for `status_change`
+            message type**
+          type: string
+          enum:
+            - approved
+            - archived
+            - rejected
+            - draft
+            - unlisted
+            - processing
+            - withheld
+            - scheduled
+            - private
+            - unknown
+          example: processing
+        new_status:
+          description: >-
+            The new status of the project. **Only present for `status_change`
+            message type**
+          type: string
+          enum:
+            - approved
+            - archived
+            - rejected
+            - draft
+            - unlisted
+            - processing
+            - withheld
+            - scheduled
+            - private
+            - unknown
+          example: approved
+      required:
+        - type
+    TeamMember:
+      type: object
+      properties:
+        team_id:
+          description: The ID of the team this team member is a member of
+          type: string
+          example: MMNNOOPP
+        user:
+          $ref: '#/components/schemas/User'
+        role:
+          description: The user's role on the team
+          type: string
+          example: Member
+        permissions:
+          description: >
+            The user's permissions in bitfield format (requires authorization to
+            view)
+
+
+            In order from first to tenth bit, the bits are:
+
+            - UPLOAD_VERSION
+
+            - DELETE_VERSION
+
+            - EDIT_DETAILS
+
+            - EDIT_BODY
+
+            - MANAGE_INVITES
+
+            - REMOVE_MEMBER
+
+            - EDIT_MEMBER
+
+            - DELETE_PROJECT
+
+            - VIEW_ANALYTICS
+
+            - VIEW_PAYOUTS
+          type: integer
+          format: bitfield
+          example: 127
+        accepted:
+          description: >-
+            Whether or not the user has accepted to be on the team (requires
+            authorization to view)
+          type: boolean
+          example: true
+        payouts_split:
+          description: >-
+            The split of payouts going to this user. The proportion of payouts
+            they get is their split divided by the sum of the splits of all
+            members.
+          type: integer
+          example: 100
+        ordering:
+          description: The order of the team member.
+          type: integer
+          example: 0
+      required:
+        - team_id
+        - user
+        - role
+        - accepted
+    CategoryTag:
+      type: object
+      properties:
+        icon:
+          description: The SVG icon of a category
+          type: string
+          example: <svg></svg>
+        name:
+          description: The name of the category
+          type: string
+          example: adventure
+        project_type:
+          description: The project type this category is applicable to
+          type: string
+          example: mod
+        header:
+          description: The header under which the category should go
+          type: string
+          example: resolutions
+      required:
+        - icon
+        - name
+        - project_type
+        - header
+    LoaderTag:
+      type: object
+      properties:
+        icon:
+          description: The SVG icon of a loader
+          type: string
+          example: <svg></svg>
+        name:
+          description: The name of the loader
+          type: string
+          example: fabric
+        supported_project_types:
+          description: The project types that this loader is applicable to
+          type: array
+          items:
+            description: The project type
+            type: string
+          example:
+            - mod
+            - modpack
+      required:
+        - icon
+        - name
+        - supported_project_types
+    GameVersionTag:
+      type: object
+      properties:
+        version:
+          description: The name/number of the game version
+          type: string
+          example: 1.18.1
+        version_type:
+          description: The type of the game version
+          type: string
+          enum:
+            - release
+            - snapshot
+            - alpha
+            - beta
+          example: release
+        date:
+          description: The date of the game version release
+          type: string
+          format: ISO-8601
+        major:
+          description: Whether or not this is a major version, used for Featured Versions
+          type: boolean
+          example: true
+      required:
+        - version
+        - version_type
+        - date
+        - major
+    DonationPlatformTag:
+      type: object
+      properties:
+        short:
+          description: The short identifier of the donation platform
+          type: string
+          example: bmac
+        name:
+          description: The full name of the donation platform
+          type: string
+          example: Buy Me a Coffee
+      required:
+        - short
+        - name
+    ModifyTeamMemberBody:
+      properties:
+        role:
+          type: string
+          example: Contributor
+        permissions:
+          description: |
+            The user's permissions in bitfield format
+
+            In order from first to tenth bit, the bits are:
+            - UPLOAD_VERSION
+            - DELETE_VERSION
+            - EDIT_DETAILS
+            - EDIT_BODY
+            - MANAGE_INVITES
+            - REMOVE_MEMBER
+            - EDIT_MEMBER
+            - DELETE_PROJECT
+            - VIEW_ANALYTICS
+            - VIEW_PAYOUTS
+          type: integer
+          format: bitfield
+          example: 127
+        payouts_split:
+          description: >-
+            The split of payouts going to this user. The proportion of payouts
+            they get is their split divided by the sum of the splits of all
+            members.
+          type: integer
+          example: 100
+        ordering:
+          description: The order of the team member.
+          type: integer
+          example: 0
+    LicenseTag:
+      description: A short overview of a license
+      type: object
+      properties:
+        short:
+          description: The short identifier of the license
+          type: string
+          example: lgpl-3
+        name:
+          description: The full name of the license
+          type: string
+          example: GNU Lesser General Public License v3
+      required:
+        - short
+        - name
+    License:
+      description: A full license
+      type: object
+      properties:
+        title:
+          type: string
+          example: GNU Lesser General Public License v3.0 or later
+        body:
+          type: string
+          example: Insert the entire text of the LGPL-3.0 here...
+    InvalidInputError:
+      type: object
+      properties:
+        description:
+          description: The contents of the error
+          type: string
+          example: Error while parsing multipart payload
+        error:
+          description: The name of the error
+          type: string
+          example: invalid_input
+      required:
+        - error
+        - description
+    AuthError:
+      type: object
+      properties:
+        description:
+          description: The contents of the error
+          type: string
+          example: 'Authentication Error: Invalid Authentication Credentials'
+        error:
+          description: The name of the error
+          type: string
+          example: unauthorized
+      required:
+        - error
+        - description
+    Statistics:
+      type: object
+      properties:
+        projects:
+          description: Number of projects on Modrinth
+          type: integer
+        versions:
+          description: Number of projects on Modrinth
+          type: integer
+        files:
+          description: Number of version files on Modrinth
+          type: integer
+        authors:
+          description: Number of authors (users with projects) on Modrinth
+          type: integer
+    ForgeUpdates:
+      description: Mod version information that can be consumed by Forge's update checker
+      type: object
+      properties:
+        homepage:
+          description: A link to the mod page
+          type: string
+          example: https://modrinth.com
+        promos:
+          $ref: '#/components/schemas/ForgeUpdateCheckerPromos'
+    ForgeUpdateCheckerPromos:
+      description: A list of the recommended and latest versions for each Minecraft release
+      type: object
+      properties:
+        '{version}-recommended':
+          description: >-
+            The mod version that is recommended for `{version}`. Excludes
+            versions with the `alpha` and `beta` version types.
+          type: string
+        '{version}-latest':
+          description: >-
+            The latest mod version for `{version}`. Shows versions with the
+            `alpha` and `beta` version types.
+          type: string
+    ProjectsChangeProjectIconRequest:
+      type: string
+      format: binary
+    ProjectsChangeProjectIconRequest1:
+      type: string
+      format: binary
+    ProjectsChangeProjectIconRequest2:
+      type: string
+      format: binary
+    ProjectsChangeProjectIconRequest3:
+      type: string
+      format: binary
+    ProjectsChangeProjectIconRequest4:
+      type: string
+      format: binary
+    ProjectsChangeProjectIconRequest5:
+      type: string
+      format: binary
+    ProjectsChangeProjectIconRequest6:
+      type: string
+      format: binary
+    ProjectsChangeProjectIconRequest7:
+      type: string
+      format: binary
+    VersionsAddFilesToVersionRequest:
+      type: object
+      properties:
+        data:
+          type: object
+          enum:
+            - {}
+    ThreadsModifyReportRequest:
+      type: object
+      properties:
+        body:
+          description: The contents of the report
+          type: string
+          example: This is the meat and potatoes of the report!
+        closed:
+          description: Whether the thread should be closed
+          type: boolean
+    ProjectsListProjectsResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/Project'
+    ProjectsGetRandomListResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/Project'
+    VersionsListProjectVersionsResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/Version'
+    VersionsListResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/Version'
+    UsersGetMultipleUsersResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/User'
+    UsersGetUserProjectsResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/Project'
+    UsersGetFollowedProjectsResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/Project'
+    NotificationsGetUserNotificationsResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/Notification'
+    NotificationsGetMultipleResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/Notification'
+    ThreadsGetOpenReportsResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/Report'
+    ThreadsGetMultipleReportsResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/Report'
+    ThreadsListThreadsResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/Thread'
+    TeamsGetProjectMembersResponse:
+      description: An array of team members
+      type: array
+      items:
+        $ref: '#/components/schemas/TeamMember'
+    TeamsGetTeamMembersResponse:
+      description: An array of team members
+      type: array
+      items:
+        $ref: '#/components/schemas/TeamMember'
+    TeamsGetMembersResponse:
+      type: array
+      items:
+        type: array
+        items:
+          $ref: '#/components/schemas/TeamMember'
+    TagsListCategoriesWithIconsResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/CategoryTag'
+    TagsGetLoaderListResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/LoaderTag'
+    TagsListGameVersionsResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/GameVersionTag'
+    TagsListLicensesResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/LicenseTag'
+    TagsListDonationPlatformsResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/DonationPlatformTag'
+    TagsListReportTypesResponse:
+      type: array
+      items:
+        type: string
+      example:
+        - spam
+        - copyright
+        - inappropriate
+        - malicious
+        - name-squatting
+        - other
+    TagsListProjectTypesResponse:
+      type: array
+      items:
+        type: string
+      example:
+        - mod
+        - modpack
+        - resourcepack
+        - shader
+    TagsListSideTypesResponse:
+      type: array
+      items:
+        type: string
+      example:
+        - required
+        - optional
+        - unsupported
+        - unknown
+  securitySchemes:
+    TokenAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+x-tagGroups:
+  - tags:
+      - projects
+      - versions
+      - version-files
+      - users
+      - notifications
+      - threads
+      - teams
+      - tags
+      - misc
+    name: Routes
+  - tags:
+      - project_model
+      - project_result_model
+      - version_model
+      - user_model
+      - team_member_model
+    name: Models
