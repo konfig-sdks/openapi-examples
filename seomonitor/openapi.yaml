@@ -1,0 +1,2900 @@
+openapi: 3.0.0
+info:
+  title: SEOmonitor API
+  description: >-
+    `
+
+    We have now released the new `<a href='https://api-docs.seomonitor.com/'>API
+    3.0</a>`!
+
+    It comes with enhanced data coverage and organization, and easy-to-use
+    documentation.
+
+    This version will continue to be functional, and you can use it alongside
+    the new version, if needed.`
+  version: '1.2'
+servers:
+  - description: SEOmonitor API
+    url: https://api.internal.seomonitor.com/api/v1.2
+tags:
+  - name: Groups
+  - name: Compare
+  - name: Keyword Data
+  - name: Forecast
+  - name: Ranks
+  - name: Organic Traffic
+  - name: Visibility Score
+  - name: Sites
+  - name: Content Performance
+  - name: Keyword SERP
+  - name: Devices
+paths:
+  /keyword_canibalization/{site_id}/{group_id}:
+    get:
+      tags:
+        - Keyword Data
+      summary: Keyword Canibalization
+      operationId: KeywordData_listCanibalizationKeywords
+      security:
+        - Authorization: []
+      description: |
+        List of keywords with canibalization issues
+      parameters:
+        - description: The unique site identifier
+          name: site_id
+          in: path
+          required: true
+          type: integer
+        - description: The unique group identifier. 0 for 'All keywords'
+          name: group_id
+          in: path
+          required: true
+          type: integer
+        - description: Start Date
+          name: start_date
+          in: path
+          required: false
+          type: integer
+        - description: End Date
+          name: end_date
+          in: path
+          required: false
+          type: integer
+      responses:
+        '200':
+          description: An array of keywords
+          schema:
+            type: array
+            items: {}
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+      google_sheets:
+        show: false
+  /sites:
+    get:
+      tags:
+        - Sites
+      summary: Sites
+      operationId: Sites_getList
+      security:
+        - Authorization: []
+      description: |
+        List of sites available in your account.
+      responses:
+        '200':
+          description: An array of sites
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Site'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+      google_sheets:
+        show: false
+  /on_target/{site_id}:
+    get:
+      tags:
+        - Forecast
+      summary: Forecast
+      operationId: Forecast_trafficForecastStatus
+      security:
+        - Authorization: []
+      description: |
+        Traffic forecast status.
+      parameters:
+        - description: The unique site identifier
+          name: site_id
+          in: path
+          required: true
+          type: integer
+      responses:
+        '200':
+          description: ''
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/ForecastExample'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+      google_sheets:
+        show: false
+  /on_target/by_dates/{site_id}:
+    get:
+      tags:
+        - Forecast
+      summary: Objective/Forecast
+      operationId: Forecast_objectiveData
+      security:
+        - Authorization: []
+      description: It returns the forecast data for the set objective
+      parameters:
+        - description: The unique site identifier
+          name: site_id
+          in: path
+          required: true
+          type: integer
+          google_sheets:
+            label: Site
+      responses:
+        '200':
+          description: >-
+            It returns the traffic forecast data for the last 12 months for the
+            selected website, such as: month, search volume, real traffic,
+            estimated traffic and visibility score.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/ForecastExampleByDates'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+      google_sheets:
+        show: true
+        header:
+          date:
+            name: Month
+            format_rule: format_date_month
+            note: null
+            colWidth: 65
+            style_rule: alignment_center
+          real_traffic:
+            name: |-
+              Actual 
+               Traffic
+            format_rule: format_number
+            note: >-
+              This is the actual non-brand organic traffic for the forecasted
+              months that already passed.
+            colWidth: 90
+            style_rule: alignment_right
+          inertial_traffic:
+            name: |-
+              Est. Inertial 
+               Traffic
+            format_rule: format_number
+            note: >-
+              The estimated monthly non-brand organic traffic if there's no SEO
+              progress or decrease in the selected timeframe. The estimations
+              are based on the current values and then extrapolated using the
+              seasonality and trends of the keywords that generate the
+              Forecast. 
+               
+               This estimations are used to calculate the impact in non-brand organic traffic when the objective will be achieved.
+            colWidth: 90
+            style_rule: alignment_right
+          estimated_traffic:
+            name: |-
+              Est. Improved 
+               Traffic
+            format_rule: format_number
+            note: >-
+              This is the initial forecasted non-brand organic traffic
+              (monthly), based on achieving the selected SEO goals in the chosen
+              timeframe.
+            colWidth: 100
+            style_rule: alignment_right
+          estimated_additional_traffic:
+            name: |-
+              Additional 
+               Traffic
+            format_rule: format_number
+            note: >-
+              This is the monthly estimated impact of the targeted SEO progress.
+              It is the difference between the estimated Improved Traffic and
+              the estimated Inertial Traffic.
+            colWidth: 90
+            style_rule: alignment_right
+          search_volume:
+            name: |-
+              Search 
+               Seasonality
+            format_rule: format_number
+            note: >-
+              This is the total monthly Search Volume of the tracked keywords,
+              which informs our forecasting algorithm on the search seasonality.
+            colWidth: 90
+            style_rule: alignment_right
+        error: |-
+          There is no forecast set as objective. 
+           You can configure one here: https://app.seomonitor.com/param_0/forecast
+  /keyword_groups/{site_id}/{date_start}/{date_end}:
+    get:
+      tags:
+        - Groups
+      summary: Keyword Groups
+      operationId: Groups_getKeywordGroups
+      security:
+        - Authorization: []
+      description: >-
+        DEPRECATED<br>
+
+        Use groups_list and group_details instead.<br><br>
+
+
+        The details for the keyword groups for a specific site.
+
+        <br/><strong>Warning:</strong> Group details are only available when
+        providing the <b>load_keyword_ids</b> parameter with a value of
+        <b>1</b>.
+      parameters:
+        - description: The unique site identifier
+          name: site_id
+          in: path
+          required: true
+          type: integer
+        - description: >-
+            The start of the period. (Accepts date format as YYYY-mm-dd or
+            relative like "1 week ago", "3 months ago", etc.)
+          name: date_start
+          in: path
+          required: true
+          type: string
+          format: YYYY-mm-dd or relative
+        - description: >-
+            The end of the period. (Accepts date format as YYYY-mm-dd or
+            relative like "now", "today", etc.)
+          name: date_end
+          in: path
+          required: true
+          type: string
+          format: YYYY-mm-dd or relative
+        - description: >-
+            By default, a request is limited to 1000 groups (or 10 if
+            load_keywords_ids is active), if you want more you can set the
+            offset
+          name: offset
+          in: query
+          type: number
+        - description: >-
+            By default, a request is limited to 1000 groups (or 10 if
+            load_keywords_ids is active). Use the limit parameter to change the
+            number of results per request (max. 10 if load_keyword_ids is
+            active)
+          name: limit
+          in: query
+          type: number
+        - description: >-
+            Loads Keyword IDs in the keywords array if set to 1. When active,
+            the response is limited to 10 groups
+          name: load_keyword_ids
+          in: query
+          type: number
+      responses:
+        '200':
+          description: An array of groups
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/KeywordGroups'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+      deprecated: true
+      google_sheets:
+        show: false
+  /groups_list/{site_id}:
+    get:
+      info: >-
+        It returns Group ID, Group name and Group type (normal or smart) for the
+        selected website.
+      tags:
+        - Groups
+      summary: Groups List
+      operationId: Groups_getList
+      security:
+        - Authorization: []
+      description: |
+        Group List.
+      parameters:
+        - description: The unique site identifier
+          name: site_id
+          in: path
+          required: true
+          type: integer
+          google_sheets:
+            label: Site
+      responses:
+        '200':
+          description: >-
+            It returns Group ID, Group name and Group type (normal or smart) for
+            the selected website.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/GroupsList'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+      google_sheets:
+        show: false
+  /group_details/{site_id}/{group_id}/{date_start}/{date_end}:
+    get:
+      tags:
+        - Groups
+      summary: Group Performance
+      operationId: Groups_getPerformanceData
+      security:
+        - Authorization: []
+      description: >-
+        Returns the keyword count, the search volumes, the desktop and mobile
+        visibility at the end of the period and the performance-related
+        visibility changes for the timeframe.
+      parameters:
+        - description: The unique site identifier
+          name: site_id
+          in: path
+          required: true
+          type: integer
+          google_sheets:
+            label: Site
+        - description: The group identifier
+          name: group_id
+          in: path
+          required: true
+          type: integer
+          google_sheets:
+            label: Group
+        - description: >-
+            The start of the period. (Accepts date format as YYYY-mm-dd or
+            relative like "1 week ago", "3 months ago", etc.)
+          name: date_start
+          in: path
+          required: true
+          type: string
+          format: YYYY-mm-dd or relative
+          google_sheets:
+            label: Start Date
+        - description: >-
+            The end of the period. (Accepts date format as YYYY-mm-dd or
+            relative like "now", "today", etc.)
+          name: date_end
+          in: path
+          required: true
+          type: string
+          format: YYYY-mm-dd or relative
+          google_sheets:
+            label: End Date
+      responses:
+        '200':
+          description: An array of groups
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/GroupDetails'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+      google_sheets:
+        show: true
+        title_param: group
+        secondary_header:
+          search_data:
+            name: SEARCH DATA
+            columns: 4
+            background_color: '#0c343d'
+            color: '#ffffff'
+            full_columns_color: false
+            alignment: left
+          desktop_visibility:
+            name: DESKTOP VISIBILITY
+            columns: 2
+            background_color: '#4a86e8'
+            color: '#ffffff'
+            full_columns_color: '#ecf8ff'
+            alignment: left
+          mobile_visibility:
+            name: MOBILE VISIBILITY
+            columns: 2
+            background_color: '#6aa84f'
+            color: '#ffffff'
+            full_columns_color: '#eeffed'
+            alignment: left
+        header:
+          group_name:
+            name: Group
+            colWidth: 250
+            style_rule: alignment_left
+          kw_count:
+            name: Keywords
+            format_rule: format_number
+            note: Number of keywords in each group.
+            colWidth: 75
+            style_rule: alignment_right
+          search_volume:
+            name: |-
+              Search 
+               Volume
+            format_rule: format_number
+            colWidth: 80
+            style_rule: alignment_right
+          yoy.value:
+            name: |-
+              YoY 
+               Trend
+            format_rule: percent
+            style_rule: percent_sign, alignment_right
+            note: Year-over-Year search trend.
+            colWidth: 65
+          vscore_stop_desktop:
+            name: Visibility
+            format_rule: percent
+            style_rule: percent_round, alignment_right
+            note: The desktop Visibility in the last day of the timeframe.
+            colWidth: 70
+          desktop_performance_change:
+            name: Change
+            format_rule: percent
+            style_rule: sign_color_percent, bold, alignment_right
+            note: >-
+              The performance-related change in desktop Visibility for the given
+              timeframe. 
+
+               Read more about this here - https://help.seomonitor.com/en/articles/886067-understanding-changes-in-visibility
+            colWidth: 65
+          vscore_stop_mobile:
+            name: Visibility
+            format_rule: percent
+            style_rule: percent_round, alignment_right
+            note: The mobile Visibility in the last day of the timeframe.
+            colWidth: 70
+          mobile_performance_change:
+            name: Change
+            format_rule: percent
+            style_rule: sign_color_percent, bold, alignment_right
+            note: >-
+              The performance-related change in mobile Visibility for the given
+              timeframe. 
+
+               Read more about this here - https://help.seomonitor.com/en/articles/886067-understanding-changes-in-visibility
+            colWidth: 65
+  /all_group_details/{site_id}/{date_start}/{date_end}:
+    get:
+      info: >-
+        It returns the group name, number of keywords, total search volume for
+        the keywords, desktop and mobile visibility score at the start of the
+        period, desktop and mobile visibility score at the end of the period and
+        desktop and mobile visibility score performance change for all groups
+      tags:
+        - Groups
+      summary: Group performance
+      operationId: Groups_getKeywordsDetails
+      security:
+        - Authorization: []
+      description: |
+        Keywords details for all groups
+      parameters:
+        - description: The unique site identifier
+          name: site_id
+          in: path
+          required: true
+          type: integer
+        - description: >-
+            The start of the period. (Accepts date format as YYYY-mm-dd or
+            relative like "1 week ago", "3 months ago", etc.)
+          name: date_start
+          in: path
+          required: true
+          type: string
+          format: YYYY-mm-dd or relative
+        - description: >-
+            The end of the period. (Accepts date format as YYYY-mm-dd or
+            relative like "now", "today", etc.)
+          name: date_end
+          in: path
+          required: true
+          type: string
+          format: YYYY-mm-dd or relative
+      responses:
+        '200':
+          description: An array of groups
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/AllGroupDetails'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+      google_sheets:
+        show: false
+  /keyword_data/{site_id}/{date_start}/{date_end}:
+    get:
+      info: >-
+        It returns the name, search volume, cost per click, date and time the
+        keyword was added, landing page for desktop and mobile in google for the
+        keyword for this site, total visits, bounces, conversions, conversion
+        rate, conversions value, goals, goals rate, goals value, last position
+        both desktop and mobile, the difference between the first position in
+        the period and the last position in the period both desktop and mobile,
+        visibility impact (similar to a weighted average) both desktop and
+        mobile, the group the keyword is in and estimated additional traffic,
+        revenue and AdWords cost once in Top 3
+      tags:
+        - Keyword Data
+      summary: Keyword Data
+      operationId: KeywordData_getDetails
+      security:
+        - Authorization: []
+      description: |
+        All SEO Campaign section keywords details.
+      parameters:
+        - description: The unique site identifier
+          name: site_id
+          in: path
+          required: true
+          type: integer
+        - description: >-
+            The start of the period. (Accepts date format as YYYY-mm-dd or
+            relative like "1 week ago", "3 months ago", etc.)
+          name: date_start
+          in: path
+          required: true
+          type: string
+          format: YYYY-mm-dd or relative
+        - description: >-
+            The end of the period. (Accepts date format as YYYY-mm-dd or
+            relative like "now", "today", etc.)
+          name: date_end
+          in: path
+          required: true
+          type: string
+          format: YYYY-mm-dd or relative
+        - description: >-
+            By default a  request is limited to 1000 rows, if you want more you
+            can set the offset
+          name: offset
+          in: query
+          type: number
+        - description: The keyword name you wish to retrieve data for
+          name: keyword_name
+          in: query
+          required: false
+          type: string
+      responses:
+        '200':
+          description: An array of keywords details
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/KeywordData'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+      google_sheets:
+        show: false
+  /keyword_data/{site_id}/{group_id}/{date_start}/{date_end}:
+    get:
+      tags:
+        - Keyword Data
+      summary: Keyword Performance
+      operationId: KeywordData_getPerformance
+      security:
+        - Authorization: []
+      description: >-
+        Returns all keyword data including ranking performance on both devices
+        in the selected timeframe.
+      parameters:
+        - description: The unique site identifier
+          name: site_id
+          in: path
+          required: true
+          type: integer
+          google_sheets:
+            label: Site
+        - description: Group id. For Brand folder you can use `brand` as value for group id
+          name: group_id
+          in: path
+          required: true
+          type: integer
+          google_sheets:
+            label: Group
+        - description: >-
+            The start of the period. (Accepts date format as YYYY-mm-dd or
+            relative like "1 week ago", "3 months ago", etc.)
+          name: date_start
+          in: path
+          required: true
+          type: string
+          format: YYYY-mm-dd or relative
+          google_sheets:
+            label: Start Date
+        - description: >-
+            The end of the period. (Accepts date format as YYYY-mm-dd or
+            relative like "now", "today", etc.)
+          name: date_end
+          in: path
+          required: true
+          type: string
+          format: YYYY-mm-dd or relative
+          google_sheets:
+            label: End Date
+        - description: >-
+            By default, a request is limited to 1000 rows. If you need to get
+            more, you can set an offset, accordingly (an offset of 1000 will
+            provide the following 1000 rows). 
+             For example, if you need rows 3000-4000, you would set the offset at 3000.
+          name: offset
+          in: query
+          type: number
+          google_sheets:
+            hide: true
+            label: Offset
+        - description: The keyword (name, not ID) you need data for.
+          name: keyword_name
+          in: query
+          required: false
+          type: string
+          google_sheets:
+            label: Keyword Filter
+            placeholder: Enter Keyword
+      responses:
+        '200':
+          description: Keyword details for a specific group.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/KeywordData'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+      google_sheets:
+        show: true
+        title_param: group
+        lockColumns: 4
+        lockRows: 4
+        sort: 2
+        secondary_header:
+          search_data:
+            name: SEARCH DATA
+            columns: 4
+            background_color: '#0c343d'
+            color: '#ffffff'
+            full_columns_color: false
+            alignment: left
+          desktop_ranking_data:
+            name: DESKTOP RANKING DATA
+            columns: 4
+            background_color: '#4a86e8'
+            color: '#ffffff'
+            full_columns_color: '#ecf8ff'
+            alignment: left
+          mobile_ranking_data:
+            name: MOBILE RANKING DATA
+            columns: 4
+            background_color: '#6aa84f'
+            color: '#ffffff'
+            full_columns_color: '#eeffed'
+            alignment: left
+          traffic_data:
+            name: TRAFFIC DATA
+            columns: 5
+            background_color: '#1c4587'
+            color: '#ffffff'
+            full_columns_color: false
+            alignment: left
+          opportunity:
+            name: OPPORTUNITY
+            columns: 3
+            background_color: '#351c75'
+            color: '#ffffff'
+            full_columns_color: false
+            alignment: left
+          other:
+            name: OTHER
+            columns: 4
+            background_color: '#000000'
+            color: '#ffffff'
+            full_columns_color: false
+            alignment: left
+        header:
+          keyword_data.name:
+            name: Keyword
+            note: Keyword Name
+            format_rule: ''
+            style_rule: alignment_left
+            colWidth: 155
+          keyword_data.average_search_volume:
+            name: |-
+              Search 
+               Volume
+            note: Monthly searches on the keyword.
+            format_rule: format_number
+            style_rule: alignment_right
+            colWidth: 65
+          keyword_data.yoy:
+            name: |-
+              YOY 
+               Trend
+            note: Year-over-Year search trend.
+            format_rule: percent
+            style_rule: percent_round, alignment_right
+            colWidth: 55
+          keyword_data.average_cpc:
+            name: CPC
+            note: Cost Per Click
+            format_rule: number_two_decimal
+            style_rule: alignment_right
+            colWidth: 55
+          position:
+            name: Rank
+            note: The desktop rank in the last day of the timeframe.
+            format_rule: max_99
+            style_rule: alignment_right
+            colWidth: 55
+          position_trend:
+            name: Change
+            note: The change in desktop rank for the given timeframe.
+            format_rule: ''
+            style_rule: sign_color, bold, alignemnt_right
+            colWidth: 55
+          visibility_impact_desktop:
+            name: |-
+              Visibility 
+               Impact
+            note: >-
+              The impact of this keyword's rank change in the desktop Visibility
+              change for the given timeframe. 
+
+               Read more about the performance-related Visibility changes here - https://help.seomonitor.com/en/articles/886067-understanding-changes-in-visibility
+            format_rule: ''
+            style_rule: sign_color, alignment_right
+            colWidth: 65
+          keyword_data.landing_page:
+            name: Landing Page
+            format_rule: landing_page
+            style_rule: alignment_left
+            note: The ranking landing page in the desktop search.
+            colWidth: 130
+          position_mobile:
+            name: Rank
+            format_rule: max_99
+            style_rule: alignment_right
+            note: The mobile rank in the last day of the timeframe.
+            colWidth: 55
+          position_trend_mobile:
+            name: Change
+            format_rule: ''
+            style_rule: sign_color, bold, alignment_right
+            note: The change in mobile rank for the given timeframe.
+            colWidth: 55
+          visibility_impact_mobile:
+            name: |-
+              Visibility 
+               Impact
+            format_rule: ''
+            style_rule: sign_color, alignment_right
+            note: >-
+              The impact of this keyword's rank change in the mobile Visibility
+              change for the given timeframe. 
+
+               Read more about the performance-related Visibility changes here - https://help.seomonitor.com/en/articles/886067-understanding-changes-in-visibility
+            colWidth: 65
+          keyword_data.landing_page_mobile:
+            name: Landing Page
+            format_rule: landing_page
+            style_rule: alignment_left
+            note: The ranking landing page in the mobile search.
+            colWidth: 130
+          visits:
+            name: Sessions
+            format_rule: format_number
+            style_rule: alignment_right
+            note: Non-brand organic visits on the keyword, for the given timeframe.
+            colWidth: 65
+          bounces:
+            name: Bounces
+            note: Percentage of single-page sessions.
+            format_rule: format_number
+            style_rule: alignment_right
+            colWidth: 65
+          conversions_goals:
+            name: Conversions
+            note: Number of completed goals, based on the Analytics selection.
+            format_rule: format_number
+            style_rule: alignment_right
+            colWidth: 87
+          conversions_goals_rate:
+            name: |-
+              Conv. 
+               Rate
+            note: Percentage of Conversions resulting from the organic sessions.
+            format_rule: number_two_decimal
+            style_rule: alignment_right
+            colWidth: 45
+          revenue_value:
+            name: |-
+              Revenue/ 
+               Value
+            note: Percentage of single-page sessions.
+            format_rule: format_number
+            style_rule: alignment_right
+            colWidth: 70
+          keyword_data.top_10_difficulty:
+            name: |-
+              Top 10 
+               Difficulty
+            format_rule: ''
+            style_rule: alignment_right
+            note: The difficulty for the landing page to reach Top 10.
+            colWidth: 75
+          keyword_data.opportunity:
+            name: Opportunity
+            note: >-
+              The effort necessary to reach the top versus the monthly estimated
+              value (revenue) generated after that.
+            format_rule: ''
+            style_rule: alignment_right
+            colWidth: 80
+          keyword_data.lables_warning:
+            name: |-
+              Labels & 
+               Warnings
+            format_rule: ''
+            style_rule: alignment_left
+            note: Helpful labels and/or warnings automatically added to the keyword.
+            colWidth: 95
+          group_name:
+            name: Groups
+            note: Groups in which the keyword is present.
+            format_rule: ''
+            style_rule: alignment_left
+            colWidth: 75
+          keyword_data.date_added:
+            name: Date Added
+            format_rule: format_date
+            style_rule: alignment_center
+            note: The date when the keyword started being tracked in the campaign.
+            colWidth: 80
+          keyword_data.main_keyword_id:
+            name: Main Keyword ID
+            format_rule: ''
+            style_rule: alignment_center
+            colWidth: 60
+          keyword_data.close_variation:
+            name: Close Variation
+            format_rule: ''
+            style_rule: alignment_center
+            note: If the keyword is a close variation of other keyword.
+            colWidth: 80
+  /ranks/{site_id}/{date_start}/{date_end}:
+    get:
+      info: >-
+        It returns both desktop and mobile position for each date in your
+        selected interval
+      tags:
+        - Ranks
+      summary: Ranks
+      operationId: Ranks_getDesktopMobileRanks
+      security:
+        - Authorization: []
+      description: |
+        Desktop and mobile ranks
+      parameters:
+        - description: The unique site identifier
+          name: site_id
+          in: path
+          required: true
+          type: integer
+        - description: >-
+            The start of the period. (Accepts date format as YYYY-mm-dd or
+            relative like "1 week ago", "3 months ago", etc.)
+          name: date_start
+          in: path
+          required: true
+          type: string
+          format: YYYY-mm-dd or relative
+        - description: >-
+            The end of the period. (Accepts date format as YYYY-mm-dd or
+            relative like "now", "today", etc.)
+          name: date_end
+          in: path
+          required: true
+          type: string
+          format: YYYY-mm-dd or relative
+        - description: >-
+            By default a rank request is limited to 100 keywords, if you want
+            the next 100 keywords you can set the offset
+          name: offset
+          in: query
+          type: number
+        - description: >-
+            If this field is not set, default value is 100.If this field is set,
+            allowed values are between 100 and 1000
+          name: limit
+          in: query
+          type: number
+      responses:
+        '200':
+          description: An array of positions grouped by keyword
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Ranks'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+      google_sheets:
+        show: false
+  /ranks/{site_id}/{date_start}/{date_end}/{group_id}:
+    get:
+      info: >-
+        It returns both desktop and mobile position for each date in your
+        selected interval filtered by group
+      tags:
+        - Ranks
+      summary: Keywords Ranks
+      operationId: Ranks_getGroupRanks
+      security:
+        - Authorization: []
+      description: >-
+        Returns both desktop and mobile ranks for each day in the selected
+        interval, filtered by group.
+      parameters:
+        - description: The unique site identifier
+          name: site_id
+          in: path
+          required: true
+          type: integer
+          google_sheets:
+            label: Site
+        - description: The unique group identifier
+          name: group_id
+          in: path
+          required: true
+          type: string
+          format: integer
+          google_sheets:
+            label: Group
+        - description: >-
+            The start of the period. (Accepts date format as YYYY-mm-dd or
+            relative like "1 week ago", "3 months ago", etc.)
+          name: date_start
+          in: path
+          required: true
+          type: string
+          format: YYYY-mm-dd or relative
+          google_sheets:
+            label: Start Date
+        - description: >-
+            The end of the period. (Accepts date format as YYYY-mm-dd or
+            relative like "now", "today", etc.)
+          name: date_end
+          in: path
+          required: true
+          type: string
+          format: YYYY-mm-dd or relative
+          google_sheets:
+            label: End Date
+        - description: >-
+            By default, a rank request is limited to 100 keywords. If you need
+            to get more, you can set an offset, accordingly (an offset of 100
+            will provide the following 100 keywords). 
+             For example, if you need keywords 300-400, you would set the offset at 300.
+          name: offset
+          in: query
+          type: number
+          google_sheets:
+            label: Offset
+            placeholder: Offset
+        - description: >-
+            If this field is not set, default value is 100.If this field is set,
+            allowed values are between 100 and 1000
+          name: limit
+          in: query
+          type: number
+          google_sheets:
+            label: Limit
+            placeholder: Limit
+      responses:
+        '200':
+          description: An array of positions grouped by keyword
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Ranks'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+      google_sheets:
+        show: true
+        title_param: group
+        lockColumns: 2
+        lockRows: 4
+        sort: 2
+        header:
+          keyword_data.name:
+            name: Keyword
+            style_rule: alignment_left
+            note: Keyword name.
+            colWidth: 180
+          keyword_data.search_volume:
+            name: |-
+              Search 
+               Volume
+            format_rule: format_number
+            style_rule: alignment_right
+            note: Monthly searches on the keyword.
+            colWidth: 65
+        secondary_header:
+          date:
+            name: 'DATE:'
+            columns: 2
+            background_color: '#b7e1cd'
+            color: '#000'
+            full_columns_color: false
+            alignment: center
+  /organic_traffic/{site_id}/{date_start}/{date_end}:
+    get:
+      info: >-
+        It returns the visits, conversion rate (e-commerce), goals rate, revenue
+        (e-commerce), goals revenue and date for brand and non-brand.
+      tags:
+        - Organic Traffic
+      summary: Organic Traffic Performance
+      operationId: OrganicTraffic_getPerformanceData
+      security:
+        - Authorization: []
+      description: >-
+        Returns the sessions, conversions, conversion rates and conversion
+        values, split by brand and non-brand, for each day in the selected
+        interval.
+      parameters:
+        - description: The unique site identifier
+          name: site_id
+          in: path
+          required: true
+          type: integer
+          google_sheets:
+            label: Site
+        - description: >-
+            The start of the period. (Accepts date format as YYYY-mm-dd or
+            relative like "1 week ago", "3 months ago", etc.)
+          name: date_start
+          in: path
+          required: true
+          type: string
+          format: YYYY-mm-dd or relative
+          google_sheets:
+            label: Start Date
+        - description: >-
+            The end of the period. (Accepts date format as YYYY-mm-dd or
+            relative like "now", "today", etc.)
+          name: date_end
+          in: path
+          required: true
+          type: string
+          format: YYYY-mm-dd or relative
+          google_sheets:
+            label: End Date
+      responses:
+        '200':
+          description: An array of Organic Traffic statistics grouped by date
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/OrganicTraffic'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+      google_sheets:
+        show: true
+        header:
+          date:
+            name: Date
+            format_rule: format_date
+            style_rule: alignment_center
+          visits_non_brand:
+            name: Sessions
+            format_rule: format_number
+            note: Non-brand organic sessions.
+            style_rule: alignment_right
+          goals_conversions_non_brand:
+            name: Conversions
+            format_rule: format_number
+            note: Conversions generated by the non-brand organic sessions.
+            style_rule: alignment_right
+          conversion_rate_non_brand:
+            name: Conv. Rate
+            format_rule: percent
+            note: >-
+              Percentage of conversions generated by the non-brand organic
+              sessions.
+            style_rule: alignment_right, percent
+          goals_conversions_value_non_brand:
+            name: Conv. Value
+            format_rule: format_number
+            note: Revenue generated by the non-brand conversions.
+            style_rule: alignment_right
+          visits_brand:
+            name: Sessions
+            format_rule: format_number
+            note: Branded organic sessions.
+            style_rule: alignment_right
+          goals_conversions_brand:
+            name: Conversions
+            format_rule: format_number
+            note: Conversions generated by the brand organic sessions.
+            style_rule: alignment_right
+          conversion_rate_brand:
+            name: Conv. Rate
+            format_rule: percent
+            note: >-
+              Percentage of conversions generated by the branded organic
+              sessions.
+            style_rule: alignment_right, percent
+          goals_conversions_value_brand:
+            name: Conv. Value
+            format_rule: format_number
+            note: Revenue generated by the branded conversions.
+            style_rule: alignment_right
+        secondary_header:
+          date:
+            name: ''
+            columns: 1
+            background_color: '#b7e1cd'
+            color: '#000'
+            full_columns_color: false
+            alignment: center
+          non_branded:
+            name: 'NON-BRANDED:'
+            columns: 4
+            background_color: '#b7e1cd'
+            color: '#000'
+            full_columns_color: false
+            alignment: center
+          branded:
+            name: 'BRANDED:'
+            columns: 4
+            background_color: '#b7e1cd'
+            color: '#000'
+            full_columns_color: false
+            alignment: center
+  /organic_traffic/split/{site_id}/{date_start}/{date_end}:
+    get:
+      info: >-
+        It returns the visits, conversion rate (e-commerce), goals rate, revenue
+        (e-commerce), goals revenue, date and type for brand, non-brand or both.
+      tags:
+        - Organic Traffic
+      summary: Organic Traffic
+      operationId: OrganicTraffic_splitByDates
+      security:
+        - Authorization: []
+      description: |
+        Organic Traffic split by brand/non-brand.
+      parameters:
+        - description: The unique site identifier
+          name: site_id
+          in: path
+          required: true
+          type: integer
+          google_sheets:
+            label: Site
+        - description: >-
+            The start of the period. (Accepts date format as YYYY-mm-dd or
+            relative like "1 week ago", "3 months ago", etc.)
+          name: date_start
+          in: path
+          required: true
+          type: string
+          format: YYYY-mm-dd or relative
+          google_sheets:
+            label: Start Date
+        - description: >-
+            The end of the period. (Accepts date format as YYYY-mm-dd or
+            relative like "now", "today", etc.)
+          name: date_end
+          in: path
+          required: true
+          type: string
+          format: YYYY-mm-dd or relative
+          google_sheets:
+            label: End Date
+        - description: 'Possible values: brand | non-brand.'
+          name: type
+          in: query
+          type: string
+          google_sheets:
+            label: Type
+            options:
+              type: select
+              options:
+                Both: ''
+                Brand: brand
+                Non-brand: non-brand
+      responses:
+        '200':
+          description: An array of Organic Traffic statistics grouped by date
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/OrganicTrafficSplit'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+      google_sheets:
+        show: false
+  /content/{site_id}/{date_start}/{date_end}:
+    get:
+      tags:
+        - Content Performance
+      summary: Content Performance
+      operationId: ContentPerformance_getPerformanceData
+      security:
+        - Authorization: []
+      description: Returns all the content performance data in the selected timeframe
+      parameters:
+        - description: The unique site identifier
+          name: site_id
+          in: path
+          required: true
+          type: integer
+          google_sheets:
+            label: Site
+        - description: >-
+            The start of the period. (Accepts date format as YYYY-mm-dd or
+            relative like "1 week ago", "3 months ago", etc.)
+          name: date_start
+          in: path
+          required: true
+          type: string
+          google_sheets:
+            label: Start Date
+        - description: >-
+            The end of the period. (Accepts date format as YYYY-mm-dd or
+            relative like "now", "today", etc.)
+          name: date_end
+          in: path
+          required: true
+          type: string
+          google_sheets:
+            label: End Date
+        - description: >-
+            By default, a request is limited to 1000 rows. If you need to get
+            more, you can set an offset, accordingly (an offset of 1000 will
+            provide the following 1000 rows). 
+             For example, if you need rows 3000-4000, you would set the offset at 3000.
+          name: offset
+          in: query
+          required: false
+          type: integer
+          google_sheets:
+            label: Offset
+            placeholder: Offset
+      responses:
+        '200':
+          description: List of articles associated to your site
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Content'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+      google_sheets:
+        show: false
+        header:
+          title:
+            name: Article Title
+            note: Title of the linking article.
+            style_rule: alignment_left
+            colWidth: 205
+          date:
+            name: Date
+            note: Publishing date for the linking article.
+            format_rule: format_date
+            style_rule: alignment_center
+            colWidth: 85
+          article_url:
+            name: URL
+            note: Full linking article URL.
+            style_rule: alignment_left
+            colWidth: 205
+          source:
+            name: Source
+            note: Source domain for the linking article.
+            style_rule: alignment_left
+            colWidth: 110
+          social.facebook:
+            name: Facebook
+            note: Facebook signals count.
+            style_rule: alignment_right
+            colWidth: 70
+          visits:
+            name: Sessions
+            note: Sessions generated by the linking article.
+            style_rule: alignment_right
+            colWidth: 75
+          conversions:
+            name: Conversions
+            note: Conversions generated by the linking article.
+            style_rule: alignment_right
+            colWidth: 90
+          conversions_value:
+            name: |-
+              Conv. 
+               Value
+            note: Revenue generated by the linking article.
+            style_rule: alignment_right
+            colWidth: 55
+          landing_pages.url:
+            name: URL
+            note: Landing page linked in the article.
+            format_rule: landing_page
+            style_rule: alignment_left, clip
+            colWidth: 170
+          landing_pages.keywords:
+            name: Keywords
+            note: >-
+              Tracked keywords pointing to the landing page linked in the
+              article.
+            style_rule: alignment_left
+            colWidth: 150
+          landing_pages.search_volume:
+            name: |-
+              Search 
+               Volume
+            note: >-
+              Total search volume for the tracked keywords pointing to the
+              landing pages linked in the article.
+            style_rule: alignment_right
+            colWidth: 60
+          landing_pages.visibility_score:
+            name: Visibility
+            note: >-
+              Visibility score of the linked landing page, in the last day of
+              the interval.
+            format_rule: percent
+            style_rule: alignment_right, percent
+            colWidth: 65
+          landing_pages.visibility_score_change:
+            name: |-
+              Visibility 
+               Change
+            note: >-
+              Visibility score trend for the linked landing page, between the
+              first and the last day of the interval.
+            format_rule: percent
+            style_rule: sign_color_percent, alignment_right
+            colWidth: 65
+        secondary_header:
+          limking_article:
+            name: LINKING ARTICLE
+            columns: 5
+            background_color: '#1c4587'
+            color: '#fff'
+            full_columns_color: false
+            alignment: left
+          generated_traffic:
+            name: 'GENERATED TRAFFIC:'
+            columns: 3
+            background_color: '#274e13'
+            color: '#fff'
+            full_columns_color: false
+            alignment: left
+          linked_landing_page:
+            name: 'LINKED LANDING PAGE:'
+            columns: 5
+            background_color: '#20124d'
+            color: '#fff'
+            full_columns_color: false
+            alignment: left
+  /keyword_serp/{site_id}:
+    get:
+      tags:
+        - Keyword SERP
+      summary: Keyword Competitors
+      operationId: KeywordSerp_getCompetitors
+      security:
+        - Authorization: []
+      description: Returns the top 100 ranking domains and URLs, for the given keyword.
+      parameters:
+        - description: The unique site identifier
+          name: site_id
+          in: path
+          required: true
+          type: integer
+          google_sheets:
+            label: Site
+        - description: The keyword name
+          name: keyword_name
+          in: query
+          required: true
+          type: string
+          google_sheets:
+            label: Keyword
+            placeholder: Keyword
+        - description: >-
+            The end of the period. (Accepts date format as YYYY-mm-dd or
+            relative like "now", "today", etc.)
+          name: query_end_date
+          in: query
+          required: true
+          type: string
+          google_sheets:
+            label: End Date
+        - description: Check to retrieve mobile landing pages.
+          name: mobile
+          in: query
+          type: number
+          google_sheets:
+            label: Mobile
+            options:
+              type: checkbox
+              default: 0
+      responses:
+        '200':
+          description: An array of landing pages
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/KeywordSERP'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+      google_sheets:
+        show: true
+        title_param: keyword, device
+        header:
+          position:
+            name: Rank
+            format_rule: ''
+            style_rule: alignment_right
+            colWidth: 45
+          site:
+            name: Site
+            format_rule: ''
+            style_rule: alignment_left
+            note: Ranking domain.
+            colWidth: 180
+          full_lp:
+            name: URL
+            format_rule: ''
+            style_rule: alignment_left
+            note: LP that the domain is ranking for.
+            colWidth: 180
+  /visibility_score_data/{site_id}/{group_id}/{date_start}/{date_end}:
+    get:
+      tags:
+        - Visibility Score
+      summary: Daily Visibility
+      operationId: VisibilityScore_dailyVisibilityData
+      security:
+        - Authorization: []
+      description: >-
+        Returns the Visibility for mobile or desktop for each day in the
+        selected interval, with any annotation present on the Visibility graph,
+        correspondingly.
+      parameters:
+        - description: The unique site identifier
+          name: site_id
+          in: path
+          required: true
+          type: integer
+          google_sheets:
+            label: Site
+        - description: The unique group identifier
+          name: group_id
+          in: path
+          required: true
+          type: integer
+          google_sheets:
+            label: Group
+        - description: >-
+            The start of the period. (Accepts date format as YYYY-mm-dd or
+            relative like "1 week ago", "3 months ago", etc.)
+          name: date_start
+          in: path
+          required: true
+          type: string
+          google_sheets:
+            label: Start Date
+        - description: >-
+            The end of the period. (Accepts date format as YYYY-mm-dd or
+            relative like "now", "today", etc.)
+          name: date_end
+          in: path
+          required: true
+          type: string
+          google_sheets:
+            label: End Date
+        - description: >-
+            Device value. If it's not provided, default value is 1 (desktop).
+            Get all devices from &quot;/devices&quot; endpoint. Possible values:
+            1 or 2
+          name: device
+          in: query
+          required: false
+          type: integer
+          google_sheets:
+            label: Device
+            options:
+              type: select
+              options:
+                Desktop: 1
+                Mobile: 2
+      responses:
+        '200':
+          description: An array containing dates and visibility scores for each date
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/VisibilityScoreData'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+      google_sheets:
+        show: true
+        header:
+          date:
+            name: Date
+            format_rule: format_date
+            style_rule: alignment_center
+            colWidth: 85
+          vscore:
+            name: Visibility
+            note: Daily group Visibility on selected device.
+            format_rule: percent
+            style_rule: percent, alignment_right
+            colWidth: 65
+          annotations:
+            name: Annotations
+            format_rule: annotation
+            note: Annotations present on the Visibility graph.
+            style_rule: alignment_left
+            colWidth: 230
+  /visibility_score/{site_id}/{group_id}/{date_start}/{date_end}:
+    get:
+      tags:
+        - Visibility Score
+      summary: Visibility scores
+      operationId: VisibilityScore_getByDateRange
+      security:
+        - Authorization: []
+      description: |
+        DEPRECATED<br>
+        Use /compare/competitors/visibility_score instead.<br><br>
+
+        Visibility scores for group.
+      parameters:
+        - description: The unique site identifier
+          name: site_id
+          in: path
+          required: true
+          type: integer
+          google_sheets:
+            label: Site
+        - description: The unique group identifier
+          name: group_id
+          in: path
+          required: true
+          type: integer
+          google_sheets:
+            label: Group
+        - description: >-
+            The start of the period. (Accepts date format as YYYY-mm-dd or
+            relative like "1 week ago", "3 months ago", etc.)
+          name: date_start
+          in: path
+          required: true
+          type: string
+          google_sheets:
+            label: Start Date
+        - description: >-
+            The end of the period. (Accepts date format as YYYY-mm-dd or
+            relative like "now", "today", etc.)
+          name: date_end
+          in: path
+          required: true
+          type: string
+          google_sheets:
+            label: End Date
+      responses:
+        '200':
+          description: An array of visibility scores
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/VisibilityScore'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+      deprecated: true
+      google_sheets:
+        show: false
+  /compare/keywords/{site_id}/{start_date}/{end_date}/{competitors}:
+    get:
+      info: >-
+        It returns the keyword, average CPC, YOY, position and position change
+        of each requested competitor.
+      tags:
+        - Compare
+      summary: Get competitors keywords
+      operationId: Compare_competitorKeywords
+      security:
+        - Authorization: []
+      description: |
+        Get competitors keywords.
+      parameters:
+        - description: The unique site identifier
+          name: site_id
+          in: path
+          required: true
+          type: integer
+          google_sheets:
+            label: Site
+        - description: The start of the period. (Relative date)
+          name: start_date
+          in: path
+          required: true
+          type: string
+          google_sheets:
+            label: Start Date
+        - description: The end of the period. (Relative date)
+          name: end_date
+          in: path
+          required: true
+          type: string
+          google_sheets:
+            label: End Date
+        - description: Maximum 10 competitors, separated by comma.
+          name: competitors
+          in: path
+          required: true
+          type: string
+          google_sheets:
+            label: Competitors
+        - description: >-
+            By default a  request is limited to 1000 rows, if you want more you
+            can set the offset
+          name: offset
+          in: query
+          type: number
+          google_sheets:
+            label: Offset
+            placeholder: Offset
+      responses:
+        '200':
+          description: Competition data for keywords
+          schema:
+            type: object
+            $ref: '#/definitions/CompareKeywords'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+      google_sheets:
+        show: false
+  /compare/keywords/{site_id}/{start_date}/{end_date}/{competitors}/{group_id}:
+    get:
+      tags:
+        - Compare
+      summary: Competitors' Rankings
+      operationId: Compare_competitorRankings
+      security:
+        - Authorization: []
+      description: >-
+        Returns the keyword search and ranking data for the requested
+        competitors in the selected timeframe.
+      parameters:
+        - description: The unique site identifier
+          name: site_id
+          in: path
+          required: true
+          type: integer
+          google_sheets:
+            label: Site
+        - description: The start of the period. (Relative date)
+          name: start_date
+          in: path
+          required: true
+          type: string
+          google_sheets:
+            label: Start Date
+        - description: The end of the period. (Relative date)
+          name: end_date
+          in: path
+          required: true
+          type: string
+          google_sheets:
+            label: End Date
+        - description: Maximum 10 competitors, separated by comma.
+          name: competitors
+          in: path
+          required: true
+          type: string
+          google_sheets:
+            label: Competitors
+            placeholder: Competitors
+        - description: >-
+            Group id from /groups_list/{site_id}. If it's not provided, default
+            group is 'All keywords'
+          name: group_id
+          in: path
+          required: false
+          type: string
+          google_sheets:
+            label: Group
+        - description: Check to retrieve mobile data.
+          name: device
+          in: query
+          type: number
+          google_sheets:
+            label: Device
+            options:
+              type: select
+              options:
+                Desktop: 1
+                Mobile: 2
+        - description: >-
+            By default, a request is limited to 1000 rows. If you need to get
+            more, you can set an offset, accordingly (an offset of 1000 will
+            provide the following 1000 rows). 
+             For example, if you need rows 3000-4000, you would set the offset at 3000.
+          name: offset
+          in: query
+          type: number
+          google_sheets:
+            label: Offset
+            placeholder: Offset
+      responses:
+        '200':
+          description: Competition data for keywords
+          schema:
+            type: object
+            $ref: '#/definitions/CompareKeywords'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+      google_sheets:
+        show: true
+        title_param: group, device
+        lockColumns: 4
+        lockRows: 4
+        header:
+          name:
+            name: Keyword
+            note: null
+            style_rule: alignment_left
+            colWidth: 180
+          search_volume:
+            name: |-
+              Search 
+               Volume
+            format_rule: format_number
+            note: Monthly searches on the keyword.
+            style_rule: alignment_right
+            colWidth: 65
+          avg_cpc:
+            name: CPC
+            note: Cost Per Click
+            style_rule: alignment_right
+            colWidth: 80
+          yoy:
+            name: |-
+              YoY 
+               Trend
+            note: Year-over-Year search trend.
+            format_rule: percent
+            style_rule: percent_sign, alignment_right
+            colWidth: 60
+        secondary_header:
+          search_data:
+            name: SEARCH DATA
+            columns: 4
+            background_color: '#38761d'
+            color: '#fff'
+            full_columns_color: false
+            alignment: left
+  /compare/competitors/visibility_score/{site_id}/{start_date}/{end_date}:
+    get:
+      info: >-
+        It returns the visibility score of you and the requested competitors
+        segmented by dates
+      tags:
+        - Compare
+      summary: Get competitors visibility score
+      operationId: Compare_competitorsVisibilityScore
+      security:
+        - Authorization: []
+      description: |
+        Get competitors visibility score.
+      parameters:
+        - description: The unique site identifier
+          name: site_id
+          in: path
+          required: true
+          type: integer
+          google_sheets:
+            label: Site
+        - description: The start of the period. (Relative date)
+          name: start_date
+          in: path
+          required: true
+          type: string
+          google_sheets:
+            label: Start Date
+        - description: The end of the period. (Relative date)
+          name: end_date
+          in: path
+          required: true
+          type: string
+          google_sheets:
+            label: End Date
+        - description: >-
+            Group id from /groups_list/{site_id}. If it's not provided, default
+            group is &quotAll keywords&quot.  Use comma for multiple groups (Eg:
+            group_id_1,group_id_2) 
+          name: group_id
+          in: query
+          required: false
+          type: string
+          google_sheets:
+            label: Group
+        - description: Maximum 10 competitors, separated by comma.
+          name: competitors
+          in: query
+          required: false
+          type: string
+          google_sheets:
+            label: Copetitors
+        - description: >-
+            Device value. If it's not provided, default value is 1 (desktop).
+            Get all devices from &quot;/devices&quot; endpoint. Possible values:
+            1 or 2
+          name: device
+          in: query
+          required: false
+          type: integer
+          google_sheets:
+            label: Device
+            options:
+              type: select
+              options:
+                Desktop: 1
+                Mobile: 2
+      responses:
+        '200':
+          description: >-
+            An array with all marked as "default over all groups" in competitors
+            and their visibility score on interval [startDate - endDate ]
+          schema:
+            type: object
+            $ref: '#/definitions/CompareCompetitorsResponse'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+      google_sheets:
+        show: false
+        header:
+          date:
+            name: Date
+            format_rule: format_date
+  /compare/competitors/visibility_score/{site_id}/{start_date}/{end_date}/{competitors}/{group_id}:
+    get:
+      info: >-
+        It returns the visibility score of you and the requested competitors
+        segmented by dates, filtered by group
+      tags:
+        - Compare
+      summary: Competitors' Daily visibility
+      operationId: Compare_dailyVisibility
+      security:
+        - Authorization: []
+      description: >-
+        Returns the Visibility for each day in the selected interval, with any
+        annotation present on the Visibility graph, correspondingly, for you and
+        each of the requested competitors.
+      parameters:
+        - description: The unique site identifier
+          name: site_id
+          in: path
+          required: true
+          type: integer
+          google_sheets:
+            label: Site
+        - description: The start of the period. (Relative date)
+          name: start_date
+          in: path
+          required: true
+          type: string
+          google_sheets:
+            label: Start Date
+        - description: The end of the period. (Relative date)
+          name: end_date
+          in: path
+          required: true
+          type: string
+          google_sheets:
+            label: End Date
+        - description: Maximum 10 competitors, separated by comma.
+          name: competitors
+          in: path
+          required: true
+          type: string
+          google_sheets:
+            label: Competitors
+            placeholder: Enter competitors
+        - description: >-
+            Group id from /groups_list/{site_id}. If it's not provided, default
+            group is &quotAll keywords&quot 
+          name: group_id
+          in: path
+          required: false
+          type: string
+          google_sheets:
+            label: Group
+        - description: >-
+            Device value. If it's not provided, default value is 1 (desktop).
+            Get all devices from &quot;/devices&quot; endpoint. Possible values:
+            1 or 2
+          name: device
+          in: query
+          required: false
+          type: integer
+          google_sheets:
+            label: Device
+            options:
+              type: select
+              options:
+                Desktop: 1
+                Mobile: 2
+      responses:
+        '200':
+          description: >-
+            An array with all competitors and their visibility score on interval
+            [startDate - endDate ]
+          schema:
+            type: object
+            $ref: '#/definitions/CompareCompetitorsResponse'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+      google_sheets:
+        show: true
+        title_param: group
+        lockColumns: 2
+        lockRows: 3
+        header:
+          date:
+            name: Date
+            format_rule: format_date
+            style_rule: alignment_center
+            colWidth: 90
+          annotations:
+            name: Annotations
+            format_rule: annotation
+            style_rule: alignment_left
+            colWidth: 180
+            note: Annotations present on the Visibility graph.
+  /devices:
+    get:
+      tags:
+        - Devices
+      summary: Get all devices
+      operationId: Devices_getAll
+      security:
+        - Authorization: []
+      description: |
+        Get all devices.
+      responses:
+        '200':
+          description: Result with all devices
+          schema:
+            type: object
+      google_sheets: false
+components:
+  securitySchemes:
+    Authorization:
+      type: apiKey
+      name: Authorization
+      in: header
+definitions:
+  Site:
+    type: object
+    properties:
+      id:
+        description: Unique identifier representing a specific site
+        type: integer
+      name:
+        description: Name of site
+        type: string
+      url:
+        description: Url of the Site
+        type: string
+      owner:
+        description: The owner of the site (the email address)
+        type: string
+      date:
+        description: The date the site was added
+        type: string
+      localized:
+        description: Location name (if localized)
+        type: string
+      localized_canonical:
+        description: Canonical location name (if localized)
+        type: string
+      pitching:
+        description: 'Possible values: 0 (site is not pitching)/1 (site is pitching).'
+        type: integer
+  ForecastExample:
+    type: object
+    properties:
+      manual:
+        description: Last updated forecast (if it's manual)
+        type: string
+      real:
+        description: Real traffic
+        type: integer
+      estimated:
+        description: Estimated traffic
+        type: integer
+      on_target:
+        description: On target percent
+        type: integer
+      type:
+        description: 'Forecast type: Visibility/Traffic'
+        type: string
+  ForecastExampleByDates:
+    type: object
+    properties:
+      date:
+        type: string
+        google_sheets:
+          show: true
+          header_name: Date
+      search_volume:
+        type: integer
+        google_sheets:
+          show: true
+          header_name: Search Volume
+          format_rule: number
+      real_traffic:
+        type: integer
+        google_sheets:
+          show: true
+          header_name: Real Traffic
+      estimated_traffic:
+        type: integer
+        google_sheets:
+          show: true
+          header_name: Estimated Traffic
+      visibility_score:
+        type: string
+        google_sheets:
+          show: true
+          header_name: Visibility Score
+  KeywordGroups:
+    type: object
+    properties:
+      id:
+        description: Unique identifier representing a specific group
+        type: string
+      name:
+        description: The name of the group
+        type: string
+      is_smart:
+        description: If the group is defined by a smart rule
+        type: boolean
+      kw_count:
+        description: The number of keywords in the group for the selected period
+        type: integer
+      search_volume:
+        description: >-
+          The total search volume for the keywords in the group for the selected
+          period
+        type: number
+      vscore_start:
+        description: The desktop visibility score at the start of the period
+        type: number
+      vscore_end:
+        description: The desktop visibility score at the end of the period
+        type: number
+      vscore_start_mobile:
+        description: The mobile visibility score at the start of the period
+        type: number
+      vscore_end_mobile:
+        description: The mobile visibility score at the end of the period
+        type: number
+      keywords:
+        description: List of Keyword IDs (when load_keyword_ids is active)
+        type: array
+        items:
+          $ref: '#/definitions/KeywordGroupsKIDS'
+  GroupsList:
+    type: object
+    properties:
+      id:
+        description: Unique identifier representing a specific group
+        type: string
+        google_sheets:
+          show: true
+          header_name: Group ID
+      name:
+        description: The name of the group
+        type: string
+        google_sheets:
+          show: true
+          header_name: Group Name
+      is_smart:
+        description: If the group is defined by a smart rule
+        type: boolean
+        google_sheets:
+          show: true
+          header_name: Group Type
+          format_rule: boolean_to_string
+  GroupDetails:
+    type: object
+    properties:
+      kw_count:
+        description: The number of keywords in the group for the selected period
+        type: integer
+        google_sheets:
+          show: true
+          header_name: Keyword Count
+      search_volume:
+        description: >-
+          The total search volume for the keywords in the group for the selected
+          period
+        type: number
+        google_sheets:
+          show: true
+          header_name: Search Volume
+      vscore_start_desktop:
+        description: The desktop visibility score at the start of the period
+        type: number
+        google_sheets:
+          show: true
+          header_name: Desktop Visibility Score Start Date
+          format_rule: number_two_decimal
+      vscore_stop_desktop:
+        description: The desktop visibility score at the end of the period
+        type: number
+        google_sheets:
+          show: true
+          header_name: Desktop Visibility Score End Date
+          format_rule: number_two_decimal
+      vscore_start_mobile:
+        description: The mobile visibility score at the start of the period
+        type: number
+        google_sheets:
+          show: true
+          header_name: Mobile Visibility Score Start Date
+          format_rule: number_two_decimal
+      vscore_stop_mobile:
+        description: The mobile visibility score at the end of the period
+        type: number
+        google_sheets:
+          show: true
+          header_name: Mobile Visibility Score End Date
+          format_rule: number_two_decimal
+      desktop_performance_change:
+        description: The desktop visibility score performance change
+        type: number
+        google_sheets:
+          show: true
+          header_name: Desktop Visibility Score Change
+      mobile_performance_change:
+        description: The mobile visibility score performance change
+        type: number
+        google_sheets:
+          show: true
+          header_name: Mobile Visibility Score Change
+      keywords:
+        description: List of Keyword IDs (when load_keyword_ids is active)
+        type: array
+        items:
+          $ref: '#/definitions/KeywordGroupsKIDS'
+        google_sheets:
+          show: false
+  AllGroupDetails:
+    type: object
+    properties:
+      group_name:
+        description: Group name
+        type: string
+        google_sheets:
+          show: true
+          header_name: Group Name
+      kw_count:
+        description: The number of keywords in the group for the selected period
+        type: integer
+        google_sheets:
+          show: true
+          header_name: Keyword Count
+      search_volume:
+        description: >-
+          The total search volume for the keywords in the group for the selected
+          period
+        type: number
+        google_sheets:
+          show: true
+          header_name: Search Volume
+      vscore_start_desktop:
+        description: The desktop visibility score at the start of the period
+        type: number
+        google_sheets:
+          show: true
+          header_name: Desktop Visibility Score Start Date
+          format_rule: number_two_decimal
+      vscore_stop_desktop:
+        description: The desktop visibility score at the end of the period
+        type: number
+        google_sheets:
+          show: true
+          header_name: Desktop Visibility Score End Date
+          format_rule: number_two_decimal
+      vscore_start_mobile:
+        description: The mobile visibility score at the start of the period
+        type: number
+        google_sheets:
+          show: true
+          header_name: Mobile Visibility Score Start Date
+          format_rule: number_two_decimal
+      vscore_stop_mobile:
+        description: The mobile visibility score at the end of the period
+        type: number
+        google_sheets:
+          show: true
+          header_name: Mobile Visibility Score End Date
+          format_rule: number_two_decimal
+      desktop_performance_change:
+        description: The desktop visibility score performance change
+        type: number
+        google_sheets:
+          show: true
+          header_name: Desktop Visibility Score Change
+      mobile_performance_change:
+        description: The mobile visibility score performance change
+        type: number
+        google_sheets:
+          show: true
+          header_name: Mobile Visibility Score Change
+      keywords:
+        description: List of Keyword IDs (when load_keyword_ids is active)
+        type: array
+        items:
+          $ref: '#/definitions/KeywordGroupsKIDS'
+        google_sheets:
+          show: false
+  KeywordGroupsKIDS:
+    type: integer
+  KeywordData:
+    type: object
+    properties:
+      id:
+        description: Unique identifier representing a specific keyword
+        type: string
+        google_sheets:
+          show: true
+          header_name: Keyword ID
+      visits:
+        description: Total visits for the selected period
+        type: number
+        google_sheets:
+          show: true
+          header_name: Visits
+      bounces:
+        description: Total bounces for the selected period
+        type: number
+        google_sheets:
+          show: true
+          header_name: Bounces
+      conversions:
+        description: Total conversions (e-commerce) for the selected period
+        type: number
+        google_sheets:
+          show: true
+          header_name: Conversions
+      conversions_rate:
+        description: Total conversion rate (e-commerce) for the selected period
+        type: number
+        google_sheets:
+          show: true
+          header_name: Conversion Rate
+      conversions_value:
+        description: Total conversions value (e-commerce) for the selected period
+        type: number
+        google_sheets:
+          show: true
+          header_name: Conversion Value
+      goals:
+        description: Total goals for the selected period
+        type: number
+        google_sheets:
+          show: true
+          header_name: Goals
+      goals_rate:
+        description: Total goals rate for the selected period
+        type: number
+        google_sheets:
+          show: true
+          header_name: Goals Rate
+      goals_value:
+        description: Total goals value for the selected period
+        type: number
+        google_sheets:
+          show: true
+          header_name: Goals Value
+      position:
+        description: Last position in the selected period
+        type: number
+        google_sheets:
+          show: true
+          header_name: Keyword Position
+      position_trend:
+        description: >-
+          The difference between the first position in the period and the last
+          position in the period
+        type: number
+        google_sheets:
+          show: true
+          header_name: Position Trend
+      position_mobile:
+        description: Last position (mobile devices) in the selected period
+        type: number
+        google_sheets:
+          show: true
+          header_name: Mobile Position
+      position_trend_mobile:
+        description: >-
+          The difference between the first position in the period and the last
+          position in the period (mobile devices)
+        type: number
+        google_sheets:
+          show: true
+          header_name: Mobile Position Trend
+      visibility_impact_desktop:
+        description: >-
+          Visibility impact - similar to a weighted average; Use case: sorting
+          the keywords by their impact in the Visibility Score
+        type: number
+        google_sheets:
+          show: true
+          header_name: Desktop Visibility Impact
+      visibility_impact_mobile:
+        description: >-
+          Visibility impact - similar to a weighted average; Use case: sorting
+          the keywords by their impact in the Visibility Score (mobile devices)
+        type: number
+        google_sheets:
+          show: true
+          header_name: Mobile Visibility Impact
+      group_name:
+        description: The name of the group the keyword is in
+        type: string
+        google_sheets:
+          show: true
+          header_name: Group Name
+      keyword_data:
+        description: Specific keyword data
+        type: object
+        google_sheets:
+          show: true
+          drill_down: true
+          header_name: Keyword Data
+        properties:
+          name:
+            description: The keyword name
+            type: string
+            google_sheets:
+              show: true
+              header_name: Keyword
+          average_search_volume:
+            description: The avereage search volume
+            type: number
+            google_sheets:
+              show: true
+              header_name: Keyword Average Search Volume
+          average_cpc:
+            description: The avereage cost per click
+            type: number
+            google_sheets:
+              show: true
+              header_name: Keyword Average Cost per Click
+          date_added:
+            description: The date and time the keyword was added
+            type: string
+            google_sheets:
+              show: true
+              header_name: Keyword Date Added
+          landing_page:
+            description: The landing page for desktop devices
+            type: string
+            google_sheets:
+              show: true
+              header_name: Desktop Landing Page
+          landing_page_mobile:
+            description: The landing page for mobile devices
+            type: string
+            google_sheets:
+              show: true
+              header_name: Mobile Landing Page
+      est_additional_visits:
+        description: Estimated additional traffic once in Top 3
+        type: number
+        google_sheets:
+          show: true
+          header_name: Estimated Additional Traffic
+      est_additional_revenue:
+        description: Estimated additional revenue once in Top 3
+        type: number
+        google_sheets:
+          show: true
+          header_name: Estimated Additional Revenue
+      est_adwords_cost:
+        description: Estimated AdWords cost for the additional visits once in Top 3
+        type: number
+        google_sheets:
+          show: true
+          header_name: Estimated AdWords Cost
+  Ranks:
+    type: array
+    items:
+      type: object
+      properties:
+        keyword_data:
+          description: The keyword details
+          type: object
+          properties:
+            id:
+              description: Unique identifer for keyword
+              type: number
+        positions:
+          description: >-
+            The positions for deskop devices for the dates in the interval
+            selected(when available).
+             The positions can go up to 100, 101 means that the keyword was not found in the first 10 google pages
+          type: object
+          properties:
+            date(YY-mm-dd):
+              type: string
+              additionalProperties:
+                type: integer
+        positions_mobile:
+          description: >-
+            The positions for mobile devices for the dates in the interval
+            selected(when available).
+             The positions can go up to 100, 101 means that the keyword was not found in the first 10 google pages
+          type: object
+          properties:
+            date(YY-mm-dd):
+              type: string
+              additionalProperties:
+                type: integer
+    properties:
+      keyword_data:
+        description: Specific keyword data
+        type: object
+        google_sheets:
+          show: true
+          drill_down: true
+          header_name: Keyword Data
+        properties:
+          name:
+            description: The keyword name
+            type: string
+            google_sheets:
+              show: true
+              header_name: Keyword
+          id:
+            description: The keyword ID
+            type: string
+            google_sheets:
+              show: true
+              header_name: Keyword ID
+      positions:
+        description: Desktop Positions
+        type: object
+        google_sheets:
+          show: true
+          drill_down: true
+          header_name: Desktop Positions
+        properties:
+          date:
+            type: string
+            additionalProperties:
+              type: integer
+            google_sheets:
+              show: true
+              header_name: Desktop Positions
+      positions_mobile:
+        description: Mobile Positions
+        type: object
+        google_sheets:
+          show: true
+          drill_down: true
+          header_name: Mobile Positions
+        properties:
+          date:
+            type: string
+            additionalProperties:
+              type: integer
+            google_sheets:
+              show: true
+              header_name: Mobile Positions
+  OrganicTraffic:
+    type: object
+    properties:
+      visits_brand:
+        description: The brand visits
+        type: number
+        google_sheets:
+          show: true
+          header_name: Brand Visits
+      visits_non_brand:
+        description: The non brand visits
+        type: number
+        google_sheets:
+          show: true
+          header_name: Non-Brand Visits
+      conversions_rate_brand:
+        description: The conversion rate (e-commerce) for brand
+        type: number
+        google_sheets:
+          show: true
+          header_name: Brand Conversion Rate
+      conversions_rate_non_brand:
+        description: The conversion rate (e-commerce) for non-brand
+        type: number
+        google_sheets:
+          show: true
+          header_name: Non-Brand Visits
+      goals_rate_brand:
+        description: The goals rate for brand
+        type: number
+        google_sheets:
+          show: true
+          header_name: Brand Goals Rate
+      goals_rate_non_brand:
+        description: The goals rate for non-brand
+        type: number
+        google_sheets:
+          show: true
+          header_name: Non-Brand Goal Rate
+      conversions_value_brand:
+        description: The revenue (e-commerce) for brand
+        type: number
+        google_sheets:
+          show: true
+          header_name: Brand Revenue
+      conversions_value_non_brand:
+        description: The revenue (e-commerce) for non-brand
+        type: number
+        google_sheets:
+          show: true
+          header_name: Non-Brand Revenue
+      goals_conversions_value_brand:
+        description: The goals revenue for brand
+        type: number
+        google_sheets:
+          show: true
+          header_name: Brand Goals Revenue
+      goals_conversions_value_non_brand:
+        description: The goals revenue for non-brand
+        type: number
+        google_sheets:
+          show: true
+          header_name: Non-Brand Goals Revenue
+      date:
+        description: Date format(Y-m-d)
+        type: string
+        google_sheets:
+          show: true
+          header_name: Date
+  OrganicTrafficSplit:
+    type: object
+    properties:
+      visits:
+        description: Visits for brand/non-brand
+        type: number
+        google_sheets:
+          show: true
+          header_name: Visits
+      conversions_rate:
+        description: The conversion rate (e-commerce) for brand/non-brand
+        type: number
+        google_sheets:
+          show: true
+          header_name: Conversion Rate
+      goals_rate:
+        description: The goals rate for brand/non-brand
+        type: number
+        google_sheets:
+          show: true
+          header_name: Goals Rate
+      conversions_value:
+        description: The revenue (e-commerce) for brand/non-brand
+        type: number
+        google_sheets:
+          show: true
+          header_name: Revenue
+      goals_conversions_value:
+        description: The goals revenue for brand/non-brand
+        type: number
+        google_sheets:
+          show: true
+          header_name: Goals Revenue
+      date:
+        description: Date format(Y-m-d)
+        type: string
+        google_sheets:
+          show: true
+          header_name: Date
+      type:
+        description: 'Possible values: brand | non-brand'
+        type: string
+        google_sheets:
+          show: true
+          header_name: Type
+  Content:
+    type: object
+    properties:
+      title:
+        type: string
+        google_sheets:
+          show: true
+          header_name: Title
+      id:
+        type: integer
+        format: int32
+        google_sheets:
+          show: true
+          header_name: ID
+      date:
+        type: string
+        google_sheets:
+          show: true
+          header_name: Date
+      article_url:
+        type: string
+        google_sheets:
+          show: true
+          header_name: Article URL
+      source:
+        type: string
+        google_sheets:
+          show: true
+          header_name: Article Source
+      visits:
+        type: integer
+        format: int32
+        google_sheets:
+          show: true
+          header_name: Visits
+      conversions:
+        type: integer
+        format: int32
+        google_sheets:
+          show: true
+          header_name: Conversions
+      conversions_value:
+        type: integer
+        format: int32
+        google_sheets:
+          show: true
+          header_name: Converions Value
+      transactions:
+        type: integer
+        format: int32
+        google_sheets:
+          show: true
+          header_name: Transactions
+      transactions_value:
+        type: integer
+        format: int32
+        google_sheets:
+          show: true
+          header_name: Transactions Value
+      social:
+        type: object
+        google_sheets:
+          show: true
+          header_name: Social
+          drill_down: true
+        properties:
+          total:
+            type: integer
+            format: int32
+            google_sheets:
+              show: true
+              header_name: Social Total
+          facebook:
+            type: integer
+            format: int32
+            google_sheets:
+              show: true
+              header_name: Facebook
+          twitter:
+            type: integer
+            format: int32
+            google_sheets:
+              show: true
+              header_name: Twitter
+          google_plus:
+            type: integer
+            format: int32
+            google_sheets:
+              show: true
+              header_name: Google Plus
+          linkedin:
+            type: integer
+            format: int32
+            google_sheets:
+              show: true
+              header_name: Linkedin
+          pinterest:
+            type: integer
+            format: int32
+            google_sheets:
+              show: true
+              header_name: Pintrest
+      landing_pages:
+        type: array
+        items:
+          $ref: '#/definitions/LandingPage'
+  KeywordSERP:
+    description: The landing pages
+    type: object
+    properties:
+      landing page(text):
+        type: string
+        additionalProperties:
+          description: position
+          type: integer
+  Error:
+    type: object
+    properties:
+      code:
+        type: integer
+        format: int32
+      message:
+        type: string
+      fields:
+        type: string
+  LandingPage:
+    type: object
+    properties:
+      url:
+        type: string
+      search_volume:
+        type: integer
+      visibility_score:
+        type: integer
+      visibility_score_change:
+        type: integer
+      keywords:
+        type: array
+        items:
+          $ref: '#/definitions/Keyword'
+  Keyword:
+    type: object
+    properties:
+      id:
+        type: integer
+      avg_search_volume:
+        type: integer
+      name:
+        type: string
+      rank:
+        type: integer
+      rank_change:
+        type: integer
+  VisibilityScore:
+    type: object
+    properties:
+      date:
+        type: string
+      vscore:
+        type: integer
+      vscore_mobile:
+        type: integer
+  VisibilityScoreData:
+    type: object
+    properties:
+      date:
+        type: string
+      vscore:
+        type: integer
+  CompareCompetitorsResponse:
+    type: object
+    properties:
+      YYYY-MM-DD:
+        description: Date
+        type: object
+        $ref: '#/definitions/CompareCompetitorsResponseVscore'
+  CompareCompetitorsResponseVscore:
+    type: object
+    properties:
+      competitor.tld:
+        description: Visibility Score for Competior
+        type: number
+  CompareKeywordsCompetitors:
+    type: object
+    properties:
+      rank:
+        type: integer
+      change:
+        type: string
+  CompareKeywords:
+    type: object
+    properties:
+      results:
+        type: array
+        items:
+          $ref: '#/definitions/CompareKeywordsResults'
+      limit:
+        description: Current limit
+        type: number
+      offset:
+        description: Current offset
+        type: number
+      pages:
+        description: Total number of pages
+        type: number
+      total_results:
+        description: Total number of results
+        type: number
+  CompareKeywordsResults:
+    type: object
+    properties:
+      name:
+        type: string
+      search_volume:
+        type: integer
+      avg_cpc:
+        type: string
+      competitors:
+        type: array
+        items:
+          $ref: '#/definitions/CompareKeywordsCompetitors'
+      yoy:
+        type: string
+      serp_features:
+        description: Array of SERP features
+        type: array
+        items:
+          type: string
