@@ -1,0 +1,5649 @@
+openapi: 3.0.0
+info:
+  title: WeFitter API
+  description: This is the WeFitter API
+  version: v1.3
+  termsOfService: https://www.wefitter.com/privacy/
+  contact:
+    email: hello@wefitter.com
+  license:
+    name: BSD License
+servers:
+  - url: https://api.wefitter.com/api/v1.3
+tags:
+  - description: >
+
+      Profiles are containers for wearables data.
+
+      The profiles can be seen as an extension of users in a different system.
+
+      Profiles are anonymous objects which can participate in teams and
+      challenges.
+
+
+      Keep in mind, listing profiles and creating profiles need an
+      administrative bearer token, all profile specific actions
+
+      need a seperate bearer token that is returned after creating a profile.
+      This bearer token is used in place of the
+
+      administrative bearer token. (see profile create action for more
+      information)
+    name: profile
+  - description: >+
+
+      WeFitter API’s challenge engine will bring endless engagement to your
+      platform.
+
+      For more information about the possibilities in challenges please go to
+      https://www.wefitter.com/en-us/features/gamification/
+
+
+      Challenges have multilanguage support on the fields: `Title`, `Slogan`,
+      and `Description`.
+
+      By default, challenges get the default-language that is configured in the
+      app. Whenever a challenge is requested through the API this challenge will
+      be presented in the default language. 
+
+      If another language is preferred, this can be requested by adding the
+      header parameter `Accept-Language` stating the language short code (ex.
+      `en` for english). If this language short code is not present in the title
+      of the challenge, the default language will be returned.
+
+
+      These translation fields contain JSON strings, for example:
+
+      ```{"en":"this is the English title","nl":"this is the Dutch title"}```
+
+      So to create a multilanguage challenge, please provide the title, slogan,
+      and description field as json strings, be aware that because of
+      serialization this should be formed with backward slashes:
+
+
+
+      <table><tbody>
+          <tr><td>
+      {
+
+
+      "title": "{\"en\":\"this is the English title\", \"nl\":\"this is the
+      dutch title\"}",
+
+
+      "slogan": "{\"en\":\"this is the English title\", \"nl\":\"this is the
+      dutch slogan\"}",
+
+
+      "description": "{\"en\":\"this is the English title\", \"nl\":\"this is
+      the dutch description\"}",
+
+
+      }
+
+      </td></tr>
+
+      </tbody></table>
+
+    name: challenge
+  - name: team
+  - description: Connections are the links between profiles and their wearables.
+    name: connection
+  - description: |
+      Send a notification to all devices for the specified profiles
+      The data will be sent to the client in the following format:
+      ```
+      {
+              "app": <app public id>,
+              "title": <title>,
+              "body": <body>,
+              "link": <optional link>
+      }
+      ```
+    name: notification
+  - name: loyalty
+  - description: >
+
+      <p>
+
+      Before any calls can be made to wefitter, BasicAuth is needed to verify
+      the identity of the requesting party.
+
+      This call will result into a Bearer token which has administrator
+      privileges and is valid for 1 day.
+
+      This token can be used to create profiles, challenges, etc.
+
+      </p>
+
+
+      <p>
+
+      The returned bearer is a JWT (<a
+      href="https://en.wikipedia.org/wiki/JSON_Web_Token">JSON Web Token</a>).
+
+      </p>
+    name: token
+  - name: app
+  - name: insights
+paths:
+  /insights/bio_age:
+    parameters: []
+    get:
+      tags:
+        - insights
+      summary: Get someones biological age on a weekly basis.
+      operationId: Insights_getBioAgeWeekly
+      description: ''
+      parameters:
+        - name: start_date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: end_date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InsightsGetBioAgeWeeklyResponse'
+  /loyalty/get_recommended_products:
+    parameters: []
+    get:
+      tags:
+        - loyalty
+      operationId: Loyalty_getRecommendedProducts
+      description: ''
+      parameters:
+        - description: Number of results to return per page.
+          name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+        - description: The initial index from which to return the results.
+          name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoyaltyGetRecommendedProductsResponse'
+  /loyalty/get_shoppingcart_link:
+    parameters: []
+    get:
+      tags:
+        - loyalty
+      operationId: Loyalty_getShoppingcartLink
+      description: ''
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShoppingCart'
+  /app/totals:
+    parameters: []
+    get:
+      tags:
+        - app
+      summary: Totals
+      operationId: App_getTotals
+      security:
+        - BearerAdmin: []
+      description: >-
+        Total values for calories, distance, steps, points and activity duration
+        over all profiles in the app.
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppGetTotalsResponse'
+      deprecated: false
+  /challenge:
+    parameters: []
+    get:
+      tags:
+        - challenge
+      summary: List Challenges
+      operationId: challenge_list
+      security:
+        - BearerAdmin: []
+      description: Lists all available challenges
+      parameters:
+        - description: Number of results to return per page.
+          name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+        - description: The initial index from which to return the results.
+          name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+        - description: Show challenges that have not ended in the last N weeks
+          name: recent
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChallengeListResponse'
+      deprecated: false
+    post:
+      tags:
+        - challenge
+      summary: Create challenge
+      operationId: challenge_create
+      security:
+        - BearerAdmin: []
+      description: Creates a new challenge
+      requestBody:
+        $ref: '#/components/requestBodies/ChallengeDetail'
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChallengeDetail'
+      deprecated: false
+  /challenge/{challenge_public_id}/team:
+    parameters:
+      - name: challenge_public_id
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      tags:
+        - challenge
+      summary: Team leaderboard
+      operationId: Challenge_teamStandingsList
+      security:
+        - BearerAdmin: []
+      description: >
+        List the standings of different teams in challenges (don't have to be
+        team challenges).
+
+        This endpoint returns a list of objects.
+      parameters:
+        - description: Number of results to return per page.
+          name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+        - description: The initial index from which to return the results.
+          name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+        - description: Index of the time period use
+          name: date_range
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChallengeTeamStandingsListResponse'
+      deprecated: false
+  /challenge/{challenge_public_id}/team/{team_public_id}:
+    parameters:
+      - name: challenge_public_id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: team_public_id
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      tags:
+        - challenge
+      summary: Team contribution
+      operationId: Challenge_teamContributionList
+      security:
+        - BearerAdmin: []
+      description: |
+        List team members' contribution to the challenge.
+        This endpoint returns a list of objects.
+      parameters:
+        - description: Index of the time period use
+          name: date_range
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaderboardProfile'
+      deprecated: false
+  /challenge/{public_id}:
+    parameters:
+      - name: public_id
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      tags:
+        - challenge
+      summary: Get Challenge
+      operationId: challenge_read
+      security:
+        - BearerAdmin: []
+      description: Gets a single challenge
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChallengeDetail'
+      deprecated: false
+    put:
+      tags:
+        - challenge
+      summary: Edit challenge
+      operationId: challenge_update
+      security:
+        - BearerAdmin: []
+      description: Edits a challenge
+      requestBody:
+        $ref: '#/components/requestBodies/ChallengeDetail'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChallengeDetail'
+      deprecated: false
+    patch:
+      tags:
+        - challenge
+      summary: Partial edit challenge
+      operationId: Challenge_partialEdit
+      security:
+        - BearerAdmin: []
+      description: Edits a challenge
+      requestBody:
+        $ref: '#/components/requestBodies/ChallengeDetail'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChallengeDetail'
+      deprecated: false
+    delete:
+      tags:
+        - challenge
+      summary: Delete challenge
+      operationId: challenge_delete
+      security:
+        - BearerAdmin: []
+      description: deletes a challenge
+      responses:
+        '204':
+          description: ''
+      deprecated: false
+  /challenge/{public_id}/deactivate_member:
+    parameters:
+      - name: public_id
+        in: path
+        required: true
+        schema:
+          type: string
+    post:
+      tags:
+        - challenge
+      summary: Deactivate member
+      operationId: Challenge_deactivateMember
+      security:
+        - BearerAdmin: []
+      description: Deactivate a member from the challenge
+      parameters:
+        - description: A profile public_id is expected
+          name: profile
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - description: A team public_id is expected
+          name: team
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - description: >-
+            Whether profile actively participates in challenge.
+
+
+            While inactive, scores/leaderboard will not be updated but still be
+            visible.
+          name: is_active
+          in: query
+          required: false
+          schema:
+            type: boolean
+      requestBody:
+        $ref: >-
+          #/components/requestBodies/ProfileAsProfilePublicIdAndTeamAsTeamPublicId
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/ProfileAsProfilePublicIdAndTeamAsTeamPublicId
+      deprecated: false
+    put:
+      tags:
+        - challenge
+      operationId: Challenge_deactivateMember
+      description: This docstring is used by Django Rest Framework
+      requestBody:
+        $ref: >-
+          #/components/requestBodies/ProfileAsProfilePublicIdAndTeamAsTeamPublicId
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/ProfileAsProfilePublicIdAndTeamAsTeamPublicId
+  /challenge/{public_id}/deactivate_members:
+    parameters:
+      - name: public_id
+        in: path
+        required: true
+        schema:
+          type: string
+    post:
+      tags:
+        - challenge
+      summary: Deactivate members
+      operationId: Challenge_deactivateMembers
+      security:
+        - BearerAdmin: []
+      description: Deactivate multiple members from the challenge
+      parameters:
+        - description: A profile public_id is expected
+          name: profile
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - description: A team public_id is expected
+          name: team
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - description: >-
+            Whether profile actively participates in challenge.
+
+
+            While inactive, scores/leaderboard will not be updated but still be
+            visible.
+          name: is_active
+          in: query
+          required: false
+          schema:
+            type: boolean
+      requestBody:
+        $ref: '#/components/requestBodies/ProfilePublicIdsListAndTeamAsPublicId'
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfilePublicIdsListAndTeamAsPublicId'
+      deprecated: false
+    put:
+      tags:
+        - challenge
+      operationId: Challenge_deactivateMembers
+      description: This docstring is used by Django Rest Framework
+      requestBody:
+        $ref: '#/components/requestBodies/ProfilePublicIdsListAndTeamAsPublicId'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfilePublicIdsListAndTeamAsPublicId'
+  /challenge/{public_id}/leaderboard:
+    parameters:
+      - name: public_id
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      tags:
+        - challenge
+      summary: Leaderboard
+      operationId: challenge_leaderboard
+      security:
+        - BearerAdmin: []
+      description: |
+        Displays the leaderboard for a challenge.
+        This endpoint returns a list of objects.
+      parameters:
+        - description: Index of the time period use
+          name: date_range
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaderboardProfileAndTeam'
+      deprecated: false
+  /challenge/{public_id}/leaderboard_history:
+    parameters:
+      - name: public_id
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      tags:
+        - challenge
+      summary: Leaderboard history
+      operationId: Challenge_getScoresHistory
+      description: >
+        Retrieve the scores of the authenticated profile for all periods since
+        the profile joined the challenge.
+
+        This endpoint returns a list of objects.
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaderboardHistory'
+      deprecated: false
+  /challenge/{public_id}/member:
+    parameters:
+      - name: public_id
+        in: path
+        required: true
+        schema:
+          type: string
+    post:
+      tags:
+        - challenge
+      summary: Add member
+      operationId: Challenge_memberCreate
+      security:
+        - BearerAdmin: []
+      description: >
+        Add member to a team.
+
+
+        Note: for now if the challenge is a team challenge and no team is
+        specified, the first team for the specified profile is
+
+        used. Do note that this is a temporary fix and may be removed at any
+        time.
+      requestBody:
+        $ref: >-
+          #/components/requestBodies/ProfileAsProfilePublicIdAndTeamAsTeamPublicId
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/ProfileAsProfilePublicIdAndTeamAsTeamPublicId
+      deprecated: false
+    put:
+      tags:
+        - challenge
+      summary: Add member
+      operationId: Challenge_memberAdd
+      security:
+        - BearerAdmin: []
+      description: >
+        Add member to a team.
+
+
+        Note: for now if the challenge is a team challenge and no team is
+        specified, the first team for the specified profile is
+
+        used. Do note that this is a temporary fix and may be removed at any
+        time.
+      requestBody:
+        $ref: >-
+          #/components/requestBodies/ProfileAsProfilePublicIdAndTeamAsTeamPublicId
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/ProfileAsProfilePublicIdAndTeamAsTeamPublicId
+      deprecated: false
+    delete:
+      tags:
+        - challenge
+      summary: Remove member
+      operationId: Challenge_removeMember
+      security:
+        - BearerAdmin: []
+      description: Remove a member from the challenge
+      parameters:
+        - description: A profile public_id is expected
+          name: profile
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: ''
+      deprecated: false
+  /challenge/{public_id}/members:
+    parameters:
+      - name: public_id
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      tags:
+        - challenge
+      summary: Get members
+      operationId: Challenge_getMembers
+      security:
+        - BearerAdmin: []
+      description: Get a paginated list of members enrolled to a Challenge
+      parameters:
+        - description: Number of results to return per page.
+          name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+        - description: The initial index from which to return the results.
+          name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChallengeGetMembersResponse'
+      deprecated: false
+    post:
+      tags:
+        - challenge
+      summary: Add members
+      operationId: Challenge_addMembers
+      security:
+        - BearerAdmin: []
+      description: >-
+        Add members to a team.
+
+
+        Note: for now if the challenge is a team challenge and no team is
+        specified, the first team for the specified profile is
+
+        used. Do note that this is a temporary fix and may be removed at any
+        time.
+
+
+        Note: for the GET/POST endpoint an admin bearer token is required, while
+        the GET also accepts profile bearer tokens
+      requestBody:
+        $ref: '#/components/requestBodies/ProfilePublicIdsListAndTeamAsPublicId'
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfilePublicIdsListAndTeamAsPublicId'
+      deprecated: false
+    put:
+      tags:
+        - challenge
+      summary: Add members
+      operationId: Challenge_addMembers
+      security:
+        - BearerAdmin: []
+      description: >-
+        Add members to a team.
+
+
+        Note: for now if the challenge is a team challenge and no team is
+        specified, the first team for the specified profile is
+
+        used. Do note that this is a temporary fix and may be removed at any
+        time.
+
+
+        Note: for the GET/POST endpoint an admin bearer token is required, while
+        the GET also accepts profile bearer tokens
+      requestBody:
+        $ref: '#/components/requestBodies/ProfilePublicIdsListAndTeamAsPublicId'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfilePublicIdsListAndTeamAsPublicId'
+      deprecated: false
+  /challenge/{public_id}/periods:
+    parameters:
+      - name: public_id
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      tags:
+        - challenge
+      summary: Periods
+      operationId: challenge_periods
+      security:
+        - BearerAdmin: []
+      description: |
+        Get all periods for the challenge.
+        This endpoint returns a list of objects.
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChallengePeriod'
+      deprecated: false
+  /challenge/{public_id}/remove_members:
+    parameters:
+      - name: public_id
+        in: path
+        required: true
+        schema:
+          type: string
+    post:
+      tags:
+        - challenge
+      summary: Remove members
+      operationId: Challenge_removeMembers
+      security:
+        - BearerAdmin: []
+      description: Remove members from the challenge
+      requestBody:
+        $ref: '#/components/requestBodies/ProfilePublicIdsListAndTeamAsPublicId'
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfilePublicIdsListAndTeamAsPublicId'
+      deprecated: false
+  /connection/{connection_slug}/connect:
+    parameters:
+      - name: connection_slug
+        in: path
+        required: true
+        schema:
+          type: string
+    post:
+      tags:
+        - connection
+      summary: Connect wearable
+      operationId: Connection_getOAuthUrl
+      description: Get OAuth URL for this connection.
+      requestBody:
+        $ref: '#/components/requestBodies/ProfileAsProfilePublicId'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppConnectionUrl'
+      deprecated: false
+    delete:
+      tags:
+        - connection
+      summary: Disconnect Wearable
+      operationId: Connection_disconnectWearable
+      description: Disconnect a wearables connection
+      parameters:
+        - description: A profile public_id is expected
+          name: profile
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+      deprecated: false
+  /notification/send_to_all:
+    parameters: []
+    post:
+      tags:
+        - notification
+      summary: Notification to all profiles in app
+      operationId: Notification_sendToAllCreate
+      security:
+        - BearerAdmin: []
+      description: Send a notification to all registered devices in the app.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Notification'
+        required: true
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notification'
+      deprecated: false
+  /notification/send_to_profiles:
+    parameters: []
+    post:
+      tags:
+        - notification
+      summary: Notification to specific profiles
+      operationId: Notification_sendToProfilesCreate
+      security:
+        - BearerAdmin: []
+      description: >-
+        Send a notification to all registered devices for the specified
+        profiles.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NotificationForProfiles'
+        required: true
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationForProfiles'
+      deprecated: false
+  /profile:
+    parameters: []
+    get:
+      tags:
+        - profile
+      summary: List Profiles
+      operationId: profile_list
+      security:
+        - BearerAdmin: []
+      description: Lists all available profiles
+      parameters:
+        - description: A search term.
+          name: search
+          in: query
+          required: false
+          schema:
+            type: string
+        - description: Which field to use when ordering the results.
+          name: ordering
+          in: query
+          required: false
+          schema:
+            type: string
+        - description: Number of results to return per page.
+          name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+        - description: The initial index from which to return the results.
+          name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileListResponse'
+      deprecated: false
+    post:
+      tags:
+        - profile
+      summary: Create Profile
+      operationId: profile_create
+      security:
+        - BearerAdmin: []
+      description: >
+
+        Creates a new profile.
+
+        The bearer field contains a profile bearer token. When this is used in
+        the Authorization header actions are performed
+
+        as that profile, which will also enable access to private data.
+
+        Using a profile bearer token disables administrative features such as
+        creating profiles, making this token safe
+
+        for 'public' use.
+
+        A profile bearer token has no expiration, so it remains valid as long as
+        the profile is active.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProfileCreated'
+        required: true
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileCreated'
+      deprecated: false
+  /profile/{profile_public_id}/activity_segment:
+    parameters:
+      - name: profile_public_id
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      tags:
+        - profile
+      summary: Activity segment
+      operationId: Profile_listActivitySegments
+      description: Lists segments of activities and small non-workout-like movements.
+      parameters:
+        - description: The pagination cursor value.
+          name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+        - description: Number of results to return per page.
+          name: page_size
+          in: query
+          required: false
+          schema:
+            type: integer
+        - description: Lower bound of date or timestamp.
+          name: date_start
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - description: Upper bound of date or timestamp.
+          name: date_end
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: ''
+          headers:
+            api-results-next:
+              description: Next page.
+              schema:
+                type: string
+            api-results-previous:
+              description: Previous page.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileListActivitySegmentsResponse'
+      deprecated: false
+  /profile/{profile_public_id}/biometric:
+    parameters:
+      - name: profile_public_id
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      tags:
+        - profile
+      summary: Bio Metric
+      operationId: Profile_listBiometricChanges
+      description: Lists changes in weight, height and bmi for the profile.
+      parameters:
+        - description: The pagination cursor value.
+          name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+        - description: Number of results to return per page.
+          name: page_size
+          in: query
+          required: false
+          schema:
+            type: integer
+        - description: Lower bound of date or timestamp.
+          name: date_start
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - description: Upper bound of date or timestamp.
+          name: date_end
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: ''
+          headers:
+            api-results-next:
+              description: Next page.
+              schema:
+                type: string
+            api-results-previous:
+              description: Previous page.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileListBiometricChangesResponse'
+      deprecated: false
+  /profile/{profile_public_id}/biometric_measurement:
+    parameters:
+      - name: profile_public_id
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      tags:
+        - profile
+      summary: Biometric Measurement
+      operationId: Profile_listBiometricChanges
+      description: List changes in biometric measurements for the profile.
+      parameters:
+        - description: The pagination cursor value.
+          name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+        - description: Number of results to return per page.
+          name: page_size
+          in: query
+          required: false
+          schema:
+            type: integer
+        - description: Lower bound of date or timestamp.
+          name: date_start
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - description: Upper bound of date or timestamp.
+          name: date_end
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - name: measurement_type
+          in: query
+          required: true
+          schema:
+            type: string
+            enum:
+              - BLOOD_PRESSURE
+              - BODY_FAT
+              - BODY_FAT_MASS
+              - GLUCOSE
+              - SYSTOLIC_BP
+              - DIASTOLIC_BP
+              - PULSE_BP
+              - TEMPERATURE
+              - BLOOD_OXYGEN
+              - HRV
+              - VO2_MAX
+      responses:
+        '200':
+          description: ''
+          headers:
+            api-results-next:
+              description: Next page.
+              schema:
+                type: string
+            api-results-previous:
+              description: Previous page.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileListBiometricChanges200Response'
+      deprecated: false
+  /profile/{profile_public_id}/bmi:
+    parameters:
+      - name: profile_public_id
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      tags:
+        - profile
+      summary: BMI
+      operationId: Profile_getBmiOverTime
+      description: Presents the Body-Mass-Index over time.
+      parameters:
+        - description: The pagination cursor value.
+          name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+        - description: Number of results to return per page.
+          name: page_size
+          in: query
+          required: false
+          schema:
+            type: integer
+        - description: Lower bound of date or timestamp.
+          name: date_start
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - description: Upper bound of date or timestamp.
+          name: date_end
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: ''
+          headers:
+            api-results-next:
+              description: Next page.
+              schema:
+                type: string
+            api-results-previous:
+              description: Previous page.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileGetBmiOverTimeResponse'
+      deprecated: false
+  /profile/{profile_public_id}/daily_detail:
+    parameters:
+      - name: profile_public_id
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      tags:
+        - profile
+      summary: Daily details
+      operationId: Profile_getDailyDetail
+      description: Intraday data measured at a single point in time.
+      parameters:
+        - description: The pagination cursor value.
+          name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+        - description: Number of results to return per page.
+          name: page_size
+          in: query
+          required: false
+          schema:
+            type: integer
+        - description: Lower bound of date or timestamp.
+          name: date_start
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - description: Upper bound of date or timestamp.
+          name: date_end
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: ''
+          headers:
+            api-results-next:
+              description: Next page.
+              schema:
+                type: string
+            api-results-previous:
+              description: Previous page.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileGetDailyDetailResponse'
+      deprecated: false
+  /profile/{profile_public_id}/daily_summary:
+    parameters:
+      - name: profile_public_id
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      tags:
+        - profile
+      summary: Daily Summary
+      operationId: Profile_getDailySummary
+      description: Provides summarized data per day.
+      parameters:
+        - description: The pagination cursor value.
+          name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+        - description: Number of results to return per page.
+          name: page_size
+          in: query
+          required: false
+          schema:
+            type: integer
+        - description: Lower bound of date or timestamp.
+          name: date_start
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - description: Upper bound of date or timestamp.
+          name: date_end
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - description: If set to true, duplicates will be aggregated.
+          name: deduplicate
+          in: query
+          required: false
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: ''
+          headers:
+            api-results-next:
+              description: Next page.
+              schema:
+                type: string
+            api-results-previous:
+              description: Previous page.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileGetDailySummaryResponse'
+      deprecated: false
+  /profile/{profile_public_id}/detail_sample:
+    parameters:
+      - name: profile_public_id
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      tags:
+        - profile
+      summary: Detail Sample
+      operationId: Profile_getDetailSamples
+      description: Presents detail samples.
+      parameters:
+        - description: The pagination cursor value.
+          name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+        - description: Number of results to return per page.
+          name: page_size
+          in: query
+          required: false
+          schema:
+            type: integer
+        - description: Lower bound of date or timestamp.
+          name: date_start
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - description: Upper bound of date or timestamp.
+          name: date_end
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: ''
+          headers:
+            api-results-next:
+              description: Next page.
+              schema:
+                type: string
+            api-results-previous:
+              description: Previous page.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileGetDetailSamplesResponse'
+      deprecated: false
+  /profile/{profile_public_id}/ecg_recordings:
+    parameters:
+      - name: profile_public_id
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      tags:
+        - profile
+      summary: Electrocardiograms
+      operationId: Profile_getEcgRecordings
+      description: |
+
+        This endpoint returns a list of ECG recordings.
+      parameters:
+        - description: The pagination cursor value.
+          name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+        - description: Number of results to return per page.
+          name: page_size
+          in: query
+          required: false
+          schema:
+            type: integer
+        - description: Lower bound of date or timestamp.
+          name: date_start
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - description: Upper bound of date or timestamp.
+          name: date_end
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: ''
+          headers:
+            api-results-next:
+              description: Next page.
+              schema:
+                type: string
+            api-results-previous:
+              description: Previous page.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileGetEcgRecordingsResponse'
+      deprecated: false
+  /profile/{profile_public_id}/ecg_recordings/data:
+    parameters:
+      - name: profile_public_id
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      tags:
+        - profile
+      summary: Electrocardiogram data
+      operationId: Profile_getEcgRecordingsData
+      description: >
+
+        This endpoint returns an ECG recording with data as an array of tuples
+        `[(time, value)]`.
+
+        Set the argument `date_end` to request a specific recording or leave it
+        empty to receive the latest recording.
+      parameters:
+        - description: The pagination cursor value.
+          name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+        - description: Number of results to return per page.
+          name: page_size
+          in: query
+          required: false
+          schema:
+            type: integer
+        - description: Lower bound of date or timestamp.
+          name: date_start
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - description: Upper bound of date or timestamp.
+          name: date_end
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: ''
+          headers:
+            api-results-next:
+              description: Next page.
+              schema:
+                type: string
+            api-results-previous:
+              description: Previous page.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileGetEcgRecordingsDataResponse'
+      deprecated: false
+  /profile/{profile_public_id}/ecg_recordings/pdf:
+    parameters:
+      - name: profile_public_id
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      tags:
+        - profile
+      summary: Electrocardiogram PDF
+      operationId: Profile_getEcgPdf
+      description: >-
+        Returns a PDF with generated ECG charts from a specific source and time.
+        Contact api-support@wefitter.com to gain access.
+      parameters:
+        - description: >-
+            The timestamp when the ECG has been recorded in the format
+            `yyyymmddhhmmss`. e.g. `20210913132513`
+          name: datetime
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+        - name: source
+          in: query
+          required: true
+          schema:
+            type: string
+            enum:
+              - NONE
+              - AGGREGATED
+              - ANDROID
+              - APPLE
+              - FITBIT
+              - GARMIN
+              - GOOGLEFIT
+              - HEALTHCONNECT
+              - HUAWEI
+              - MYZONE
+              - OMH
+              - OMRON
+              - OURA
+              - POLAR
+              - SAMSUNG
+              - STRAVA
+              - SUUNTO
+              - WF
+              - WHOOP
+              - WITHINGS
+      responses:
+        '200':
+          description: ''
+      deprecated: false
+  /profile/{profile_public_id}/event:
+    parameters:
+      - name: profile_public_id
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      tags:
+        - profile
+      summary: Event
+      operationId: Profile_listEvents
+      description: Lists events, generic actions for which points have been awarded.
+      parameters:
+        - description: The pagination cursor value.
+          name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+        - description: Number of results to return per page.
+          name: page_size
+          in: query
+          required: false
+          schema:
+            type: integer
+        - description: Lower bound of date or timestamp.
+          name: date_start
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - description: Upper bound of date or timestamp.
+          name: date_end
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: ''
+          headers:
+            api-results-next:
+              description: Next page.
+              schema:
+                type: string
+            api-results-previous:
+              description: Previous page.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileListEventsResponse'
+      deprecated: false
+    post:
+      tags:
+        - profile
+      summary: Create Event
+      operationId: Profile_eventCreate
+      security:
+        - BearerAdmin: []
+      description: Create a new event for the profile.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Event'
+        required: true
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+      deprecated: false
+  /profile/{profile_public_id}/heartrate_sample:
+    parameters:
+      - name: profile_public_id
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      tags:
+        - profile
+      summary: Heart Rate Sample
+      operationId: Profile_getHeartrateSample
+      description: Heart Rate measured at a single point in time.
+      parameters:
+        - description: The pagination cursor value.
+          name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+        - description: Number of results to return per page.
+          name: page_size
+          in: query
+          required: false
+          schema:
+            type: integer
+        - description: Lower bound of date or timestamp.
+          name: date_start
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - description: Upper bound of date or timestamp.
+          name: date_end
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - description: If set to true it will add heart_rate_samples field
+          name: heart_rate_detail
+          in: query
+          required: false
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: ''
+          headers:
+            api-results-next:
+              description: Next page.
+              schema:
+                type: string
+            api-results-previous:
+              description: Previous page.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileGetHeartrateSampleResponse'
+      deprecated: false
+  /profile/{profile_public_id}/heartrate_summary:
+    parameters:
+      - name: profile_public_id
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      tags:
+        - profile
+      summary: Heart Rate Summary
+      operationId: Profile_getHeartRateSummary
+      description: Presents heart rate information.
+      parameters:
+        - description: The pagination cursor value.
+          name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+        - description: Number of results to return per page.
+          name: page_size
+          in: query
+          required: false
+          schema:
+            type: integer
+        - description: Lower bound of date or timestamp.
+          name: date_start
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - description: Upper bound of date or timestamp.
+          name: date_end
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: ''
+          headers:
+            api-results-next:
+              description: Next page.
+              schema:
+                type: string
+            api-results-previous:
+              description: Previous page.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileGetHeartRateSummaryResponse'
+      deprecated: false
+  /profile/{profile_public_id}/height:
+    parameters:
+      - name: profile_public_id
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      tags:
+        - profile
+      summary: Height
+      operationId: Profile_listHeightChanges
+      description: Lists changes in height for the profile.
+      parameters:
+        - description: The pagination cursor value.
+          name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+        - description: Number of results to return per page.
+          name: page_size
+          in: query
+          required: false
+          schema:
+            type: integer
+        - description: Lower bound of date or timestamp.
+          name: date_start
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - description: Upper bound of date or timestamp.
+          name: date_end
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: ''
+          headers:
+            api-results-next:
+              description: Next page.
+              schema:
+                type: string
+            api-results-previous:
+              description: Previous page.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileListHeightChangesResponse'
+      deprecated: false
+  /profile/{profile_public_id}/sleep_detail:
+    parameters:
+      - name: profile_public_id
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      tags:
+        - profile
+      summary: Sleep detail
+      operationId: Profile_getSleepDetail
+      description: Provides sleep detail data.
+      parameters:
+        - description: The pagination cursor value.
+          name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+        - description: Number of results to return per page.
+          name: page_size
+          in: query
+          required: false
+          schema:
+            type: integer
+        - description: Lower bound of date or timestamp.
+          name: date_start
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - description: Upper bound of date or timestamp.
+          name: date_end
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: ''
+          headers:
+            api-results-next:
+              description: Next page.
+              schema:
+                type: string
+            api-results-previous:
+              description: Previous page.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileGetSleepDetailResponse'
+      deprecated: false
+  /profile/{profile_public_id}/sleep_summary:
+    parameters:
+      - name: profile_public_id
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      tags:
+        - profile
+      summary: Sleep Summary
+      operationId: Profile_getSleepSummary
+      description: Provides summarized sleep data.
+      parameters:
+        - description: The pagination cursor value.
+          name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+        - description: Number of results to return per page.
+          name: page_size
+          in: query
+          required: false
+          schema:
+            type: integer
+        - description: Lower bound of date or timestamp.
+          name: date_start
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - description: Upper bound of date or timestamp.
+          name: date_end
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - description: >-
+            If set to true and only 1 result is returned, it will add a detail
+            field
+          name: detail
+          in: query
+          required: false
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: ''
+          headers:
+            api-results-next:
+              description: Next page.
+              schema:
+                type: string
+            api-results-previous:
+              description: Previous page.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileGetSleepSummaryResponse'
+      deprecated: false
+  /profile/{profile_public_id}/stress_samples:
+    parameters:
+      - name: profile_public_id
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      tags:
+        - profile
+      summary: Stress Sample
+      operationId: Profile_getStressSamples
+      description: Presents stress samples.
+      parameters:
+        - description: The pagination cursor value.
+          name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+        - description: Number of results to return per page.
+          name: page_size
+          in: query
+          required: false
+          schema:
+            type: integer
+        - description: Lower bound of date or timestamp.
+          name: date_start
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - description: Upper bound of date or timestamp.
+          name: date_end
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: ''
+          headers:
+            api-results-next:
+              description: Next page.
+              schema:
+                type: string
+            api-results-previous:
+              description: Previous page.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileGetStressSamplesResponse'
+      deprecated: false
+  /profile/{profile_public_id}/stress_summary:
+    parameters:
+      - name: profile_public_id
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      tags:
+        - profile
+      summary: Stress Summary
+      operationId: Profile_getStressSummary
+      description: Presents stress summaries.
+      parameters:
+        - description: The pagination cursor value.
+          name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+        - description: Number of results to return per page.
+          name: page_size
+          in: query
+          required: false
+          schema:
+            type: integer
+        - description: Lower bound of date or timestamp.
+          name: date_start
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - description: Upper bound of date or timestamp.
+          name: date_end
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: ''
+          headers:
+            api-results-next:
+              description: Next page.
+              schema:
+                type: string
+            api-results-previous:
+              description: Previous page.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileGetStressSummaryResponse'
+      deprecated: false
+  /profile/{profile_public_id}/track_sample:
+    parameters:
+      - name: profile_public_id
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      tags:
+        - profile
+      summary: Track Sample
+      operationId: Profile_getGpxTrackSamples
+      description: Presents GPX track samples.
+      parameters:
+        - description: The pagination cursor value.
+          name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+        - description: Number of results to return per page.
+          name: page_size
+          in: query
+          required: false
+          schema:
+            type: integer
+        - description: Lower bound of date or timestamp.
+          name: date_start
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - description: Upper bound of date or timestamp.
+          name: date_end
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: ''
+          headers:
+            api-results-next:
+              description: Next page.
+              schema:
+                type: string
+            api-results-previous:
+              description: Previous page.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileGetGpxTrackSamplesResponse'
+      deprecated: false
+  /profile/{profile_public_id}/weight:
+    parameters:
+      - name: profile_public_id
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      tags:
+        - profile
+      summary: Weight
+      operationId: Profile_listWeightChanges
+      description: Lists changes in weight for the profile.
+      parameters:
+        - description: The pagination cursor value.
+          name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+        - description: Number of results to return per page.
+          name: page_size
+          in: query
+          required: false
+          schema:
+            type: integer
+        - description: Lower bound of date or timestamp.
+          name: date_start
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - description: Upper bound of date or timestamp.
+          name: date_end
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: ''
+          headers:
+            api-results-next:
+              description: Next page.
+              schema:
+                type: string
+            api-results-previous:
+              description: Previous page.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileListWeightChangesResponse'
+      deprecated: false
+  /profile/{profile_public_id}/workout:
+    parameters:
+      - name: profile_public_id
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      tags:
+        - profile
+      summary: Workout
+      operationId: Profile_listWorkouts
+      description: >-
+        Lists workouts associated with the profile. Used to be known as
+        Activity.
+      parameters:
+        - description: The pagination cursor value.
+          name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+        - description: Number of results to return per page.
+          name: page_size
+          in: query
+          required: false
+          schema:
+            type: integer
+        - description: Lower bound of date or timestamp.
+          name: date_start
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - description: Upper bound of date or timestamp.
+          name: date_end
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - description: If set to true, duplicates will be aggregated.
+          name: deduplicate
+          in: query
+          required: false
+          schema:
+            type: boolean
+        - description: >-
+            If set to true and page_size is 1, it will add heart_rate_samples
+            field
+          name: heart_rate_detail
+          in: query
+          required: false
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: ''
+          headers:
+            api-results-next:
+              description: Next page.
+              schema:
+                type: string
+            api-results-previous:
+              description: Previous page.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileListWorkoutsResponse'
+      deprecated: false
+  /profile/{public_id}:
+    parameters:
+      - name: public_id
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      tags:
+        - profile
+      summary: Get Profile
+      operationId: profile_read
+      description: Gets a single profile
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileDetail'
+      deprecated: false
+    put:
+      tags:
+        - profile
+      summary: Update profile
+      operationId: profile_update
+      description: Updates the specified profile, excluding ID, team and public id.
+      requestBody:
+        $ref: '#/components/requestBodies/ProfileDetail'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileDetail'
+      deprecated: false
+    patch:
+      tags:
+        - profile
+      summary: Partial Update
+      operationId: Profile_updatePartial
+      description: Performs a partial update
+      requestBody:
+        $ref: '#/components/requestBodies/ProfileDetail'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileDetail'
+      deprecated: false
+    delete:
+      tags:
+        - profile
+      summary: Delete Profile
+      operationId: profile_delete
+      security:
+        - BearerAdmin: []
+      description: Deletes the specified profile, if created by the app.
+      responses:
+        '204':
+          description: ''
+      deprecated: false
+  /profile/{public_id}/challenge:
+    parameters:
+      - name: public_id
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      tags:
+        - profile
+      summary: Challenge
+      operationId: profile_challenge
+      description: >
+        Provides a list of challenges where the profile can participate and is
+        already participating in.
+
+
+        This endpoint returns a list of objects.
+      parameters:
+        - description: Show challenges that have not ended in the last N weeks
+          name: recent
+          in: query
+          required: false
+          schema:
+            type: integer
+        - description: |-
+            Only return challenges that are active after this time
+
+            Note: this only affects challenges that are not joined.
+
+            Defaults to now
+          name: date_start
+          in: query
+          required: false
+          x-nullable: true
+          schema:
+            type: string
+            format: date-time
+        - description: |-
+            Only return challenges that are active before this time
+
+            Note: this only affects challenges that are not joined.
+
+            Defaults to now
+          name: date_end
+          in: query
+          required: false
+          x-nullable: true
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileChallengeList'
+      deprecated: false
+  /profile/{public_id}/challenges:
+    parameters:
+      - name: public_id
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      tags:
+        - profile
+      operationId: profile_challenges
+      description: This docstring is used by Django Rest Framework
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileChallengeList'
+  /profile/{public_id}/connections:
+    parameters:
+      - name: public_id
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      tags:
+        - profile
+      summary: Connections
+      operationId: profile_connections
+      description: |
+        Lists the connections available for a profile and their "state".
+        This endpoint returns a list of objects.
+      parameters:
+        - description: >-
+            After connecting redirect back to this url.
+
+
+            Note: has to be a valid http url. For deeplinks (to apps) first
+            redirect to your own backend and then deeplink from there.
+
+
+            Note: the user is only redirected on a successfull connection,
+            otherwise an error screen is shown. (see redirect_on_error to change
+            this)
+
+
+            Note: if this parameter is omitted, then user will see a generic
+            success screen.
+          name: redirect
+          in: query
+          required: false
+          schema:
+            type: string
+            minLength: 1
+        - description: >-
+            If enabled, then user will also be redirected to the redirect url if
+            an error occurs
+
+
+            Note: a query parameter 'error' is added to the redirect url.
+            Possible values are access_denied, unknown. New values may be added
+            at anytime
+
+
+            Note: for backwards compatibility the default is false, but this
+            will be changed in the next breaking release
+          name: redirect_on_error
+          in: query
+          required: false
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileAppConnectionList'
+      deprecated: false
+  /team:
+    parameters: []
+    get:
+      tags:
+        - team
+      summary: List Teams
+      operationId: team_list
+      security:
+        - BearerAdmin: []
+      description: List all available teams
+      parameters:
+        - description: Number of results to return per page.
+          name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+        - description: The initial index from which to return the results.
+          name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamListResponse'
+      deprecated: false
+    post:
+      tags:
+        - team
+      summary: Create Team
+      operationId: team_create
+      security:
+        - BearerAdmin: []
+      description: Creates a new team
+      requestBody:
+        $ref: '#/components/requestBodies/TeamDetail'
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamDetail'
+      deprecated: false
+  /team/{public_id}:
+    parameters:
+      - name: public_id
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      tags:
+        - team
+      summary: Team
+      operationId: team_read
+      security:
+        - BearerAdmin: []
+      description: Get a single team
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamDetail'
+      deprecated: false
+    put:
+      tags:
+        - team
+      summary: Edit Team
+      operationId: team_update
+      security:
+        - BearerAdmin: []
+      description: Creates a new team
+      requestBody:
+        $ref: '#/components/requestBodies/TeamDetail'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamDetail'
+      deprecated: false
+    patch:
+      tags:
+        - team
+      summary: Partial Edit a Team
+      operationId: Team_editTeamPartial
+      security:
+        - BearerAdmin: []
+      description: Creates a new team
+      requestBody:
+        $ref: '#/components/requestBodies/TeamDetail'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamDetail'
+      deprecated: false
+    delete:
+      tags:
+        - team
+      summary: Deletes a Team
+      operationId: team_delete
+      security:
+        - BearerAdmin: []
+      description: Deletes an existing team
+      responses:
+        '204':
+          description: ''
+      deprecated: false
+  /team/{public_id}/member:
+    parameters:
+      - name: public_id
+        in: path
+        required: true
+        schema:
+          type: string
+    post:
+      tags:
+        - team
+      summary: Add member
+      operationId: Team_addMember
+      security:
+        - BearerAdmin: []
+      description: Add member to a team
+      requestBody:
+        $ref: '#/components/requestBodies/ProfileAsProfilePublicId'
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileAsProfilePublicId'
+      deprecated: false
+    put:
+      tags:
+        - team
+      summary: Add member
+      operationId: Team_addMember
+      security:
+        - BearerAdmin: []
+      description: Add member to a team
+      requestBody:
+        $ref: '#/components/requestBodies/ProfileAsProfilePublicId'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileAsProfilePublicId'
+      deprecated: false
+    delete:
+      tags:
+        - team
+      summary: Remove member
+      operationId: Team_removeMember
+      security:
+        - BearerAdmin: []
+      description: Remove a member from the team
+      parameters:
+        - description: A profile public_id is expected
+          name: profile
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: ''
+      deprecated: false
+  /team/{public_id}/members:
+    parameters:
+      - name: public_id
+        in: path
+        required: true
+        schema:
+          type: string
+    post:
+      tags:
+        - team
+      summary: Add members
+      operationId: Team_addMembers
+      security:
+        - BearerAdmin: []
+      description: Add members to a team
+      requestBody:
+        $ref: '#/components/requestBodies/ProfilePublicIdsList'
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfilePublicIdsList'
+      deprecated: false
+    put:
+      tags:
+        - team
+      summary: Add members
+      operationId: Team_addMembers
+      security:
+        - BearerAdmin: []
+      description: Add members to a team
+      requestBody:
+        $ref: '#/components/requestBodies/ProfilePublicIdsList'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfilePublicIdsList'
+      deprecated: false
+  /team/{public_id}/remove_members:
+    parameters:
+      - name: public_id
+        in: path
+        required: true
+        schema:
+          type: string
+    post:
+      tags:
+        - team
+      summary: Remove members
+      operationId: Team_removeMembers
+      security:
+        - BearerAdmin: []
+      description: Remove members from the team
+      requestBody:
+        $ref: '#/components/requestBodies/ProfilePublicIdsList'
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfilePublicIdsList'
+      deprecated: false
+  /token:
+    parameters: []
+    post:
+      tags:
+        - token
+      summary: Create Token
+      operationId: token_create
+      security:
+        - Basic: []
+      description: >
+
+        In order to create a token, perform a POST request to this endpoint,
+        example:<br/>
+
+        <table><tbody>
+            <tr><td>Application ID</td><td>123</td></tr>
+            <tr><td>Application Secret</td><td>ABC</td></tr>
+            <tr><td>Authorization header format</td><td>Authorization: base64(app_id:app_secret)</td></tr>
+            <tr><td>Expected result</td><td>Authorization: MTIzOkFCQw==</td></tr>
+        </tbody></table>
+
+        For testing purposes, a CURL can be used:
+
+        <pre>
+
+        curl -X POST -H "Authorization: Basic MTIzOkFCQw=="
+        https://api.wefitter.com/api/v1.3/token/
+
+        # alternatively
+
+        curl -X POST --user 123:ABC https://api.wefitter.com/api/v1.3/token/
+
+        </pre>
+
+
+        The response to a successful request should look like this:
+
+        <pre>
+
+        {
+            "bearer": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOiIxNTY2NTYxMzk2IiwiaWF0IjoxNTE2MjM5MDIyfQ.14x12h5VMJjAV2kFB5cCrfFmZhryBAYGk9N-vhyDl00"
+        }
+
+        </pre>
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Token'
+        required: true
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Token'
+      deprecated: false
+components:
+  requestBodies:
+    TeamDetail:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TeamDetail'
+      required: true
+    ChallengeDetail:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ChallengeDetail'
+      required: true
+    ProfileAsProfilePublicIdAndTeamAsTeamPublicId:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProfileAsProfilePublicIdAndTeamAsTeamPublicId'
+      required: true
+    ProfilePublicIdsListAndTeamAsPublicId:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProfilePublicIdsListAndTeamAsPublicId'
+      required: true
+    ProfileAsProfilePublicId:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProfileAsProfilePublicId'
+      required: true
+    ProfileDetail:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProfileDetail'
+      required: true
+    ProfilePublicIdsList:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProfilePublicIdsList'
+      required: true
+  securitySchemes:
+    Basic:
+      description: >-
+        Basic Authentication is used to create administrator bearer tokens.
+
+
+        Once a bearer token has been made, remove this auth. ('logout' in
+        Swagger')
+      type: http
+      scheme: basic
+    BearerProfile:
+      description: >-
+        Bearer authentication for logged-in profiles.
+
+
+        When using the GUI, please don't forget to prefix your bearer tokens
+        with the text 'bearer', followed by a space.
+      type: apiKey
+      name: Authorization
+      in: header
+    BearerAdmin:
+      description: >-
+        Bearer authentication for administrators.
+
+
+        When using the GUI, please don't forget to prefix your bearer tokens
+        with the text 'bearer', followed by a space.
+      type: apiKey
+      name: Authorization
+      in: header
+  schemas:
+    AppTotals:
+      type: object
+      properties:
+        total_calories:
+          title: Total calories
+          type: number
+        total_distance:
+          title: Total distance
+          type: number
+        total_steps:
+          title: Total steps
+          type: number
+        total_points:
+          title: Total points
+          type: number
+        total_activity_duration:
+          title: Total activity duration
+          type: string <iso8601 duration>
+          minLength: 1
+    ChallengeActivityType:
+      required:
+        - activity_type
+      type: object
+      properties:
+        activity_type:
+          title: Activity type
+          type: string
+          enum:
+            - RUNNING
+            - CROSSFIT
+            - CYCLING
+            - SWIMMING
+            - OTHER
+            - ROWING
+            - WALKING
+            - MINDFULNESS
+            - YOGA
+            - STRENGTH_TRAINING
+    ChallengeList:
+      required:
+        - title
+        - start
+        - type
+        - goal
+        - goal_type
+        - visibility
+        - repetition
+      type: object
+      properties:
+        title:
+          title: Title
+          type: string
+          minLength: 1
+        description:
+          title: Description
+          type: string
+        url:
+          title: Url
+          type: string
+          format: uri
+          readOnly: true
+        public_id:
+          title: Public id
+          type: string
+          format: uuid
+          readOnly: true
+        slogan:
+          title: Slogan
+          type: string
+        start:
+          title: Start
+          type: string
+          format: date-time
+        end:
+          title: End
+          type: string
+          format: date-time
+          nullable: true
+        type:
+          title: Type
+          type: string
+          enum:
+            - INDIVIDUAL
+            - GROUP
+            - TEAM
+        goal:
+          title: Goal
+          type: string
+          enum:
+            - DAILY
+            - TOTAL
+            - WEEKLY
+            - MONTHLY
+        goal_value:
+          title: Goal value
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          nullable: true
+        goal_type:
+          title: Goal type
+          type: string
+          enum:
+            - POINTS
+            - DISTANCE
+            - CALORIES
+            - DURATION
+            - STEPS
+        visibility:
+          title: Visibility
+          type: string
+          enum:
+            - PUBLIC
+            - PRIVATE
+        num_members:
+          title: Num members
+          type: string
+          readOnly: true
+        repetition:
+          title: Repetition
+          type: string
+          enum:
+            - NONE
+            - STREAK
+            - STICKTOIT
+            - GOALBREAKER
+        avatar:
+          title: Avatar
+          type: string
+          format: uri
+          minLength: 1
+          nullable: true
+        data_source:
+          title: Data source
+          type: string
+          readOnly: true
+          minLength: 1
+        activity_types:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChallengeActivityType'
+        current_period_start:
+          title: Current period start
+          description: >-
+            The start (exclusive) of the current period. Null if the challenge
+            has not started yet.
+          type: string
+          format: date-time
+          readOnly: true
+        current_period_end:
+          title: Current period end
+          description: >-
+            The end (exclusive) of the current period. Null if the challenge end
+            has passed.
+          type: string
+          format: date-time
+          readOnly: true
+        goal_cap:
+          title: Goal cap
+          description: Whether scores should be unable to surpass the goal value.
+          type: boolean
+    ChallengeDetail:
+      required:
+        - title
+        - start
+        - type
+        - goal
+        - goal_type
+        - visibility
+        - calculation_method
+        - enrollment_method
+        - repetition
+      type: object
+      properties:
+        title:
+          title: Title
+          type: string
+          minLength: 1
+        description:
+          title: Description
+          type: string
+        url:
+          title: Url
+          type: string
+          format: uri
+          readOnly: true
+        public_id:
+          title: Public id
+          type: string
+          format: uuid
+          readOnly: true
+        slogan:
+          title: Slogan
+          type: string
+        start:
+          title: Start
+          type: string
+          format: date-time
+        end:
+          title: End
+          type: string
+          format: date-time
+          nullable: true
+        type:
+          title: Type
+          type: string
+          enum:
+            - INDIVIDUAL
+            - GROUP
+            - TEAM
+        goal:
+          title: Goal
+          type: string
+          enum:
+            - DAILY
+            - TOTAL
+            - WEEKLY
+            - MONTHLY
+        goal_value:
+          title: Goal value
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          nullable: true
+        goal_type:
+          title: Goal type
+          type: string
+          enum:
+            - POINTS
+            - DISTANCE
+            - CALORIES
+            - DURATION
+            - STEPS
+        visibility:
+          title: Visibility
+          type: string
+          enum:
+            - PUBLIC
+            - PRIVATE
+        num_members:
+          title: Num members
+          type: string
+          readOnly: true
+        calculation_method:
+          title: Calculation method
+          type: string
+          enum:
+            - SUM
+            - AVERAGE
+        goal_progress:
+          title: Goal progress
+          description: >-
+            Progress towards the goal, from perspective of profile whose bearer
+            is used for authentication: can be an individual/team/global score.
+            When goal is duration, this is the duration in seconds. When an
+            admin token is used, returns 0.0.
+          type: number
+          readOnly: true
+        enrollment_method:
+          title: Enrollment method
+          type: string
+          enum:
+            - AUTOMATIC
+            - MANUAL
+        default_enrollment_time:
+          title: Default enrollment time
+          type: string
+          enum:
+            - CHALLENGE_START
+            - ENROLLMENT_TIME
+        repetition:
+          title: Repetition
+          type: string
+          enum:
+            - NONE
+            - STREAK
+            - STICKTOIT
+            - GOALBREAKER
+        avatar:
+          title: Avatar
+          type: string
+          format: uri
+          minLength: 1
+          nullable: true
+        data_source:
+          title: Data source
+          type: string
+          readOnly: true
+          minLength: 1
+        activity_types:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChallengeActivityType'
+        current_period_start:
+          title: Current period start
+          description: >-
+            The start (exclusive) of the current period. Null if the challenge
+            has not started yet.
+          type: string
+          format: date-time
+          readOnly: true
+        current_period_end:
+          title: Current period end
+          description: >-
+            The end (exclusive) of the current period. Null if the challenge end
+            has passed.
+          type: string
+          format: date-time
+          readOnly: true
+        goal_cap:
+          title: Goal cap
+          description: Whether scores should be unable to surpass the goal value.
+          type: boolean
+        total_calories:
+          title: Total calories
+          type: number
+          readOnly: true
+        total_distance:
+          title: Total distance
+          type: number
+          readOnly: true
+        total_steps:
+          title: Total steps
+          type: number
+          readOnly: true
+        total_points:
+          title: Total points
+          type: number
+          readOnly: true
+        total_activity_duration:
+          title: Total activity duration
+          type: string <iso8601 duration>
+          readOnly: true
+          minLength: 1
+    LeaderboardTeam:
+      required:
+        - name
+        - avatar
+      type: object
+      properties:
+        name:
+          title: Name
+          type: string
+          maxLength: 100
+          minLength: 1
+        public_id:
+          title: Public id
+          type: string
+          format: uuid
+          readOnly: true
+        url:
+          title: Url
+          type: string
+          format: uri
+          readOnly: true
+        num_members:
+          title: Num members
+          type: string
+          readOnly: true
+        score:
+          title: Score
+          type: number
+          readOnly: true
+        position:
+          title: Position
+          type: integer
+          readOnly: true
+        avatar:
+          title: Avatar
+          type: string
+          format: uri
+          minLength: 1
+    TeamProfile:
+      description: Team of which this profile is a member of
+      required:
+        - name
+      type: object
+      properties:
+        name:
+          title: Name
+          type: string
+          maxLength: 100
+          minLength: 1
+        public_id:
+          title: Public id
+          type: string
+          format: uuid
+          readOnly: true
+        url:
+          title: Url
+          type: string
+          format: uri
+          readOnly: true
+        avatar:
+          title: Avatar
+          type: string
+          format: uri
+          minLength: 1
+          nullable: true
+    LeaderboardProfile:
+      required:
+        - avatar
+      type: object
+      properties:
+        url:
+          title: Url
+          type: string
+          format: uri
+          readOnly: true
+        public_id:
+          title: Public id
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          title: Name
+          type: string
+          readOnly: true
+          minLength: 1
+        gender:
+          title: Gender
+          type: string
+          enum:
+            - M
+            - F
+            - X
+        teams:
+          description: Team of which this profile is a member of
+          type: array
+          items:
+            $ref: '#/components/schemas/TeamProfile'
+          readOnly: true
+        reference:
+          title: Reference
+          type: string
+          readOnly: true
+          minLength: 1
+        score:
+          title: Score
+          type: number
+          readOnly: true
+        position:
+          title: Position
+          type: integer
+          readOnly: true
+        avatar:
+          title: Avatar
+          type: string
+          format: uri
+          minLength: 1
+    ProfileAsProfilePublicIdAndTeamAsTeamPublicId:
+      required:
+        - profile
+      type: object
+      properties:
+        profile:
+          title: Profile
+          description: A profile public_id is expected
+          type: string
+          format: uuid
+        team:
+          title: Team
+          description: A team public_id is expected
+          type: string
+          format: uuid
+        is_active:
+          title: Is active
+          description: >-
+            Whether profile actively participates in challenge.
+
+
+            While inactive, scores/leaderboard will not be updated but still be
+            visible.
+          type: boolean
+        joined:
+          title: Joined
+          description: The timestamp when the profile/team joined the challenge.
+          type: string
+          format: date-time
+    ProfilePublicIdsListAndTeamAsPublicId:
+      required:
+        - profiles
+      type: object
+      properties:
+        profiles:
+          type: array
+          items:
+            type: string
+            format: uuid
+        is_active:
+          title: Is active
+          description: >-
+            Whether profile actively participates in challenge.
+
+
+            While inactive, scores/leaderboard will not be updated but still be
+            visible.
+          type: boolean
+        team:
+          title: Team
+          description: A team public_id is expected
+          type: string
+          format: uuid
+        joined:
+          title: Joined
+          description: The timestamp when the profile/team joined the challenge.
+          type: string
+          format: date-time
+    LeaderboardProfileAndTeam:
+      required:
+        - avatar
+      type: object
+      properties:
+        name:
+          title: Name
+          type: string
+          readOnly: true
+          minLength: 1
+        public_id:
+          title: Public id
+          type: string
+          format: uuid
+          readOnly: true
+        url:
+          title: Url
+          type: string
+          format: uri
+          readOnly: true
+        score:
+          title: Score
+          type: number
+          readOnly: true
+        position:
+          title: Position
+          type: integer
+          readOnly: true
+        avatar:
+          title: Avatar
+          type: string
+          format: uri
+          minLength: 1
+    LeaderboardHistory:
+      type: object
+      properties:
+        score:
+          title: Score
+          type: number
+          readOnly: true
+        start:
+          title: Start
+          type: string
+          format: date-time
+          readOnly: true
+        end:
+          title: End
+          type: string
+          format: date-time
+          readOnly: true
+    ChallengePeriod:
+      type: object
+      properties:
+        start:
+          title: Start
+          type: string
+          format: date-time
+          readOnly: true
+        end:
+          title: End
+          type: string
+          format: date-time
+          readOnly: true
+    ProfileAsProfilePublicId:
+      required:
+        - profile
+      type: object
+      properties:
+        profile:
+          title: Profile
+          description: A profile public_id is expected
+          type: string
+          format: uuid
+        joined:
+          title: Joined
+          description: The timestamp when the profile/team joined the challenge.
+          type: string
+          format: date-time
+    AppConnectionUrl:
+      required:
+        - next
+      type: object
+      properties:
+        next:
+          title: Next
+          type: string
+          format: uri
+          minLength: 1
+    BioAge:
+      required:
+        - start
+        - end
+        - bio_age
+      type: object
+      properties:
+        start:
+          title: Start
+          type: string
+          format: date
+        end:
+          title: End
+          type: string
+          format: date
+        bio_age:
+          title: Bio age
+          type: number
+    RecommendedProducts:
+      required:
+        - name
+      type: object
+      properties:
+        description:
+          title: Description
+          type: string
+          maxLength: 200
+        article_number:
+          title: Article number
+          type: integer
+          maximum: 9223372036854776000
+          minimum: -9223372036854776000
+        name:
+          title: Name
+          type: string
+          maxLength: 255
+          minLength: 1
+        price:
+          title: Price
+          type: number
+          nullable: true
+    ShoppingCart:
+      required:
+        - redirect_url
+      type: object
+      properties:
+        redirect_url:
+          title: Redirect url
+          type: string
+          maxLength: 256
+          minLength: 1
+    Notification:
+      required:
+        - title
+        - body
+      type: object
+      properties:
+        title:
+          title: Title
+          type: string
+          maxLength: 512
+          minLength: 1
+        body:
+          title: Body
+          type: string
+          maxLength: 2048
+          minLength: 1
+        schedule:
+          title: Schedule
+          description: date and time to send notification
+          type: string
+          format: date-time
+          nullable: true
+        link:
+          title: Link
+          type: string
+          maxLength: 1024
+    NotificationForProfiles:
+      required:
+        - title
+        - body
+        - profiles
+      type: object
+      properties:
+        title:
+          title: Title
+          type: string
+          maxLength: 512
+          minLength: 1
+        body:
+          title: Body
+          type: string
+          maxLength: 2048
+          minLength: 1
+        schedule:
+          title: Schedule
+          description: date and time to send notification
+          type: string
+          format: date-time
+          nullable: true
+        link:
+          title: Link
+          type: string
+          maxLength: 1024
+        profiles:
+          type: array
+          items:
+            description: The profiles to send the push notification to
+            type: string
+            format: uuid
+    ProfileList:
+      type: object
+      properties:
+        url:
+          title: Url
+          type: string
+          format: uri
+          readOnly: true
+        public_id:
+          title: Public id
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          title: Name
+          type: string
+          readOnly: true
+          minLength: 1
+        gender:
+          title: Gender
+          type: string
+          enum:
+            - M
+            - F
+            - X
+        teams:
+          description: Team of which this profile is a member of
+          type: array
+          items:
+            $ref: '#/components/schemas/TeamProfile'
+          readOnly: true
+        reference:
+          title: Reference
+          type: string
+          maxLength: 255
+        avatar:
+          title: Avatar
+          type: string
+          format: uri
+          minLength: 1
+          nullable: true
+    ProfileCreated:
+      required:
+        - reference
+      type: object
+      properties:
+        url:
+          title: Url
+          type: string
+          format: uri
+          readOnly: true
+        public_id:
+          title: Public id
+          type: string
+          format: uuid
+          readOnly: true
+        given_name:
+          title: Given name
+          type: string
+          maxLength: 100
+        family_name:
+          title: Family name
+          type: string
+          maxLength: 100
+        nickname:
+          title: Nickname
+          type: string
+          maxLength: 100
+        gender:
+          title: Gender
+          type: string
+          enum:
+            - M
+            - F
+            - X
+        birthdate:
+          title: Birthdate
+          type: string
+          format: date
+          nullable: true
+        zoneinfo:
+          title: Zoneinfo
+          type: string
+          readOnly: true
+        locale:
+          title: Locale
+          type: string
+          maxLength: 5
+        reference:
+          title: Reference
+          type: string
+          maxLength: 256
+          minLength: 1
+        avatar:
+          title: Avatar
+          type: string
+          format: uri
+          minLength: 1
+          nullable: true
+        bearer:
+          title: Bearer
+          description: >-
+            Used for authenticating as a profile. Make this the active
+            Authorization bearer to perform actions using this profile.
+          type: string
+          readOnly: true
+          minLength: 1
+    HeartRateSummaryLinked:
+      type: object
+      properties:
+        min:
+          title: Min
+          description: Minimum heart rate.
+          type: integer
+          nullable: true
+        max:
+          title: Max
+          description: Maximum heart rate.
+          type: integer
+          nullable: true
+        average:
+          title: Average
+          description: Average heart rate.
+          type: integer
+          nullable: true
+        resting:
+          title: Resting
+          description: Resting heart rate.
+          type: integer
+          nullable: true
+    Activity:
+      required:
+        - timestamp
+        - source
+        - type
+      type: object
+      properties:
+        timestamp:
+          title: Timestamp
+          description: Starting time of the measurement.
+          type: string
+          format: date-time
+        duration:
+          title: Duration
+          type: string <iso8601 duration>
+          minLength: 1
+        source:
+          title: Source
+          description: Origin of the data.
+          type: string
+          enum:
+            - AGGREGATED
+            - ANDROID
+            - APPLE
+            - FITBIT
+            - GARMIN
+            - GOOGLEFIT
+            - HEALTHCONNECT
+            - HUAWEI
+            - MYZONE
+            - OMH
+            - OMRON
+            - OURA
+            - POLAR
+            - SAMSUNG
+            - STRAVA
+            - SUUNTO
+            - WF
+            - WHOOP
+            - WITHINGS
+        is_manual:
+          title: Is_manual
+          description: Whether the data was entered manually.
+          type: boolean
+          nullable: true
+        type:
+          title: Type
+          description: Type of the activity.
+          type: string
+          enum:
+            - RUNNING
+            - CROSSFIT
+            - CYCLING
+            - SWIMMING
+            - OTHER
+            - ROWING
+            - WALKING
+            - MINDFULNESS
+            - YOGA
+            - STRENGTH_TRAINING
+        distance:
+          title: Distance
+          description: Distance in meters.
+          type: number
+          nullable: true
+        steps:
+          title: Steps
+          description: Steps taken.
+          type: number
+          nullable: true
+        elevation:
+          title: Elevation
+          description: Elevation gained during the workout.
+          type: number
+          nullable: true
+        speed:
+          title: Speed
+          description: Average speed during the workout
+          type: number
+          nullable: true
+        calories:
+          title: Calories
+          description: Calories burned.
+          type: number
+          nullable: true
+        points:
+          title: Points
+          description: Points earned.
+          type: number
+          nullable: true
+        in_outdoor:
+          title: In_outdoor
+          description: in- or outdoor-activity.
+          type: string
+          nullable: true
+        heart_rate_summary:
+          $ref: '#/components/schemas/HeartRateSummaryLinked'
+    BioMetric:
+      required:
+        - timestamp
+        - source
+      type: object
+      properties:
+        timestamp:
+          title: Timestamp
+          description: Starting time of the measurement.
+          type: string
+          format: date-time
+        source:
+          title: Source
+          description: Origin of the data.
+          type: string
+          enum:
+            - AGGREGATED
+            - ANDROID
+            - APPLE
+            - FITBIT
+            - GARMIN
+            - GOOGLEFIT
+            - HEALTHCONNECT
+            - HUAWEI
+            - MYZONE
+            - OMH
+            - OMRON
+            - OURA
+            - POLAR
+            - SAMSUNG
+            - STRAVA
+            - SUUNTO
+            - WF
+            - WHOOP
+            - WITHINGS
+        is_manual:
+          title: Is_manual
+          description: Whether the data was entered manually.
+          type: boolean
+          nullable: true
+        weight:
+          title: Weight
+          description: Weight in kg.
+          type: number
+          nullable: true
+        height:
+          title: Height
+          description: Height in cm.
+          type: number
+          nullable: true
+        bmi:
+          title: Bmi
+          description: >-
+            Body Mass Index, automatically calculated if not entered and both
+            weight and height are available.
+          type: number
+          nullable: true
+    BiometricMeasurement:
+      required:
+        - timestamp
+        - source
+        - measurement_type
+      type: object
+      properties:
+        timestamp:
+          title: Timestamp
+          description: Starting time of the measurement.
+          type: string
+          format: date-time
+        end:
+          title: End
+          description: End time of the measurement.
+          type: string
+          format: date-time
+          nullable: true
+        source:
+          title: Source
+          description: Origin of the data.
+          type: string
+          enum:
+            - AGGREGATED
+            - ANDROID
+            - APPLE
+            - FITBIT
+            - GARMIN
+            - GOOGLEFIT
+            - HEALTHCONNECT
+            - HUAWEI
+            - MYZONE
+            - OMH
+            - OMRON
+            - OURA
+            - POLAR
+            - SAMSUNG
+            - STRAVA
+            - SUUNTO
+            - WF
+            - WHOOP
+            - WITHINGS
+        measurement_type:
+          title: Measurement_type
+          description: Type of biometric measurement.
+          type: string
+          minLength: 1
+        is_manual:
+          title: Is_manual
+          description: Whether the data was entered manually.
+          type: boolean
+          nullable: true
+        value:
+          title: Value
+          description: Value of this measurement.
+          type: number
+          nullable: true
+        unit:
+          title: Unit
+          description: Unit of this measurement
+          type: string
+          nullable: true
+    BMI:
+      required:
+        - timestamp
+        - source
+      type: object
+      properties:
+        timestamp:
+          title: Timestamp
+          description: Starting time of the measurement.
+          type: string
+          format: date-time
+        source:
+          title: Source
+          description: Origin of the data.
+          type: string
+          enum:
+            - AGGREGATED
+            - ANDROID
+            - APPLE
+            - FITBIT
+            - GARMIN
+            - GOOGLEFIT
+            - HEALTHCONNECT
+            - HUAWEI
+            - MYZONE
+            - OMH
+            - OMRON
+            - OURA
+            - POLAR
+            - SAMSUNG
+            - STRAVA
+            - SUUNTO
+            - WF
+            - WHOOP
+            - WITHINGS
+        is_manual:
+          title: Is_manual
+          description: Whether the data was entered manually.
+          type: boolean
+          nullable: true
+        bmi:
+          title: Bmi
+          description: >-
+            Body Mass Index, automatically calculated if not entered and both
+            weight and height are available.
+          type: number
+          nullable: true
+    DailyDetail:
+      required:
+        - timestamp
+        - source
+      type: object
+      properties:
+        timestamp:
+          title: Timestamp
+          description: Starting time of the measurement.
+          type: string
+          format: date-time
+        duration:
+          title: Duration
+          description: Duration of the measurement.
+          type: string
+          nullable: true
+        source:
+          title: Source
+          description: Origin of the data.
+          type: string
+          enum:
+            - AGGREGATED
+            - ANDROID
+            - APPLE
+            - FITBIT
+            - GARMIN
+            - GOOGLEFIT
+            - HEALTHCONNECT
+            - HUAWEI
+            - MYZONE
+            - OMH
+            - OMRON
+            - OURA
+            - POLAR
+            - SAMSUNG
+            - STRAVA
+            - SUUNTO
+            - WF
+            - WHOOP
+            - WITHINGS
+        steps:
+          title: Steps
+          description: Steps taken.
+          type: integer
+          nullable: true
+        calories:
+          title: Calories
+          description: Calories burned.
+          type: number
+          nullable: true
+        distance:
+          title: Distance
+          description: Distance in meters.
+          type: number
+          nullable: true
+    StressSummaryLinked:
+      required:
+        - stress_qualifier
+      type: object
+      properties:
+        stress_qualifier:
+          title: Stress qualifier
+          description: Qualifier describing stress level.
+          type: string
+          enum:
+            - UNKNOWN
+            - CALM
+            - BALANCED
+            - STRESSFUL
+            - VERY_STRESSFUL
+        average_stress_level:
+          title: Average_stress_level
+          description: Average stress level.
+          type: integer
+          nullable: true
+        max_stress_level:
+          title: Max_stress_level
+          description: Maximum stress level.
+          type: integer
+          nullable: true
+        rest_stress_duration:
+          title: Rest stress duration
+          description: Time at restful stress level.
+          type: string <iso8601 duration>
+          minLength: 1
+        low_stress_duration:
+          title: Low stress duration
+          description: Time at low stress level.
+          type: string <iso8601 duration>
+          minLength: 1
+        medium_stress_duration:
+          title: Medium stress duration
+          description: Time at medium stress level.
+          type: string <iso8601 duration>
+          minLength: 1
+        high_stress_duration:
+          title: High stress duration
+          description: Time at high stress level.
+          type: string <iso8601 duration>
+          minLength: 1
+        stress_duration:
+          title: Stress duration
+          description: Total time in stress.
+          type: string <iso8601 duration>
+          minLength: 1
+    DailySummary:
+      required:
+        - date
+        - source
+      type: object
+      properties:
+        date:
+          title: Date
+          description: Date of the summary.
+          type: string
+          format: date
+        distance:
+          title: Distance
+          description: Distance in meters.
+          type: number
+          nullable: true
+        steps:
+          title: Steps
+          description: Steps taken.
+          type: number
+          nullable: true
+        calories:
+          title: Calories
+          description: Calories burned.
+          type: number
+          nullable: true
+        active_calories:
+          title: Active_calories
+          description: Active calorie burn.
+          type: number
+          nullable: true
+        bmr_calories:
+          title: Bmr_calories
+          description: BMR calorie burn.
+          type: number
+          nullable: true
+        points:
+          title: Points
+          description: Points earned.
+          type: number
+          nullable: true
+        source:
+          title: Source
+          description: Origin of the data.
+          type: string
+          enum:
+            - AGGREGATED
+            - ANDROID
+            - APPLE
+            - FITBIT
+            - GARMIN
+            - GOOGLEFIT
+            - HEALTHCONNECT
+            - HUAWEI
+            - MYZONE
+            - OMH
+            - OMRON
+            - OURA
+            - POLAR
+            - SAMSUNG
+            - STRAVA
+            - SUUNTO
+            - WF
+            - WHOOP
+            - WITHINGS
+        heart_rate_summary:
+          $ref: '#/components/schemas/HeartRateSummaryLinked'
+        stress_summary:
+          $ref: '#/components/schemas/StressSummaryLinked'
+    DetailSample:
+      required:
+        - timestamp
+        - source
+      type: object
+      properties:
+        timestamp:
+          title: Timestamp
+          description: Starting time of the measurement.
+          type: string
+          format: date-time
+        duration:
+          title: Duration
+          type: string <iso8601 duration>
+          minLength: 1
+        source:
+          title: Source
+          description: Origin of the data.
+          type: string
+          enum:
+            - AGGREGATED
+            - ANDROID
+            - APPLE
+            - FITBIT
+            - GARMIN
+            - GOOGLEFIT
+            - HEALTHCONNECT
+            - HUAWEI
+            - MYZONE
+            - OMH
+            - OMRON
+            - OURA
+            - POLAR
+            - SAMSUNG
+            - STRAVA
+            - SUUNTO
+            - WF
+            - WHOOP
+            - WITHINGS
+        activity_type:
+          title: Activity_type
+          type: string
+          nullable: true
+        activity_id:
+          title: Activity_id
+          type: string
+          nullable: true
+        distance:
+          title: Distance
+          type: number
+          nullable: true
+        calories:
+          title: Calories
+          type: number
+          nullable: true
+        heart_rate:
+          title: Heart_rate
+          type: number
+          nullable: true
+    ECGRecordings:
+      required:
+        - timestamp
+        - source
+      type: object
+      properties:
+        timestamp:
+          title: Timestamp
+          description: Starting time of the measurement.
+          type: string
+          format: date-time
+        duration:
+          title: Duration
+          description: Duration of the measurement.
+          type: string
+          nullable: true
+        source:
+          title: Source
+          description: Origin of the data.
+          type: string
+          enum:
+            - AGGREGATED
+            - ANDROID
+            - APPLE
+            - FITBIT
+            - GARMIN
+            - GOOGLEFIT
+            - HEALTHCONNECT
+            - HUAWEI
+            - MYZONE
+            - OMH
+            - OMRON
+            - OURA
+            - POLAR
+            - SAMSUNG
+            - STRAVA
+            - SUUNTO
+            - WF
+            - WHOOP
+            - WITHINGS
+        sample_frequency:
+          title: Sample_frequency
+          description: Sampling frequency of heart beats as integer in Hz.
+          type: integer
+          nullable: true
+        sample_count:
+          title: Sample_count
+          description: Sample count of heart beats as integer.
+          type: integer
+          nullable: true
+    ECGRecording:
+      required:
+        - timestamp
+        - source
+      type: object
+      properties:
+        timestamp:
+          title: Timestamp
+          description: Starting time of the measurement.
+          type: string
+          format: date-time
+        duration:
+          title: Duration
+          description: Duration of the measurement.
+          type: string
+          nullable: true
+        source:
+          title: Source
+          description: Origin of the data.
+          type: string
+          enum:
+            - AGGREGATED
+            - ANDROID
+            - APPLE
+            - FITBIT
+            - GARMIN
+            - GOOGLEFIT
+            - HEALTHCONNECT
+            - HUAWEI
+            - MYZONE
+            - OMH
+            - OMRON
+            - OURA
+            - POLAR
+            - SAMSUNG
+            - STRAVA
+            - SUUNTO
+            - WF
+            - WHOOP
+            - WITHINGS
+        sample_frequency:
+          title: Sample_frequency
+          description: Sampling frequency of heart beats as integer in Hz.
+          type: integer
+          nullable: true
+        sample_count:
+          title: Sample_count
+          description: Sample count of heart beats as integer.
+          type: integer
+          nullable: true
+        data:
+          description: >-
+            ECG data, represented as [[time (s), value (mcV)], [time2 (s),
+            value2 (mcV)]), ..
+          type: array
+          items:
+            type: string
+            nullable: true
+          nullable: true
+    Event:
+      type: object
+      properties:
+        description:
+          title: Description
+          description: Title / description of the action.
+          type: string
+          nullable: true
+        timestamp:
+          title: Timestamp
+          description: Time at which the action was performed.
+          type: string
+          format: date-time
+        points:
+          title: Points
+          description: Amount of points awarded for the action.
+          type: number
+          nullable: true
+    HeartRateSample:
+      required:
+        - timestamp
+        - source
+      type: object
+      properties:
+        timestamp:
+          title: Timestamp
+          description: Starting time of the measurement.
+          type: string
+          format: date-time
+        duration:
+          title: Duration
+          type: string <iso8601 duration>
+          minLength: 1
+        source:
+          title: Source
+          description: Origin of the data.
+          type: string
+          enum:
+            - AGGREGATED
+            - ANDROID
+            - APPLE
+            - FITBIT
+            - GARMIN
+            - GOOGLEFIT
+            - HEALTHCONNECT
+            - HUAWEI
+            - MYZONE
+            - OMH
+            - OMRON
+            - OURA
+            - POLAR
+            - SAMSUNG
+            - STRAVA
+            - SUUNTO
+            - WF
+            - WHOOP
+            - WITHINGS
+        is_manual:
+          title: Is_manual
+          description: Whether the data was entered manually.
+          type: boolean
+          nullable: true
+        value:
+          title: Value
+          description: Measured heart rate in beats/min.
+          type: integer
+          nullable: true
+        min:
+          title: Min
+          description: Minimum value measured in the time window.
+          type: integer
+          nullable: true
+        max:
+          title: Max
+          description: Maximum value measured in the time window.
+          type: integer
+          nullable: true
+    HeartRateSummary:
+      required:
+        - timestamp
+        - source
+      type: object
+      properties:
+        timestamp:
+          title: Timestamp
+          description: Starting time of the measurement.
+          type: string
+          format: date-time
+        duration:
+          title: Duration
+          type: string <iso8601 duration>
+          minLength: 1
+        source:
+          title: Source
+          description: Origin of the data.
+          type: string
+          enum:
+            - AGGREGATED
+            - ANDROID
+            - APPLE
+            - FITBIT
+            - GARMIN
+            - GOOGLEFIT
+            - HEALTHCONNECT
+            - HUAWEI
+            - MYZONE
+            - OMH
+            - OMRON
+            - OURA
+            - POLAR
+            - SAMSUNG
+            - STRAVA
+            - SUUNTO
+            - WF
+            - WHOOP
+            - WITHINGS
+        is_manual:
+          title: Is_manual
+          description: Whether the data was entered manually.
+          type: boolean
+          nullable: true
+        min:
+          title: Min
+          description: Minimum heart rate.
+          type: integer
+          nullable: true
+        max:
+          title: Max
+          description: Maximum heart rate.
+          type: integer
+          nullable: true
+        average:
+          title: Average
+          description: Average heart rate.
+          type: integer
+          nullable: true
+        resting:
+          title: Resting
+          description: Resting heart rate.
+          type: integer
+          nullable: true
+    Height:
+      required:
+        - timestamp
+        - source
+      type: object
+      properties:
+        timestamp:
+          title: Timestamp
+          description: Starting time of the measurement.
+          type: string
+          format: date-time
+        source:
+          title: Source
+          description: Origin of the data.
+          type: string
+          enum:
+            - AGGREGATED
+            - ANDROID
+            - APPLE
+            - FITBIT
+            - GARMIN
+            - GOOGLEFIT
+            - HEALTHCONNECT
+            - HUAWEI
+            - MYZONE
+            - OMH
+            - OMRON
+            - OURA
+            - POLAR
+            - SAMSUNG
+            - STRAVA
+            - SUUNTO
+            - WF
+            - WHOOP
+            - WITHINGS
+        is_manual:
+          title: Is_manual
+          description: Whether the data was entered manually.
+          type: boolean
+          nullable: true
+        height:
+          title: Height
+          description: Height in cm.
+          type: number
+          nullable: true
+    SleepDetail:
+      required:
+        - timestamp
+        - source
+        - level
+      type: object
+      properties:
+        timestamp:
+          title: Timestamp
+          description: Starting time of the measurement.
+          type: string
+          format: date-time
+        source:
+          title: Source
+          description: Origin of the data.
+          type: string
+          enum:
+            - AGGREGATED
+            - ANDROID
+            - APPLE
+            - FITBIT
+            - GARMIN
+            - GOOGLEFIT
+            - HEALTHCONNECT
+            - HUAWEI
+            - MYZONE
+            - OMH
+            - OMRON
+            - OURA
+            - POLAR
+            - SAMSUNG
+            - STRAVA
+            - SUUNTO
+            - WF
+            - WHOOP
+            - WITHINGS
+        timestamp_end:
+          title: Timestamp end
+          description: Ending time of the measurement.
+          type: string
+          format: date-time
+        level:
+          title: Level
+          description: Sleep level
+          type: string
+          enum:
+            - AWAKE
+            - LIGHT
+            - DEEP
+            - REM
+            - UNKNOWN
+        duration:
+          title: Duration
+          type: string <iso8601 duration>
+          minLength: 1
+    SleepDetailMinimal:
+      required:
+        - timestamp
+        - level
+      type: object
+      properties:
+        timestamp:
+          title: Timestamp
+          description: Starting time of the measurement.
+          type: string
+          format: date-time
+        timestamp_end:
+          title: Timestamp end
+          description: Ending time of the measurement.
+          type: string
+          format: date-time
+        level:
+          title: Level
+          description: Sleep level
+          type: string
+          enum:
+            - AWAKE
+            - LIGHT
+            - DEEP
+            - REM
+            - UNKNOWN
+    SleepSummary:
+      required:
+        - timestamp
+        - source
+      type: object
+      properties:
+        timestamp:
+          title: Timestamp
+          description: Starting time of the measurement.
+          type: string
+          format: date-time
+        duration:
+          title: Duration
+          type: string <iso8601 duration>
+          minLength: 1
+        timestamp_end:
+          title: Timestamp end
+          type: string
+          format: date-time
+        source:
+          title: Source
+          description: Origin of the data.
+          type: string
+          enum:
+            - AGGREGATED
+            - ANDROID
+            - APPLE
+            - FITBIT
+            - GARMIN
+            - GOOGLEFIT
+            - HEALTHCONNECT
+            - HUAWEI
+            - MYZONE
+            - OMH
+            - OMRON
+            - OURA
+            - POLAR
+            - SAMSUNG
+            - STRAVA
+            - SUUNTO
+            - WF
+            - WHOOP
+            - WITHINGS
+        is_manual:
+          title: Is_manual
+          description: Whether the data was entered manually.
+          type: boolean
+          nullable: true
+        awake:
+          title: Awake
+          description: Time awake.
+          type: string <iso8601 duration>
+          minLength: 1
+        light:
+          title: Light
+          description: Time in light sleep.
+          type: string <iso8601 duration>
+          minLength: 1
+        deep:
+          title: Deep
+          description: Time in deep sleep.
+          type: string <iso8601 duration>
+          minLength: 1
+        rem:
+          title: Rem
+          description: Time in REM sleep.
+          type: string <iso8601 duration>
+          minLength: 1
+        sleep_score:
+          title: Sleep_score
+          description: Sleep score
+          type: integer
+          nullable: true
+        detail:
+          type: array
+          items:
+            $ref: '#/components/schemas/SleepDetailMinimal'
+        total_time_in_sleep:
+          title: Total time in sleep
+          type: string <iso8601 duration>
+          minLength: 1
+    StressSample:
+      required:
+        - timestamp
+        - source
+        - stress_value
+      type: object
+      properties:
+        timestamp:
+          title: Timestamp
+          description: Starting time of the measurement.
+          type: string
+          format: date-time
+        source:
+          title: Source
+          description: Origin of the data.
+          type: string
+          enum:
+            - AGGREGATED
+            - ANDROID
+            - APPLE
+            - FITBIT
+            - GARMIN
+            - GOOGLEFIT
+            - HEALTHCONNECT
+            - HUAWEI
+            - MYZONE
+            - OMH
+            - OMRON
+            - OURA
+            - POLAR
+            - SAMSUNG
+            - STRAVA
+            - SUUNTO
+            - WF
+            - WHOOP
+            - WITHINGS
+        stress_value:
+          title: Stress_value
+          description: Stress value.
+          type: integer
+    StressSummary:
+      required:
+        - timestamp
+        - source
+        - stress_qualifier
+      type: object
+      properties:
+        timestamp:
+          title: Timestamp
+          description: Starting time of the measurement.
+          type: string
+          format: date-time
+        duration:
+          title: Duration
+          type: string <iso8601 duration>
+          minLength: 1
+        source:
+          title: Source
+          description: Origin of the data.
+          type: string
+          enum:
+            - AGGREGATED
+            - ANDROID
+            - APPLE
+            - FITBIT
+            - GARMIN
+            - GOOGLEFIT
+            - HEALTHCONNECT
+            - HUAWEI
+            - MYZONE
+            - OMH
+            - OMRON
+            - OURA
+            - POLAR
+            - SAMSUNG
+            - STRAVA
+            - SUUNTO
+            - WF
+            - WHOOP
+            - WITHINGS
+        stress_qualifier:
+          title: Stress qualifier
+          description: Qualifier describing stress level.
+          type: string
+          enum:
+            - UNKNOWN
+            - CALM
+            - BALANCED
+            - STRESSFUL
+            - VERY_STRESSFUL
+        average_stress_level:
+          title: Average_stress_level
+          description: Average stress level.
+          type: integer
+          nullable: true
+        max_stress_level:
+          title: Max_stress_level
+          description: Maximum stress level.
+          type: integer
+          nullable: true
+        rest_stress_duration:
+          title: Rest stress duration
+          description: Time at restful stress level.
+          type: string <iso8601 duration>
+          minLength: 1
+        low_stress_duration:
+          title: Low stress duration
+          description: Time at low stress level.
+          type: string <iso8601 duration>
+          minLength: 1
+        medium_stress_duration:
+          title: Medium stress duration
+          description: Time at medium stress level.
+          type: string <iso8601 duration>
+          minLength: 1
+        high_stress_duration:
+          title: High stress duration
+          description: Time at high stress level.
+          type: string <iso8601 duration>
+          minLength: 1
+        stress_duration:
+          title: Stress duration
+          description: Total time in stress.
+          type: string <iso8601 duration>
+          minLength: 1
+    TrackSample:
+      required:
+        - timestamp
+        - source
+      type: object
+      properties:
+        timestamp:
+          title: Timestamp
+          description: Starting time of the measurement.
+          type: string
+          format: date-time
+        duration:
+          title: Duration
+          type: string <iso8601 duration>
+          minLength: 1
+        source:
+          title: Source
+          description: Origin of the data.
+          type: string
+          enum:
+            - AGGREGATED
+            - ANDROID
+            - APPLE
+            - FITBIT
+            - GARMIN
+            - GOOGLEFIT
+            - HEALTHCONNECT
+            - HUAWEI
+            - MYZONE
+            - OMH
+            - OMRON
+            - OURA
+            - POLAR
+            - SAMSUNG
+            - STRAVA
+            - SUUNTO
+            - WF
+            - WHOOP
+            - WITHINGS
+        activity_type:
+          title: Activity_type
+          type: string
+          nullable: true
+        activity_id:
+          title: Activity_id
+          type: string
+          nullable: true
+        distance:
+          title: Distance
+          type: number
+          nullable: true
+        calories:
+          title: Calories
+          type: number
+          nullable: true
+    Weight:
+      required:
+        - timestamp
+        - source
+      type: object
+      properties:
+        timestamp:
+          title: Timestamp
+          description: Starting time of the measurement.
+          type: string
+          format: date-time
+        source:
+          title: Source
+          description: Origin of the data.
+          type: string
+          enum:
+            - AGGREGATED
+            - ANDROID
+            - APPLE
+            - FITBIT
+            - GARMIN
+            - GOOGLEFIT
+            - HEALTHCONNECT
+            - HUAWEI
+            - MYZONE
+            - OMH
+            - OMRON
+            - OURA
+            - POLAR
+            - SAMSUNG
+            - STRAVA
+            - SUUNTO
+            - WF
+            - WHOOP
+            - WITHINGS
+        is_manual:
+          title: Is_manual
+          description: Whether the data was entered manually.
+          type: boolean
+          nullable: true
+        weight:
+          title: Weight
+          description: Weight in kg.
+          type: number
+          nullable: true
+    Workout:
+      required:
+        - timestamp
+        - source
+        - type
+      type: object
+      properties:
+        timestamp:
+          title: Timestamp
+          description: Starting time of the measurement.
+          type: string
+          format: date-time
+        duration:
+          title: Duration
+          type: string <iso8601 duration>
+          minLength: 1
+        source:
+          title: Source
+          description: Origin of the data.
+          type: string
+          enum:
+            - AGGREGATED
+            - ANDROID
+            - APPLE
+            - FITBIT
+            - GARMIN
+            - GOOGLEFIT
+            - HEALTHCONNECT
+            - HUAWEI
+            - MYZONE
+            - OMH
+            - OMRON
+            - OURA
+            - POLAR
+            - SAMSUNG
+            - STRAVA
+            - SUUNTO
+            - WF
+            - WHOOP
+            - WITHINGS
+        is_manual:
+          title: Is_manual
+          description: Whether the data was entered manually.
+          type: boolean
+          nullable: true
+        type:
+          title: Type
+          description: Type of the activity.
+          type: string
+          enum:
+            - RUNNING
+            - CROSSFIT
+            - CYCLING
+            - SWIMMING
+            - OTHER
+            - ROWING
+            - WALKING
+            - MINDFULNESS
+            - YOGA
+            - STRENGTH_TRAINING
+        distance:
+          title: Distance
+          description: Distance in meters.
+          type: number
+          nullable: true
+        steps:
+          title: Steps
+          description: Steps taken.
+          type: number
+          nullable: true
+        elevation:
+          title: Elevation
+          description: Elevation gained during the workout.
+          type: number
+          nullable: true
+        speed:
+          title: Speed
+          description: Average speed during the workout
+          type: number
+          nullable: true
+        calories:
+          title: Calories
+          description: Calories burned.
+          type: number
+          nullable: true
+        points:
+          title: Points
+          description: Points earned.
+          type: number
+          nullable: true
+        in_outdoor:
+          title: In_outdoor
+          description: in- or outdoor-activity.
+          type: string
+          nullable: true
+        heart_rate_summary:
+          $ref: '#/components/schemas/HeartRateSummaryLinked'
+    ProfileDetail:
+      type: object
+      properties:
+        url:
+          title: Url
+          type: string
+          format: uri
+          readOnly: true
+        public_id:
+          title: Public id
+          type: string
+          format: uuid
+          readOnly: true
+        given_name:
+          title: Given name
+          type: string
+          maxLength: 100
+        family_name:
+          title: Family name
+          type: string
+          maxLength: 100
+        nickname:
+          title: Nickname
+          type: string
+          maxLength: 100
+        gender:
+          title: Gender
+          type: string
+          enum:
+            - M
+            - F
+            - X
+        birthdate:
+          title: Birthdate
+          type: string
+          format: date
+          nullable: true
+        zoneinfo:
+          title: Zoneinfo
+          type: string
+          readOnly: true
+        locale:
+          title: Locale
+          type: string
+          maxLength: 5
+        total_calories:
+          title: Total calories
+          type: number
+        total_distance:
+          title: Total distance
+          type: number
+        total_steps:
+          title: Total steps
+          type: number
+        total_points:
+          title: Total points
+          type: number
+        total_activity_duration:
+          title: Total activity duration
+          type: string <iso8601 duration>
+          readOnly: true
+          minLength: 1
+        reference:
+          title: Reference
+          type: string
+          maxLength: 255
+        teams:
+          description: Team of which this profile is a member of
+          type: array
+          items:
+            $ref: '#/components/schemas/TeamProfile'
+          readOnly: true
+        avatar:
+          title: Avatar
+          type: string
+          format: uri
+          minLength: 1
+          nullable: true
+        created_at:
+          title: Created at
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          title: Updated at
+          type: string
+          format: date-time
+          readOnly: true
+        num_active_challenges:
+          title: Num active challenges
+          type: string
+          readOnly: true
+        num_done_challenges:
+          title: Num done challenges
+          type: string
+          readOnly: true
+        num_future_challenges:
+          title: Num future challenges
+          type: string
+          readOnly: true
+    EnrollmentInformation:
+      type: object
+      properties:
+        team:
+          title: Team
+          type: string
+          readOnly: true
+          minLength: 1
+        team_public_id:
+          title: Team public id
+          type: string
+          readOnly: true
+          minLength: 1
+        team_size:
+          title: Team size
+          type: integer
+          readOnly: true
+        leaderboard_rank:
+          title: Leaderboard rank
+          description: >-
+            Current or final rank among the participants of the challenge as
+            determined by the relevant score.
+          type: integer
+          readOnly: true
+        leaderboard_score:
+          title: Leaderboard score
+          description: The profile's current or final score.
+          type: number
+          readOnly: true
+    ProfileChallengeList:
+      required:
+        - title
+        - start
+        - type
+        - goal
+        - goal_type
+        - visibility
+        - repetition
+      type: object
+      properties:
+        title:
+          title: Title
+          type: string
+          minLength: 1
+        description:
+          title: Description
+          type: string
+        url:
+          title: Url
+          type: string
+          format: uri
+          readOnly: true
+        public_id:
+          title: Public id
+          type: string
+          format: uuid
+          readOnly: true
+        slogan:
+          title: Slogan
+          type: string
+        start:
+          title: Start
+          type: string
+          format: date-time
+        end:
+          title: End
+          type: string
+          format: date-time
+          nullable: true
+        type:
+          title: Type
+          type: string
+          enum:
+            - INDIVIDUAL
+            - GROUP
+            - TEAM
+        goal:
+          title: Goal
+          type: string
+          enum:
+            - DAILY
+            - TOTAL
+            - WEEKLY
+            - MONTHLY
+        goal_value:
+          title: Goal value
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          nullable: true
+        goal_type:
+          title: Goal type
+          type: string
+          enum:
+            - POINTS
+            - DISTANCE
+            - CALORIES
+            - DURATION
+            - STEPS
+        visibility:
+          title: Visibility
+          type: string
+          enum:
+            - PUBLIC
+            - PRIVATE
+        num_members:
+          title: Num members
+          type: string
+          readOnly: true
+        leaderboard_rank:
+          title: Leaderboard rank
+          description: >-
+            Current or final rank among the participants of the challenge as
+            determined by the relevant score.
+          type: integer
+          readOnly: true
+        leaderboard_score:
+          title: Leaderboard score
+          description: The profile's current or final score.
+          type: number
+          readOnly: true
+        is_participating:
+          title: Is participating
+          description: Does the current profile participate in this challenge?
+          type: boolean
+          readOnly: true
+        enrollment:
+          $ref: '#/components/schemas/EnrollmentInformation'
+        repetition:
+          title: Repetition
+          type: string
+          enum:
+            - NONE
+            - STREAK
+            - STICKTOIT
+            - GOALBREAKER
+        avatar:
+          title: Avatar
+          type: string
+          format: uri
+          minLength: 1
+          nullable: true
+        data_source:
+          title: Data source
+          type: string
+          readOnly: true
+          minLength: 1
+        activity_types:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChallengeActivityType'
+        current_period_start:
+          title: Current period start
+          description: >-
+            The start (exclusive) of the current period. Null if the challenge
+            has not started yet.
+          type: string
+          format: date-time
+          readOnly: true
+        current_period_end:
+          title: Current period end
+          description: >-
+            The end (exclusive) of the current period. Null if the challenge end
+            has passed.
+          type: string
+          format: date-time
+          readOnly: true
+        goal_cap:
+          title: Goal cap
+          description: Whether scores should be unable to surpass the goal value.
+          type: boolean
+        joined:
+          title: Joined
+          description: The timestamp when the profile joined the challenge.
+          type: string
+          format: date-time
+          readOnly: true
+    ProfileAppConnectionList:
+      type: object
+      properties:
+        display_name:
+          title: Display name
+          type: string
+          readOnly: true
+        url:
+          title: Url
+          type: string
+          readOnly: true
+          minLength: 1
+        connected:
+          title: Connected
+          type: string
+          enum:
+            - CONNECTED
+            - ERROR
+            - NOT_CONNECTED
+          readOnly: true
+        connection_slug:
+          title: Connection slug
+          type: string
+          readOnly: true
+          minLength: 1
+        img_url:
+          title: Img url
+          type: string
+          readOnly: true
+          minLength: 1
+        created_at:
+          title: Created at
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          title: Updated at
+          type: string
+          format: date-time
+          readOnly: true
+    TeamList:
+      required:
+        - name
+      type: object
+      properties:
+        name:
+          title: Name
+          type: string
+          maxLength: 100
+          minLength: 1
+        public_id:
+          title: Public id
+          type: string
+          format: uuid
+          readOnly: true
+        url:
+          title: Url
+          type: string
+          format: uri
+          readOnly: true
+        num_members:
+          title: Num members
+          type: string
+          readOnly: true
+        avatar:
+          title: Avatar
+          type: string
+          format: uri
+          minLength: 1
+          nullable: true
+    ProfileTeam:
+      description: List of members in this team
+      type: object
+      properties:
+        url:
+          title: Url
+          type: string
+          format: uri
+          readOnly: true
+        public_id:
+          title: Public id
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          title: Name
+          type: string
+          readOnly: true
+          minLength: 1
+        reference:
+          title: Reference
+          type: string
+          maxLength: 255
+    TeamDetail:
+      required:
+        - name
+        - description
+      type: object
+      properties:
+        description:
+          title: Description
+          type: string
+          minLength: 1
+        name:
+          title: Name
+          type: string
+          maxLength: 100
+          minLength: 1
+        public_id:
+          title: Public id
+          type: string
+          format: uuid
+          readOnly: true
+        url:
+          title: Url
+          type: string
+          format: uri
+          readOnly: true
+        num_members:
+          title: Num members
+          type: string
+          readOnly: true
+        members:
+          description: List of members in this team
+          type: array
+          items:
+            $ref: '#/components/schemas/ProfileTeam'
+          readOnly: true
+        avatar:
+          title: Avatar
+          type: string
+          format: uri
+          minLength: 1
+          nullable: true
+    ProfilePublicIdsList:
+      required:
+        - profiles
+      type: object
+      properties:
+        profiles:
+          type: array
+          items:
+            type: string
+            format: uuid
+        is_active:
+          title: Is active
+          description: >-
+            Whether profile actively participates in challenge.
+
+
+            While inactive, scores/leaderboard will not be updated but still be
+            visible.
+          type: boolean
+        joined:
+          title: Joined
+          description: The timestamp when the profile/team joined the challenge.
+          type: string
+          format: date-time
+    Token:
+      type: object
+      properties:
+        bearer:
+          title: Bearer
+          type: string
+          readOnly: true
+          minLength: 1
+    InsightsGetBioAgeWeeklyResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/BioAge'
+    LoyaltyGetRecommendedProductsResponse:
+      required:
+        - count
+        - results
+      type: object
+      properties:
+        count:
+          type: integer
+        next:
+          type: string
+          format: uri
+          nullable: true
+        previous:
+          type: string
+          format: uri
+          nullable: true
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecommendedProducts'
+    AppGetTotalsResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/AppTotals'
+    ChallengeListResponse:
+      required:
+        - count
+        - results
+      type: object
+      properties:
+        count:
+          type: integer
+        next:
+          type: string
+          format: uri
+          nullable: true
+        previous:
+          type: string
+          format: uri
+          nullable: true
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChallengeList'
+    ChallengeTeamStandingsListResponse:
+      required:
+        - count
+        - results
+      type: object
+      properties:
+        count:
+          type: integer
+        next:
+          type: string
+          format: uri
+          nullable: true
+        previous:
+          type: string
+          format: uri
+          nullable: true
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/LeaderboardTeam'
+    ChallengeGetMembersResponse:
+      required:
+        - count
+        - results
+      type: object
+      properties:
+        count:
+          type: integer
+        next:
+          type: string
+          format: uri
+          nullable: true
+        previous:
+          type: string
+          format: uri
+          nullable: true
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChallengeDetail'
+    ProfileListResponse:
+      required:
+        - count
+        - results
+      type: object
+      properties:
+        count:
+          type: integer
+        next:
+          type: string
+          format: uri
+          nullable: true
+        previous:
+          type: string
+          format: uri
+          nullable: true
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProfileList'
+    ProfileListActivitySegmentsResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/Activity'
+    ProfileListBiometricChangesResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/BioMetric'
+    ProfileListBiometricChanges200Response:
+      type: array
+      items:
+        $ref: '#/components/schemas/BiometricMeasurement'
+    ProfileGetBmiOverTimeResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/BMI'
+    ProfileGetDailyDetailResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/DailyDetail'
+    ProfileGetDailySummaryResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/DailySummary'
+    ProfileGetDetailSamplesResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/DetailSample'
+    ProfileGetEcgRecordingsResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/ECGRecordings'
+    ProfileGetEcgRecordingsDataResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/ECGRecording'
+    ProfileListEventsResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/Event'
+    ProfileGetHeartrateSampleResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/HeartRateSample'
+    ProfileGetHeartRateSummaryResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/HeartRateSummary'
+    ProfileListHeightChangesResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/Height'
+    ProfileGetSleepDetailResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/SleepDetail'
+    ProfileGetSleepSummaryResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/SleepSummary'
+    ProfileGetStressSamplesResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/StressSample'
+    ProfileGetStressSummaryResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/StressSummary'
+    ProfileGetGpxTrackSamplesResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/TrackSample'
+    ProfileListWeightChangesResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/Weight'
+    ProfileListWorkoutsResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/Workout'
+    TeamListResponse:
+      required:
+        - count
+        - results
+      type: object
+      properties:
+        count:
+          type: integer
+        next:
+          type: string
+          format: uri
+          nullable: true
+        previous:
+          type: string
+          format: uri
+          nullable: true
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/TeamList'
+security:
+  - BearerProfile: []
