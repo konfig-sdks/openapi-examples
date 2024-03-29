@@ -1,0 +1,6257 @@
+openapi: 3.0.0
+info:
+  title: Crusoe Cloud API Gateway
+  description: >-
+    The API Gateway exposes all publicly available API endpoints for Crusoe
+    Cloud products.
+  version: v1alpha5
+  x-konfig-ignore:
+    potential-incorrect-type: true
+servers:
+  - url: https://api.crusoecloud.com/v1alpha5
+tags:
+  - name: VMs
+  - name: Projects
+  - name: Instance-Groups
+  - name: Load-Balancers
+  - name: VPC-Firewall-Rules
+  - name: VPC-Networks
+  - name: VPC-Subnets
+  - name: Disks
+  - name: Entities
+  - name: Instance-Templates
+  - name: IB-Partitions
+  - name: Snapshots
+  - name: Usage
+  - name: Identities
+  - name: SSH-Keys
+  - name: Tokens
+  - name: Images
+  - name: VM-Operations
+  - name: IB-Networks
+  - name: Load-Balancer-Operations
+  - name: VPC-Firewall-Rule-Operations
+  - name: VPC-Network-Operations
+  - name: VPC-Subnet-Operations
+  - name: Disk-Operations
+  - name: Snapshot-Operations
+  - name: Capacities
+  - name: Feature-Flags
+  - name: Locations
+  - name: Billing
+  - name: Prospects
+paths:
+  /capacities:
+    get:
+      tags:
+        - Capacities
+      summary: >-
+        Lists available Crusoe Cloud capacity with optional filters on location
+        and product name.
+      operationId: Capacities_listAvailable
+      parameters:
+        - example: '[a100.1x, a100.2x]'
+          x-go-name: ProductNames
+          name: product_name
+          in: query
+          style: form
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+        - example: '[us-northcentral1-a, us-northcentral1-b]'
+          x-go-name: Locations
+          name: location
+          in: query
+          style: form
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/capacitiesResponse'
+        '400':
+          $ref: '#/components/responses/badReqError'
+        '401':
+          $ref: '#/components/responses/authError'
+        '403':
+          $ref: '#/components/responses/permissionsError'
+        '500':
+          $ref: '#/components/responses/serverError'
+  /compute/images:
+    get:
+      tags:
+        - Images
+      summary: Lists all VM images available for use.
+      operationId: Images_listAvailableVMImages
+      responses:
+        '200':
+          $ref: '#/components/responses/listImagesResponse'
+        '401':
+          $ref: '#/components/responses/authError'
+        '500':
+          $ref: '#/components/responses/serverError'
+  /compute/images/{image_id}:
+    get:
+      tags:
+        - Images
+      summary: Retrieve details about a VM image.
+      operationId: Images_getDetails
+      parameters:
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: ImageID
+          name: image_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/getImageResponse'
+        '400':
+          $ref: '#/components/responses/badReqError'
+        '401':
+          $ref: '#/components/responses/authError'
+        '404':
+          $ref: '#/components/responses/notFoundError'
+        '500':
+          $ref: '#/components/responses/serverError'
+  /featureflags:
+    get:
+      tags:
+        - Feature-Flags
+      summary: Get feature flags for the currently logged in user.
+      operationId: FeatureFlags_getUserFlags
+      description: |-
+        A successful response from this resource will contain a map of
+        all feature flags and the value assigned to each of them for the user.
+      responses:
+        '200':
+          $ref: '#/components/responses/featureFlagsGetResponse'
+        '401':
+          $ref: '#/components/responses/authError'
+        '500':
+          $ref: '#/components/responses/serverError'
+  /locations:
+    get:
+      tags:
+        - Locations
+      summary: Lists all Crusoe Cloud locations usable for resource hosting.
+      operationId: Locations_listUsableLocations
+      responses:
+        '200':
+          $ref: '#/components/responses/locationsResponse'
+        '401':
+          $ref: '#/components/responses/authError'
+        '500':
+          $ref: '#/components/responses/serverError'
+  /organizations/billing/intent:
+    get:
+      tags:
+        - Billing
+      summary: Retrieve an intent to facilitate a Stripe action.
+      operationId: Billing_getIntent
+      parameters:
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: OrgID
+          name: org_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - x-go-name: Type
+          name: intent_type
+          in: query
+          required: true
+          schema:
+            type: string
+            enum:
+              - dashboard
+      responses:
+        '200':
+          $ref: '#/components/responses/billingIntentGetResponse'
+        '400':
+          $ref: '#/components/responses/badReqError'
+        '401':
+          $ref: '#/components/responses/authError'
+        '403':
+          $ref: '#/components/responses/permissionsError'
+        '500':
+          $ref: '#/components/responses/serverError'
+  /organizations/entities:
+    get:
+      tags:
+        - Entities
+      summary: >-
+        Retrieve details about all active organizations the logged in user
+        belongs to.
+      operationId: Entities_getDetailsAllActive
+      responses:
+        '200':
+          $ref: '#/components/responses/organizationsGetResponse'
+        '401':
+          $ref: '#/components/responses/authError'
+        '500':
+          $ref: '#/components/responses/serverError'
+    put:
+      tags:
+        - Entities
+      summary: Update details for an organization that the logged in user owns.
+      operationId: Entities_updateOrganizationDetails
+      description: >-
+        A successful response from this resource will contain the updated
+        organization details.
+      parameters:
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: OrgID
+          name: org_id
+          in: query
+          required: true
+          schema:
+            type: string
+      requestBody:
+        $ref: '#/components/requestBodies/EntitiesPutPostRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/organizationsPutPostResponse'
+        '400':
+          $ref: '#/components/responses/badReqError'
+        '401':
+          $ref: '#/components/responses/authError'
+        '403':
+          $ref: '#/components/responses/permissionsError'
+        '500':
+          $ref: '#/components/responses/serverError'
+    post:
+      tags:
+        - Entities
+      summary: Create a new organization owned by the logged in user.
+      operationId: Entities_createNewOrganization
+      description: >-
+        A successful response from this resource will contain the json encoded
+        organization details.
+      requestBody:
+        $ref: '#/components/requestBodies/EntitiesPutPostRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/organizationsPutPostResponse'
+        '401':
+          $ref: '#/components/responses/authError'
+        '500':
+          $ref: '#/components/responses/serverError'
+    delete:
+      tags:
+        - Entities
+      summary: Delete an organization owned by the logged in user.
+      operationId: Entities_removeOrganization
+      description: >-
+        Delete operations will cascade to projects and VMs, and all members will
+        be removed from the organization.
+      parameters:
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: OrgID
+          name: org_id
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/emptyResponse'
+        '401':
+          $ref: '#/components/responses/authError'
+        '403':
+          $ref: '#/components/responses/permissionsError'
+        '500':
+          $ref: '#/components/responses/serverError'
+  /organizations/projects:
+    get:
+      tags:
+        - Projects
+      summary: >-
+        Retrieve details about projects that the logged in user belongs to or
+        owns.
+      operationId: Projects_getDetails
+      description: >-
+        If querying for projects within an organization, the logged in user must
+        be the owner of the organization.
+      parameters:
+        - example: ee2a6bc3-aed5-4756-8995-9990a53d3a17
+          x-go-name: OrgID
+          name: org_id
+          in: query
+          schema:
+            type: string
+        - example: default
+          x-go-name: ProjectName
+          name: project_name
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/listProjectsResponse'
+        '401':
+          $ref: '#/components/responses/authError'
+        '500':
+          $ref: '#/components/responses/serverError'
+    put:
+      tags:
+        - Projects
+      summary: Update details for a project that the logged in user owns.
+      operationId: Projects_updateDetails
+      description: >-
+        Requests to this resource must contain the json-encoded representation
+        of the changes they want to make to the project.
+
+        Currently only the project's name can be changed.
+      parameters:
+        - example: f058d0db-2fa4-4cf2-8cf1-dfbcfe05a814
+          x-go-name: ProjectID
+          name: project_id
+          in: query
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectsPutRequest'
+        required: true
+      responses:
+        '200':
+          $ref: '#/components/responses/projectsPutPostResponse'
+        '400':
+          $ref: '#/components/responses/badReqError'
+        '401':
+          $ref: '#/components/responses/authError'
+        '403':
+          $ref: '#/components/responses/permissionsError'
+        '500':
+          $ref: '#/components/responses/serverError'
+    post:
+      tags:
+        - Projects
+      summary: Create a new project that will be owned by the logged in user.
+      operationId: Projects_createOwnedProject
+      description: >-
+        The logged in user must have the permission to create projects within
+        the organization.
+
+        A successful response from this resource contains details of the created
+        project.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectsPostRequest'
+        required: true
+      responses:
+        '200':
+          $ref: '#/components/responses/projectsPutPostResponse'
+        '400':
+          $ref: '#/components/responses/badReqError'
+        '401':
+          $ref: '#/components/responses/authError'
+        '403':
+          $ref: '#/components/responses/permissionsError'
+        '500':
+          $ref: '#/components/responses/serverError'
+  /organizations/projects/{project_id}:
+    get:
+      tags:
+        - Projects
+      summary: >-
+        Retrieve details about a project that the logged in user belongs to or
+        owns.
+      operationId: Projects_getDetails
+      parameters:
+        - example: ee2a6bc3-aed5-4756-8995-9990a53d3a17
+          x-go-name: ProjectID
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/getProjectResponse'
+        '401':
+          $ref: '#/components/responses/authError'
+        '500':
+          $ref: '#/components/responses/serverError'
+    delete:
+      tags:
+        - Projects
+      summary: Delete a project that the logged in user owns.
+      operationId: Projects_deleteOwnedProject
+      description: Delete operations cascade to VMs created under that project.
+      parameters:
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: ProjectID
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/emptyResponse'
+        '401':
+          $ref: '#/components/responses/authError'
+        '403':
+          $ref: '#/components/responses/permissionsError'
+        '500':
+          $ref: '#/components/responses/serverError'
+  /organizations/prospects:
+    post:
+      tags:
+        - Prospects
+      summary: Create a new prospective customer in Crusoe Cloud.
+      operationId: Prospects_createNewProspect
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProspectPostRequest'
+        required: true
+      responses:
+        '200':
+          $ref: '#/components/responses/prospectPostResponse'
+        '400':
+          $ref: '#/components/responses/badReqError'
+        '500':
+          $ref: '#/components/responses/serverError'
+  /organizations/usage:
+    get:
+      tags:
+        - Usage
+      summary: Get project-level usage for products in Crusoe Cloud.
+      operationId: Usage_getProjectUsage
+      parameters:
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: OrgID
+          name: org_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - example:
+            - d8f58dfd-dd86-4ee4-8f01-643e6d0f15bb
+          x-go-name: Projects
+          name: projects
+          in: query
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+        - example:
+            - persistent-ssd
+            - a40.1x
+          x-go-name: ResourceTypes
+          name: resource_types
+          in: query
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+        - example:
+            - us-east1
+            - us-northcentral1
+          x-go-name: Regions
+          name: regions
+          in: query
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+        - example: '"2022-07-01"'
+          x-go-name: StartDate
+          name: start_date
+          in: query
+          required: true
+          schema:
+            type: string
+        - example: '"2023-08-08"'
+          x-go-name: EndDate
+          name: end_date
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/usageGetResponse'
+        '400':
+          $ref: '#/components/responses/badReqError'
+        '500':
+          $ref: '#/components/responses/serverError'
+  /organizations/usage/export:
+    get:
+      tags:
+        - Usage
+      summary: Get resource-level usage for products in Crusoe Cloud.
+      operationId: Usage_exportResourceUsage
+      parameters:
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: OrgID
+          name: org_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - example:
+            - d8f58dfd-dd86-4ee4-8f01-643e6d0f15bb
+          x-go-name: Projects
+          name: projects
+          in: query
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+        - example:
+            - d8f58dfd-dd86-4ee4-8f01-643e6d0f15bb
+          x-go-name: Resources
+          name: resources
+          in: query
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+        - example:
+            - persistent-ssd
+            - a40.1x
+          x-go-name: ResourceTypes
+          name: resource_types
+          in: query
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+        - example:
+            - us-east1
+            - us-northcentral1
+          x-go-name: Regions
+          name: regions
+          in: query
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+        - example: '"2022-07-01"'
+          x-go-name: StartDate
+          name: start_date
+          in: query
+          required: true
+          schema:
+            type: string
+        - example: '"2023-08-08"'
+          x-go-name: EndDate
+          name: end_date
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/usageExportGetResponse'
+        '400':
+          $ref: '#/components/responses/badReqError'
+        '500':
+          $ref: '#/components/responses/serverError'
+  /organizations/usage/options:
+    get:
+      tags:
+        - Usage
+      summary: Get options which exist for filters for /usage and /usage/export routes.
+      operationId: Usage_getOptionFilters
+      parameters:
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: OrgID
+          name: org_id
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/usageOptionsGetResponse'
+        '500':
+          $ref: '#/components/responses/serverError'
+  /projects/{project_id}/compute/instance-groups:
+    get:
+      tags:
+        - Instance-Groups
+      summary: Lists all instance groups.
+      operationId: InstanceGroups_listAll
+      parameters:
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: ProjectID
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/listInstanceGroupsResponse'
+        '401':
+          $ref: '#/components/responses/authError'
+        '500':
+          $ref: '#/components/responses/serverError'
+    post:
+      tags:
+        - Instance-Groups
+      summary: Create an instance group.
+      operationId: InstanceGroups_createInstanceGroup
+      parameters:
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: ProjectID
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InstanceGroupPostRequest'
+        required: true
+      responses:
+        '200':
+          $ref: '#/components/responses/createInstanceGroupResponse'
+        '400':
+          $ref: '#/components/responses/badReqError'
+        '401':
+          $ref: '#/components/responses/authError'
+        '500':
+          $ref: '#/components/responses/serverError'
+  /projects/{project_id}/compute/instance-groups/{instance_group_id}:
+    get:
+      tags:
+        - Instance-Groups
+      summary: Retrieve details about an instance group.
+      operationId: InstanceGroups_getDetails
+      parameters:
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: InstanceGroupID
+          name: instance_group_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: ProjectID
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/getInstanceGroupResponse'
+        '400':
+          $ref: '#/components/responses/badReqError'
+        '401':
+          $ref: '#/components/responses/authError'
+        '404':
+          $ref: '#/components/responses/notFoundError'
+        '500':
+          $ref: '#/components/responses/serverError'
+    delete:
+      tags:
+        - Instance-Groups
+      summary: Delete an instance group.
+      operationId: InstanceGroups_removeInstanceGroup
+      parameters:
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: InstanceGroupID
+          name: instance_group_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: ProjectID
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/emptyResponse'
+        '400':
+          $ref: '#/components/responses/badReqError'
+        '401':
+          $ref: '#/components/responses/authError'
+        '500':
+          $ref: '#/components/responses/serverError'
+    patch:
+      tags:
+        - Instance-Groups
+      summary: Update an instance group.
+      operationId: InstanceGroups_updateInstanceGroup
+      parameters:
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: InstanceGroupID
+          name: instance_group_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: ProjectID
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InstanceGroupPatchRequest'
+        required: true
+      responses:
+        '200':
+          $ref: '#/components/responses/patchInstanceGroupResponse'
+        '400':
+          $ref: '#/components/responses/badReqError'
+        '401':
+          $ref: '#/components/responses/authError'
+        '500':
+          $ref: '#/components/responses/serverError'
+  /projects/{project_id}/compute/instance-templates:
+    get:
+      tags:
+        - Instance-Templates
+      summary: Lists all VM instance templates available for use.
+      operationId: InstanceTemplates_listAvailableVmTemplates
+      parameters:
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: ProjectID
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/listInstanceTemplatesResponse'
+        '401':
+          $ref: '#/components/responses/authError'
+        '500':
+          $ref: '#/components/responses/serverError'
+    post:
+      tags:
+        - Instance-Templates
+      summary: Create a VM instance template, for use in bulk VM creation.
+      operationId: InstanceTemplates_createVmTemplate
+      parameters:
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: ProjectID
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InstanceTemplatePostRequestV1Alpha5'
+        required: true
+      responses:
+        '200':
+          $ref: '#/components/responses/createInstanceTemplateResponse'
+        '400':
+          $ref: '#/components/responses/badReqError'
+        '401':
+          $ref: '#/components/responses/authError'
+        '500':
+          $ref: '#/components/responses/serverError'
+  /projects/{project_id}/compute/instance-templates/{instance_template_id}:
+    get:
+      tags:
+        - Instance-Templates
+      summary: Retrieve details about a VM instance template.
+      operationId: InstanceTemplates_getDetails
+      parameters:
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: InstanceTemplateID
+          name: instance_template_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: ProjectID
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/getInstanceTemplateResponse'
+        '400':
+          $ref: '#/components/responses/badReqError'
+        '401':
+          $ref: '#/components/responses/authError'
+        '404':
+          $ref: '#/components/responses/notFoundError'
+        '500':
+          $ref: '#/components/responses/serverError'
+    delete:
+      tags:
+        - Instance-Templates
+      summary: Delete a VM instance template.
+      operationId: InstanceTemplates_deleteVmTemplate
+      parameters:
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: InstanceTemplateID
+          name: instance_template_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: ProjectID
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/emptyResponse'
+        '400':
+          $ref: '#/components/responses/badReqError'
+        '401':
+          $ref: '#/components/responses/authError'
+        '500':
+          $ref: '#/components/responses/serverError'
+  /projects/{project_id}/compute/vms/bulk-instances:
+    post:
+      tags:
+        - VMs
+      summary: Create new VM instances owned by the logged in user.
+      operationId: VMs_createBulkInstances
+      parameters:
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: ProjectID
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BulkInstancePostRequestV1Alpha5'
+        required: true
+      responses:
+        '200':
+          $ref: '#/components/responses/asyncOperationResponse'
+        '400':
+          $ref: '#/components/responses/badReqError'
+        '401':
+          $ref: '#/components/responses/authError'
+        '403':
+          $ref: '#/components/responses/permissionsError'
+        '500':
+          $ref: '#/components/responses/serverError'
+  /projects/{project_id}/compute/vms/instances:
+    get:
+      tags:
+        - VMs
+      summary: >-
+        Retrieve details about all VMs that the logged in user owns or has
+        access to.
+      operationId: VMs_getAllOwnedInstances
+      parameters:
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: ProjectID
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: IDs
+          name: ids
+          in: query
+          schema:
+            type: string
+        - example: my-first-vm
+          x-go-name: Names
+          name: names
+          in: query
+          schema:
+            type: string
+        - example: a40.2x,a100.8x
+          x-go-name: Types
+          name: types
+          in: query
+          schema:
+            type: string
+        - example: us-east1,us-northcentral1
+          x-go-name: Locations
+          name: locations
+          in: query
+          schema:
+            type: string
+        - example: STATE_RUNNING
+          x-go-name: States
+          name: states
+          in: query
+          schema:
+            type: string
+        - example: '20'
+          x-go-name: Limit
+          name: limit
+          in: query
+          schema:
+            type: string
+        - example: name
+          x-go-name: Sort
+          name: sort
+          in: query
+          schema:
+            type: string
+        - example: bXktZmlyc3Qtdm0
+          x-go-name: NextToken
+          name: next_token
+          in: query
+          schema:
+            type: string
+        - example: bXktZmlyc3Qtdm0
+          x-go-name: PrevToken
+          name: prev_token
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/listInstancesResponse'
+        '401':
+          $ref: '#/components/responses/authError'
+        '500':
+          $ref: '#/components/responses/serverError'
+    post:
+      tags:
+        - VMs
+      summary: Create a new VM instance owned by the logged in user.
+      operationId: VMs_createInstance
+      parameters:
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: ProjectID
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InstancesPostRequestV1Alpha5'
+        required: true
+      responses:
+        '200':
+          $ref: '#/components/responses/asyncOperationResponse'
+        '400':
+          $ref: '#/components/responses/badReqError'
+        '401':
+          $ref: '#/components/responses/authError'
+        '403':
+          $ref: '#/components/responses/permissionsError'
+        '500':
+          $ref: '#/components/responses/serverError'
+  /projects/{project_id}/compute/vms/instances/operations:
+    get:
+      tags:
+        - VM-Operations
+      summary: Get status of asynchronous operations
+      operationId: VmOperations_getStatusOfOperations
+      description: >-
+        This resource retrieves information about the status of asynchronous
+        operations initiated by
+
+        the instances resource. All operations that are either in-flight or
+        completed but not yet
+
+        queried will be returned.
+      parameters:
+        - example: 452580d7-41d1-4b63-b4d7-4e4e21e95f96
+          x-go-name: ResourceID
+          name: resource_id
+          in: query
+          schema:
+            type: string
+        - example:
+            - IN_PROGRESS
+          x-go-name: State
+          name: state
+          in: query
+          style: form
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+        - example: '2021-12-03T19:58:34Z'
+          x-go-name: LowerTimeBound
+          name: lower_time_bound
+          in: query
+          schema:
+            type: string
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: ProjectID
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/listOperationsResponse'
+        '401':
+          $ref: '#/components/responses/authError'
+        '403':
+          $ref: '#/components/responses/permissionsError'
+        '500':
+          $ref: '#/components/responses/serverError'
+  /projects/{project_id}/compute/vms/instances/operations/{operation_id}:
+    get:
+      tags:
+        - VM-Operations
+      summary: Get the status of a single asynchronous operation
+      operationId: VmOperations_getStatusOfOperation
+      description: >-
+        This resource retrieves information about the status of an asynchronous
+        operation initiated by
+
+        the instances resource. Only information about the operation specified
+        in the path will be returned,
+
+        or an HTTP 403 will be returned if the operation does not exist, was not
+        initiated by the logged
+
+        in user, or has expired.
+      parameters:
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: ProjectID
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: OperationID
+          name: operation_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/getOperationResponse'
+        '400':
+          $ref: '#/components/responses/badReqError'
+        '401':
+          $ref: '#/components/responses/authError'
+        '403':
+          $ref: '#/components/responses/permissionsError'
+        '500':
+          $ref: '#/components/responses/serverError'
+  /projects/{project_id}/compute/vms/instances/{vm_id}:
+    get:
+      tags:
+        - VMs
+      summary: Retrieve details about a particular VM.
+      operationId: VMs_getDetails
+      parameters:
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: ProjectID
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: VMID
+          name: vm_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/getInstanceResponse'
+        '400':
+          $ref: '#/components/responses/badReqError'
+        '401':
+          $ref: '#/components/responses/authError'
+        '403':
+          $ref: '#/components/responses/permissionsError'
+        '500':
+          $ref: '#/components/responses/serverError'
+    delete:
+      tags:
+        - VMs
+      summary: Delete a VM that the logged in user owns.
+      operationId: VMs_deleteInstance
+      parameters:
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: ProjectID
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: VMID
+          name: vm_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/asyncOperationResponse'
+        '401':
+          $ref: '#/components/responses/authError'
+        '403':
+          $ref: '#/components/responses/permissionsError'
+        '500':
+          $ref: '#/components/responses/serverError'
+    patch:
+      tags:
+        - VMs
+      summary: Change the state of a VM the logged in user owns.
+      operationId: VMs_changeState
+      parameters:
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: ProjectID
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: VMID
+          name: vm_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InstancesPatchRequestV1Alpha5'
+        required: true
+      responses:
+        '200':
+          $ref: '#/components/responses/asyncOperationResponse'
+        '400':
+          $ref: '#/components/responses/badReqError'
+        '401':
+          $ref: '#/components/responses/authError'
+        '403':
+          $ref: '#/components/responses/permissionsError'
+        '500':
+          $ref: '#/components/responses/serverError'
+  /projects/{project_id}/compute/vms/instances/{vm_id}/attach-disks:
+    post:
+      tags:
+        - VMs
+      summary: Attach disks to a VM the logged in user owns.
+      operationId: VMs_attachDisksToInstance
+      parameters:
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: ProjectID
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: VMID
+          name: vm_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InstancesAttachDiskPostRequestV1Alpha5'
+        required: true
+      responses:
+        '200':
+          $ref: '#/components/responses/asyncOperationResponse'
+        '400':
+          $ref: '#/components/responses/badReqError'
+        '401':
+          $ref: '#/components/responses/authError'
+        '403':
+          $ref: '#/components/responses/permissionsError'
+        '500':
+          $ref: '#/components/responses/serverError'
+  /projects/{project_id}/compute/vms/instances/{vm_id}/detach-disks:
+    post:
+      tags:
+        - VMs
+      summary: Detach disks from a VM the logged in user owns.
+      operationId: VMs_detachDiskFromInstance
+      parameters:
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: ProjectID
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: VMID
+          name: vm_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InstancesDetachDiskPostRequest'
+        required: true
+      responses:
+        '200':
+          $ref: '#/components/responses/asyncOperationResponse'
+        '400':
+          $ref: '#/components/responses/badReqError'
+        '401':
+          $ref: '#/components/responses/authError'
+        '403':
+          $ref: '#/components/responses/permissionsError'
+        '500':
+          $ref: '#/components/responses/serverError'
+  /projects/{project_id}/compute/vms/types:
+    get:
+      tags:
+        - VMs
+      summary: >-
+        Retrieve information about the types of VMs that are available to
+        purchase along with their prices.
+      operationId: VMs_getAvailableTypes
+      parameters:
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: ProjectID
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/typesGetResponse'
+        '401':
+          $ref: '#/components/responses/authError'
+        '500':
+          $ref: '#/components/responses/serverError'
+  /projects/{project_id}/networking/ib-networks:
+    get:
+      tags:
+        - IB-Networks
+      summary: Retrieve details for all Infiniband networks.
+      operationId: IbNetworks_getAllDetails
+      parameters:
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: ProjectID
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/listIbNetworksResponse'
+        '401':
+          $ref: '#/components/responses/authError'
+        '500':
+          $ref: '#/components/responses/serverError'
+  /projects/{project_id}/networking/ib-networks/{ib_network_id}:
+    get:
+      tags:
+        - IB-Networks
+      summary: Retrieve details for an Infiniband network.
+      operationId: IbNetworks_getDetails
+      parameters:
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: ProjectID
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: IBNetworkID
+          name: ib_network_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/getIbNetworkResponse'
+        '400':
+          $ref: '#/components/responses/badReqError'
+        '401':
+          $ref: '#/components/responses/authError'
+        '500':
+          $ref: '#/components/responses/serverError'
+  /projects/{project_id}/networking/ib-partitions:
+    get:
+      tags:
+        - IB-Partitions
+      summary: Retrieve details for all Infiniband partitions that belongs to the user.
+      operationId: IbPartitions_getAllPartitionsBelongsToUser
+      parameters:
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: ProjectID
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/listIBPartitionsResponse'
+        '401':
+          $ref: '#/components/responses/authError'
+        '403':
+          $ref: '#/components/responses/permissionsError'
+        '500':
+          $ref: '#/components/responses/serverError'
+    post:
+      tags:
+        - IB-Partitions
+      summary: Create a new Infiniband partition owned by the logged in user.
+      operationId: IbPartitions_createNewPartition
+      parameters:
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: ProjectID
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IBPartitionsPostRequestV1Alpha5'
+        required: true
+      responses:
+        '200':
+          $ref: '#/components/responses/ibPartitionsPostResponse'
+        '400':
+          $ref: '#/components/responses/badReqError'
+        '401':
+          $ref: '#/components/responses/authError'
+        '403':
+          $ref: '#/components/responses/permissionsError'
+        '500':
+          $ref: '#/components/responses/serverError'
+  /projects/{project_id}/networking/ib-partitions/{ib_partition_id}:
+    get:
+      tags:
+        - IB-Partitions
+      summary: Retrieve details for an Infiniband partition that belongs to the user.
+      operationId: IbPartitions_getDetails
+      parameters:
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: ProjectID
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: IBPartitionID
+          name: ib_partition_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/getIbPartitionResponse'
+        '400':
+          $ref: '#/components/responses/badReqError'
+        '401':
+          $ref: '#/components/responses/authError'
+        '403':
+          $ref: '#/components/responses/permissionsError'
+        '500':
+          $ref: '#/components/responses/serverError'
+    delete:
+      tags:
+        - IB-Partitions
+      summary: Delete an Infiniband partition owned by the logged in user.
+      operationId: IbPartitions_deleteById
+      parameters:
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: ProjectID
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: IBPartitionID
+          name: ib_partition_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/emptyResponse'
+        '400':
+          $ref: '#/components/responses/badReqError'
+        '401':
+          $ref: '#/components/responses/authError'
+        '403':
+          $ref: '#/components/responses/permissionsError'
+        '500':
+          $ref: '#/components/responses/serverError'
+  /projects/{project_id}/networking/load-balancers:
+    get:
+      tags:
+        - Load-Balancers
+      summary: >-
+        Retrieve details about all load balancers that belong to the logged in
+        user.
+      operationId: LoadBalancers_getAllDetails
+      parameters:
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: ProjectID
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/listLoadBalancersResponse'
+        '401':
+          $ref: '#/components/responses/authError'
+        '403':
+          $ref: '#/components/responses/permissionsError'
+        '500':
+          $ref: '#/components/responses/serverError'
+    post:
+      tags:
+        - Load-Balancers
+      summary: Create a new load balancer owned by the logged in user.
+      operationId: LoadBalancers_createOwnedBalancer
+      description: >-
+        A successful response from this resource will contain the async
+        operation.
+      parameters:
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: ProjectID
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoadBalancersPostRequest'
+        required: true
+      responses:
+        '200':
+          $ref: '#/components/responses/asyncOperationResponse'
+        '400':
+          $ref: '#/components/responses/badReqError'
+        '401':
+          $ref: '#/components/responses/authError'
+        '403':
+          $ref: '#/components/responses/permissionsError'
+        '500':
+          $ref: '#/components/responses/serverError'
+  /projects/{project_id}/networking/load-balancers/operations:
+    get:
+      tags:
+        - Load-Balancer-Operations
+      summary: Get status of asynchronous operations
+      operationId: LoadBalancerOperations_getStatus
+      description: >-
+        This resource retrieves information about the status of asynchronous
+        operations initiated by
+
+        the Load Balancers resource. All operations that are either in-flight or
+        completed but not yet
+
+        queried will be returned.
+      parameters:
+        - example: 452580d7-41d1-4b63-b4d7-4e4e21e95f96
+          x-go-name: ResourceID
+          name: resource_id
+          in: query
+          schema:
+            type: string
+        - example:
+            - IN_PROGRESS
+          x-go-name: State
+          name: state
+          in: query
+          style: form
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: ProjectID
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/listOperationsResponse'
+        '401':
+          $ref: '#/components/responses/authError'
+        '403':
+          $ref: '#/components/responses/permissionsError'
+        '500':
+          $ref: '#/components/responses/serverError'
+  /projects/{project_id}/networking/load-balancers/operations/{operation_id}:
+    get:
+      tags:
+        - Load-Balancer-Operations
+      summary: Get status of a single asynchronous operation
+      operationId: LoadBalancerOperations_getStatus
+      description: >-
+        This resource retrieves information about the status of an asynchronous
+        operation initiated by
+
+        the Load Balancer resource. Only information about the operation
+        specified in the path will be returned,
+
+        or an HTTP 403 will be returned if the operation does not exist, was not
+        initiated by the logged
+
+        in user, or has expired.
+      parameters:
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: ProjectID
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: OperationID
+          name: operation_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/getOperationResponse'
+        '400':
+          $ref: '#/components/responses/badReqError'
+        '401':
+          $ref: '#/components/responses/authError'
+        '403':
+          $ref: '#/components/responses/permissionsError'
+        '500':
+          $ref: '#/components/responses/serverError'
+  /projects/{project_id}/networking/load-balancers/{load_balancer_id}:
+    get:
+      tags:
+        - Load-Balancers
+      summary: Retrieve details for a load balancer that belongs to the logged in user.
+      operationId: LoadBalancers_getDetails
+      parameters:
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: ProjectID
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: LoadBalancerID
+          name: load_balancer_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/getLoadBalancerResponse'
+        '401':
+          $ref: '#/components/responses/authError'
+        '403':
+          $ref: '#/components/responses/permissionsError'
+        '500':
+          $ref: '#/components/responses/serverError'
+    delete:
+      tags:
+        - Load-Balancers
+      summary: Delete a load balancer owned by the logged in user.
+      operationId: LoadBalancers_removeOwnedBalancer
+      description: >-
+        A successful response from this resource will contain the async
+        operation.
+      parameters:
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: ProjectID
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: LoadBalancerID
+          name: load_balancer_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/asyncOperationResponse'
+        '401':
+          $ref: '#/components/responses/authError'
+        '403':
+          $ref: '#/components/responses/permissionsError'
+        '500':
+          $ref: '#/components/responses/serverError'
+    patch:
+      tags:
+        - Load-Balancers
+      summary: Patch (update) a load balancer owned by the logged in user.
+      operationId: LoadBalancers_updateAsyncOperation
+      description: >-
+        A successful response from this resource will contain the async
+        operation.
+
+        To disable health checking, pass "health_check": {"port": 0}
+      parameters:
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: ProjectID
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: LoadBalancerID
+          name: load_balancer_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoadBalancersPatchRequestV1Alpha5'
+        required: true
+      responses:
+        '200':
+          $ref: '#/components/responses/asyncOperationResponse'
+        '400':
+          $ref: '#/components/responses/badReqError'
+        '401':
+          $ref: '#/components/responses/authError'
+        '403':
+          $ref: '#/components/responses/permissionsError'
+        '500':
+          $ref: '#/components/responses/serverError'
+  /projects/{project_id}/networking/vpc-firewall-rules:
+    get:
+      tags:
+        - VPC-Firewall-Rules
+      summary: >-
+        Retrieve details about all VPC firewall rules that belong to the logged
+        in user.
+      operationId: VpcFirewallRules_getAllDetails
+      parameters:
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: ProjectID
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/listVpcFirewallRulesResponse'
+        '401':
+          $ref: '#/components/responses/authError'
+        '403':
+          $ref: '#/components/responses/permissionsError'
+        '500':
+          $ref: '#/components/responses/serverError'
+    post:
+      tags:
+        - VPC-Firewall-Rules
+      summary: Create a new VPC firewall rule owned by the logged in user.
+      operationId: VpcFirewallRules_createNewRule
+      description: >-
+        A successful response from this resource will contain the async
+        operation.
+      parameters:
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: ProjectID
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VPCFirewallRulesPostRequestV1Alpha5'
+        required: true
+      responses:
+        '200':
+          $ref: '#/components/responses/asyncOperationResponse'
+        '400':
+          $ref: '#/components/responses/badReqError'
+        '401':
+          $ref: '#/components/responses/authError'
+        '403':
+          $ref: '#/components/responses/permissionsError'
+        '500':
+          $ref: '#/components/responses/serverError'
+  /projects/{project_id}/networking/vpc-firewall-rules/operations:
+    get:
+      tags:
+        - VPC-Firewall-Rule-Operations
+      summary: Get status of asynchronous operations
+      operationId: VpcFirewallRuleOperations_getStatus
+      description: >-
+        This resource retrieves information about the status of asynchronous
+        operations initiated by
+
+        the snapshots resource. All operations that are either in-flight or
+        completed but not yet
+
+        queried will be returned.
+      parameters:
+        - example: 452580d7-41d1-4b63-b4d7-4e4e21e95f96
+          x-go-name: ResourceID
+          name: resource_id
+          in: query
+          schema:
+            type: string
+        - example:
+            - IN_PROGRESS
+          x-go-name: State
+          name: state
+          in: query
+          style: form
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: ProjectID
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/listOperationsResponse'
+        '401':
+          $ref: '#/components/responses/authError'
+        '403':
+          $ref: '#/components/responses/permissionsError'
+        '500':
+          $ref: '#/components/responses/serverError'
+  /projects/{project_id}/networking/vpc-firewall-rules/operations/{operation_id}:
+    get:
+      tags:
+        - VPC-Firewall-Rule-Operations
+      summary: Get status of a single asynchronous operation
+      operationId: VpcFirewallRuleOperations_getStatus
+      description: >-
+        This resource retrieves information about the status of an asynchronous
+        operation initiated by
+
+        the snapshots resource. Only information about the operation specified
+        in the path will be returned,
+
+        or an HTTP 403 will be returned if the operation does not exist, was not
+        initiated by the logged
+
+        in user, or has expired.
+      parameters:
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: ProjectID
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: OperationID
+          name: operation_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/getOperationResponse'
+        '400':
+          $ref: '#/components/responses/badReqError'
+        '401':
+          $ref: '#/components/responses/authError'
+        '403':
+          $ref: '#/components/responses/permissionsError'
+        '500':
+          $ref: '#/components/responses/serverError'
+  /projects/{project_id}/networking/vpc-firewall-rules/{vpc_firewall_rule_id}:
+    get:
+      tags:
+        - VPC-Firewall-Rules
+      summary: >-
+        Retrieve details for a VPC firewall rule that belongs to the logged in
+        user.
+      operationId: VpcFirewallRules_getDetails
+      parameters:
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: ProjectID
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: VPCFirewallRuleID
+          name: vpc_firewall_rule_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/getVpcFirewallRuleResponse'
+        '401':
+          $ref: '#/components/responses/authError'
+        '403':
+          $ref: '#/components/responses/permissionsError'
+        '500':
+          $ref: '#/components/responses/serverError'
+    delete:
+      tags:
+        - VPC-Firewall-Rules
+      summary: Delete a VPC firewall rule owned by the logged in user.
+      operationId: VpcFirewallRules_deleteRule
+      description: >-
+        A successful response from this resource will contain the async
+        operation.
+      parameters:
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: ProjectID
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: VPCFirewallRuleID
+          name: vpc_firewall_rule_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/asyncOperationResponse'
+        '401':
+          $ref: '#/components/responses/authError'
+        '403':
+          $ref: '#/components/responses/permissionsError'
+        '500':
+          $ref: '#/components/responses/serverError'
+    patch:
+      tags:
+        - VPC-Firewall-Rules
+      summary: Patch (update) a VPC firewall rule owned by the logged in user.
+      operationId: VpcFirewallRules_updateOwnedRule
+      description: >-
+        A successful response from this resource will contain the async
+        operation.
+      parameters:
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: ProjectID
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: VPCFirewallRuleID
+          name: vpc_firewall_rule_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VPCFirewallRulesPatchRequest'
+        required: true
+      responses:
+        '200':
+          $ref: '#/components/responses/asyncOperationResponse'
+        '400':
+          $ref: '#/components/responses/badReqError'
+        '401':
+          $ref: '#/components/responses/authError'
+        '403':
+          $ref: '#/components/responses/permissionsError'
+        '500':
+          $ref: '#/components/responses/serverError'
+  /projects/{project_id}/networking/vpc-networks:
+    get:
+      tags:
+        - VPC-Networks
+      summary: >-
+        Retrieve details about all VPC networks that belong to the logged in
+        user.
+      operationId: VpcNetworks_getAllDetails
+      parameters:
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: ProjectID
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/listVPCNetworksResponse'
+        '401':
+          $ref: '#/components/responses/authError'
+        '403':
+          $ref: '#/components/responses/permissionsError'
+        '500':
+          $ref: '#/components/responses/serverError'
+    post:
+      tags:
+        - VPC-Networks
+      summary: Create a new VPC network owned by the logged in user.
+      operationId: VpcNetworks_createNewVpcNetwork
+      description: >-
+        A successful response from this resource will contain information
+        regarding the created VPC network.
+      parameters:
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: ProjectID
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VPCNetworkPostRequest'
+        required: true
+      responses:
+        '200':
+          $ref: '#/components/responses/vpcNetworkPostResponse'
+        '400':
+          $ref: '#/components/responses/badReqError'
+        '401':
+          $ref: '#/components/responses/authError'
+        '403':
+          $ref: '#/components/responses/permissionsError'
+        '500':
+          $ref: '#/components/responses/serverError'
+  /projects/{project_id}/networking/vpc-networks/operations:
+    get:
+      tags:
+        - VPC-Network-Operations
+      summary: Get status of asynchronous operations
+      operationId: VpcNetworkOperations_getStatusAsynchronousOperations
+      description: >-
+        This resource retrieves information about the status of asynchronous
+        operations initiated by
+
+        the VPC Networks resource. All operations that are either in-flight or
+        completed but not yet
+
+        queried will be returned.
+      parameters:
+        - example: 452580d7-41d1-4b63-b4d7-4e4e21e95f96
+          x-go-name: ResourceID
+          name: resource_id
+          in: query
+          schema:
+            type: string
+        - example:
+            - IN_PROGRESS
+          x-go-name: State
+          name: state
+          in: query
+          style: form
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: ProjectID
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/listOperationsResponse'
+        '401':
+          $ref: '#/components/responses/authError'
+        '403':
+          $ref: '#/components/responses/permissionsError'
+        '500':
+          $ref: '#/components/responses/serverError'
+  /projects/{project_id}/networking/vpc-networks/operations/{operation_id}:
+    get:
+      tags:
+        - VPC-Network-Operations
+      summary: Get status of a single asynchronous operation
+      operationId: VpcNetworkOperations_getStatus
+      description: >-
+        This resource retrieves information about the status of an asynchronous
+        operation initiated by
+
+        the VPC Network resource. Only information about the operation specified
+        in the path will be returned,
+
+        or an HTTP 403 will be returned if the operation does not exist, was not
+        initiated by the logged
+
+        in user, or has expired.
+      parameters:
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: ProjectID
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: OperationID
+          name: operation_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/getOperationResponse'
+        '400':
+          $ref: '#/components/responses/badReqError'
+        '401':
+          $ref: '#/components/responses/authError'
+        '403':
+          $ref: '#/components/responses/permissionsError'
+        '500':
+          $ref: '#/components/responses/serverError'
+  /projects/{project_id}/networking/vpc-networks/{vpc_network_id}:
+    get:
+      tags:
+        - VPC-Networks
+      summary: Retrieve details for a VPC network that belongs to the logged in user.
+      operationId: VpcNetworks_getDetails
+      parameters:
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: ProjectID
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: VPCNetworkID
+          name: vpc_network_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/getVPCNetworkResponse'
+        '401':
+          $ref: '#/components/responses/authError'
+        '403':
+          $ref: '#/components/responses/permissionsError'
+        '500':
+          $ref: '#/components/responses/serverError'
+    delete:
+      tags:
+        - VPC-Networks
+      summary: Delete a VPC network owned by the logged in user.
+      operationId: VpcNetworks_deleteOwnedNetwork
+      description: >-
+        A successful response from this resource will contain the async
+        operation.
+      parameters:
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: ProjectID
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: VPCNetworkID
+          name: vpc_network_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/asyncOperationResponse'
+        '400':
+          $ref: '#/components/responses/badReqError'
+        '401':
+          $ref: '#/components/responses/authError'
+        '403':
+          $ref: '#/components/responses/permissionsError'
+        '404':
+          $ref: '#/components/responses/notFoundError'
+        '500':
+          $ref: '#/components/responses/serverError'
+    patch:
+      tags:
+        - VPC-Networks
+      summary: Patch (update) a VPC network owned by the logged in user.
+      operationId: VpcNetworks_updateAsyncOperation
+      description: >-
+        A successful response from this resource will contain the async
+        operation.
+      parameters:
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: ProjectID
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: VPCNetworkID
+          name: vpc_network_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VPCNetworkPatchRequest'
+        required: true
+      responses:
+        '200':
+          $ref: '#/components/responses/asyncOperationResponse'
+        '400':
+          $ref: '#/components/responses/badReqError'
+        '401':
+          $ref: '#/components/responses/authError'
+        '403':
+          $ref: '#/components/responses/permissionsError'
+        '404':
+          $ref: '#/components/responses/notFoundError'
+        '500':
+          $ref: '#/components/responses/serverError'
+  /projects/{project_id}/networking/vpc-subnets:
+    get:
+      tags:
+        - VPC-Subnets
+      summary: >-
+        Retrieve details about all VPC subnets that belong to the logged in
+        user.
+      operationId: VpcSubnets_list
+      parameters:
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: ProjectID
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/listVpcSubnetsResponse'
+        '401':
+          $ref: '#/components/responses/authError'
+        '403':
+          $ref: '#/components/responses/permissionsError'
+        '500':
+          $ref: '#/components/responses/serverError'
+    post:
+      tags:
+        - VPC-Subnets
+      summary: Create a new VPC subnet owned by the logged in user.
+      operationId: VpcSubnets_createNewSubnet
+      description: >-
+        A successful response from this resource will contain information
+        regarding the created subnet.
+      parameters:
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: ProjectID
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VPCSubnetPostRequest'
+        required: true
+      responses:
+        '200':
+          $ref: '#/components/responses/vpcSubnetPostResponse'
+        '400':
+          $ref: '#/components/responses/badReqError'
+        '401':
+          $ref: '#/components/responses/authError'
+        '403':
+          $ref: '#/components/responses/permissionsError'
+        '500':
+          $ref: '#/components/responses/serverError'
+  /projects/{project_id}/networking/vpc-subnets/operations:
+    get:
+      tags:
+        - VPC-Subnet-Operations
+      summary: Get status of asynchronous operations
+      operationId: VpcSubnetOperations_getStatus
+      description: >-
+        This resource retrieves information about the status of asynchronous
+        operations initiated by
+
+        the VPC Networks resource. All operations that are either in-flight or
+        completed but not yet
+
+        queried will be returned.
+      parameters:
+        - example: 452580d7-41d1-4b63-b4d7-4e4e21e95f96
+          x-go-name: ResourceID
+          name: resource_id
+          in: query
+          schema:
+            type: string
+        - example:
+            - IN_PROGRESS
+          x-go-name: State
+          name: state
+          in: query
+          style: form
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: ProjectID
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/listOperationsResponse'
+        '401':
+          $ref: '#/components/responses/authError'
+        '403':
+          $ref: '#/components/responses/permissionsError'
+        '500':
+          $ref: '#/components/responses/serverError'
+  /projects/{project_id}/networking/vpc-subnets/operations/{operation_id}:
+    get:
+      tags:
+        - VPC-Subnet-Operations
+      summary: Get status of a single asynchronous operation
+      operationId: VpcSubnetOperations_getStatus
+      description: >-
+        This resource retrieves information about the status of an asynchronous
+        operation initiated by
+
+        the VPC Subnet resource. Only information about the operation specified
+        in the path will be returned,
+
+        or an HTTP 403 will be returned if the operation does not exist, was not
+        initiated by the logged
+
+        in user, or has expired.
+      parameters:
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: ProjectID
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: OperationID
+          name: operation_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/getOperationResponse'
+        '400':
+          $ref: '#/components/responses/badReqError'
+        '401':
+          $ref: '#/components/responses/authError'
+        '403':
+          $ref: '#/components/responses/permissionsError'
+        '500':
+          $ref: '#/components/responses/serverError'
+  /projects/{project_id}/networking/vpc-subnets/{vpc_subnet_id}:
+    get:
+      tags:
+        - VPC-Subnets
+      summary: Retrieve details for a VPC subnet that belongs to the logged in user.
+      operationId: VpcSubnets_getDetails
+      parameters:
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: ProjectID
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: VPCSubnetID
+          name: vpc_subnet_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/getVpcSubnetResponse'
+        '401':
+          $ref: '#/components/responses/authError'
+        '403':
+          $ref: '#/components/responses/permissionsError'
+        '500':
+          $ref: '#/components/responses/serverError'
+    delete:
+      tags:
+        - VPC-Subnets
+      summary: Delete a VPC subnet owned by the logged in user.
+      operationId: VpcSubnets_deleteOwnedSubnet
+      description: >-
+        A successful response from this resource will contain the async
+        operation.
+      parameters:
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: ProjectID
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: VPCSubnetID
+          name: vpc_subnet_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/asyncOperationResponse'
+        '400':
+          $ref: '#/components/responses/badReqError'
+        '401':
+          $ref: '#/components/responses/authError'
+        '403':
+          $ref: '#/components/responses/permissionsError'
+        '404':
+          $ref: '#/components/responses/notFoundError'
+        '500':
+          $ref: '#/components/responses/serverError'
+    patch:
+      tags:
+        - VPC-Subnets
+      summary: Patch (update) a VPC subnet owned by the logged in user.
+      operationId: VpcSubnets_updateAsyncOperation
+      description: >-
+        A successful response from this resource will contain the async
+        operation.
+      parameters:
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: ProjectID
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: VPCSubnetID
+          name: vpc_subnet_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VPCSubnetPatchRequest'
+        required: true
+      responses:
+        '200':
+          $ref: '#/components/responses/asyncOperationResponse'
+        '400':
+          $ref: '#/components/responses/badReqError'
+        '401':
+          $ref: '#/components/responses/authError'
+        '403':
+          $ref: '#/components/responses/permissionsError'
+        '404':
+          $ref: '#/components/responses/notFoundError'
+        '500':
+          $ref: '#/components/responses/serverError'
+  /projects/{project_id}/storage/disks:
+    get:
+      tags:
+        - Disks
+      summary: Retrieve details about all disks that belong to the logged in user.
+      operationId: Disks_getAllDetails
+      description: Size of disks will be in gibibytes (GiB)
+      parameters:
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: ProjectID
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/listDisksResponse'
+        '401':
+          $ref: '#/components/responses/authError'
+        '403':
+          $ref: '#/components/responses/permissionsError'
+        '500':
+          $ref: '#/components/responses/serverError'
+    post:
+      tags:
+        - Disks
+      summary: Create a new disk owned by the logged in user.
+      operationId: Disks_createOwnedDisk
+      description: >-
+        Requires either a disk snapshot ID, or size and location, where size of
+        disk
+
+        should be in gibibytes (GiB) or tebibytes (TiB) in the format
+        [Size][Unit].
+
+        E.g. 10GiB. Disk type must be one of: DISK_TYPE_PERSISTENT_SSD.
+
+        A successful response from this resource will contain the async
+        operation.
+      parameters:
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: ProjectID
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DisksPostRequestV1Alpha5'
+        required: true
+      responses:
+        '200':
+          $ref: '#/components/responses/asyncOperationResponse'
+        '400':
+          $ref: '#/components/responses/badReqError'
+        '401':
+          $ref: '#/components/responses/authError'
+        '403':
+          $ref: '#/components/responses/permissionsError'
+        '500':
+          $ref: '#/components/responses/serverError'
+  /projects/{project_id}/storage/disks/operations:
+    get:
+      tags:
+        - Disk-Operations
+      summary: Get status of asynchronous operations
+      operationId: DiskOperations_getStatus
+      description: >-
+        This resource retrieves information about the status of asynchronous
+        operations initiated by
+
+        the disks resource. All operations that are either in-flight or
+        completed but not yet
+
+        queried will be returned.
+      parameters:
+        - example: 452580d7-41d1-4b63-b4d7-4e4e21e95f96
+          x-go-name: ResourceID
+          name: resource_id
+          in: query
+          schema:
+            type: string
+        - example:
+            - IN_PROGRESS
+          x-go-name: State
+          name: state
+          in: query
+          style: form
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: ProjectID
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/listOperationsResponse'
+        '401':
+          $ref: '#/components/responses/authError'
+        '403':
+          $ref: '#/components/responses/permissionsError'
+        '500':
+          $ref: '#/components/responses/serverError'
+  /projects/{project_id}/storage/disks/operations/{operation_id}:
+    get:
+      tags:
+        - Disk-Operations
+      summary: Get status of a single asynchronous operation
+      operationId: DiskOperations_getStatus
+      description: >-
+        This resource retrieves information about the status of an asynchronous
+        operation initiated by
+
+        the disks resource. Only information about the operation specified in
+        the path will be returned,
+
+        or an HTTP 403 will be returned if the operation does not exist, was not
+        initiated by the logged
+
+        in user, or has expired.
+      parameters:
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: ProjectID
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: OperationID
+          name: operation_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/getOperationResponse'
+        '400':
+          $ref: '#/components/responses/badReqError'
+        '401':
+          $ref: '#/components/responses/authError'
+        '403':
+          $ref: '#/components/responses/permissionsError'
+        '500':
+          $ref: '#/components/responses/serverError'
+  /projects/{project_id}/storage/disks/{disk_id}:
+    get:
+      tags:
+        - Disks
+      summary: Retrieve details for a disk that belongs to the logged in user.
+      operationId: Disks_getDetails
+      description: Size of disk will be in gibibytes (GiB)
+      parameters:
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: ProjectID
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: DiskID
+          name: disk_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/getDiskResponse'
+        '401':
+          $ref: '#/components/responses/authError'
+        '403':
+          $ref: '#/components/responses/permissionsError'
+        '500':
+          $ref: '#/components/responses/serverError'
+    delete:
+      tags:
+        - Disks
+      summary: Delete a disk owned by the logged in user.
+      operationId: Disks_deleteById
+      description: >-
+        A successful response from this resource will contain the async
+        operation.
+      parameters:
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: ProjectID
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: DiskID
+          name: disk_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/asyncOperationResponse'
+        '401':
+          $ref: '#/components/responses/authError'
+        '403':
+          $ref: '#/components/responses/permissionsError'
+        '500':
+          $ref: '#/components/responses/serverError'
+    patch:
+      tags:
+        - Disks
+      summary: Resize a disk that the logged in user owns.
+      operationId: Disks_resizeDiskSize
+      description: |-
+        Size should be in gibibytes (GiB) or tebibytes (TiB) in the format
+        [Size][Unit]. E.g. 10GiB A successful response from this resource will
+        contain the async operation.
+      parameters:
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: ProjectID
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: DiskID
+          name: disk_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DisksPatchRequest'
+        required: true
+      responses:
+        '200':
+          $ref: '#/components/responses/asyncOperationResponse'
+        '400':
+          $ref: '#/components/responses/badReqError'
+        '401':
+          $ref: '#/components/responses/authError'
+        '403':
+          $ref: '#/components/responses/permissionsError'
+        '500':
+          $ref: '#/components/responses/serverError'
+  /projects/{project_id}/storage/snapshots:
+    get:
+      tags:
+        - Snapshots
+      summary: >-
+        Retrieve details about all disk snapshots that belong to the logged in
+        user.
+      operationId: Snapshots_listUserSnapshots
+      description: Size of snapshots will be in bytes.
+      parameters:
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: ProjectID
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/listDiskSnapshotsResponse'
+        '400':
+          $ref: '#/components/responses/badReqError'
+        '401':
+          $ref: '#/components/responses/authError'
+        '403':
+          $ref: '#/components/responses/permissionsError'
+        '500':
+          $ref: '#/components/responses/serverError'
+    post:
+      tags:
+        - Snapshots
+      summary: Create a new snapshot for a disk owned by the logged in user.
+      operationId: Snapshots_createDiskSnapshot
+      description: >-
+        A successful response from this resource will contain the async
+        operation.
+      parameters:
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: ProjectID
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DiskSnapshotPostRequest'
+        required: true
+      responses:
+        '200':
+          $ref: '#/components/responses/asyncOperationResponse'
+        '401':
+          $ref: '#/components/responses/authError'
+        '403':
+          $ref: '#/components/responses/permissionsError'
+        '500':
+          $ref: '#/components/responses/serverError'
+  /projects/{project_id}/storage/snapshots/operations:
+    get:
+      tags:
+        - Snapshot-Operations
+      summary: Get status of asynchronous operations
+      operationId: SnapshotOperations_getStatus
+      description: >-
+        This resource retrieves information about the status of asynchronous
+        operations initiated by
+
+        the snapshots resource. All operations that are either in-flight or
+        completed but not yet
+
+        queried will be returned.
+      parameters:
+        - example: 452580d7-41d1-4b63-b4d7-4e4e21e95f96
+          x-go-name: ResourceID
+          name: resource_id
+          in: query
+          schema:
+            type: string
+        - example:
+            - IN_PROGRESS
+          x-go-name: State
+          name: state
+          in: query
+          style: form
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: ProjectID
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/listOperationsResponse'
+        '401':
+          $ref: '#/components/responses/authError'
+        '403':
+          $ref: '#/components/responses/permissionsError'
+        '500':
+          $ref: '#/components/responses/serverError'
+  /projects/{project_id}/storage/snapshots/operations/{operation_id}:
+    get:
+      tags:
+        - Snapshot-Operations
+      summary: Get status of a single asynchronous operation
+      operationId: SnapshotOperations_getStatusSingle
+      description: >-
+        This resource retrieves information about the status of an asynchronous
+        operation initiated by
+
+        the snapshots resource. Only information about the operation specified
+        in the path will be returned,
+
+        or an HTTP 403 will be returned if the operation does not exist, was not
+        initiated by the logged
+
+        in user, or has expired.
+      parameters:
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: ProjectID
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: OperationID
+          name: operation_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/getOperationResponse'
+        '400':
+          $ref: '#/components/responses/badReqError'
+        '401':
+          $ref: '#/components/responses/authError'
+        '403':
+          $ref: '#/components/responses/permissionsError'
+        '500':
+          $ref: '#/components/responses/serverError'
+  /projects/{project_id}/storage/snapshots/{snapshot_id}:
+    get:
+      tags:
+        - Snapshots
+      summary: >-
+        Retrieve details about a disk snapshot that belongs to the logged in
+        user.
+      operationId: Snapshots_getDetails
+      description: Size of snapshot will be in bytes.
+      parameters:
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: ProjectID
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: SnapshotID
+          name: snapshot_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/getSnapshotResponse'
+        '400':
+          $ref: '#/components/responses/badReqError'
+        '401':
+          $ref: '#/components/responses/authError'
+        '403':
+          $ref: '#/components/responses/permissionsError'
+        '500':
+          $ref: '#/components/responses/serverError'
+    delete:
+      tags:
+        - Snapshots
+      summary: Delete a disk snapshot owned by the logged in user.
+      operationId: Snapshots_deleteOwnedSnapshot
+      description: >-
+        A successful response from this resource will contain the async
+        operation.
+      parameters:
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: ProjectID
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          x-go-name: SnapshotID
+          name: snapshot_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/asyncOperationResponse'
+        '401':
+          $ref: '#/components/responses/authError'
+        '403':
+          $ref: '#/components/responses/permissionsError'
+        '500':
+          $ref: '#/components/responses/serverError'
+  /users/identities:
+    get:
+      tags:
+        - Identities
+      summary: Retrieve user details for the logged in user.
+      operationId: Identities_getUserDetails
+      responses:
+        '200':
+          $ref: '#/components/responses/usersGetResponse'
+        '401':
+          $ref: '#/components/responses/authError'
+        '500':
+          $ref: '#/components/responses/serverError'
+    put:
+      tags:
+        - Identities
+      summary: Update user details for the logged in user.
+      operationId: Identities_updateUserDetails
+      description: >-
+        A successful response from this resource wil contain the updated user
+        details.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IdentityPutRequest'
+        required: true
+      responses:
+        '200':
+          $ref: '#/components/responses/usersPutResponse'
+        '401':
+          $ref: '#/components/responses/authError'
+        '500':
+          $ref: '#/components/responses/serverError'
+    delete:
+      tags:
+        - Identities
+      summary: Delete the account for the logged in user.
+      operationId: Identities_deleteUserAccount
+      description: >-
+        Delete operations will cascade to all entities the user owns
+        (organizations, roles, vms).
+      responses:
+        '200':
+          $ref: '#/components/responses/emptyResponse'
+        '401':
+          $ref: '#/components/responses/authError'
+        '403':
+          $ref: '#/components/responses/permissionsError'
+        '500':
+          $ref: '#/components/responses/serverError'
+  /users/ssh-keys:
+    get:
+      tags:
+        - SSH-Keys
+      summary: Retrieve the list of SSH public keys registered to the logged in user.
+      operationId: SshKeys_listUserKeys
+      responses:
+        '200':
+          $ref: '#/components/responses/getSSHKeysResponse'
+        '401':
+          $ref: '#/components/responses/authError'
+        '500':
+          $ref: '#/components/responses/serverError'
+    post:
+      tags:
+        - SSH-Keys
+      summary: Register a new SSH public key to the logged in user.
+      operationId: SshKeys_registerNewKey
+      description: >-
+        A successful response from this resource wil contain the created SSH key
+        details.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSSHKeyRequest'
+        required: true
+      responses:
+        '200':
+          $ref: '#/components/responses/createSSHKeysResponse'
+        '400':
+          $ref: '#/components/responses/badReqError'
+        '401':
+          $ref: '#/components/responses/authError'
+        '500':
+          $ref: '#/components/responses/serverError'
+    delete:
+      tags:
+        - SSH-Keys
+      summary: Delete an SSH public key registered to the logged in user.
+      operationId: SshKeys_deleteUserSshKey
+      parameters:
+        - example: 6e28cad3-98e6-47a9-a9fc-1cd83a7f25c1
+          x-go-name: ID
+          name: id
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/emptyResponse'
+        '400':
+          $ref: '#/components/responses/badReqError'
+        '401':
+          $ref: '#/components/responses/authError'
+        '404':
+          $ref: '#/components/responses/notFoundError'
+        '500':
+          $ref: '#/components/responses/serverError'
+  /users/tokens:
+    get:
+      tags:
+        - Tokens
+      summary: Retrieve all active/expired API tokens for the logged in user.
+      operationId: Tokens_getAll
+      responses:
+        '200':
+          $ref: '#/components/responses/tokensGetResponse'
+        '401':
+          $ref: '#/components/responses/authError'
+        '500':
+          $ref: '#/components/responses/serverError'
+    post:
+      tags:
+        - Tokens
+      summary: Create a new token owned by the logged in user.
+      operationId: Tokens_generateOwnedToken
+      description: >-
+        A successful response from this resource will contain json-encoded
+        details of API token.
+
+        This is the only time the customer will be able to view the secret key
+        associated with the token.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTokenRequest'
+        required: true
+      responses:
+        '200':
+          $ref: '#/components/responses/tokensPostResponse'
+        '401':
+          $ref: '#/components/responses/authError'
+        '500':
+          $ref: '#/components/responses/serverError'
+    delete:
+      tags:
+        - Tokens
+      summary: Delete an API token owned by the logged in user.
+      operationId: Tokens_deleteOwnedToken
+      parameters:
+        - example: WTUzcGibQ82y9_01h4MCdQ
+          x-go-name: AccessKey
+          name: access_key
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/emptyResponse'
+        '401':
+          $ref: '#/components/responses/authError'
+        '403':
+          $ref: '#/components/responses/permissionsError'
+        '500':
+          $ref: '#/components/responses/serverError'
+components:
+  responses:
+    WrappedErrorBody:
+      description: >-
+        WrappedErrorBody is a baseline Error Response Object
+
+        The body of every error response type must have the same structure as
+        handlers.ErrorBody
+      headers:
+        Body: {}
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorBody'
+    asyncOperationResponse:
+      description: ''
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/AsyncOperationResponse'
+    authError:
+      description: Error Authentication Failed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CapacitiesListAvailable401Response'
+    badReqError:
+      description: Error Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CapacitiesListAvailableResponse'
+    billingIntentGetResponse:
+      description: ''
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/BillingIntentGetResponse'
+    capacitiesResponse:
+      description: ''
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ListCapacitiesResponseV1Alpha5'
+    createInstanceGroupResponse:
+      description: ''
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/InstanceGroup'
+    createInstanceTemplateResponse:
+      description: ''
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/InstanceTemplate'
+    createSSHKeysResponse:
+      description: ''
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CreateSSHKeyResponse'
+    emptyResponse:
+      description: Empty Response
+    featureFlagsGetResponse:
+      description: ''
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/FeatureFlagsGetResponse'
+    getDiskResponse:
+      description: ''
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/DiskV1Alpha5'
+    getIbNetworkResponse:
+      description: ''
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/IBNetwork'
+    getIbPartitionResponse:
+      description: ''
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/IBPartition'
+    getImageResponse:
+      description: ''
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Image'
+    getInstanceGroupResponse:
+      description: ''
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/InstanceGroup'
+    getInstanceResponse:
+      description: ''
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/InstanceV1Alpha5'
+    getInstanceTemplateResponse:
+      description: ''
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/InstanceTemplate'
+    getLoadBalancerResponse:
+      description: ''
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/LoadBalancer'
+    getOperationResponse:
+      description: ''
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Operation'
+    getProjectResponse:
+      description: ''
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Project'
+    getSSHKeysResponse:
+      description: ''
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ListSSHKeysResponseV1Alpha5'
+    getSnapshotResponse:
+      description: ''
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/DiskSnapshot'
+    getVPCNetworkResponse:
+      description: ''
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/VPCNetwork'
+    getVpcFirewallRuleResponse:
+      description: ''
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/VPCFirewallRule'
+    getVpcSubnetResponse:
+      description: ''
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/VPCSubnet'
+    ibPartitionsPostResponse:
+      description: ''
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/IBPartition'
+    listDiskSnapshotsResponse:
+      description: ''
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ListDiskSnapshotsResponseV1Alpha5'
+    listDisksResponse:
+      description: ''
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ListDisksResponseV1Alpha5'
+    listIBPartitionsResponse:
+      description: ''
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ListIBPartitionsResponseV1Alpha5'
+    listIbNetworksResponse:
+      description: ''
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ListIBNetworksResponseV1Alpha5'
+    listImagesResponse:
+      description: ''
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ListImagesResponseV1Alpha5'
+    listInstanceGroupsResponse:
+      description: ''
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ListInstanceGroupsResponse'
+    listInstanceTemplatesResponse:
+      description: ''
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ListInstanceTemplatesResponseV1Alpha5'
+    listInstancesResponse:
+      description: ''
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ListInstancesResponseV1Alpha5'
+    listLoadBalancersResponse:
+      description: ''
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ListLoadBalancersResponseV1Alpha5'
+    listOperationsResponse:
+      description: ''
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ListOperationsResponseV1Alpha5'
+    listProjectsResponse:
+      description: ''
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ListProjectsResponseV1Alpha5'
+    listVPCNetworksResponse:
+      description: ''
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ListVPCNetworksResponseV1Alpha5'
+    listVpcFirewallRulesResponse:
+      description: ''
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ListVPCFirewallRulesResponseV1Alpha5'
+    listVpcSubnetsResponse:
+      description: ''
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ListVPCSubnetsResponseV1Alpha5'
+    locationsResponse:
+      description: ''
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ListLocationsResponseV1Alpha5'
+    notFoundError:
+      description: Error Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ImagesGetDetailsResponse'
+    organizationsGetResponse:
+      description: ''
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ListEntitiesResponseV1Alpha5'
+    organizationsPutPostResponse:
+      description: ''
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/EntitiesPutPostResponse'
+    patchInstanceGroupResponse:
+      description: ''
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/InstanceGroup'
+    permissionsError:
+      description: Error Permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CapacitiesListAvailable403Response'
+    projectsPutPostResponse:
+      description: ''
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProjectsPutPostResponseV1Alpha5'
+    prospectPostResponse:
+      description: ''
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProspectPostResponse'
+    serverError:
+      description: Error Internal Server
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CapacitiesListAvailable500Response'
+    tokensGetResponse:
+      description: >-
+        A successful response from this resource will contain json-encoded array
+        of token details, excluding the secret key.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TokensGetResponseV1Alpha4'
+    tokensPostResponse:
+      description: ''
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TokensPostResponse'
+    typesGetResponse:
+      description: ''
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ListTypesResponseV1Alpha5'
+    usageExportGetResponse:
+      description: ''
+      headers:
+        metric:
+          example: instance-hours
+          schema:
+            type: string
+        project_id:
+          example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          schema:
+            type: string
+        quantity:
+          example: 261.271111
+          schema:
+            type: number
+            format: double
+        region:
+          example: us-east1
+          schema:
+            type: string
+        resource_id:
+          example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          schema:
+            type: string
+        resource_type:
+          example: a40.1x
+          schema:
+            type: string
+        usage_date:
+          example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+          schema:
+            type: string
+    usageGetResponse:
+      description: ''
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/UsageByProjectGetResponse'
+    usageOptionsGetResponse:
+      description: ''
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/UsageOptions'
+    usersGetResponse:
+      description: ''
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/UserResponse'
+    usersPutResponse:
+      description: ''
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/UserResponse'
+    vpcNetworkPostResponse:
+      description: ''
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/VPCNetworkPostResponse'
+    vpcSubnetPostResponse:
+      description: ''
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/VPCSubnetPostResponse'
+  requestBodies:
+    EntitiesPutPostRequest:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/EntitiesPutPostRequest'
+      required: true
+  schemas:
+    AsyncOperationResponse:
+      title: >-
+        AsyncOperationResponse is the response type for endpoints which return
+        async operations.
+      type: object
+      required:
+        - operation
+      properties:
+        operation:
+          $ref: '#/components/schemas/Operation'
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    AttachedDiskV1Alpha5:
+      type: object
+      required:
+        - id
+        - name
+        - type
+        - size
+        - location
+        - block_size
+        - created_at
+        - updated_at
+        - serial_number
+        - attachment_type
+        - mode
+      properties:
+        attachment_type:
+          type: string
+          x-go-name: AttachmentType
+          example: os | data
+        block_size:
+          type: integer
+          format: int64
+          x-go-name: BlockSize
+          example: 4096
+        created_at:
+          type: string
+          x-go-name: CreatedAt
+          example: '2021-12-03T19:58:34Z'
+        id:
+          type: string
+          x-go-name: ID
+          example: 123e4567-e89b-12d3-a456-426614174000
+        location:
+          type: string
+          x-go-name: Location
+          example: us-northcentral1-a
+        mode:
+          type: string
+          x-go-name: Mode
+          example: read-write | read-only
+        name:
+          type: string
+          x-go-name: Name
+          example: my-disk
+        serial_number:
+          type: string
+          x-go-name: SerialNumber
+          example: 96FD14FDBCF7E21E8EC
+        size:
+          type: string
+          x-go-name: Size
+          example: 10GiB
+        type:
+          type: string
+          x-go-name: Type
+          example: persistent-ssd
+        updated_at:
+          type: string
+          x-go-name: UpdatedAt
+          example: '2021-12-03T19:58:34Z'
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    Billing:
+      title: >-
+        Billing contains information about the billing status of an
+        organization.
+      type: object
+      required:
+        - balance
+        - has_valid_payment_method
+        - delinquent
+      properties:
+        balance:
+          type: string
+          x-go-name: Balance
+          example: $1000.00
+        delinquent:
+          type: boolean
+          x-go-name: Delinquent
+          example: false
+        has_valid_payment_method:
+          type: boolean
+          x-go-name: HasValidPaymentMethod
+          example: true
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    BillingIntentGetResponse:
+      title: >-
+        BillingIntentGetResponse is the response type for Get requests to the
+        entities/billing/intent endpoint.
+      type: object
+      required:
+        - intent
+      properties:
+        intent:
+          type: string
+          x-go-name: Intent
+          example: https://billing.stripe.com/session/{SESSION_SECRET}
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    BulkCreateLocationInfo:
+      type: object
+      required:
+        - location
+      properties:
+        ib_partition_id:
+          description: >-
+            The ID of the Infiniband partition to create the VMs in, if an IB
+            type was specified.
+
+            Must be in the same location as the VMs.
+          type: string
+          x-go-name: IBPartitionID
+          example: 09ae8411-0fbb-411c-898c-2b8f19622ae1
+        location:
+          description: The location to create the VMs in.
+          type: string
+          x-go-name: Location
+          example: us-northcentral1-a
+        subnet_id:
+          description: >-
+            The ID of the subnet to create the VMs in. Must be in the same
+            location
+
+            as the VMs. If not provided, the default subnet for the location
+            will be
+
+            used, if there is one.
+          type: string
+          x-go-name: SubnetID
+          example: 09ae8411-0fbb-411c-898c-2b8f19622ae1
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    BulkInstancePostRequestV1Alpha5:
+      type: object
+      required:
+        - name_prefix
+        - count
+      properties:
+        count:
+          description: >-
+            The number of VMs to create. If multiple locations are specified,
+            this will be the number of VMs
+
+            created in each location.
+          type: integer
+          format: int64
+          x-go-name: Count
+          example: 6
+        instance_template:
+          $ref: '#/components/schemas/InstanceTemplatePostRequestV1Alpha5'
+        instance_template_id:
+          description: The ID of the instance template to use for creating the VMs.
+          type: string
+          x-go-name: InstanceTemplateID
+          example: 09ae8411-0fbb-411c-898c-2b8f19622ae1
+        locations:
+          description: >-
+            The locations to create the VMs in. This will override any location
+            specified in the instance template.
+          type: array
+          items:
+            $ref: '#/components/schemas/BulkCreateLocationInfo'
+          x-go-name: Locations
+        name_prefix:
+          description: >-
+            The name prefix for the VMs to be created. E.g. "my-vm" will create
+            VMs with names "my-vm-1",
+          type: string
+          x-go-name: NamePrefix
+          example: my-vm
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    CapacityV1Alpha5:
+      type: object
+      required:
+        - location
+        - quantity
+      properties:
+        location:
+          type: string
+          x-go-name: Location
+          example: us-east
+        quantity:
+          type: integer
+          format: uint32
+          x-go-name: Quantity
+          example: 8
+        type:
+          type: string
+          x-go-name: Type
+          example: a100.2x
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    CreateSSHKeyRequest:
+      type: object
+      required:
+        - name
+        - public_key
+      properties:
+        name:
+          type: string
+          x-go-name: Name
+          example: John Doe
+        public_key:
+          type: string
+          x-go-name: PublicKey
+          example: >-
+            ssh-ed25519
+            AAAAC3NzaC1lZDI1NTE5AAAAICpuH/fqCFLbAConChyVH6rZzSaxlnHSwQk6qvtPsf5E
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    CreateSSHKeyResponse:
+      type: object
+      required:
+        - ssh_key
+      properties:
+        ssh_key:
+          $ref: '#/components/schemas/SSHKey'
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    CreateTokenRequest:
+      type: object
+      required:
+        - expires_at
+      properties:
+        alias:
+          type: string
+          x-go-name: Alias
+          example: token1
+        expires_at:
+          type: string
+          x-go-name: ExpiresAt
+          example: '2021-12-03T19:58:34Z'
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    DiskAttachment:
+      type: object
+      required:
+        - disk_id
+        - mode
+        - attachment_type
+      properties:
+        attachment_type:
+          type: string
+          enum:
+            - os
+            - data
+          x-go-name: AttachmentType
+          example: data
+        disk_id:
+          type: string
+          x-go-name: DiskID
+          example: 09ae8411-0fbb-411c-898c-2b8f19622ae1
+        mode:
+          type: string
+          enum:
+            - read-only
+            - read-write
+          x-go-name: Mode
+          example: read-only, read-write
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    DiskModeType:
+      type: string
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    DiskSnapshot:
+      type: object
+      required:
+        - id
+        - created_at
+        - updated_at
+        - created_from
+        - size
+        - block_size
+      properties:
+        block_size:
+          type: integer
+          format: int64
+          x-go-name: BlockSize
+          example: 4096
+        created_at:
+          type: string
+          x-go-name: CreatedAt
+          example: '2021-12-03T19:58:34Z'
+        created_from:
+          type: string
+          x-go-name: CreatedFrom
+          example: 123e4567-e89b-12d3-a456-426614174000
+        id:
+          type: string
+          x-go-name: ID
+          example: 123e4567-e89b-12d3-a456-426614174000
+        size:
+          type: string
+          x-go-name: Size
+          example: 10457 bytes
+        updated_at:
+          type: string
+          x-go-name: UpdatedAt
+          example: '2021-12-03T19:58:34Z'
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    DiskSnapshotPostRequest:
+      type: object
+      required:
+        - role_id
+        - disk_id
+      properties:
+        disk_id:
+          type: string
+          x-go-name: DiskID
+          example: 123e4567-e89b-12d3-a456-426614174000
+        role_id:
+          type: string
+          x-go-name: RoleID
+          example: 09ae8411-0fbb-411c-898c-2b8f19622ae1
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    DiskTemplate:
+      title: >-
+        DiskTemplate defines a disk to create for each VM during bulk VM
+        creation.
+      type: object
+      required:
+        - size
+        - type
+      properties:
+        size:
+          type: string
+          x-go-name: Size
+          example: 10GiB
+        type:
+          type: string
+          x-go-name: Type
+          example: persistent-ssd
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    DiskV1Alpha5:
+      type: object
+      required:
+        - id
+        - name
+        - type
+        - size
+        - location
+        - block_size
+        - created_at
+        - updated_at
+        - serial_number
+        - attached_to
+      properties:
+        attached_to:
+          type: array
+          items:
+            $ref: '#/components/schemas/VMAttachmentV1Alpha5'
+          x-go-name: AttachedTo
+        block_size:
+          type: integer
+          format: int64
+          x-go-name: BlockSize
+          example: 4096
+        created_at:
+          type: string
+          x-go-name: CreatedAt
+          example: '2021-12-03T19:58:34Z'
+        id:
+          type: string
+          x-go-name: ID
+          example: 123e4567-e89b-12d3-a456-426614174000
+        location:
+          type: string
+          x-go-name: Location
+          example: us-northcentral1-a
+        name:
+          type: string
+          x-go-name: Name
+          example: my-disk
+        serial_number:
+          type: string
+          x-go-name: SerialNumber
+          example: 96FD14FDBCF7E21E8EC
+        size:
+          type: string
+          x-go-name: Size
+          example: 10GiB
+        type:
+          type: string
+          x-go-name: Type
+          example: persistent-ssd
+        updated_at:
+          type: string
+          x-go-name: UpdatedAt
+          example: '2021-12-03T19:58:34Z'
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    DisksPatchRequest:
+      type: object
+      required:
+        - size
+      properties:
+        size:
+          type: string
+          x-go-name: Size
+          example: 10GiB
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    DisksPostRequestV1Alpha5:
+      type: object
+      required:
+        - name
+        - type
+      properties:
+        block_size:
+          type: integer
+          format: int64
+          x-go-name: BlockSize
+          example: 4096
+        location:
+          type: string
+          x-go-name: Location
+          example: us-northcentral1-a
+        name:
+          type: string
+          x-go-name: Name
+          example: my-disk
+        size:
+          type: string
+          x-go-name: Size
+          example: 10GiB
+        snapshot_id:
+          type: string
+          x-go-name: DiskSnapshotID
+          example: 123e4567-e89b-12d3-a456-426614174000
+        type:
+          type: string
+          x-go-name: Type
+          example: persistent-ssd
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    EntitiesPutPostRequest:
+      title: >-
+        EntitiesPutPostRequest is the request type for PUT and POST requests to
+        the entities endpoint.
+      type: object
+      required:
+        - organization_name
+      properties:
+        organization_name:
+          type: string
+          x-go-name: OrganizationName
+          example: Crusoe Energy
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    EntitiesPutPostResponse:
+      title: >-
+        EntitiesPutPostResponse is the response type for PUT and POST requests
+        to the entities endpoint.
+      type: object
+      required:
+        - entity
+      properties:
+        entity:
+          $ref: '#/components/schemas/Entity'
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    Entity:
+      title: Entity contains identifying information for an organization.
+      type: object
+      required:
+        - id
+        - name
+        - relation
+        - billing
+        - features
+      properties:
+        billing:
+          $ref: '#/components/schemas/Billing'
+        features:
+          type: object
+          additionalProperties:
+            type: object
+          x-go-name: Features
+        id:
+          type: string
+          x-go-name: ID
+          example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+        name:
+          type: string
+          x-go-name: Name
+          example: Crusoe Energy
+        relation:
+          type: string
+          x-go-name: Relation
+          example: owner
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    ErrorBody:
+      type: object
+      properties:
+        code:
+          type: string
+          x-go-name: Code
+        message:
+          type: string
+          x-go-name: Message
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    FeatureFlagsGetResponse:
+      title: >-
+        FeatureFlagsGetResponse is the response type for GET requests to the
+        feature flags endpoint.
+      type: object
+      required:
+        - feature_flags
+      properties:
+        feature_flags:
+          type: object
+          additionalProperties:
+            type: object
+          x-go-name: FeatureFlags
+          example:
+            curated-images: true
+            infiniband: false
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    Fingerprints:
+      type: object
+      required:
+        - md5
+        - sha256
+      properties:
+        md5:
+          type: string
+          x-go-name: MD5
+          example: bf:60:fa:cc:9f:42:1f:5e:23:9e:ed:d2:69:d8:76:93
+        sha256:
+          type: string
+          x-go-name: SHA256
+          example: tARFxQkVHeqm6TzqpI897QsHVdgZlxgL2/YhVltmEUk
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    FirewallRuleObject:
+      title: >-
+        FirewallRuleObject specifies the source or destination of a firewall
+        rule.
+      description: >-
+        It has two fields: CIDR and ResourceID. The CIDR field may either be a
+
+        CIDR or an IP address. If an IP, it will be converted to a CIDR.
+        Resource ids
+
+        of VPC networks, Subnets, and VMs are the only allowed. Only one of the
+        two
+
+        fields can be non empty.
+      type: object
+      properties:
+        cidr:
+          type: string
+          x-go-name: CIDR
+          example: 10.1.2.3/24
+        resource_id:
+          type: string
+          x-go-name: ResourceID
+          example: 306aa10d-5570-4e47-88c9-46bf11bd8737
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    GeneratedToken:
+      title: >-
+        GeneratedToken contains the Traits Island stores for a Token inside of
+        Kratos.
+      description: These are the fields returned from a PUT request.
+      type: object
+      required:
+        - access_key
+        - secret_key
+        - created_at
+        - expires_at
+      properties:
+        access_key:
+          type: string
+          x-go-name: AccessKey
+          example: R7p5XctCQMuGlpVBmVdqzA
+        alias:
+          type: string
+          x-go-name: Alias
+          example: newtoken
+        created_at:
+          type: string
+          x-go-name: CreatedAt
+          example: '2021-11-03T22:16:27Z'
+        expires_at:
+          type: string
+          x-go-name: ExpiresAt
+          example: '2021-12-03T19:58:34Z'
+        secret_key:
+          type: string
+          x-go-name: SecretKey
+          example: HrbZ3VTUb2YNAq53Md1EsA
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    HealthCheckOptions:
+      type: object
+      required:
+        - port
+      properties:
+        failure_count:
+          type: string
+          x-go-name: FailureCount
+          example: '3'
+        interval:
+          type: string
+          x-go-name: Interval
+          example: '60'
+        port:
+          type: string
+          x-go-name: Port
+          example: '8080'
+        success_count:
+          type: string
+          x-go-name: SuccessCount
+          example: '2'
+        timeout:
+          type: string
+          x-go-name: Timeout
+          example: '20'
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    HostChannelAdapter:
+      type: object
+      required:
+        - type
+        - guid
+        - ib_network_id
+        - ib_partition_id
+      properties:
+        guid:
+          type: string
+          x-go-name: GUID
+          example: 946d:ae03:0021:69aa
+        ib_network_id:
+          type: string
+          x-go-name: IBNetworkID
+          example: ca39e669-47ee-456b-968d-303234fbf99f
+        ib_partition_id:
+          type: string
+          x-go-name: IBPartitionID
+          example: ca39e669-47ee-456b-968d-303234fbf99f
+        type:
+          type: string
+          x-go-name: Type
+          example: infiniband
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    IBNetwork:
+      type: object
+      required:
+        - id
+        - name
+        - location
+        - capacities
+      properties:
+        capacities:
+          type: array
+          items:
+            $ref: '#/components/schemas/IBNetworkCapacity'
+          x-go-name: Capacities
+        id:
+          type: string
+          x-go-name: ID
+          example: 1ce839b7-3fab-46f9-8e54-7a6bb4ac1ffc
+        location:
+          type: string
+          x-go-name: Location
+          example: us-east
+        name:
+          type: string
+          x-go-name: Name
+          example: ib-network-1
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    IBNetworkCapacity:
+      type: object
+      required:
+        - quantity
+        - slice_type
+      properties:
+        quantity:
+          type: integer
+          format: uint32
+          x-go-name: Quantity
+          example: 8
+        slice_type:
+          type: string
+          x-go-name: SliceType
+          example: 16 vCPUs & 125GB RAM & 1 A100 (40GB) GPU
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    IBPartition:
+      type: object
+      required:
+        - id
+        - name
+        - ib_network_id
+      properties:
+        ib_network_id:
+          type: string
+          x-go-name: IBNetworkID
+          example: 36c0b0d9-8b68-4869-addb-227b06b64ee0
+        id:
+          type: string
+          x-go-name: ID
+          example: 44701f9e-845c-4005-9240-adee6401b8d3
+        name:
+          type: string
+          x-go-name: Name
+          example: my-ib-partition
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    IBPartitionsPostRequestV1Alpha5:
+      title: >-
+        IBPartitionsPostRequestV1Alpha5 is the request type for POST requests to
+        the IB Partitions endpoint.
+      type: object
+      required:
+        - name
+        - ib_network_id
+      properties:
+        ib_network_id:
+          type: string
+          x-go-name: IBNetworkID
+          example: 36c0b0d9-8b68-4869-addb-227b06b64ee0
+        name:
+          type: string
+          x-go-name: Name
+          example: my-ib-partition
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    IPAddresses:
+      type: object
+      required:
+        - private_ipv4
+        - public_ipv4
+      properties:
+        private_ipv4:
+          $ref: '#/components/schemas/PrivateIPv4Address'
+        public_ipv4:
+          $ref: '#/components/schemas/PublicIPv4Address'
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    Identity:
+      description: >-
+        Identity contains the Traits Island stores for a User inside of Kratos.
+        These are
+
+        the fields returned from a GET or PUT request.
+      type: object
+      required:
+        - email
+        - name
+        - role
+      properties:
+        email:
+          type: string
+          x-go-name: Email
+          example: john.doe@crusoeenergy.com
+        name:
+          type: string
+          x-go-name: Name
+          example: John Doe
+        role:
+          type: string
+          x-go-name: Role
+          example: Admin
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    IdentityPutRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          x-go-name: Name
+          example: John Doe
+        role:
+          type: string
+          x-go-name: Role
+          example: Admin
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    Image:
+      type: object
+      required:
+        - id
+        - name
+        - description
+        - tags
+        - created_at
+        - locations
+      properties:
+        tags:
+          type: array
+          items:
+            type: string
+          x-go-name: Tags
+          example: '[20.4, latest]'
+        description:
+          type: string
+          x-go-name: Description
+          example: base Ubuntu 20.04 image
+        created_at:
+          type: string
+          x-go-name: CreatedAt
+          example: '2023-06-29T20:03:26Z'
+        id:
+          type: string
+          x-go-name: ID
+          example: 09ae8411-0fbb-411c-898c-2b8f19622ae1
+        locations:
+          type: array
+          items:
+            type: string
+          x-go-name: Locations
+          example: '[us-east1, us-northcentral1]'
+        name:
+          type: string
+          x-go-name: Name
+          example: ubuntu
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    InstanceGroup:
+      title: InstanceGroup defines the specification of an instance group.
+      type: object
+      required:
+        - name
+        - id
+        - template_id
+        - created_at
+        - updated_at
+        - project_id
+        - running_instance_count
+        - instances
+      properties:
+        created_at:
+          description: Time the instance template was created.
+          type: string
+          x-go-name: CreatedAt
+          example: '2024-01-01T00:00:00Z'
+        id:
+          description: ID of the instance group.
+          type: string
+          x-go-name: ID
+          example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+        instances:
+          description: A list of IDs of instances currently in the instance group.
+          type: array
+          items:
+            type: string
+          x-go-name: Instances
+          example:
+            - 066ce497-889e-4899-b53e-400df3fb7c0e
+        name:
+          description: Name of the instance group.
+          type: string
+          x-go-name: Name
+          example: my-instance-group
+        project_id:
+          description: Project ID of the project this instance template belongs to.
+          type: string
+          x-go-name: ProjectID
+          example: b67aec22-2908-4427-994c-4e32be87477e
+        running_instance_count:
+          description: The number of running instances currently in the Instance Group.
+          type: integer
+          format: int64
+          x-go-name: RunningInstanceCount
+          example: 3
+        template_id:
+          description: Instance Template ID currently associated with the instance group.
+          type: string
+          x-go-name: TemplateID
+          example: 7e6a6c5a-1314-409a-9e4f-3cc9f2a68fcc
+        updated_at:
+          description: Most recent time the instance group was updated.
+          type: string
+          x-go-name: UpdatedAt
+          example: '2024-01-01T00:00:00Z'
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    InstanceGroupPatchRequest:
+      title: >-
+        InstanceGroupPatchRequest defines the specifications of the updates to
+        be made to the instance group.
+      description: >-
+        This is a separate type from InstanceGroupPostRequest for clearer
+        documentation, as these fields are not required
+
+        in the PATCH endpoint.
+      type: object
+      properties:
+        name:
+          description: Name of the instance group.
+          type: string
+          x-go-name: Name
+          example: my-instance-group
+        template_id:
+          description: Instance Template ID to be associated with the instance group.
+          type: string
+          x-go-name: TemplateID
+          example: 7e6a6c5a-1314-409a-9e4f-3cc9f2a68fcc
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    InstanceGroupPostRequest:
+      title: >-
+        InstanceGroupPostRequest defines the specifications of the instance
+        group to be created.
+      type: object
+      required:
+        - name
+        - template_id
+      properties:
+        name:
+          description: Name of the instance group.
+          type: string
+          x-go-name: Name
+          example: my-instance-group
+        template_id:
+          description: Instance Template ID to be associated with the instance group.
+          type: string
+          x-go-name: TemplateID
+          example: 7e6a6c5a-1314-409a-9e4f-3cc9f2a68fcc
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    InstanceTemplate:
+      title: >-
+        InstanceTemplate defines the specifications of VMs to be created during
+        bulk VM creation.
+      type: object
+      required:
+        - name
+        - id
+        - type
+        - ssh_public_key
+        - startup_script
+        - shutdown_script
+        - image_name
+        - ib_partition_id
+        - subnet_id
+        - location
+        - project_id
+        - created_at
+        - public_ip_address_type
+      properties:
+        created_at:
+          description: Time the instance template was created.
+          type: string
+          x-go-name: CreatedAt
+          example: '2024-01-01T00:00:00Z'
+        disks:
+          description: Disks to create for all VMs created from this instance template.
+          type: array
+          items:
+            $ref: '#/components/schemas/DiskTemplate'
+          x-go-name: Disks
+        ib_partition_id:
+          description: >-
+            IB Partition to use for all VMs created from this instance template.
+
+            Only used for IB-enabled VM types. Empty if template has no
+            location.
+          type: string
+          x-go-name: IBPartition
+          example: 09ae8411-0fbb-411c-898c-2b8f19622ae1
+        id:
+          description: ID of the instance template.
+          type: string
+          x-go-name: ID
+          example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+        image_name:
+          description: OS Image to use for all VMs created from this instance template.
+          type: string
+          x-go-name: Image
+          example: ubuntu:20.04
+        location:
+          description: |-
+            Location to use for all VMs created from this instance template.
+            May be empty if we do not want to bind this template to a location.
+          type: string
+          x-go-name: Location
+          example: us-northcentral1-a
+        name:
+          description: >-
+            Name of the instance template. (This is not the name of the VMs
+            created from this instance template.)
+          type: string
+          x-go-name: Name
+          example: my-instance-template
+        project_id:
+          description: Project ID of the project this instance template belongs to.
+          type: string
+          x-go-name: ProjectID
+          example: 09ae8411-0fbb-411c-898c-2b8f19622ae1
+        public_ip_address_type:
+          description: >-
+            Public IP address type to use for all VMs created from this instance
+            template. Must either be "static" or "dynamic".
+          type: string
+          x-go-name: PublicIPAddressType
+          example: static
+        shutdown_script:
+          description: >-
+            Shutdown script to use for all VMs created from this instance
+            template.
+          type: string
+          x-go-name: ShutdownScript
+          example: '"#!/bin/bash\necho''goodbye''"'
+        ssh_public_key:
+          description: >-
+            SSH public key to use for all VMs created from this instance
+            template.
+          type: string
+          x-go-name: SSHPubKey
+          example: >-
+            ssh-rsa
+            AAAAB3NzaC1yc2EAAAADAQABAAABAQCspdG97nTS/h4PEPq2QD2RYVK1jxFXLFZuSDMI8Rtxpucl6LDZLOghEYoj13lxKQnGtcsM3Iu68lh+4YgZe7CbI6cc/TxPbeAX2HJTqDh0J7+GAlLBHK9tsepC0QlhIDiazJptOPDZ3cesCBXdxSnzEbhDaqgYOfl393cp1fCeOKRIDWEP3H9CM25dCbWF66sTDziLsojJ9dMnxhgKm9/JkZc5gYncLT/2Ey+VWfV9Fs65mGUrBbQOn3c8S/nEk6WRcYn4PFOnIp0Mz+Chb50iCJrW677pllLnkTGSU+4c0H9J5z4HDG0I+91RoiQ0QsayFTYO1JtSn+THLuq98V+D
+        startup_script:
+          description: >-
+            Startup script to use for all VMs created from this instance
+            template.
+          type: string
+          x-go-name: StartupScript
+          example: '"#!/bin/bash\necho''hello''"'
+        subnet_id:
+          description: |-
+            SubnetID to use for all VMs created from this instance template.
+            Only used if template has a location.
+          type: string
+          x-go-name: SubnetID
+          example: 09ae8411-0fbb-411c-898c-2b8f19622ae1
+        type:
+          description: >-
+            Product name of the VM type we want to create from this instance
+            template.
+          type: string
+          x-go-name: Type
+          example: a100.2x
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    InstanceTemplatePostRequestV1Alpha5:
+      title: >-
+        InstanceTemplate defines the specifications of VMs to be created during
+        bulk VM creation.
+      type: object
+      required:
+        - template_name
+        - type
+        - ssh_public_key
+      properties:
+        disks:
+          description: Disks to create for all VMs created from this instance template.
+          type: array
+          items:
+            $ref: '#/components/schemas/DiskTemplate'
+          x-go-name: Disks
+        ib_partition_id:
+          description: >-
+            IB Partition to use for all VMs created from this instance template.
+
+            Should only be provided for IB-enabled VM types.
+
+            This is location-specific and must be provided if location is
+            provided.
+          type: string
+          x-go-name: IBPartition
+          example: 09ae8411-0fbb-411c-898c-2b8f19622ae1
+        image_name:
+          description: OS Image to use for all VMs created from this instance template.
+          type: string
+          x-go-name: Image
+          example: ubuntu:20.04
+        location:
+          description: |-
+            Location to use for all VMs created from this instance template.
+            If provided, all location-specific resources must also be provided.
+          type: string
+          x-go-name: Location
+          example: us-northcentral1-a
+        public_ip_address_type:
+          description: >-
+            Public IP address type to use for all VMs created from this instance
+            template. Must either be "static" or "dynamic".
+          type: string
+          x-go-name: PublicIPAddressType
+          example: static
+        shutdown_script:
+          description: >-
+            Shutdown script to use for all VMs created from this instance
+            template.
+          type: string
+          x-go-name: ShutdownScript
+          example: '"#!/bin/bash\necho''goodbye''"'
+        ssh_public_key:
+          description: >-
+            SSH public key to use for all VMs created from this instance
+            template.
+          type: string
+          x-go-name: SSHPublicKey
+          example: >-
+            ssh-rsa
+            AAAAB3NzaC1yc2EAAAADAQABAAABAQCspdG97nTS/h4PEPq2QD2RYVK1jxFXLFZuSDMI8Rtxpucl6LDZLOghEYoj13lxKQnGtcsM3Iu68lh+4YgZe7CbI6cc/TxPbeAX2HJTqDh0J7+GAlLBHK9tsepC0QlhIDiazJptOPDZ3cesCBXdxSnzEbhDaqgYOfl393cp1fCeOKRIDWEP3H9CM25dCbWF66sTDziLsojJ9dMnxhgKm9/JkZc5gYncLT/2Ey+VWfV9Fs65mGUrBbQOn3c8S/nEk6WRcYn4PFOnIp0Mz+Chb50iCJrW677pllLnkTGSU+4c0H9J5z4HDG0I+91RoiQ0QsayFTYO1JtSn+THLuq98V+D
+        startup_script:
+          description: >-
+            Startup script to use for all VMs created from this instance
+            template.
+          type: string
+          x-go-name: StartupScript
+          example: '"#!/bin/bash\necho''hello''"'
+        subnet_id:
+          description: >-
+            Subnet to use for all VMs created from this instance template.
+
+            This is location-specific and must be provided if location is
+            provided.
+          type: string
+          x-go-name: Subnet
+          example: 09ae8411-0fbb-411c-898c-2b8f19622ae1
+        template_name:
+          description: >-
+            Name of the instance template. (This is not the name of the VMs
+            created from this instance template.)
+          type: string
+          x-go-name: TemplateName
+          example: my-instance-template
+        type:
+          description: >-
+            Product name of the VM type we want to create from this instance
+            template.
+          type: string
+          x-go-name: Type
+          example: a100.2x
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    InstanceV1Alpha5:
+      description: >-
+        InstanceV1Alpha5 contains identifying information about a vm instance
+        for
+
+        vms.instances endpoints.
+      type: object
+      required:
+        - id
+        - project_id
+        - type
+        - state
+        - ssh_destination
+        - created_at
+        - updated_at
+        - name
+        - location
+        - commitment_period
+        - commitment_end
+        - disks
+        - network_interfaces
+        - host_channel_adapters
+      properties:
+        commitment_end:
+          type: string
+          x-go-name: CommitmentEnd
+          example: '2021-12-03T19:58:34Z'
+        commitment_period:
+          type: integer
+          format: int64
+          x-go-name: CommitmentPeriod
+          example: 6
+        created_at:
+          type: string
+          x-go-name: CreatedAt
+          example: '2021-12-03T19:58:34Z'
+        disks:
+          type: array
+          items:
+            $ref: '#/components/schemas/AttachedDiskV1Alpha5'
+          x-go-name: Disks
+        host_channel_adapters:
+          type: array
+          items:
+            $ref: '#/components/schemas/HostChannelAdapter'
+          x-go-name: HostChannelAdapters
+        id:
+          type: string
+          x-go-name: ID
+          example: ca39e669-47ee-456b-968d-303234fbf99f
+        location:
+          type: string
+          x-go-name: Location
+          example: us-centralnorth1-a
+        name:
+          type: string
+          x-go-name: Name
+          example: my-first-vm
+        network_interfaces:
+          type: array
+          items:
+            $ref: '#/components/schemas/NetworkInterface'
+          x-go-name: NetworkInterfaces
+        project_id:
+          type: string
+          x-go-name: ProjectID
+          example: 09ae8411-0fbb-411c-898c-2b8f19622ae1
+        ssh_destination:
+          type: string
+          x-go-name: SSHDestination
+          example: 12.21.12.21:22
+        state:
+          type: string
+          x-go-name: State
+          example: RUNNING
+        type:
+          type: string
+          x-go-name: Type
+          example: a100.2x
+        updated_at:
+          type: string
+          x-go-name: UpdatedAt
+          example: '2023-08-14T09:00:35Z'
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    InstancesAttachDiskPostRequestV1Alpha5:
+      description: >-
+        InstancesAttachDiskPostRequestV1Alpha5 is the request type for POST
+        requests to the
+
+        vms.instances.attach-disk endpoint.
+      type: object
+      required:
+        - attach_disks
+      properties:
+        attach_disks:
+          description: nolint:lll // DiskAttachment objects are large
+          type: array
+          items:
+            $ref: '#/components/schemas/DiskAttachment'
+          x-go-name: AttachDisks
+          example: >-
+            [{disk_id: "09ae8411-0fbb-411c-898c-2b8f19622ae1", mode:
+            "read-write", attachment_type: "data"}, {disk_id:
+            "b1f86d1b-42d2-490d-adb0-cc1029abf653", mode: "read-only",
+            attachment_type: "data"}]
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    InstancesDetachDiskPostRequest:
+      description: >-
+        InstancesDetachDiskPostRequest is the request type for POST requests to
+        the
+
+        vms.instances.detach-disk endpoint.
+      type: object
+      required:
+        - detach_disks
+      properties:
+        detach_disks:
+          type: array
+          items:
+            type: string
+          x-go-name: DetachDisks
+          example:
+            - 09ae8411-0fbb-411c-898c-2b8f19622ae1
+            - 123e4567-e89b-12d3-a456-426614174000
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    InstancesPatchRequestV1Alpha5:
+      title: >-
+        InstancesPatchRequestV1Alpha5 is the request type for PATCH requests to
+        the vms.instances endpoint.
+      type: object
+      required:
+        - action
+      properties:
+        action:
+          type: string
+          enum:
+            - START
+            - STOP
+            - RESET
+            - COMMIT
+            - UPDATE
+          x-go-name: Action
+          example: START
+        commitment_period:
+          type: integer
+          format: int64
+          x-go-name: CommitmentPeriod
+          example: 6
+        host_channel_adapters:
+          type: array
+          items:
+            $ref: '#/components/schemas/PartialHostChannelAdapter'
+          x-go-name: HostChannelAdapters
+        network_interfaces:
+          type: array
+          items:
+            $ref: '#/components/schemas/NetworkInterface'
+          x-go-name: NetworkInterfaces
+        type:
+          type: string
+          x-go-name: Type
+          example: a100.2x
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    InstancesPostRequestV1Alpha5:
+      description: >-
+        InstancesPostRequestV1Alpha5 is the request type for POST requests to
+        the
+
+        vms.instances endpoint.
+      type: object
+      required:
+        - type
+        - ssh_public_key
+        - name
+      properties:
+        commitment_period:
+          type: integer
+          format: int64
+          x-go-name: CommitmentPeriod
+          example: 6
+        disks:
+          type: array
+          items:
+            $ref: '#/components/schemas/DiskAttachment'
+          x-go-name: Disks
+          example: >-
+            [{disk_id: "09ae8411-0fbb-411c-898c-2b8f19622ae1", mode:
+            "read-write", attach_type: "data"},
+        host_channel_adapters:
+          type: array
+          items:
+            $ref: '#/components/schemas/PartialHostChannelAdapter'
+          x-go-name: HostChannelAdapters
+        image:
+          type: string
+          x-go-name: Image
+          example: ubuntu:20.04
+        location:
+          type: string
+          x-go-name: Location
+          example: us-northcentral1-a
+        name:
+          type: string
+          x-go-name: Name
+          example: my-first-vm
+        network_interfaces:
+          type: array
+          items:
+            $ref: '#/components/schemas/NetworkInterface'
+          x-go-name: NetworkInterfaces
+        shutdown_script:
+          type: string
+          x-go-name: ShutdownScript
+          example: '"#!/bin/bash\necho''goodbye''"'
+        ssh_public_key:
+          type: string
+          x-go-name: SSHPublicKey
+          example: >-
+            ssh-rsa
+            AAAAB3NzaC1yc2EAAAADAQABAAABAQCspdG97nTS/h4PEPq2QD2RYVK1jxFXLFZuSDMI8Rtxpucl6LDZLOghEYoj13lxKQnGtcsM3Iu68lh+4YgZe7CbI6cc/TxPbeAX2HJTqDh0J7+GAlLBHK9tsepC0QlhIDiazJptOPDZ3cesCBXdxSnzEbhDaqgYOfl393cp1fCeOKRIDWEP3H9CM25dCbWF66sTDziLsojJ9dMnxhgKm9/JkZc5gYncLT/2Ey+VWfV9Fs65mGUrBbQOn3c8S/nEk6WRcYn4PFOnIp0Mz+Chb50iCJrW677pllLnkTGSU+4c0H9J5z4HDG0I+91RoiQ0QsayFTYO1JtSn+THLuq98V+D
+        startup_script:
+          type: string
+          x-go-name: StartupScript
+          example: '"#!/bin/bash\necho''hello''"'
+        type:
+          type: string
+          x-go-name: Type
+          example: a100.2x
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    ListCapacitiesResponseV1Alpha5:
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CapacityV1Alpha5'
+          x-go-name: Items
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    ListDiskSnapshotsResponseV1Alpha5:
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/DiskSnapshot'
+          x-go-name: Items
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    ListDisksResponseV1Alpha5:
+      title: >-
+        ListDisksResponseV1Alpha5 is the response type for GET requests to the
+        disks endpoint.
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/DiskV1Alpha5'
+          x-go-name: Items
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    ListEntitiesResponseV1Alpha5:
+      title: >-
+        ListEntitiesResponseV1Alpha5 is the response type for GET requests to
+        the entities endpoint.
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Entity'
+          x-go-name: Items
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    ListIBNetworksResponseV1Alpha5:
+      title: >-
+        ListIBNetworksResponseV1Alpha5 is the response type for GET requests to
+        the IB Networks endpoint.
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/IBNetwork'
+          x-go-name: Items
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    ListIBPartitionsResponseV1Alpha5:
+      title: >-
+        ListIBPartitionsResponseV1Alpha5 is the response type for GET requests
+        to the IB Partitions endpoint.
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/IBPartition'
+          x-go-name: Items
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    ListImagesResponseV1Alpha5:
+      title: >-
+        ListImagesResponseV1Alpha5 is the resource response type for GET
+        requests to the Images endpoint.
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Image'
+          x-go-name: Items
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    ListInstanceGroupsResponse:
+      description: |-
+        ListInstanceGroupsResponse is the resource response type for GET
+        requests to the InstanceGroup endpoint.
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/InstanceGroup'
+          x-go-name: Items
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    ListInstanceTemplatesResponseV1Alpha5:
+      description: >-
+        ListInstanceTemplatesResponseV1Alpha5 is the resource response type for
+        GET
+
+        requests to the InstanceTemplates endpoint.
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/InstanceTemplate'
+          x-go-name: Items
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    ListInstancesResponseV1Alpha5:
+      title: >-
+        ListInstancesResponseV1Alpha5 is the response type for GET requests to
+        /compute/vms/instances.
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/InstanceV1Alpha5'
+          x-go-name: Items
+        next_page_token:
+          description: |-
+            Base64 encoded token representing the next page of instances.
+            Empty if currently on the last page.
+          type: string
+          x-go-name: NextPageToken
+          example: bXktbGFzdC12bQ
+        prev_page_token:
+          description: |-
+            Base64 encoded token representing the previous page of instances.
+            Empty if currently on the first page.
+          type: string
+          x-go-name: PrevPageToken
+          example: bXktZmlyc3Qtdm0
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    ListLoadBalancersResponseV1Alpha5:
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/LoadBalancer'
+          x-go-name: Items
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    ListLocationsResponseV1Alpha5:
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            type: string
+          x-go-name: Items
+          example:
+            - us-northcentral1-a
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    ListOperationsResponseV1Alpha5:
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Operation'
+          x-go-name: Items
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    ListProjectsResponseV1Alpha5:
+      title: >-
+        ListProjectsResponseV1Alpha5 is the response type for GET requests to
+        the roles endpoint.
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Project'
+          x-go-name: Items
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    ListSSHKeysResponseV1Alpha5:
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/SSHKey'
+          x-go-name: Items
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    ListTokensResponseV1Alpha5:
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/TokenInfo'
+          x-go-name: Items
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    ListTypesResponseV1Alpha5:
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Type'
+          x-go-name: Items
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    ListVPCFirewallRulesResponseV1Alpha5:
+      title: >-
+        ListVPCFirewallRulesResponseV1Alpha5 is the response type for GET
+        requests to the VPC Firewall Rules endpoint.
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/VPCFirewallRule'
+          x-go-name: Items
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    ListVPCNetworksResponseV1Alpha5:
+      title: >-
+        ListVPCNetworksResponseV1Alpha5 is the response type for GET requests to
+        the VPC Networks endpoint.
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/VPCNetwork'
+          x-go-name: Items
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    ListVPCSubnetsResponseV1Alpha5:
+      title: >-
+        ListVPCSubnetsResponseV1Alpha5 is the response type for GET requests to
+        the VPC Subnets endpoint.
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/VPCSubnet'
+          x-go-name: Items
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    LoadBalancer:
+      type: object
+      required:
+        - id
+        - name
+        - vpc_subnet_id
+        - destinations
+        - location
+        - protocols
+        - algorithm
+        - ips
+      properties:
+        algorithm:
+          type: string
+          x-go-name: Algorithm
+          example: random
+        destinations:
+          type: array
+          items:
+            $ref: '#/components/schemas/NetworkTarget'
+          x-go-name: Destinations
+        health_check:
+          $ref: '#/components/schemas/HealthCheckOptions'
+        id:
+          type: string
+          x-go-name: ID
+          example: 1ce839b7-3fab-46f9-8e54-7a6bb4ac1ffc
+        ips:
+          type: array
+          items:
+            $ref: '#/components/schemas/IPAddresses'
+          x-go-name: IPs
+        location:
+          type: string
+          x-go-name: Location
+          example: us-northcentraleast1-a
+        name:
+          type: string
+          x-go-name: Name
+          example: my-subnet
+        protocols:
+          type: array
+          items:
+            type: string
+          x-go-name: Protocols
+          example: '[tcp]'
+        type:
+          type: string
+          x-go-name: Type
+          example: internal_ipv4,
+        vpc_subnet_id:
+          type: string
+          x-go-name: VPCSubnetID
+          example: 1ce839b7-3fab-46f9-8e54-7a6bb4ac1ffc
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    LoadBalancersPatchRequestV1Alpha5:
+      type: object
+      properties:
+        destinations:
+          type: array
+          items:
+            $ref: '#/components/schemas/NetworkTarget'
+          x-go-name: Destinations
+        health_check:
+          $ref: '#/components/schemas/HealthCheckOptions'
+        name:
+          type: string
+          x-go-name: Name
+          example: my-load-balancer
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    LoadBalancersPostRequest:
+      type: object
+      required:
+        - name
+        - destinations
+        - location
+        - protocols
+        - vpc_subnet_id
+        - algorithm
+      properties:
+        algorithm:
+          type: string
+          x-go-name: Algorithm
+          example: random
+        destinations:
+          type: array
+          items:
+            $ref: '#/components/schemas/NetworkTarget'
+          x-go-name: Destinations
+        health_check:
+          $ref: '#/components/schemas/HealthCheckOptions'
+        location:
+          type: string
+          x-go-name: Location
+          example: us-northcentraleast1-a
+        name:
+          type: string
+          x-go-name: Name
+          example: my-load-balancer
+        protocols:
+          type: array
+          items:
+            type: string
+          x-go-name: Protocols
+          example: '[tcp]'
+        type:
+          type: string
+          x-go-name: Type
+          example: internal_ipv4
+        vpc_subnet_id:
+          type: string
+          x-go-name: VPCSubnetID
+          example: 09ae8411-0fbb-411c-898c-2b8f19622ae1
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    NetworkInterface:
+      type: object
+      required:
+        - id
+        - name
+        - network
+        - subnet
+        - interface_type
+        - mac_address
+        - ips
+      properties:
+        id:
+          type: string
+          x-go-name: ID
+          example: ca39e669-47ee-456b-968d-303234fbf99f
+        interface_type:
+          type: string
+          x-go-name: InterfaceType
+          example: ethernet
+        ips:
+          type: array
+          items:
+            $ref: '#/components/schemas/IPAddresses'
+          x-go-name: IPs
+        mac_address:
+          type: string
+          x-go-name: MACAddress
+          example: 00:00:5e:00:53:af
+        name:
+          type: string
+          x-go-name: Name
+          example: network-interface-1
+        network:
+          type: string
+          x-go-name: Network
+          example: 1ce839b7-3fab-46f9-8e54-7a6bb4ac1ffc
+        subnet:
+          type: string
+          x-go-name: Subnet
+          example: 1ce839b7-3fab-46f9-8e54-7a6bb4ac1ffc
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    NetworkTarget:
+      type: object
+      properties:
+        cidr:
+          type: string
+          x-go-name: CIDR
+          example: 10.1.2.3/24
+        resource_id:
+          type: string
+          x-go-name: ResourceID
+          example: 306aa10d-5570-4e47-88c9-46bf11bd8737
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    Operation:
+      title: Operation contains the common fields for all Operation API objects.
+      description: >-
+        Individual resources that use Operations should populate the `metadata`
+        field
+
+        with resource-specific information.
+      type: object
+      required:
+        - operation_id
+        - state
+        - metadata
+        - started_at
+        - completed_at
+      properties:
+        completed_at:
+          type: string
+          x-go-name: CompletedAt
+          example: '2021-12-03T19:59:34Z'
+        metadata:
+          type: object
+          x-go-name: Metadata
+          example: {}
+        operation_id:
+          type: string
+          x-go-name: ID
+          example: F6EF489C-086E-458D-B812-7962964A28C9
+        result:
+          type: object
+          x-go-name: Result
+          example: {}
+        started_at:
+          type: string
+          x-go-name: StartedAt
+          example: '2021-12-03T19:58:34Z'
+        state:
+          type: string
+          enum:
+            - IN_PROGRESS
+            - SUCCEEDED
+            - FAILED
+          x-go-name: State
+          example: IN_PROGRESS
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    PartialHostChannelAdapter:
+      title: >-
+        PartialHostChannelAdapter is used when POSTing and PATCHing VMs to
+        assign IB Partitions.
+      type: object
+      properties:
+        ib_partition_id:
+          type: string
+          x-go-name: IBPartitionID
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    PrivateIPv4Address:
+      type: object
+      required:
+        - address
+      properties:
+        address:
+          type: string
+          x-go-name: Address
+          example: 10.1.2.3
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    Project:
+      title: Project contains identifying information for a project.
+      type: object
+      required:
+        - id
+        - organization_id
+        - name
+        - relation
+      properties:
+        id:
+          type: string
+          x-go-name: ID
+          example: 09ae8411-0fbb-411c-898c-2b8f19622ae1
+        name:
+          type: string
+          x-go-name: Name
+          example: Admin
+        organization_id:
+          type: string
+          x-go-name: OrganizationID
+          example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+        relation:
+          type: string
+          x-go-name: Relation
+          example: owner
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    ProjectUsageResponse:
+      type: object
+      required:
+        - resource_type
+        - project_id
+        - region
+        - date
+        - quantity
+        - billable_metric
+      properties:
+        billable_metric:
+          type: string
+          x-go-name: Metric
+          example: '"gpu-hours"'
+        date:
+          type: string
+          x-go-name: Date
+          example: '"2022-07-01"'
+        project_id:
+          type: string
+          x-go-name: ProjectID
+          example: '"d8f58dfd-dd86-4ee4-8f01-643e6d0f15bb"'
+        quantity:
+          type: number
+          format: double
+          x-go-name: Quantity
+          example: 2.123
+        region:
+          type: string
+          x-go-name: Region
+          example: '"us-northcentral1"'
+        resource_type:
+          type: string
+          x-go-name: ResourceType
+          example: '"a40.1x"'
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    ProjectsPostRequest:
+      title: >-
+        ProjectsPostRequest is the request type for POST requests to the
+        projects endpoint.
+      type: object
+      required:
+        - organization_id
+        - name
+      properties:
+        name:
+          type: string
+          x-go-name: Name
+          example: Admin
+        organization_id:
+          type: string
+          x-go-name: OrganizationID
+          example: ab4a6b00-aa5f-408e-a9fb-ac6de5eb45ab
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    ProjectsPutPostResponseV1Alpha5:
+      title: >-
+        ProjectsPutPostResponseV1Alpha4 is the response type for PUT and POST
+        requests to the projects endpoint.
+      type: object
+      required:
+        - project
+      properties:
+        project:
+          $ref: '#/components/schemas/Project'
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    ProjectsPutRequest:
+      title: >-
+        ProjectsPutRequest is the request type for PUT requests to the projects
+        endpoint.
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          x-go-name: Name
+          example: Crusoe Energy
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    ProspectPostRequest:
+      title: >-
+        ProspectPostRequest is the request type for POST requests to the
+        prospects endpoint.
+      type: object
+      required:
+        - email
+        - name
+        - company
+        - use_case
+        - source
+        - referral
+        - expected_commitment
+        - expected_capacity
+        - expected_service
+      properties:
+        company:
+          type: string
+          x-go-name: Company
+          example: crusoe
+        email:
+          type: string
+          x-go-name: Email
+          example: john@crusoeenergy.com
+        expected_capacity:
+          type: string
+          enum:
+            - <64 GPUs
+            - 64-128 GPUs
+            - 128-256 GPUs
+            - 256+ GPUs
+          x-go-name: ExpectedCapacity
+          example: <64 GPUs
+        expected_commitment:
+          type: string
+          enum:
+            - On-demand
+            - 1 year
+            - 2 year
+            - 3 year
+          x-go-name: ExpectedCommitment
+          example: 1 year
+        expected_service:
+          type: array
+          items:
+            type: string
+          x-go-name: ExpectedService
+          example: '[Nvidia H100, Nvidia L40S]'
+        name:
+          type: string
+          x-go-name: Name
+          example: john
+        referral:
+          type: string
+          x-go-name: Referral
+          example: marketing event
+        source:
+          type: string
+          x-go-name: Source
+          example: portal
+        use_case:
+          type: string
+          x-go-name: UseCase
+          example: training model to minimize energy usage
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    ProspectPostResponse:
+      title: >-
+        ProspectPostResponse is the response type for POST requests to the
+        prospects endpoint.
+      type: object
+      properties:
+        success:
+          type: boolean
+          x-go-name: Success
+          example: true
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    PublicIPv4Address:
+      type: object
+      required:
+        - address
+        - id
+        - type
+      properties:
+        address:
+          type: string
+          x-go-name: Address
+          example: 121.0.0.0
+        id:
+          type: string
+          x-go-name: ID
+          example: 1ce839b7-3fab-46f9-8e54-7a6bb4ac1ffc
+        type:
+          type: string
+          x-go-name: Type
+          example: dynamic
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    SSHKey:
+      type: object
+      required:
+        - id
+        - name
+        - public_key
+        - created_at
+        - fingerprints
+      properties:
+        created_at:
+          type: string
+          x-go-name: CreatedAt
+          example: '2022-01-24T20:13:35.328Z'
+        fingerprints:
+          $ref: '#/components/schemas/Fingerprints'
+        id:
+          type: string
+          x-go-name: ID
+          example: 0b880f48-6a97-408f-8351-3cc30871e010
+        name:
+          type: string
+          x-go-name: Name
+          example: public key 1
+        public_key:
+          type: string
+          x-go-name: PublicKey
+          example: >-
+            ssh-ed25519
+            AAAAC3NzaC1lZDI1NTE5AAAAICpuH/fqCFLbAConChyVH6rZzSaxlnHSwQk6qvtPsf5E
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    TokenInfo:
+      title: >-
+        TokenInfo contains the Traits Island stores for a Token inside of
+        Kratos.
+      description: These are the fields returned from a GET request.
+      type: object
+      required:
+        - alias
+        - access_key
+        - created_at
+        - expires_at
+        - last_used
+      properties:
+        access_key:
+          type: string
+          x-go-name: AccessKey
+          example: Hm11C1coQZm2+Aihn9ofYg
+        alias:
+          type: string
+          x-go-name: Alias
+          example: token1
+        created_at:
+          type: string
+          x-go-name: CreatedAt
+          example: '2021-11-03T22:16:27Z'
+        expires_at:
+          type: string
+          x-go-name: ExpiresAt
+          example: '2021-12-03T19:58:34Z'
+        last_used:
+          type: string
+          x-go-name: LastUsed
+          example: '2021-11-03T22:22:55Z'
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    TokensGetResponseV1Alpha4:
+      type: object
+      required:
+        - tokens
+      properties:
+        tokens:
+          type: array
+          items:
+            $ref: '#/components/schemas/TokenInfo'
+          x-go-name: Tokens
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    TokensPostResponse:
+      type: object
+      required:
+        - token
+      properties:
+        token:
+          $ref: '#/components/schemas/GeneratedToken'
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    Type:
+      title: >-
+        Types an instance of a Crusoe cloud offering, used in the GET vms.types
+        endpoint response.
+      type: object
+      required:
+        - product_name
+        - description
+        - cpu_cores
+        - cpu_type
+        - memory_gb
+        - memory_type
+        - disk_gb
+        - disk_type
+        - num_gpu
+        - gpu_type
+      properties:
+        description:
+          type: string
+          x-go-name: Description
+          example: 2x Nvidia A100
+        cpu_cores:
+          type: integer
+          format: int64
+          x-go-name: CPUCores
+          example: 4
+        cpu_type:
+          type: string
+          x-go-name: CPUType
+          example: intel
+        disk_gb:
+          type: integer
+          format: int64
+          x-go-name: DiskGB
+          example: 8
+        disk_type:
+          type: string
+          x-go-name: DiskType
+          example: SSD
+        gpu_type:
+          type: string
+          x-go-name: GPUType
+          example: A100
+        memory_gb:
+          type: integer
+          format: int64
+          x-go-name: MemoryGB
+          example: 16
+        memory_type:
+          type: string
+          x-go-name: MemoryType
+          example: RAM
+        num_gpu:
+          type: integer
+          format: int64
+          x-go-name: NumGPU
+          example: 2
+        product_name:
+          type: string
+          x-go-name: ProductName
+          example: a100.2x
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    UsageByProjectGetResponse:
+      title: >-
+        UsageByProjectGetResponse is the response type for GET requests to the
+        usage.usageByProject endpoint.
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProjectUsageResponse'
+          x-go-name: Items
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    UsageOptions:
+      description: >-
+        UsageOptions contains the values which exist for the fields which we
+        allow filtering
+
+        on for the usageByProjectGet endpoint.
+      type: object
+      required:
+        - projects
+        - resource_types
+        - regions
+        - start_date
+        - end_date
+      properties:
+        end_date:
+          type: string
+          x-go-name: EndDate
+          example: '"2023-08-08"'
+        projects:
+          type: array
+          items:
+            type: string
+          x-go-name: Projects
+          example:
+            - d8f58dfd-dd86-4ee4-8f01-643e6d0f15bb
+        regions:
+          type: array
+          items:
+            type: string
+          x-go-name: Regions
+          example:
+            - us-east1
+            - us-northcentral1
+        resource_types:
+          type: array
+          items:
+            type: string
+          x-go-name: ResourceTypes
+          example:
+            - persistent-ssd
+            - a40.1x
+        start_date:
+          type: string
+          x-go-name: StartDate
+          example: '"2022-07-01"'
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    UserResponse:
+      title: UserResponse is the return type from the GET and PUT handlers to User.
+      description: The Identity of a user is returned.
+      type: object
+      required:
+        - identity
+      properties:
+        identity:
+          $ref: '#/components/schemas/Identity'
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    VMAttachmentType:
+      type: string
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    VMAttachmentV1Alpha5:
+      type: object
+      required:
+        - vm_id
+        - attachment_type
+      properties:
+        attachment_type:
+          $ref: '#/components/schemas/VMAttachmentType'
+        mode:
+          $ref: '#/components/schemas/DiskModeType'
+        vm_id:
+          type: string
+          x-go-name: VMID
+          example: 123e4567-e89b-12d3-a456-426614174000
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    VPCFirewallRule:
+      type: object
+      required:
+        - id
+        - name
+        - direction
+        - action
+        - vpc_network_id
+        - state
+        - sources
+        - source_ports
+        - destinations
+        - destination_ports
+        - protocols
+      properties:
+        action:
+          type: string
+          enum:
+            - allow
+            - deny
+          x-go-name: Action
+          example: allow
+        destination_ports:
+          type: array
+          items:
+            type: string
+          x-go-name: DestinationPorts
+          example: '[80, 443, 3000-8080]'
+        destinations:
+          type: array
+          items:
+            $ref: '#/components/schemas/FirewallRuleObject'
+          x-go-name: Destinations
+        direction:
+          type: string
+          enum:
+            - ingress
+            - egress
+          x-go-name: Direction
+          example: ingress
+        id:
+          type: string
+          x-go-name: ID
+          example: 1ce839b7-3fab-46f9-8e54-7a6bb4ac1ffc
+        name:
+          type: string
+          x-go-name: Name
+          example: my-firewall-rule
+        protocols:
+          type: array
+          items:
+            type: string
+          x-go-name: Protocols
+          example: '[tcp, udp]'
+        source_ports:
+          type: array
+          items:
+            type: string
+          x-go-name: SourcePorts
+          example: '[80, 443, 3000-8080]'
+        sources:
+          type: array
+          items:
+            $ref: '#/components/schemas/FirewallRuleObject'
+          x-go-name: Sources
+        state:
+          type: string
+          enum:
+            - active
+            - inactive
+          x-go-name: State
+          example: active
+        vpc_network_id:
+          type: string
+          x-go-name: VPCNetworkID
+          example: 74927f69-f6f6-43f4-bc0d-7bb2e864250e
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    VPCFirewallRulesPatchRequest:
+      title: >-
+        VPCFirewallRulesPatchRequest is the request type for PATCH requests to
+        the VPC networks endpoint.
+      type: object
+      properties:
+        destination_ports:
+          type: array
+          items:
+            type: string
+          x-go-name: DestinationPorts
+          example: '[80, 443, 3000-8080]'
+        destinations:
+          type: array
+          items:
+            $ref: '#/components/schemas/FirewallRuleObject'
+          x-go-name: Destinations
+        name:
+          type: string
+          x-go-name: Name
+          example: my-firewall-rule
+        protocols:
+          type: array
+          items:
+            type: string
+          x-go-name: Protocols
+          example: '[tcp, udp]'
+        source_ports:
+          type: array
+          items:
+            type: string
+          x-go-name: SourcePorts
+          example: '[80, 443, 3000-8080]'
+        sources:
+          type: array
+          items:
+            $ref: '#/components/schemas/FirewallRuleObject'
+          x-go-name: Sources
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    VPCFirewallRulesPostRequestV1Alpha5:
+      title: >-
+        VPCFirewallRulesPostRequest is the request type for POST requests to the
+        VPC networks endpoint.
+      type: object
+      required:
+        - name
+        - direction
+        - action
+        - sources
+        - destinations
+        - protocols
+        - vpc_network_id
+      properties:
+        action:
+          type: string
+          enum:
+            - allow
+            - deny
+          x-go-name: Action
+          example: allow
+        destination_ports:
+          type: array
+          items:
+            type: string
+          x-go-name: DestinationPorts
+          example: '[80, 443, 3000-8080]'
+        destinations:
+          type: array
+          items:
+            $ref: '#/components/schemas/FirewallRuleObject'
+          x-go-name: Destinations
+        direction:
+          type: string
+          enum:
+            - ingress
+            - egress
+          x-go-name: Direction
+          example: ingress
+        name:
+          type: string
+          x-go-name: Name
+          example: my-firewall-rule
+        protocols:
+          type: array
+          items:
+            type: string
+          x-go-name: Protocols
+          example: '[tcp, udp]'
+        source_ports:
+          type: array
+          items:
+            type: string
+          x-go-name: SourcePorts
+          example: '[80, 443, 3000-8080]'
+        sources:
+          type: array
+          items:
+            $ref: '#/components/schemas/FirewallRuleObject'
+          x-go-name: Sources
+        vpc_network_id:
+          type: string
+          x-go-name: VPCNetworkID
+          example: 09ae8411-0fbb-411c-898c-2b8f19622ae1
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    VPCNetwork:
+      type: object
+      required:
+        - id
+        - name
+        - subnets
+        - gateway
+        - cidr
+      properties:
+        cidr:
+          type: string
+          x-go-name: CIDR
+          example: 121.0.0.0/20
+        gateway:
+          type: string
+          x-go-name: Gateway
+          example: 11bf5b4c-e0e5-4017-bdb8-3861f3acedc1
+        id:
+          type: string
+          x-go-name: ID
+          example: 1ce839b7-3fab-46f9-8e54-7a6bb4ac1ffc
+        name:
+          type: string
+          x-go-name: Name
+          example: default-ethernet
+        subnets:
+          type: array
+          items:
+            type: string
+          x-go-name: Subnets
+          example: '[1ce839b7-3fab-46f9-8e54-7a6bb4ac1ffc]'
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    VPCNetworkPatchRequest:
+      title: >-
+        VPCNetworkPatchRequest is the request type for PATCH requests to the VPC
+        Networks endpoint.
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          x-go-name: Name
+          example: my-cool-vpc-network
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    VPCNetworkPostRequest:
+      title: >-
+        VPCNetworkPostRequest is the request type for POST requests to the VPC
+        Networks endpoint.
+      type: object
+      required:
+        - name
+        - cidr
+      properties:
+        cidr:
+          type: string
+          x-go-name: Cidr
+          example: 172.27.0.0/16
+        name:
+          type: string
+          x-go-name: Name
+          example: my-cool-vpc-network
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    VPCNetworkPostResponse:
+      title: >-
+        VPCNetworkPostResponse is the response type for POST requests to the VPC
+        Networks endpoint.
+      type: object
+      required:
+        - network
+      properties:
+        network:
+          $ref: '#/components/schemas/VPCNetwork'
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    VPCSubnet:
+      type: object
+      required:
+        - id
+        - name
+        - vpc_network_id
+        - cidr
+        - location
+      properties:
+        cidr:
+          type: string
+          x-go-name: CIDR
+          example: 121.0.0.0/24
+        id:
+          type: string
+          x-go-name: ID
+          example: 1ce839b7-3fab-46f9-8e54-7a6bb4ac1ffc
+        location:
+          type: string
+          x-go-name: Location
+          example: us-northcentraleast1-a
+        name:
+          type: string
+          x-go-name: Name
+          example: my-subnet
+        vpc_network_id:
+          type: string
+          x-go-name: VPCNetworkID
+          example: 1ce839b7-3fab-46f9-8e54-7a6bb4ac1ffc
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    VPCSubnetPatchRequest:
+      title: >-
+        VPCSubnetPatchRequest is the request type for PATCH requests to the VPC
+        Subnets endpoint.
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          x-go-name: Name
+          example: my-cool-vpc-subnet
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    VPCSubnetPostRequest:
+      title: >-
+        VPCSubnetPostRequest is the request type for POST requests to the VPC
+        Subnet endpoint.
+      type: object
+      required:
+        - name
+        - cidr
+        - vpc_network_id
+        - location
+      properties:
+        cidr:
+          type: string
+          x-go-name: Cidr
+          example: 172.27.0.0/16
+        location:
+          type: string
+          x-go-name: Location
+          example: us-east
+        name:
+          type: string
+          x-go-name: Name
+          example: my-cool-vpc-subnet
+        vpc_network_id:
+          type: string
+          x-go-name: VPCNetworkID
+          example: 36c0b0d9-8b68-4869-addb-227b06b64ee0
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    VPCSubnetPostResponse:
+      title: >-
+        VPCSubnetPostResponse is the response type for POST requests to the VPC
+        Subnets endpoint.
+      type: object
+      required:
+        - subnet
+      properties:
+        subnet:
+          $ref: '#/components/schemas/VPCSubnet'
+      x-go-package: gitlab.com/crusoeenergy/island/rest-gateway/internal/handlers
+    CapacitiesListAvailableResponse:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          x-go-name: Code
+          example: '400'
+        message:
+          type: string
+          x-go-name: Message
+          example: bad_request
+    CapacitiesListAvailable401Response:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          x-go-name: Code
+          example: '401'
+        message:
+          type: string
+          x-go-name: Message
+          example: bad_credential
+    CapacitiesListAvailable403Response:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          x-go-name: Code
+          example: '403'
+        message:
+          type: string
+          x-go-name: Message
+          example: unauthorized
+    CapacitiesListAvailable500Response:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          x-go-name: Code
+          example: '500'
+        message:
+          type: string
+          x-go-name: Message
+          example: internal_error
+    ImagesGetDetailsResponse:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          x-go-name: Code
+          example: '404'
+        message:
+          type: string
+          x-go-name: Message
+          example: not_found
+x-tagGroups:
+  - tags:
+      - VMs
+      - VM-Operations
+      - Images
+      - Instance-Templates
+      - Instance-Groups
+    name: Compute
+  - tags:
+      - Projects
+      - Billing
+      - Entities
+      - Prospects
+      - Usage
+    name: Organizations
+  - tags:
+      - Identities
+      - SSH-Keys
+      - Tokens
+    name: Users
+  - tags:
+      - Disks
+      - Disk-Operations
+      - Snapshots
+      - Snapshot-Operations
+    name: Storage
+  - tags:
+      - VPC-Firewall-Rules
+      - VPC-Firewall-Rule-Operations
+      - VPC-Networks
+      - VPC-Subnets
+      - Internet-Gateways
+      - Load-Balancers
+      - Load-Balancer-Operations
+    name: Networking
+  - tags:
+      - Locations
+    name: Locations
+  - tags:
+      - Capacities
+    name: Capacities
