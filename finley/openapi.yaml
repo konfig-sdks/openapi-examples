@@ -1,0 +1,1295 @@
+openapi: 3.0.2
+info:
+  servers:
+    - api.finleycms.com
+  title: Finley API
+  description: Finley API documentation
+  version: 0.0.2
+servers:
+  - url: api.finleycms.com
+tags:
+  - description: Funding Request Endpoints
+    name: FundingRequests
+  - description: >-
+      Deprecated Funding Request Endpoints.  Please use endpoints listed under
+      Credit Facilities API
+      /credit-facilities/{creditFacilityId}/funding-requests.  The deprecated
+      routes are scheduled to be removed on September 30, 2022.
+    name: FundingRequestsDeprecated
+  - description: Borrowing Base Report Endpoints
+    name: BorrowingBaseReports
+  - description: Credit Facilities Endpoints
+    name: CreditFacilities
+  - description: Expenses & Fees Report Endpoints
+    name: ExpensesFeesReports
+  - description: Webhook Details
+    name: Webhooks
+  - description: |
+      <SchemaDefinition schemaRef="#/components/schemas/BorrowingBaseReport" />
+    name: borrowingBaseReportModel
+    x-displayName: BorrowingBaseReport Model
+  - description: |
+      <SchemaDefinition schemaRef="#/components/schemas/CreditFacility" />
+    name: creditFacilityModel
+    x-displayName: CreditFacility Model
+  - description: |
+      <SchemaDefinition schemaRef="#/components/schemas/FundingRequest" />
+    name: fundingRequestModel
+    x-displayName: FundingRequest Model
+  - description: >
+      <SchemaDefinition schemaRef="#/components/schemas/FundingRequestComponent"
+      />
+    name: fundingRequestComponentModel
+    x-displayName: FundingRequestComponent Model
+  - description: >
+      <SchemaDefinition
+      schemaRef="#/components/schemas/FundingRequestComponentSummary" />
+    name: fundingRequestComponentSummaryModel
+    x-displayName: FundingRequestComponentSummary Model
+paths:
+  /credit-facilities/{creditFacilityId}/borrowing-base-reports/{borrowingBaseReportId}:
+    get:
+      tags:
+        - BorrowingBaseReports
+      summary: Get Borrowing-base Report
+      operationId: BorrowingBaseReports_getById
+      description: Fetches borrowing base report by borrowingBaseReportId
+      parameters:
+        - description: id of the associated credit facility id
+          in: path
+          name: creditFacilityId
+          schema:
+            type: string
+          required: true
+          example: 2c843493-ee7d-4998-94cb-6a97deb92123
+        - description: id of the borrowing base report to get
+          in: path
+          name: borrowingBaseReportId
+          schema:
+            type: string
+          required: true
+          example: 4a61197g-a7c6-32cd-b9f7-f02921c5b123
+      responses:
+        '200':
+          description: borrowing base report object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BorrowingBaseReport'
+      produces:
+        - application/json
+  /credit-facilities/{creditFacilityId}/borrowing-base-reports:
+    get:
+      tags:
+        - BorrowingBaseReports
+      summary: List Borrowing-base Reports
+      operationId: BorrowingBaseReports_getList
+      description: Fetches a list of borrowing base reports.
+      parameters:
+        - description: id of the associated credit facility id
+          in: path
+          name: creditFacilityId
+          schema:
+            type: string
+          required: true
+          example: 2c843493-ee7d-4998-94cb-6a97deb92123
+      responses:
+        '200':
+          description: array of borrowing base report objects
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BorrowingBaseReportsGetListResponse'
+  /credit-facilities/{creditFacilityId}:
+    get:
+      tags:
+        - CreditFacilities
+      summary: Get Credit Facility
+      operationId: CreditFacilities_getById
+      description: Fetches Credit Facility by creditFacilityId
+      parameters:
+        - description: id of the credit facility to get
+          in: path
+          name: creditFacility
+          schema:
+            type: string
+          required: true
+          example: 2c843493-ee7d-4998-94cb-6a97deb92123
+      responses:
+        '200':
+          description: credit facility object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreditFacility'
+  /credit-facilities:
+    get:
+      tags:
+        - CreditFacilities
+      summary: Get Credit Facilities
+      operationId: CreditFacilities_getList
+      description: Fetches Credit Facilities
+      responses:
+        '200':
+          description: credit facility object array
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreditFacilitiesGetListResponse'
+  /credit-facilities/{creditFacilityId}/expenses-fees:
+    get:
+      tags:
+        - ExpensesFeesReports
+      summary: Get Expenses & Fees Report
+      operationId: ExpensesFeesReports_getSummary
+      description: Fetches summary of expenses and fees.
+      parameters:
+        - description: ID of the associated credit facility
+          in: path
+          name: creditFacilityId
+          schema:
+            type: string
+          required: true
+          example: 2c843493-ee7d-4998-94cb-6a97deb92123
+        - description: Optional start date (inclusive) for ledger data
+          in: query
+          name: startDate
+          schema:
+            type: string
+          required: false
+          example: '2023-08-01'
+        - description: Optional end date (inclusive) for ledger data
+          in: query
+          name: endDate
+          schema:
+            type: string
+          required: false
+          example: '2023-08-31'
+      responses:
+        '200':
+          description: Object containing maximum date boundaries and ledger data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExpensesFeesReport'
+              examples:
+                Ledger with available entries:
+                  value:
+                    creditFacilityId: 2c843493-ee7d-4998-94cb-6a97deb92123
+                    fullLedgerLength: 100
+                    ledger:
+                      - date: '2023-08-31'
+                        countersigner: Organization Name
+                        transaction: Admin Fee
+                        amount: 123.45
+                        balance: 123.45
+                        currencyCode: USD
+                      - date: '2023-08-31'
+                        countersigner: Organization Name
+                        transaction: Interest
+                        amount: 126.54
+                        balance: 249.99
+                        currencyCode: USD
+                    _links:
+                      self: >-
+                        /credit-facilities/2c843493-ee7d-4998-94cb-6a97deb92123/expenses-fees?startDate=2023-08-31
+                Ledger with no entries:
+                  value:
+                    creditFacilityId: 2c843493-ee7d-4998-94cb-6a97deb92123
+                    fullLedgerLength: 0
+                    ledger: []
+                    _links:
+                      self: >-
+                        /credit-facilities/2c843493-ee7d-4998-94cb-6a97deb92123/expenses-fees
+  /credit-facilities/{creditFacilityId}/funding-requests/{fundingRequestId}:
+    get:
+      tags:
+        - FundingRequests
+      summary: Get Funding Request
+      operationId: FundingRequests_getByRequestId
+      description: Fetches funding request by fundingRequestId
+      parameters:
+        - description: id of the associated credit facility
+          in: path
+          name: creditFacilityId
+          schema:
+            type: string
+          required: true
+          example: 2c843493-ee7d-4998-94cb-6a97deb92123
+        - description: id of the funding request to get
+          in: path
+          name: fundingRequestId
+          schema:
+            type: string
+          required: true
+          example: 5e71197d-e7d6-41fd-b9f7-f02921c5b392
+      responses:
+        '200':
+          description: funding request object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FundingRequest'
+  /credit-facilities/{creditFacilityId}/funding-requests:
+    get:
+      tags:
+        - FundingRequests
+      summary: List Funding Requests
+      operationId: FundingRequests_list
+      description: Fetches funding requests.
+      parameters:
+        - description: ID of the associated credit facility
+          in: path
+          name: creditFacilityId
+          schema:
+            type: string
+          required: true
+          example: 2c843493-ee7d-4998-94cb-6a97deb92123
+        - description: >-
+            ID of the associated borrowing base report from which the funding
+            request was generated
+          in: query
+          name: borrowingBaseReportId
+          schema:
+            type: string
+          required: false
+          example: 3d743493-ee7d-4998-94cb-6a97deb92123
+        - description: Status of the funding request
+          in: query
+          name: status
+          schema:
+            type: string
+          required: false
+          example: pending
+          enum:
+            - approved
+            - canceled
+            - expired
+            - pending
+            - rejected
+            - submitted
+          type: string
+      responses:
+        '200':
+          description: array of funding request objects
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FundingRequestsListResponse'
+    post:
+      tags:
+        - FundingRequests
+      summary: Create Funding Request
+      operationId: FundingRequests_createPendingRequestUsingLatestBorrowingBase
+      description: Creates a pending funding request using the latest borrowing base report
+      responses:
+        '200':
+          description: Funding request object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FundingRequest'
+        '409':
+          description: Funding request creation failed
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/FundingRequestsCreatePendingRequestUsingLatestBorrowingBaseResponse
+  /credit-facilities/{creditFacilityId}/funding-requests/{fundingRequestId}/components/{fundingRequestComponentId}:
+    get:
+      tags:
+        - FundingRequests
+      summary: Get Component
+      operationId: FundingRequests_getComponentById
+      description: >-
+        Fetches a funding request component specified by fundingRequestId and
+        fundingRequestComponentId
+      parameters:
+        - description: id of the associated credit facility
+          in: path
+          name: creditFacilityId
+          schema:
+            type: string
+          required: true
+          example: 2c843493-ee7d-4998-94cb-6a97deb92123
+        - description: id of the funding request of whose components to get
+          in: path
+          name: fundingRequestId
+          schema:
+            type: string
+          required: true
+          example: 5e71197d-e7d6-41fd-b9f7-f02921c5b392
+        - description: id of the funding request component to be settled
+          in: path
+          name: fundingRequestComponentId
+          schema:
+            type: string
+          required: true
+          example: a22cc363-639b-4243-b4b6-3a8d5c46316c
+      responses:
+        '200':
+          description: funding request component
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FundingRequestComponent'
+  /credit-facilities/{creditFacilityId}/funding-requests/{fundingRequestId}/components:
+    get:
+      tags:
+        - FundingRequests
+      summary: List Components
+      operationId: FundingRequests_listComponentsByRequestId
+      description: Fetches all funding request components by fundingRequestId
+      parameters:
+        - description: id of the associated credit facility
+          in: path
+          name: creditFacilityId
+          schema:
+            type: string
+          required: true
+          example: 2c843493-ee7d-4998-94cb-6a97deb92123
+        - description: id of the funding request of whose components to get
+          in: path
+          name: fundingRequestId
+          schema:
+            type: string
+          required: true
+          example: 5e71197d-e7d6-41fd-b9f7-f02921c5b392
+      responses:
+        '200':
+          description: an array of funding request component summaries
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/FundingRequestsListComponentsByRequestIdResponse
+  /credit-facilities/{creditFacilityId}/funding-requests/{fundingRequestId}/components/{fundingRequestComponentId}/settle:
+    put:
+      tags:
+        - FundingRequests
+      summary: Settle Component
+      operationId: FundingRequests_settleComponentSettlement
+      description: Settles a funding request component
+      parameters:
+        - description: id of the associated credit facility
+          in: path
+          name: creditFacilityId
+          schema:
+            type: string
+          required: true
+          example: 2c843493-ee7d-4998-94cb-6a97deb92123
+        - description: id of the funding request whose component will be settled
+          in: path
+          name: fundingRequestId
+          schema:
+            type: string
+          required: true
+          example: 5e71197d-e7d6-41fd-b9f7-f02921c5b392
+        - description: id of the funding request component to be settled
+          in: path
+          name: fundingRequestComponentId
+          schema:
+            type: string
+          required: true
+          example: a22cc363-639b-4243-b4b6-3a8d5c46316c
+      requestBody:
+        description: Request body
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SettleRequestBody'
+      responses:
+        '204':
+          description: No content
+        '409':
+          description: Settle has already been performed previously
+  /credit-facilities/{creditFacilityId}/funding-requests/{fundingRequestId}/submit:
+    put:
+      tags:
+        - FundingRequests
+      summary: Submit Funding Request
+      operationId: FundingRequests_submitFundingRequest
+      description: Submits a funding request
+      parameters:
+        - description: id of the associated credit facility
+          in: path
+          name: creditFacilityId
+          schema:
+            type: string
+          required: true
+          example: 2c843493-ee7d-4998-94cb-6a97deb92123
+        - description: id of the funding request whose component will be settled
+          in: path
+          name: fundingRequestId
+          schema:
+            type: string
+          required: true
+          example: 5e71197d-e7d6-41fd-b9f7-f02921c5b392
+      requestBody:
+        description: Request body
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FundingRequestSubmissionRequestBody'
+      responses:
+        '204':
+          description: No content
+        '409':
+          description: Funding request submission failed
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/FundingRequestsSubmitFundingRequestResponse
+  /funding-requests/{fundingRequestId}:
+    get:
+      tags:
+        - FundingRequestsDeprecated
+      summary: Get Funding Request
+      operationId: FundingRequestsDeprecated_getById
+      description: Fetches funding request by fundingRequestId
+      parameters:
+        - description: id of the funding request to get
+          in: path
+          name: fundingRequestId
+          schema:
+            type: string
+          required: true
+          example: 5e71197d-e7d6-41fd-b9f7-f02921c5b392
+      responses:
+        '200':
+          description: funding request object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FundingRequest'
+      deprecated: true
+  /funding-requests:
+    get:
+      tags:
+        - FundingRequestsDeprecated
+      summary: List Funding Requests
+      operationId: FundingRequestsDeprecated_getList
+      description: Fetches funding requests.
+      responses:
+        '200':
+          description: array of funding request objects
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FundingRequestsDeprecatedGetListResponse'
+      deprecated: true
+  /funding-requests/{fundingRequestId}/components/{fundingRequestComponentId}:
+    get:
+      tags:
+        - FundingRequestsDeprecated
+      summary: Get Component
+      operationId: FundingRequestsDeprecated_getComponentById
+      description: >-
+        Fetches a funding request component specified by fundingRequestId and
+        fundingRequestComponentId
+      parameters:
+        - description: id of the funding request of whose components to get
+          in: path
+          name: fundingRequestId
+          schema:
+            type: string
+          required: true
+          example: 5e71197d-e7d6-41fd-b9f7-f02921c5b392
+        - description: id of the funding request component to be settled
+          in: path
+          name: fundingRequestComponentId
+          schema:
+            type: string
+          required: true
+          example: a22cc363-639b-4243-b4b6-3a8d5c46316c
+      responses:
+        '200':
+          description: funding request component
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FundingRequestComponent'
+      deprecated: true
+  /funding-requests/{fundingRequestId}/components:
+    get:
+      tags:
+        - FundingRequestsDeprecated
+      summary: List Components
+      operationId: FundingRequestsDeprecated_getComponentsByRequestId
+      description: Fetches all funding request components by fundingRequestId
+      parameters:
+        - description: id of the funding request of whose components to get
+          in: path
+          name: fundingRequestId
+          schema:
+            type: string
+          required: true
+          example: 5e71197d-e7d6-41fd-b9f7-f02921c5b392
+      responses:
+        '200':
+          description: an array of funding request component summaries
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/FundingRequestsDeprecatedGetComponentsByRequestIdResponse
+      deprecated: true
+      produces:
+        - application/json
+  /funding-requests/{fundingRequestId}/components/{fundingRequestComponentId}/settle:
+    put:
+      tags:
+        - FundingRequestsDeprecated
+      summary: Settle Component
+      operationId: FundingRequestsDeprecated_settleComponent
+      description: Settles a funding request component
+      parameters:
+        - description: id of the funding request whose component will be settled
+          in: path
+          name: fundingRequestId
+          schema:
+            type: string
+          required: true
+          example: 5e71197d-e7d6-41fd-b9f7-f02921c5b392
+        - description: id of the funding request component to be settled
+          in: path
+          name: fundingRequestComponentId
+          schema:
+            type: string
+          required: true
+          example: a22cc363-639b-4243-b4b6-3a8d5c46316c
+      requestBody:
+        description: Request body
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SettleRequestBody'
+      responses:
+        '204':
+          description: No content
+        '409':
+          description: Settle has already been performed previously
+      deprecated: true
+components:
+  schemas:
+    BorrowingBaseReport:
+      type: object
+      properties:
+        id:
+          description: The id of the borrowing base report
+          type: string
+          example: 4a61197g-a7c6-32cd-b9f7-f02921c5b123
+        creditFacilityId:
+          description: The id of the associated credit facility
+          type: string
+          example: 2c843493-ee7d-4998-94cb-6a97deb92123
+        currentPrincipalBalance:
+          description: The current principal balance of credit facility
+          type: number
+          example: 10000
+        fileVersion:
+          description: The file version of the borrowing base report
+          type: number
+          example: 1
+        borrowingBaseAmount:
+          description: >-
+            The total contribution of assets to the borrowing base (after
+            applying eligibility kickouts, concentration limits, asset
+            valuations, advance rates, borrowing base reserve, if applicable)
+          type: number
+          example: 20000
+        proFormaCurrentPrincipalBalance:
+          description: >-
+            Current principal balance assuming all approved funding requests are
+            executed
+          type: number
+          example: 15000
+        proFormaBorrowingBaseAmount:
+          description: >-
+            The total contribution of assets to the borrowing base assuming all
+            approved funding requests are executed
+          type: number
+          example: 20000
+        reportingDate:
+          description: The reporting date of the borrowing base report
+          type: string
+          format: date
+          example: '2022-01-01'
+        concentrationLimits:
+          description: Concentration limit calculations
+          type: array
+          items:
+            $ref: '#/components/schemas/ConcentrationLimit'
+        _links:
+          type: object
+          properties:
+            self:
+              type: string
+              example: >-
+                /credit-facilities/2c843493-ee7d-4998-94cb-6a97deb92123/borrowing-base-reports/4a61197g-a7c6-32cd-b9f7-f02921c5b123
+    ConcentrationLimit:
+      type: object
+      properties:
+        key:
+          description: Identifier for the concentration limit
+          type: string
+        type:
+          description: Type of value against which `concentrationLimit` is specified
+          type: string
+          enum:
+            - standard
+            - weightedAverage
+        complianceStatus:
+          description: Compliance status
+          type: string
+          enum:
+            - compliant
+            - limitReached
+            - waived
+        concentration:
+          description: >-
+            Value computed for testing against `concentrationLimit`. If `type`
+            is `standard`, this is computed as `concentrationAmount` / `total
+            eligible exposure`. If `type` is `weightedAverage`, this is computed
+            as the weighted average of a particular receivable property,
+            weighted by exposure.
+          type: number
+        concentrationLimit:
+          description: >-
+            Threshold against which `concentration` is compared, as defined in
+            the contract
+          type: number
+        concentrationAmount:
+          description: >-
+            For standard concentration limits, the exposure (prior to
+            concentration limits being applied) of eligible receivables matching
+            this concentration limit's criteria. For weighted average
+            concentration limits, not present.
+          type: number
+        kickout:
+          description: >-
+            Amount by which the borrowing base was reduced by this concentration
+            limit
+          type: number
+    CreditFacility:
+      type: object
+      properties:
+        id:
+          description: The id of the credit facility
+          type: string
+          example: 2c843493-ee7d-4998-94cb-6a97deb92123
+        slug:
+          description: The slug (human readable) identifier for the credit facility
+          type: string
+          example: acmeCorpAbcProviders1
+        isActive:
+          description: Represents if the credit facility is active or not
+          type: boolean
+          example: true
+        _links:
+          type: object
+          properties:
+            self:
+              type: string
+              example: /credit-facilities/2c843493-ee7d-4998-94cb-6a97deb92123
+    ExpensesFeesReport:
+      description: Object containing maximum date boundaries and ledger data
+      type: object
+      properties:
+        creditFacilityId:
+          description: The id of the credit facility
+          type: string
+          example: 2c843493-ee7d-4998-94cb-6a97deb92123
+        fullLedgerLength:
+          description: The full length of the ledger without query parameters
+          type: number
+          example: 123
+        firstEntryDate:
+          description: The date corresponding to the earliest ledger entry available
+          type: string
+          example: '2023-08-01'
+          format: date
+        lastEntryDate:
+          description: The date corresponding to the most recent ledger entry available
+          type: string
+          example: '2023-08-31'
+          format: date
+        updatedAt:
+          description: >-
+            The timestamp corresponding to the latest ledger update (may not be
+            the same as latest entry when if ledger entries are backdated)
+          type: string
+          format: date-time
+          example: '2023-08-31T13:15:23.17Z'
+        ledger:
+          description: Array of objects containing daily summarized ledger entries
+          type: array
+          items:
+            description: >-
+              Object containing summary of daily amount per transaction type
+              with running balance across all entries
+            type: object
+            properties:
+              date:
+                description: Posting date of transaction
+                type: string
+                example: '2023-08-31'
+                format: date
+              countersigner:
+                description: Party to which liability is owed
+                type: string
+                example: Organization Name
+              transaction:
+                description: Name of transaction type
+                type: string
+                example: Admin Fee
+              amount:
+                description: >-
+                  Total amount posted for transaction type on associated date
+                  (sum of debits and credits)
+                type: number
+                example: 123.45
+              balance:
+                description: Running balance across transactions
+                type: number
+                example: 123.45
+              currencyCode:
+                description: Currency code corresponding to customer account
+                type: string
+                example: USD
+        _links:
+          description: Links to relevant resources
+          type: object
+          properties:
+            self:
+              description: Link for current resource
+              type: string
+              example: >-
+                /credit-facilities/2c843493-ee7d-4998-94cb-6a97deb92123/expenses-fees?startDate=2023-08-01
+      required:
+        - creditFacilityId
+        - fullLedgerLength
+        - ledger
+    FundingRequest:
+      type: object
+      properties:
+        id:
+          description: The id of the funding request
+          type: string
+          example: 5e71197d-e7d6-41fd-b9f7-f02921c5b392
+        borrowingBaseReportId:
+          description: >-
+            The id of the corresponding borrowing base report from which this
+            funding request was generated
+          type: string
+          example: 4a61197g-a7c6-32cd-b9f7-f02921c5b123
+        collectionsPaydownTotalAmount:
+          description: >-
+            The total amount of collections paydowns associated with the funding
+            request
+          type: number
+          example: 0
+        collectionsRecycleTotalAmount:
+          description: >-
+            The total amount of collections recycles associated with the funding
+            request
+          type: number
+          example: 500250.51
+        createdAt:
+          description: The datetime the funding request was created
+          type: string
+          format: date-time
+        creditFacilityId:
+          description: The credit facility id associated with funding request
+          type: string
+          example: 2c843493-ee7d-4998-94cb-6a97deb92123
+        curePaydownTotalAmount:
+          description: >-
+            The total amount of cure paydowns associated with the funding
+            request
+          type: number
+          example: 0
+        drawRequestTotalAmount:
+          description: >-
+            The total amount of draw requests paydowns associated with the
+            funding request
+          type: number
+          example: 1234567.89
+        expire:
+          description: >-
+            The expiration datetime of the funding request (if the funding
+            request does not reach a terminal state prior)
+          type: string
+          format: date-time
+        isCurrent:
+          description: >-
+            Will be true if funding request is the current funding request,
+            otherwise null
+          type: boolean
+          nullable: true
+          example: true
+        status:
+          description: The current status of the funding request
+          type: string
+          example: approved
+          enum:
+            - approved
+            - canceled
+            - expired
+            - pending
+            - rejected
+            - submitted
+        _links:
+          type: object
+          properties:
+            components:
+              type: string
+              example: >-
+                /credit-facilities/2c843493-ee7d-4998-94cb-6a97deb92123/funding-requests/5e71197d-e7d6-41fd-b9f7-f02921c5b392/components
+            borrowingBaseReport:
+              type: string
+              example: >-
+                /credit-facilities/2c843493-ee7d-4998-94cb-6a97deb92123/borrowing-base-reports/4a61197g-a7c6-32cd-b9f7-f02921c5b123
+            self:
+              type: string
+              example: >-
+                /credit-facilities/2c843493-ee7d-4998-94cb-6a97deb92123/funding-requests/5e71197d-e7d6-41fd-b9f7-f02921c5b392
+    FundingRequestComponent:
+      type: object
+      properties:
+        id:
+          description: The id of the funding request component
+          type: string
+          example: a22cc363-639b-4243-b4b6-3a8d5c46316c
+        amount:
+          description: The amount associated with the funding request component
+          type: number
+          example: 1234567.89
+        destinationBankAccountId:
+          description: >-
+            The destination bank account id (internal Finley identifier)
+            associated with the funding request component
+          type: string
+          example: 151d1f11-139c-4371-98fc-6b4934e69f1b
+        fundingRequestId:
+          description: The id of the associated funding request
+          type: string
+          example: 5e71197d-e7d6-41fd-b9f7-f02921c5b392
+        settlementDate:
+          description: >-
+            The date the funding request component amount was transferred from
+            source to destination bank account
+          type: string
+          nullable: true
+          example: null
+          format: date
+        sourceBankAccountId:
+          description: >-
+            The source bank account id (internal Finley identifier) associated
+            with the funding request component
+          type: string
+          example: 441a53a7-10f8-42ad-8fa0-a5a253db0f4e
+        capitalProviderSlug:
+          description: >-
+            The slug (human readable) identifier for the associated capital
+            provider. May be null if there is no associated capital provider
+            (e.g. components of type collections recycle).
+          type: string
+          example: abcProviders
+          nullable: true
+        targetFundingDate:
+          description: >-
+            The target date the funding request component amount was intended to
+            be transferred
+          type: string
+          nullable: true
+          format: date
+        type:
+          description: The type of funding request component
+          type: string
+          example: drawRequest
+          enum:
+            - collectionsPaydown
+            - collectionsRecycle
+            - curePaydown
+            - drawRequest
+        _links:
+          type: object
+          properties:
+            self:
+              type: string
+              example: >-
+                /funding-requests/5e71197d-e7d6-41fd-b9f7-f02921c5b392/components/a22cc363-639b-4243-b4b6-3a8d5c46316c
+    FundingRequestComponentSummary:
+      type: object
+      properties:
+        amount:
+          description: The amount associated with the funding request component
+          type: number
+          example: 1234567.89
+        id:
+          description: The id of the funding request component
+          type: string
+          example: a22cc363-639b-4243-b4b6-3a8d5c46316c
+        type:
+          description: The type of funding request component
+          type: string
+          example: drawRequest
+          enum:
+            - collectionsPaydown
+            - collectionsRecycle
+            - curePaydown
+            - drawRequest
+        _links:
+          type: object
+          properties:
+            self:
+              type: string
+              example: >-
+                /credit-facilities/2c843493-ee7d-4998-94cb-6a97deb92123/funding-requests/5e71197d-e7d6-41fd-b9f7-f02921c5b392/components/a22cc363-639b-4243-b4b6-3a8d5c46316c
+    FundingRequestSubmissionRequestBody:
+      description: >-
+        The funding request components (only non-zero components should be
+        submitted)
+      type: object
+      properties:
+        collectionsPaydown:
+          description: Transaction to issue paydown of balance from collections account
+          type: object
+          properties:
+            amount:
+              description: Amount for funding transaction
+              type: number
+              example: 1000000
+            targetFundingDate:
+              description: >-
+                The target date for which this funding transaction is expected
+                to settle
+              type: string
+              format: date
+              example: '2023-08-31'
+        collectionsRecycle:
+          description: Transaction to recycle cash from collections account
+          type: object
+          properties:
+            amount:
+              description: Amount for funding transaction
+              type: number
+              example: 1000000
+            targetFundingDate:
+              description: >-
+                The target date for which this funding transaction is expected
+                to settle
+              type: string
+              format: date
+              example: '2023-08-31'
+        curePaydown:
+          description: >-
+            Transaction to issue paydown of balance from parent operating
+            account
+          type: object
+          properties:
+            amount:
+              description: Amount for funding transaction
+              type: number
+              example: 1000000
+            targetFundingDate:
+              description: >-
+                The target date for which this funding transaction is expected
+                to settle
+              type: string
+              format: date
+              example: '2023-08-31'
+        drawRequest:
+          description: Transaction to issue draw request from capital provider
+          type: object
+          properties:
+            amount:
+              description: Amount for funding transaction
+              type: number
+              example: 1000000
+            targetFundingDate:
+              description: >-
+                The target date for which this funding transaction is expected
+                to settle
+              type: string
+              format: date
+              example: '2023-08-31'
+    SettleRequestBody:
+      type: object
+      properties:
+        amount:
+          description: >-
+            The amount of the funding request component to be settled.  This
+            must exactly match the amount in the funding request component.
+          type: number
+          example: 1234567.89
+        settlementDate:
+          description: >-
+            The date of which the funding request component amount was
+            transferred.
+          type: string
+          format: date
+    FundingRequestApproved:
+      type: object
+      properties:
+        id:
+          description: The id of the webhook event
+          type: string
+          example: 5e71197d-e7d6-41fd-b9f7-f02921c5b392
+        eventType:
+          type: fundingRequest.approved
+          example: fundingRequest.approved
+        timestamp:
+          description: The timestamp that the event occurred
+          type: string
+          format: date-time
+          example: '2022-02-26T33:15:23.17Z'
+        payload:
+          type: object
+          properties:
+            testPayload:
+              description: >-
+                if set to true this payload was generated just to test the
+                webhook
+              type: boolean
+              required: false
+              example: true
+            fundingRequestId:
+              description: The id of the funding request you submitted.
+              type: string
+              example: 0a042147-3f56-4356-8d80-302813823995
+            creditFacilityId:
+              description: The id of the credit facility this funding request belongs to
+              type: string
+              example: 4883c161-88ec-483a-b1a1-547a38b1eec7
+            fundingRequestComponents:
+              description: >-
+                The funding request components belonging to this overall funding
+                request
+              type: array
+              items:
+                type: object
+                properties:
+                  fundingRequestComponentId:
+                    description: >-
+                      The id of the funding request component you submitted. A
+                      funding request is guaranteed to contain 1 or more funding
+                      request components.
+                    type: string
+                    example: 486d5adf-d648-47f0-b581-3666010bbfc6
+                  fundingRequestComponentType:
+                    description: The type of this given funding request component.
+                    type: string
+                    example: drawRequest
+                    enum:
+                      - collectionsPaydown
+                      - collectionsRecycle
+                      - curePaydown
+                      - drawRequest
+    BorrowingBaseReportGenerated:
+      type: object
+      properties:
+        id:
+          description: The id of the webhook event
+          type: string
+          example: 5e71197d-e7d6-41fd-b9f7-f02921c5b392
+        eventType:
+          type: borrowingBaseReport.generated
+          example: borrowingBaseReport.generated
+        timestamp:
+          description: The timestamp that the event occurred
+          type: string
+          format: date-time
+          example: '2022-02-26T33:15:23.17Z'
+        payload:
+          type: object
+          properties:
+            testPayload:
+              description: >-
+                if set to true this payload was generated just to test the
+                webhook
+              type: boolean
+              required: false
+              example: true
+            borrowingBaseReportId:
+              description: The id of the borrowing base report that was generated
+              type: string
+              example: 39a5a605-cddf-4629-b2aa-154b2dc4cf8d
+            creditFacilityId:
+              description: >-
+                The id of the credit facility that this borrowing base report
+                belongs to
+              type: string
+              example: b691a27b-9765-45b9-93c3-b661db7ab31a
+    BorrowingBaseReportsGetListResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/BorrowingBaseReport'
+    CreditFacilitiesGetListResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/CreditFacility'
+    FundingRequestsListResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/FundingRequest'
+    FundingRequestsCreatePendingRequestUsingLatestBorrowingBaseResponse:
+      type: object
+      properties:
+        errorCode:
+          description: >-
+            Short description that can be used for API clients to categorize
+            errors
+          type: string
+          example: latestBorrowingBaseReportIsTooOld
+        message:
+          description: Full description of error for human-readable display
+          type: string
+          example: Latest borrowing base report is too old to be used.
+        resolution:
+          description: >-
+            Provides full text description of error for human-readable display
+            along with steps for resolution if possible
+          type: string
+          example: >-
+            Please upload a new set of tapes. If tapes are currently processing,
+            please wait until the borrowing base report has been generated.
+    FundingRequestsListComponentsByRequestIdResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/FundingRequestComponentSummary'
+    FundingRequestsSubmitFundingRequestResponse:
+      type: object
+      properties:
+        errorType:
+          description: Type of error from submission
+          type: string
+          enum:
+            - input
+            - submission
+        inputErrors:
+          description: When errorType is `input`, a list of input errors will be returned
+          type: array
+          items:
+            type: object
+            properties:
+              errorCode:
+                description: >-
+                  Short description that can be used for API clients to
+                  categorize errors
+                type: string
+                enum:
+                  - invalidComponentType
+                  - invalidFundingAmount
+                  - invalidTargetFundingDate
+              message:
+                description: Full description of error for human-readable display
+                type: string
+                example: Latest borrowing base report is too old to be used.
+              resolution:
+                description: >-
+                  Provides full text description of error for human-readable
+                  display along with steps for resolution if possible
+                type: string
+                example: >-
+                  Please upload a new set of tapes. If tapes are currently
+                  processing, please wait until the borrowing base report has
+                  been generated.
+        submissionError:
+          description: >-
+            When errorType is `submission`, the submission error will be
+            returned
+          type: object
+          properties:
+            message:
+              description: Full description of error for human-readable display
+              type: string
+              example: Funding request submission body must not be empty.
+            resolution:
+              description: >-
+                Provides full text description of error for human-readable
+                display along with steps for resolution if possible
+              type: string
+              example: >-
+                Please submit a request containing at least one valid component
+                type with a positive amount and target funding date.
+    FundingRequestsDeprecatedGetListResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/FundingRequest'
+    FundingRequestsDeprecatedGetComponentsByRequestIdResponse:
+      type: array
+      items:
+        type: object
+        properties:
+          amount:
+            type: number
+            example: 1234567.89
+          id:
+            type: string
+            example: a22cc363-639b-4243-b4b6-3a8d5c46316c
+          type:
+            type: string
+            example: drawRequest
+            enum:
+              - collectionsPaydown
+              - collectionsRecycle
+              - curePaydown
+              - drawRequest
+          _links:
+            type: object
+            properties:
+              self:
+                type: string
+                example: >-
+                  /funding-requests/5e71197d-e7d6-41fd-b9f7-f02921c5b392/components/a22cc363-639b-4243-b4b6-3a8d5c46316c
+security: []
+x-webhooks:
+  FundingRequestApprovedEvent:
+    post:
+      tags:
+        - Webhooks
+      summary: FundingRequestApprovedEvent
+      description: Sent when a funding request is approved
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FundingRequestApproved'
+  BorrowingBaseReportGeneratedEvent:
+    post:
+      tags:
+        - Webhooks
+      summary: BorrowingBaseReportGeneratedEvent
+      description: Sent when a borrowing base report is generated
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BorrowingBaseReportGenerated'
+x-tagGroups:
+  - tags:
+      - BorrowingBaseReports
+      - CreditFacilities
+      - ExpensesFeesReports
+      - FundingRequests
+    name: Credit Facility API
+  - tags:
+      - borrowingBaseReportModel
+      - creditFacilityModel
+      - fundingRequestModel
+      - fundingRequestComponentModel
+      - fundingRequestComponentSummaryModel
+    name: Models
+  - tags:
+      - Webhooks
+    name: Webhooks
+  - tags:
+      - FundingRequestsDeprecated
+    name: Deprecated
