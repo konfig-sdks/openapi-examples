@@ -1,0 +1,4695 @@
+openapi: 3.0.0
+info:
+  title: Hathora Cloud API
+  description: >-
+    Welcome to the Hathora Cloud API documentation! Learn how to use the Hathora
+    Cloud APIs to build and scale your game servers globally.
+  version: 0.0.1
+  contact: {}
+servers:
+  - url: https://api.hathora.dev
+  - url: ''
+tags:
+  - description: >-
+      Operations to create, manage, and connect to
+      [rooms](https://hathora.dev/docs/concepts/hathora-entities#room).
+    name: RoomV2
+  - description: Deprecated. Use [LobbyV3](https://hathora.dev/api#tag/LobbyV3).
+    name: LobbyV2
+  - description: Deprecated. Use [RoomV2](https://hathora.dev/api#tag/RoomV2).
+    name: RoomV1
+  - description: >-
+      Operations that allow you manage your
+      [applications](https://hathora.dev/docs/concepts/hathora-entities#application).
+    name: AppV1
+  - description: >-
+      Operations that allow you create and manage your
+      [builds](https://hathora.dev/docs/concepts/hathora-entities#build).
+    name: BuildV1
+  - description: >-
+      Operations that allow you configure and manage an application's
+      [build](https://hathora.dev/docs/concepts/hathora-entities#build) at
+      runtime.
+    name: DeploymentV1
+  - description: >-
+      Operations to create and manage lobbies using our [Lobby
+      Service](https://hathora.dev/docs/lobbies-and-matchmaking/lobby-service).
+    name: LobbyV3
+  - description: >-
+      Operations to get logs by
+      [applications](https://hathora.dev/docs/concepts/hathora-entities#application),
+      [processes](https://hathora.dev/docs/concepts/hathora-entities#process),
+      and
+      [deployments](https://hathora.dev/docs/concepts/hathora-entities#deployment).
+      We store 20GB of logs data.
+    name: LogV1
+  - description: >-
+      Operations to get data on active and stopped
+      [processes](https://hathora.dev/docs/concepts/hathora-entities#process).
+    name: ProcessesV2
+  - name: BillingV1
+  - description: >-
+      Operations that allow you to generate a Hathora-signed [JSON web token
+      (JWT)](https://jwt.io/) for [player
+      authentication](https://hathora.dev/docs/lobbies-and-matchmaking/auth-service).
+    name: AuthV1
+  - description: Deprecated. Use [LobbyV3](https://hathora.dev/api#tag/LobbyV3).
+    name: LobbyV1
+  - description: Deprecated. Use [ProcessesV2](https://hathora.dev/api#tag/ProcessesV2).
+    name: ProcessesV1
+  - name: OrgTokensV1
+  - description: >-
+      Service that allows clients to directly ping all Hathora regions to get
+      latency information
+    name: DiscoveryV1
+  - description: >-
+      Operations to get metrics by
+      [process](https://hathora.dev/docs/concepts/hathora-entities#process). We
+      store 72 hours of metrics data.
+    name: MetricsV1
+  - name: ManagementV1
+paths:
+  /apps/v1/list:
+    get:
+      tags:
+        - AppV1
+      operationId: AppV1_getAppList
+      security:
+        - hathoraDevToken: []
+      description: >-
+        Returns an unsorted list of your organization’s
+        [applications](https://hathora.dev/docs/concepts/hathora-entities#application).
+        An application is uniquely identified by an `appId`.
+      parameters: []
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppV1GetAppListResponse'
+  /apps/v1/create:
+    post:
+      tags:
+        - AppV1
+      operationId: AppV1_createNewApplication
+      security:
+        - hathoraDevToken: []
+      description: >-
+        Create a new
+        [application](https://hathora.dev/docs/concepts/hathora-entities#application).
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AppConfig'
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Application'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '422':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '500':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /apps/v1/update/{appId}:
+    post:
+      tags:
+        - AppV1
+      operationId: AppV1_updateApplicationData
+      security:
+        - hathoraDevToken: []
+      description: >-
+        Update data for an existing
+        [application](https://hathora.dev/docs/concepts/hathora-entities#application)
+        using `appId`.
+      parameters:
+        - in: path
+          name: appId
+          required: true
+          schema:
+            $ref: '#/components/schemas/AppId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AppConfig'
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Application'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '422':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '500':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /apps/v1/info/{appId}:
+    get:
+      tags:
+        - AppV1
+      operationId: AppV1_getAppInfo
+      security:
+        - hathoraDevToken: []
+      description: >-
+        Get details for an
+        [application](https://hathora.dev/docs/concepts/hathora-entities#application)
+        using `appId`.
+      parameters:
+        - in: path
+          name: appId
+          required: true
+          schema:
+            $ref: '#/components/schemas/AppId'
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Application'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /apps/v1/delete/{appId}:
+    delete:
+      tags:
+        - AppV1
+      operationId: AppV1_deleteApplicationById
+      security:
+        - hathoraDevToken: []
+      description: >-
+        Delete an
+        [application](https://hathora.dev/docs/concepts/hathora-entities#application)
+        using `appId`. Your organization will lose access to this application.
+      parameters:
+        - in: path
+          name: appId
+          required: true
+          schema:
+            $ref: '#/components/schemas/AppId'
+      responses:
+        '204':
+          description: No content
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '500':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /auth/v1/{appId}/login/anonymous:
+    post:
+      tags:
+        - AuthV1
+      operationId: AuthV1_generatePlayerToken
+      security: []
+      description: Returns a unique player token for an anonymous user.
+      parameters:
+        - in: path
+          name: appId
+          required: true
+          schema:
+            $ref: '#/components/schemas/AppId'
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /auth/v1/{appId}/login/nickname:
+    post:
+      tags:
+        - AuthV1
+      operationId: AuthV1_generateUniquePlayerToken
+      security: []
+      description: Returns a unique player token with a specified nickname for a user.
+      parameters:
+        - in: path
+          name: appId
+          required: true
+          schema:
+            $ref: '#/components/schemas/AppId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginNicknameRequest'
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /auth/v1/{appId}/login/google:
+    post:
+      tags:
+        - AuthV1
+      operationId: AuthV1_getUniquePlayerToken
+      security: []
+      description: Returns a unique player token using a Google-signed OIDC `idToken`.
+      parameters:
+        - in: path
+          name: appId
+          required: true
+          schema:
+            $ref: '#/components/schemas/AppId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginGoogleRequest'
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /billing/v1/balance:
+    get:
+      tags:
+        - BillingV1
+      operationId: BillingV1_getBalance
+      security:
+        - hathoraDevToken: []
+      parameters: []
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BillingV1GetBalanceResponse'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /billing/v1/paymentmethod:
+    get:
+      tags:
+        - BillingV1
+      operationId: BillingV1_getPaymentMethod
+      security:
+        - hathoraDevToken: []
+      parameters: []
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/Partial__card-CardPaymentMethod--ach-AchPaymentMethod--link-LinkPaymentMethod--__
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '500':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /billing/v1/customerportalurl:
+    post:
+      tags:
+        - BillingV1
+      operationId: BillingV1_createCustomerPortalUrl
+      security:
+        - hathoraDevToken: []
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerPortalUrl'
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BillingV1CreateCustomerPortalUrlResponse'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /billing/v1/invoices:
+    get:
+      tags:
+        - BillingV1
+      operationId: BillingV1_listInvoices
+      security:
+        - hathoraDevToken: []
+      parameters: []
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BillingV1ListInvoicesResponse'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /builds/v1/{appId}/list:
+    get:
+      tags:
+        - BuildV1
+      operationId: BuildV1_getApplicationBuilds
+      security:
+        - hathoraDevToken: []
+      description: >-
+        Returns an array of
+        [builds](https://hathora.dev/docs/concepts/hathora-entities#build) for
+        an
+        [application](https://hathora.dev/docs/concepts/hathora-entities#application).
+      parameters:
+        - in: path
+          name: appId
+          required: true
+          schema:
+            $ref: '#/components/schemas/AppId'
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BuildV1GetApplicationBuildsResponse'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /builds/v1/{appId}/info/{buildId}:
+    get:
+      tags:
+        - BuildV1
+      operationId: BuildV1_getApplicationInfo
+      security:
+        - hathoraDevToken: []
+      description: >-
+        Get details for a
+        [build](https://hathora.dev/docs/concepts/hathora-entities#build).
+      parameters:
+        - in: path
+          name: appId
+          required: true
+          schema:
+            $ref: '#/components/schemas/AppId'
+        - in: path
+          name: buildId
+          required: true
+          schema:
+            $ref: '#/components/schemas/BuildId'
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Build'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /builds/v1/{appId}/create:
+    post:
+      tags:
+        - BuildV1
+      operationId: BuildV1_createBuild
+      security:
+        - hathoraDevToken: []
+      description: >-
+        Creates a new
+        [build](https://hathora.dev/docs/concepts/hathora-entities#build).
+        Responds with a `buildId` that you must pass to
+        [`RunBuild()`](https://hathora.dev/api#tag/BuildV1/operation/RunBuild)
+        to build the game server artifact. You can optionally pass in a
+        `buildTag` to associate an external version with a build.
+      parameters:
+        - in: path
+          name: appId
+          required: true
+          schema:
+            $ref: '#/components/schemas/AppId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBuildParams'
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Build'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '500':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /builds/v1/{appId}/run/{buildId}:
+    post:
+      tags:
+        - BuildV1
+      operationId: BuildV1_buildServerArtifact
+      security:
+        - hathoraDevToken: []
+      description: >-
+        Builds a game server artifact from a tarball you provide. Pass in the
+        `buildId` generated from
+        [`CreateBuild()`](https://hathora.dev/api#tag/BuildV1/operation/CreateBuild).
+      parameters:
+        - in: path
+          name: appId
+          required: true
+          schema:
+            $ref: '#/components/schemas/AppId'
+        - in: path
+          name: buildId
+          required: true
+          schema:
+            $ref: '#/components/schemas/BuildId'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BuildV1BuildServerArtifactRequest'
+      responses:
+        '200':
+          description: Ok
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/BuildV1BuildServerArtifactResponse'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '500':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /builds/v1/{appId}/delete/{buildId}:
+    delete:
+      tags:
+        - BuildV1
+      operationId: BuildV1_deleteBuildById
+      security:
+        - hathoraDevToken: []
+      description: >-
+        Delete a
+        [build](https://hathora.dev/docs/concepts/hathora-entities#build). All
+        associated metadata is deleted.
+      parameters:
+        - in: path
+          name: appId
+          required: true
+          schema:
+            $ref: '#/components/schemas/AppId'
+        - in: path
+          name: buildId
+          required: true
+          schema:
+            $ref: '#/components/schemas/BuildId'
+      responses:
+        '204':
+          description: No content
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '422':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '500':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /deployments/v1/{appId}/list:
+    get:
+      tags:
+        - DeploymentV1
+      operationId: DeploymentV1_listDeploymentsByAppId
+      security:
+        - hathoraDevToken: []
+      description: >-
+        Returns an array of
+        [deployments](https://hathora.dev/docs/concepts/hathora-entities#deployment)
+        for an
+        [application](https://hathora.dev/docs/concepts/hathora-entities#application).
+      parameters:
+        - in: path
+          name: appId
+          required: true
+          schema:
+            $ref: '#/components/schemas/AppId'
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/DeploymentV1ListDeploymentsByAppIdResponse
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /deployments/v1/{appId}/latest:
+    get:
+      tags:
+        - DeploymentV1
+      operationId: DeploymentV1_getLatestDeploymentByAppId
+      security:
+        - hathoraDevToken: []
+      description: >-
+        Get the latest
+        [deployment](https://hathora.dev/docs/concepts/hathora-entities#deployment)
+        for an
+        [application](https://hathora.dev/docs/concepts/hathora-entities#application).
+      parameters:
+        - in: path
+          name: appId
+          required: true
+          schema:
+            $ref: '#/components/schemas/AppId'
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Deployment'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /deployments/v1/{appId}/info/{deploymentId}:
+    get:
+      tags:
+        - DeploymentV1
+      operationId: DeploymentV1_getInfo
+      security:
+        - hathoraDevToken: []
+      description: >-
+        Get details for a
+        [deployment](https://hathora.dev/docs/concepts/hathora-entities#deployment).
+      parameters:
+        - in: path
+          name: appId
+          required: true
+          schema:
+            $ref: '#/components/schemas/AppId'
+        - in: path
+          name: deploymentId
+          required: true
+          schema:
+            $ref: '#/components/schemas/DeploymentId'
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Deployment'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /deployments/v1/{appId}/create/{buildId}:
+    post:
+      tags:
+        - DeploymentV1
+      operationId: DeploymentV1_createNewDeployment
+      security:
+        - hathoraDevToken: []
+      description: >-
+        Create a new
+        [deployment](https://hathora.dev/docs/concepts/hathora-entities#deployment).
+        Creating a new deployment means all new rooms created will use the
+        latest deployment configuration, but existing games in progress will not
+        be affected.
+      parameters:
+        - in: path
+          name: appId
+          required: true
+          schema:
+            $ref: '#/components/schemas/AppId'
+        - in: path
+          name: buildId
+          required: true
+          schema:
+            $ref: '#/components/schemas/BuildId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeploymentConfig'
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Deployment'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '422':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '500':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /discovery/v1/ping:
+    get:
+      tags:
+        - DiscoveryV1
+      operationId: DiscoveryV1_getEndpoints
+      security: []
+      description: >-
+        Returns an array of all regions with a host and port that a client can
+        directly ping. Open a websocket connection to `wss://<host>:<port>/ws`
+        and send a packet. To calculate ping, measure the time it takes to get
+        an echo packet back.
+      parameters: []
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DiscoveryResponse'
+  /lobby/v1/{appId}/create/private:
+    post:
+      tags:
+        - LobbyV1
+      operationId: LobbyV1_createPrivateLobby
+      security:
+        - playerAuth: []
+      parameters:
+        - in: path
+          name: appId
+          required: true
+          schema:
+            $ref: '#/components/schemas/AppId'
+        - in: query
+          name: region
+          required: false
+          schema:
+            $ref: '#/components/schemas/Region'
+        - in: query
+          name: local
+          required: false
+          schema:
+            default: false
+            type: boolean
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoomId'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '402':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '422':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '429':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '500':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+      deprecated: true
+  /lobby/v1/{appId}/create/public:
+    post:
+      tags:
+        - LobbyV1
+      operationId: LobbyV1_createPublicLobby
+      security:
+        - playerAuth: []
+      parameters:
+        - in: path
+          name: appId
+          required: true
+          schema:
+            $ref: '#/components/schemas/AppId'
+        - in: query
+          name: region
+          required: false
+          schema:
+            $ref: '#/components/schemas/Region'
+        - in: query
+          name: local
+          required: false
+          schema:
+            default: false
+            type: boolean
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoomId'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '402':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '422':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '429':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '500':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+      deprecated: true
+  /lobby/v1/{appId}/list:
+    get:
+      tags:
+        - LobbyV1
+      operationId: LobbyV1_listLobbiesByAppId
+      security: []
+      parameters:
+        - in: path
+          name: appId
+          required: true
+          schema:
+            $ref: '#/components/schemas/AppId'
+        - in: query
+          name: local
+          required: false
+          schema:
+            default: false
+            type: boolean
+        - in: query
+          name: region
+          required: false
+          schema:
+            $ref: '#/components/schemas/Region'
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LobbyV1ListLobbiesByAppIdResponse'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+      deprecated: true
+  /lobby/v2/{appId}/create/private:
+    post:
+      tags:
+        - LobbyV2
+      operationId: LobbyV2_createPrivateLobby
+      security:
+        - playerAuth: []
+      parameters:
+        - in: path
+          name: appId
+          required: true
+          schema:
+            $ref: '#/components/schemas/AppId'
+        - in: query
+          name: roomId
+          required: false
+          schema:
+            $ref: '#/components/schemas/RoomId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LobbyV2CreatePrivateLobbyRequest'
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Lobby'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '402':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '422':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '429':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '500':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+      deprecated: true
+  /lobby/v2/{appId}/create/public:
+    post:
+      tags:
+        - LobbyV2
+      operationId: LobbyV2_createPublicLobby
+      security:
+        - playerAuth: []
+      parameters:
+        - in: path
+          name: appId
+          required: true
+          schema:
+            $ref: '#/components/schemas/AppId'
+        - in: query
+          name: roomId
+          required: false
+          schema:
+            $ref: '#/components/schemas/RoomId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LobbyV2CreatePublicLobbyRequest'
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Lobby'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '402':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '422':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '429':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '500':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+      deprecated: true
+  /lobby/v2/{appId}/create/local:
+    post:
+      tags:
+        - LobbyV2
+      operationId: LobbyV2_createLocalLobby
+      security:
+        - playerAuth: []
+      parameters:
+        - in: path
+          name: appId
+          required: true
+          schema:
+            $ref: '#/components/schemas/AppId'
+        - in: query
+          name: roomId
+          required: false
+          schema:
+            $ref: '#/components/schemas/RoomId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LobbyV2CreateLocalLobbyRequest'
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Lobby'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '402':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '422':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '429':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '500':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+      deprecated: true
+  /lobby/v2/{appId}/create:
+    post:
+      tags:
+        - LobbyV2
+      operationId: LobbyV2_createLobby
+      security:
+        - playerAuth: []
+      description: >-
+        Create a new lobby for an
+        [application](https://hathora.dev/docs/concepts/hathora-entities#application).
+        A lobby object is a wrapper around a
+        [room](https://hathora.dev/docs/concepts/hathora-entities#room) object.
+        With a lobby, you get additional functionality like configuring the
+        visibility of the room, managing the state of a match, and retrieving a
+        list of public lobbies to display to players.
+      parameters:
+        - in: path
+          name: appId
+          required: true
+          schema:
+            $ref: '#/components/schemas/AppId'
+        - in: query
+          name: roomId
+          required: false
+          schema:
+            $ref: '#/components/schemas/RoomId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateLobbyParams'
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Lobby'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '402':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '422':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '429':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '500':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+      deprecated: true
+  /lobby/v2/{appId}/list/public:
+    get:
+      tags:
+        - LobbyV2
+      operationId: LobbyV2_listPublicLobbies
+      security: []
+      description: >-
+        Get all active lobbies for a an
+        [application](https://hathora.dev/docs/concepts/hathora-entities#application).
+        Filter by optionally passing in a `region`. Use this endpoint to display
+        all public lobbies that a player can join in the game client.
+      parameters:
+        - in: path
+          name: appId
+          required: true
+          schema:
+            $ref: '#/components/schemas/AppId'
+        - description: >-
+            Region to filter by. If omitted, active public lobbies in all
+            regions will be returned.
+          in: query
+          name: region
+          required: false
+          schema:
+            $ref: '#/components/schemas/Region'
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LobbyV2ListPublicLobbiesResponse'
+      deprecated: true
+  /lobby/v2/{appId}/info/{roomId}:
+    get:
+      tags:
+        - LobbyV2
+      operationId: LobbyV2_getLobbyDetails
+      security: []
+      description: Get details for a lobby.
+      parameters:
+        - in: path
+          name: appId
+          required: true
+          schema:
+            $ref: '#/components/schemas/AppId'
+        - in: path
+          name: roomId
+          required: true
+          schema:
+            $ref: '#/components/schemas/RoomId'
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Lobby'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+      deprecated: true
+  /lobby/v2/{appId}/setState/{roomId}:
+    post:
+      tags:
+        - LobbyV2
+      operationId: LobbyV2_setLobbyState
+      security:
+        - hathoraDevToken: []
+      description: >-
+        Set the state of a lobby. State is intended to be set by the server and
+        must be smaller than 1MB. Use this endpoint to store match data like
+        live player count to enforce max number of clients or persist end-game
+        data (i.e. winner or final scores).
+      parameters:
+        - in: path
+          name: appId
+          required: true
+          schema:
+            $ref: '#/components/schemas/AppId'
+        - in: path
+          name: roomId
+          required: true
+          schema:
+            $ref: '#/components/schemas/RoomId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetLobbyStateParams'
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Lobby'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '422':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+      deprecated: true
+  /lobby/v3/{appId}/create:
+    post:
+      tags:
+        - LobbyV3
+      operationId: LobbyV3_createNewLobby
+      security:
+        - playerAuth: []
+      description: >-
+        Create a new lobby for an
+        [application](https://hathora.dev/docs/concepts/hathora-entities#application).
+        A lobby object is a wrapper around a
+        [room](https://hathora.dev/docs/concepts/hathora-entities#room) object.
+        With a lobby, you get additional functionality like configuring the
+        visibility of the room, managing the state of a match, and retrieving a
+        list of public lobbies to display to players.
+      parameters:
+        - in: path
+          name: appId
+          required: true
+          schema:
+            $ref: '#/components/schemas/AppId'
+        - in: query
+          name: shortCode
+          required: false
+          schema:
+            $ref: '#/components/schemas/ShortCode'
+        - in: query
+          name: roomId
+          required: false
+          schema:
+            $ref: '#/components/schemas/RoomId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateLobbyV3Params'
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LobbyV3'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '402':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '422':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '429':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '500':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /lobby/v3/{appId}/list/public:
+    get:
+      tags:
+        - LobbyV3
+      operationId: LobbyV3_listPublicLobbies
+      security: []
+      description: >-
+        Get all active lobbies for a given
+        [application](https://hathora.dev/docs/concepts/hathora-entities#application).
+        Filter the array by optionally passing in a `region`. Use this endpoint
+        to display all public lobbies that a player can join in the game client.
+      parameters:
+        - in: path
+          name: appId
+          required: true
+          schema:
+            $ref: '#/components/schemas/AppId'
+        - description: If omitted, active public lobbies in all regions will be returned.
+          in: query
+          name: region
+          required: false
+          schema:
+            $ref: '#/components/schemas/Region'
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LobbyV3ListPublicLobbiesResponse'
+  /lobby/v3/{appId}/info/roomid/{roomId}:
+    get:
+      tags:
+        - LobbyV3
+      operationId: LobbyV3_getLobbyDetails
+      security: []
+      description: Get details for a lobby.
+      parameters:
+        - in: path
+          name: appId
+          required: true
+          schema:
+            $ref: '#/components/schemas/AppId'
+        - in: path
+          name: roomId
+          required: true
+          schema:
+            $ref: '#/components/schemas/RoomId'
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LobbyV3'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /lobby/v3/{appId}/info/shortcode/{shortCode}:
+    get:
+      tags:
+        - LobbyV3
+      operationId: LobbyV3_getInfoByShortCode
+      security: []
+      description: >-
+        Get details for a lobby. If 2 or more lobbies have the same `shortCode`,
+        then the most recently created lobby will be returned.
+      parameters:
+        - in: path
+          name: appId
+          required: true
+          schema:
+            $ref: '#/components/schemas/AppId'
+        - in: path
+          name: shortCode
+          required: true
+          schema:
+            $ref: '#/components/schemas/ShortCode'
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LobbyV3'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /logs/v1/{appId}/all:
+    get:
+      tags:
+        - LogV1
+      operationId: LogV1_getAllLogs
+      security:
+        - hathoraDevToken: []
+      description: >-
+        Returns a stream of logs for an
+        [application](https://hathora.dev/docs/concepts/hathora-entities#application)
+        using `appId`.
+      parameters:
+        - in: path
+          name: appId
+          required: true
+          schema:
+            $ref: '#/components/schemas/AppId'
+        - in: query
+          name: follow
+          required: false
+          schema:
+            $ref: '#/components/schemas/LogsFollow'
+        - in: query
+          name: tailLines
+          required: false
+          schema:
+            $ref: '#/components/schemas/TailLines'
+        - in: query
+          name: region
+          required: false
+          schema:
+            $ref: '#/components/schemas/Region'
+      responses:
+        '200':
+          description: Ok
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/LogV1GetAllLogsResponse'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+      deprecated: true
+  /logs/v1/{appId}/process/{processId}:
+    get:
+      tags:
+        - LogV1
+      operationId: LogV1_streamLogsForProcess
+      security:
+        - hathoraDevToken: []
+      description: >-
+        Returns a stream of logs for a
+        [process](https://hathora.dev/docs/concepts/hathora-entities#process)
+        using `appId` and `processId`.
+      parameters:
+        - in: path
+          name: appId
+          required: true
+          schema:
+            $ref: '#/components/schemas/AppId'
+        - in: path
+          name: processId
+          required: true
+          schema:
+            $ref: '#/components/schemas/ProcessId'
+        - in: query
+          name: follow
+          required: false
+          schema:
+            $ref: '#/components/schemas/LogsFollow'
+        - in: query
+          name: tailLines
+          required: false
+          schema:
+            $ref: '#/components/schemas/TailLines'
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/octet-stream:
+              schema:
+                $ref: '#/components/schemas/LogV1StreamLogsForProcessResponse'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '410':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '500':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /logs/v1/{appId}/process/{processId}/download:
+    get:
+      tags:
+        - LogV1
+      operationId: LogV1_downloadLogForProcess
+      security:
+        - hathoraDevToken: []
+      description: Download entire log file for a stopped process.
+      parameters:
+        - in: path
+          name: appId
+          required: true
+          schema:
+            $ref: '#/components/schemas/AppId'
+        - in: path
+          name: processId
+          required: true
+          schema:
+            $ref: '#/components/schemas/ProcessId'
+      responses:
+        '200':
+          description: Ok
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/LogV1DownloadLogForProcessResponse'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '410':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /logs/v1/{appId}/deployment/{deploymentId}:
+    get:
+      tags:
+        - LogV1
+      operationId: LogV1_getLogStream
+      security:
+        - hathoraDevToken: []
+      description: >-
+        Returns a stream of logs for a
+        [deployment](https://hathora.dev/docs/concepts/hathora-entities#deployment)
+        using `appId` and `deploymentId`.
+      parameters:
+        - in: path
+          name: appId
+          required: true
+          schema:
+            $ref: '#/components/schemas/AppId'
+        - in: path
+          name: deploymentId
+          required: true
+          schema:
+            $ref: '#/components/schemas/DeploymentId'
+        - in: query
+          name: follow
+          required: false
+          schema:
+            $ref: '#/components/schemas/LogsFollow'
+        - in: query
+          name: tailLines
+          required: false
+          schema:
+            $ref: '#/components/schemas/TailLines'
+      responses:
+        '200':
+          description: Ok
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/LogV1GetLogStreamResponse'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+      deprecated: true
+  /management/v1/sendverificationemail:
+    post:
+      tags:
+        - ManagementV1
+      operationId: ManagementV1_sendVerificationEmail
+      security: []
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerificationEmailRequest'
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerificationEmailResponse'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '500':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /metrics/v1/{appId}/process/{processId}:
+    get:
+      tags:
+        - MetricsV1
+      operationId: MetricsV1_getProcessMetrics
+      security:
+        - hathoraDevToken: []
+      description: >-
+        Get metrics for a
+        [process](https://hathora.dev/docs/concepts/hathora-entities#process)
+        using `appId` and `processId`.
+      parameters:
+        - in: path
+          name: appId
+          required: true
+          schema:
+            $ref: '#/components/schemas/AppId'
+        - in: path
+          name: processId
+          required: true
+          schema:
+            $ref: '#/components/schemas/ProcessId'
+        - description: Available metrics to query over time.
+          in: query
+          name: metrics
+          required: false
+          schema:
+            default:
+              - cpu
+              - memory
+              - rate_egress
+            type: array
+            items:
+              $ref: '#/components/schemas/MetricName'
+        - description: Unix timestamp. Default is current time.
+          in: query
+          name: end
+          required: false
+          schema:
+            format: double
+            type: number
+        - description: Unix timestamp. Default is -1 hour from `end`.
+          in: query
+          name: start
+          required: false
+          schema:
+            format: double
+            type: number
+        - in: query
+          name: step
+          required: false
+          schema:
+            $ref: '#/components/schemas/MetricsStep'
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/Record_Partial_MetricName_.MetricValue-Array_
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '422':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '500':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /processes/v1/{appId}/list/running:
+    get:
+      tags:
+        - ProcessesV1
+      operationId: ProcessesV1_listRunningProcesses
+      security:
+        - hathoraDevToken: []
+      description: >-
+        Retrieve 10 most recently started
+        [process](https://hathora.dev/docs/concepts/hathora-entities#process)
+        objects for an
+        [application](https://hathora.dev/docs/concepts/hathora-entities#application).
+        Filter the array by optionally passing in a `region`.
+      parameters:
+        - in: path
+          name: appId
+          required: true
+          schema:
+            $ref: '#/components/schemas/AppId'
+        - in: query
+          name: region
+          required: false
+          schema:
+            $ref: '#/components/schemas/Region'
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessesV1ListRunningProcessesResponse'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+      deprecated: true
+  /processes/v1/{appId}/list/stopped:
+    get:
+      tags:
+        - ProcessesV1
+      operationId: ProcessesV1_getRecentlyStoppedProcesses
+      security:
+        - hathoraDevToken: []
+      description: >-
+        Retrieve 10 most recently stopped
+        [process](https://hathora.dev/docs/concepts/hathora-entities#process)
+        objects for an
+        [application](https://hathora.dev/docs/concepts/hathora-entities#application).
+        Filter the array by optionally passing in a `region`.
+      parameters:
+        - in: path
+          name: appId
+          required: true
+          schema:
+            $ref: '#/components/schemas/AppId'
+        - in: query
+          name: region
+          required: false
+          schema:
+            $ref: '#/components/schemas/Region'
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: >-
+                  #/components/schemas/ProcessesV1GetRecentlyStoppedProcessesResponse
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+      deprecated: true
+  /processes/v1/{appId}/info/{processId}:
+    get:
+      tags:
+        - ProcessesV1
+      operationId: ProcessesV1_getProcessInfo
+      security:
+        - hathoraDevToken: []
+      description: >-
+        Get details for a
+        [process](https://hathora.dev/docs/concepts/hathora-entities#process).
+      parameters:
+        - in: path
+          name: appId
+          required: true
+          schema:
+            $ref: '#/components/schemas/AppId'
+        - in: path
+          name: processId
+          required: true
+          schema:
+            $ref: '#/components/schemas/ProcessId'
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Process'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '500':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+      deprecated: true
+  /processes/v2/{appId}/info/{processId}:
+    get:
+      tags:
+        - ProcessesV2
+      operationId: ProcessesV2_getProcessInfo
+      security:
+        - hathoraDevToken: []
+      description: >-
+        Get details for a
+        [process](https://hathora.dev/docs/concepts/hathora-entities#process).
+      parameters:
+        - in: path
+          name: appId
+          required: true
+          schema:
+            $ref: '#/components/schemas/AppId'
+        - in: path
+          name: processId
+          required: true
+          schema:
+            $ref: '#/components/schemas/ProcessId'
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessV2'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /processes/v2/{appId}/list/latest:
+    get:
+      tags:
+        - ProcessesV2
+      operationId: ProcessesV2_getLatestProcessesList
+      security:
+        - hathoraDevToken: []
+      description: >-
+        Retrieve the 10 most recent
+        [processes](https://hathora.dev/docs/concepts/hathora-entities#process)
+        objects for an
+        [application](https://hathora.dev/docs/concepts/hathora-entities#application).
+        Filter the array by optionally passing in a `status` or `region`.
+      parameters:
+        - in: path
+          name: appId
+          required: true
+          schema:
+            $ref: '#/components/schemas/AppId'
+        - in: query
+          name: status
+          required: false
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/ProcessStatus'
+        - in: query
+          name: region
+          required: false
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/Region'
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessesV2GetLatestProcessesListResponse'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /processes/v2/{appId}/stop/{processId}:
+    post:
+      tags:
+        - ProcessesV2
+      operationId: ProcessesV2_stopProcessById
+      security:
+        - hathoraDevToken: []
+      description: >-
+        Stops a
+        [process](https://hathora.dev/docs/concepts/hathora-entities#process)
+        immediately.
+      parameters:
+        - in: path
+          name: appId
+          required: true
+          schema:
+            $ref: '#/components/schemas/AppId'
+        - in: path
+          name: processId
+          required: true
+          schema:
+            $ref: '#/components/schemas/ProcessId'
+      responses:
+        '204':
+          description: No content
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '500':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /processes/v2/{appId}/create/{region}:
+    post:
+      tags:
+        - ProcessesV2
+      operationId: ProcessesV2_createProcessWithoutRoom
+      security:
+        - hathoraDevToken: []
+      description: >-
+        Creates a
+        [process](https://hathora.dev/docs/concepts/hathora-entities#process)
+        without a room. Use this to pre-allocate processes ahead of time so that
+        subsequent room assignment via
+        [CreateRoom()](https://hathora.dev/api#tag/RoomV2/operation/CreateRoom)
+        can be instant.
+      parameters:
+        - in: path
+          name: appId
+          required: true
+          schema:
+            $ref: '#/components/schemas/AppId'
+        - in: path
+          name: region
+          required: true
+          schema:
+            $ref: '#/components/schemas/Region'
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessV2'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '402':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '500':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /rooms/v1/{appId}/create:
+    post:
+      tags:
+        - RoomV1
+      operationId: RoomV1_createRoom
+      security:
+        - hathoraDevToken: []
+      parameters:
+        - in: path
+          name: appId
+          required: true
+          schema:
+            $ref: '#/components/schemas/AppId'
+        - in: query
+          name: roomId
+          required: false
+          schema:
+            $ref: '#/components/schemas/RoomId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRoomParams'
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoomId'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '402':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '403':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '500':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+      deprecated: true
+  /rooms/v1/{appId}/info/{roomId}:
+    get:
+      tags:
+        - RoomV1
+      operationId: RoomV1_getRoomInfo
+      security:
+        - hathoraDevToken: []
+      parameters:
+        - in: path
+          name: appId
+          required: true
+          schema:
+            $ref: '#/components/schemas/AppId'
+        - in: path
+          name: roomId
+          required: true
+          schema:
+            $ref: '#/components/schemas/RoomId'
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Room'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+      deprecated: true
+  /rooms/v1/{appId}/list/{processId}/active:
+    get:
+      tags:
+        - RoomV1
+      operationId: RoomV1_getActiveRooms
+      security:
+        - hathoraDevToken: []
+      parameters:
+        - in: path
+          name: appId
+          required: true
+          schema:
+            $ref: '#/components/schemas/AppId'
+        - in: path
+          name: processId
+          required: true
+          schema:
+            $ref: '#/components/schemas/ProcessId'
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoomV1GetActiveRoomsResponse'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+      deprecated: true
+  /rooms/v1/{appId}/list/{processId}/inactive:
+    get:
+      tags:
+        - RoomV1
+      operationId: RoomV1_getInactiveRooms
+      security:
+        - hathoraDevToken: []
+      parameters:
+        - in: path
+          name: appId
+          required: true
+          schema:
+            $ref: '#/components/schemas/AppId'
+        - in: path
+          name: processId
+          required: true
+          schema:
+            $ref: '#/components/schemas/ProcessId'
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoomV1GetInactiveRoomsResponse'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+      deprecated: true
+  /rooms/v1/{appId}/destroy/{roomId}:
+    post:
+      tags:
+        - RoomV1
+      operationId: RoomV1_destroyRoom
+      security:
+        - hathoraDevToken: []
+      parameters:
+        - in: path
+          name: appId
+          required: true
+          schema:
+            $ref: '#/components/schemas/AppId'
+        - in: path
+          name: roomId
+          required: true
+          schema:
+            $ref: '#/components/schemas/RoomId'
+      responses:
+        '204':
+          description: No content
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '500':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+      deprecated: true
+  /rooms/v1/{appId}/suspend/{roomId}:
+    post:
+      tags:
+        - RoomV1
+      operationId: RoomV1_suspendRoom
+      security:
+        - hathoraDevToken: []
+      parameters:
+        - in: path
+          name: appId
+          required: true
+          schema:
+            $ref: '#/components/schemas/AppId'
+        - in: path
+          name: roomId
+          required: true
+          schema:
+            $ref: '#/components/schemas/RoomId'
+      responses:
+        '204':
+          description: No content
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '500':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+      deprecated: true
+  /rooms/v1/{appId}/connectioninfo/{roomId}:
+    get:
+      tags:
+        - RoomV1
+      operationId: RoomV1_getConnectionInfo
+      security: []
+      parameters:
+        - in: path
+          name: appId
+          required: true
+          schema:
+            $ref: '#/components/schemas/AppId'
+        - in: path
+          name: roomId
+          required: true
+          schema:
+            $ref: '#/components/schemas/RoomId'
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectionInfo'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '402':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '500':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+      deprecated: true
+  /rooms/v2/{appId}/create:
+    post:
+      tags:
+        - RoomV2
+      operationId: RoomV2_createRoom
+      security:
+        - hathoraDevToken: []
+      description: >-
+        Create a new
+        [room](https://hathora.dev/docs/concepts/hathora-entities#room) for an
+        existing
+        [application](https://hathora.dev/docs/concepts/hathora-entities#application).
+        Poll the
+        [`GetConnectionInfo()`](https://hathora.dev/api#tag/RoomV2/operation/GetConnectionInfo)
+        endpoint to get connection details for an active room.
+      parameters:
+        - in: path
+          name: appId
+          required: true
+          schema:
+            $ref: '#/components/schemas/AppId'
+        - in: query
+          name: roomId
+          required: false
+          schema:
+            $ref: '#/components/schemas/RoomId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRoomParams'
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateRoomResponse'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '402':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '403':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '500':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /rooms/v2/{appId}/info/{roomId}:
+    get:
+      tags:
+        - RoomV2
+      operationId: RoomV2_getAllocationData
+      security:
+        - hathoraDevToken: []
+      description: >-
+        Retreive current and historical allocation data for a
+        [room](https://hathora.dev/docs/concepts/hathora-entities#room).
+      parameters:
+        - in: path
+          name: appId
+          required: true
+          schema:
+            $ref: '#/components/schemas/AppId'
+        - in: path
+          name: roomId
+          required: true
+          schema:
+            $ref: '#/components/schemas/RoomId'
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Room'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /rooms/v2/{appId}/list/{processId}/active:
+    get:
+      tags:
+        - RoomV2
+      operationId: RoomV2_listActiveRooms
+      security:
+        - hathoraDevToken: []
+      description: >-
+        Get all active
+        [rooms](https://hathora.dev/docs/concepts/hathora-entities#room) for a
+        given
+        [process](https://hathora.dev/docs/concepts/hathora-entities#process).
+      parameters:
+        - in: path
+          name: appId
+          required: true
+          schema:
+            $ref: '#/components/schemas/AppId'
+        - in: path
+          name: processId
+          required: true
+          schema:
+            $ref: '#/components/schemas/ProcessId'
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoomV2ListActiveRoomsResponse'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /rooms/v2/{appId}/list/{processId}/inactive:
+    get:
+      tags:
+        - RoomV2
+      operationId: RoomV2_listInactiveRooms
+      security:
+        - hathoraDevToken: []
+      description: >-
+        Get all inactive
+        [rooms](https://hathora.dev/docs/concepts/hathora-entities#room) for a
+        given
+        [process](https://hathora.dev/docs/concepts/hathora-entities#process).
+      parameters:
+        - in: path
+          name: appId
+          required: true
+          schema:
+            $ref: '#/components/schemas/AppId'
+        - in: path
+          name: processId
+          required: true
+          schema:
+            $ref: '#/components/schemas/ProcessId'
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoomV2ListInactiveRoomsResponse'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /rooms/v2/{appId}/destroy/{roomId}:
+    post:
+      tags:
+        - RoomV2
+      operationId: RoomV2_destroyRoomAllocation
+      security:
+        - hathoraDevToken: []
+      description: >-
+        Destroy a
+        [room](https://hathora.dev/docs/concepts/hathora-entities#room). All
+        associated metadata is deleted.
+      parameters:
+        - in: path
+          name: appId
+          required: true
+          schema:
+            $ref: '#/components/schemas/AppId'
+        - in: path
+          name: roomId
+          required: true
+          schema:
+            $ref: '#/components/schemas/RoomId'
+      responses:
+        '204':
+          description: No content
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '500':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /rooms/v2/{appId}/suspend/{roomId}:
+    post:
+      tags:
+        - RoomV2
+      operationId: RoomV2_suspendRoomAllocation
+      security:
+        - hathoraDevToken: []
+      description: >-
+        Suspend a
+        [room](https://hathora.dev/docs/concepts/hathora-entities#room). The
+        room is unallocated from the process but can be rescheduled later using
+        the same `roomId`.
+      parameters:
+        - in: path
+          name: appId
+          required: true
+          schema:
+            $ref: '#/components/schemas/AppId'
+        - in: path
+          name: roomId
+          required: true
+          schema:
+            $ref: '#/components/schemas/RoomId'
+      responses:
+        '204':
+          description: No content
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '500':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /rooms/v2/{appId}/connectioninfo/{roomId}:
+    get:
+      tags:
+        - RoomV2
+      operationId: RoomV2_getConnectionInfo
+      security: []
+      description: >-
+        Poll this endpoint to get connection details to a
+        [room](https://hathora.dev/docs/concepts/hathora-entities#room). Clients
+        can call this endpoint without authentication.
+      parameters:
+        - in: path
+          name: appId
+          required: true
+          schema:
+            $ref: '#/components/schemas/AppId'
+        - in: path
+          name: roomId
+          required: true
+          schema:
+            $ref: '#/components/schemas/RoomId'
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectionInfoV2'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '402':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '500':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /rooms/v2/{appId}/update/{roomId}:
+    post:
+      tags:
+        - RoomV2
+      operationId: RoomV2_updateRoomAllocation
+      security:
+        - hathoraDevToken: []
+      parameters:
+        - in: path
+          name: appId
+          required: true
+          schema:
+            $ref: '#/components/schemas/AppId'
+        - in: path
+          name: roomId
+          required: true
+          schema:
+            $ref: '#/components/schemas/RoomId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateRoomConfigParams'
+      responses:
+        '204':
+          description: No content
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '500':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /tokens/v1/orgs/{orgId}:
+    get:
+      tags:
+        - OrgTokensV1
+      operationId: OrgTokensV1_listOrgTokens
+      security:
+        - hathoraDevToken: []
+      description: List all organization tokens for a given org.
+      parameters:
+        - in: path
+          name: orgId
+          required: true
+          schema:
+            $ref: '#/components/schemas/OrgId'
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListOrgTokens'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /tokens/v1/orgs/{orgId}/create:
+    post:
+      tags:
+        - OrgTokensV1
+      operationId: OrgTokensV1_createNewOrgToken
+      security:
+        - hathoraDevToken: []
+      description: Create a new organization token.
+      parameters:
+        - in: path
+          name: orgId
+          required: true
+          schema:
+            $ref: '#/components/schemas/OrgId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrgToken'
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreatedOrgToken'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '422':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /tokens/v1/orgs/{orgId}/tokens/{orgTokenId}/revoke:
+    post:
+      tags:
+        - OrgTokensV1
+      operationId: OrgTokensV1_revokeOrgToken
+      security:
+        - hathoraDevToken: []
+      description: Revoke an organization token.
+      parameters:
+        - in: path
+          name: orgId
+          required: true
+          schema:
+            $ref: '#/components/schemas/OrgId'
+        - in: path
+          name: orgTokenId
+          required: true
+          schema:
+            $ref: '#/components/schemas/OrgId'
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrgTokensV1RevokeOrgTokenResponse'
+        '401':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+components:
+  parameters: {}
+  responses: {}
+  examples: {}
+  headers: {}
+  requestBodies: {}
+  schemas:
+    AppName:
+      description: Readable name for an application. Must be unique within an organization.
+      type: string
+      example: minecraft
+      maxLength: 64
+      pattern: ^[a-z0-9-]+$
+    AppId:
+      description: System generated unique identifier for an application.
+      type: string
+      example: app-af469a92-5b45-4565-b3c4-b79878de67d2
+    Record_string.never_:
+      description: Construct a type with a set of properties K of type T
+      properties: {}
+      type: object
+    AuthConfiguration:
+      description: >-
+        Configure [player
+        authentication](https://hathora.dev/docs/lobbies-and-matchmaking/auth-service)
+        for your application. Use Hathora's built-in auth providers or use your
+        own [custom
+        authentication](https://hathora.dev/docs/lobbies-and-matchmaking/auth-service#custom-auth-provider).
+      properties:
+        google:
+          description: Enable google auth for your application.
+          properties:
+            clientId:
+              description: >-
+                A Google generated token representing the developer's
+                credentials for [Google's API
+                Console](https://console.cloud.google.com/apis/dashboard?pli=1&project=discourse-login-388921).
+                Learn how to get a `clientId`
+                [here](https://developers.google.com/identity/gsi/web/guides/get-google-api-clientid).
+              type: string
+          required:
+            - clientId
+          type: object
+        nickname:
+          description: Enable nickname auth for your application.
+          $ref: '#/components/schemas/Record_string.never_'
+        anonymous:
+          description: Enable anonymous auth for your application.
+          $ref: '#/components/schemas/Record_string.never_'
+      type: object
+    OrgId:
+      description: >-
+        System generated unique identifier for an organization. Not guaranteed
+        to have a specific format.
+      type: string
+      example: org-6f706e83-0ec1-437a-9a46-7d4281eb2f39
+    Application:
+      description: An application object is the top level namespace for the game server.
+      properties:
+        deletedBy:
+          description: UserId or email address for the user that deleted the application.
+          type: string
+          nullable: true
+          example: google-oauth2|107030234048588177467
+        deletedAt:
+          description: When the application was deleted.
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          description: When the application was created.
+          type: string
+          format: date-time
+        createdBy:
+          description: UserId or email address for the user that created the application.
+          type: string
+          example: google-oauth2|107030234048588177467
+        orgId:
+          $ref: '#/components/schemas/OrgId'
+        authConfiguration:
+          description: >-
+            Used to authenticate player requests. Use your own authentication or
+            Hathora's Auth Client.
+          $ref: '#/components/schemas/AuthConfiguration'
+        appSecret:
+          description: Secret that is used for identity and access management.
+          type: string
+          example: secret-6f706e83-0ec1-437a-9a46-7d4281eb2f39
+        appId:
+          $ref: '#/components/schemas/AppId'
+        appName:
+          $ref: '#/components/schemas/AppName'
+      required:
+        - deletedBy
+        - deletedAt
+        - createdAt
+        - createdBy
+        - orgId
+        - authConfiguration
+        - appSecret
+        - appId
+        - appName
+      type: object
+    BuildId:
+      description: System generated id for a build. Increments by 1.
+      type: integer
+      format: int32
+      example: 1
+    DeploymentId:
+      description: System generated id for a deployment. Increments by 1.
+      type: integer
+      format: int32
+      example: 1
+    TransportType:
+      description: >-
+        Transport type specifies the underlying communication protocol to the
+        exposed port.
+      type: string
+      enum:
+        - tcp
+        - udp
+        - tls
+    ContainerPort:
+      description: >-
+        A container port object represents the transport configruations for how
+        your server will listen.
+      properties:
+        transportType:
+          $ref: '#/components/schemas/TransportType'
+        port:
+          type: integer
+          format: int32
+          example: 8000
+          minimum: 1
+          maximum: 65535
+        name:
+          description: Readable name for the port.
+          type: string
+          example: default
+          minLength: 1
+          maxLength: 100
+          pattern: ^[a-z][a-z0-9-]*$
+      required:
+        - transportType
+        - port
+        - name
+      type: object
+    PlanName:
+      description: >-
+        A plan defines how much CPU and memory is required to run an instance of
+        your game server.
+
+
+        `tiny`: shared core, 1gb memory
+
+
+        `small`: 1 core, 2gb memory
+
+
+        `medium`: 2 core, 4gb memory
+
+
+        `large`: 4 core, 8gb memory
+      type: string
+      enum:
+        - tiny
+        - small
+        - medium
+        - large
+      example: tiny
+    NumRoomsPerProcess:
+      description: >-
+        Governs how many
+        [rooms](https://hathora.dev/docs/concepts/hathora-entities#room) can be
+        scheduled in a process.
+      type: integer
+      format: int32
+      example: 3
+      minimum: 1
+      maximum: 10000
+    Deployment:
+      description: >-
+        Deployment is a versioned configuration for a build that describes
+        runtime behavior.
+      properties:
+        idleTimeoutEnabled:
+          description: >-
+            Option to shut down processes that have had no new connections or
+            rooms
+
+            for five minutes.
+          type: boolean
+          default: 'true'
+        env:
+          description: >-
+            The environment variable that our process will have access to at
+            runtime.
+          items:
+            properties:
+              value:
+                type: string
+                example: 'TRUE'
+                maxLength: 5000
+              name:
+                type: string
+                example: EULA
+                minLength: 1
+                maxLength: 100
+                pattern: ^[a-zA-Z_][a-zA-Z0-9_]*$
+            required:
+              - value
+              - name
+            type: object
+          type: array
+          maxItems: 100
+        roomsPerProcess:
+          $ref: '#/components/schemas/NumRoomsPerProcess'
+        planName:
+          $ref: '#/components/schemas/PlanName'
+        additionalContainerPorts:
+          description: Additional ports your server listens on.
+          items:
+            $ref: '#/components/schemas/ContainerPort'
+          type: array
+          example:
+            transportType: tcp
+            port: 4000
+            name: debug
+          maxItems: 2
+        defaultContainerPort:
+          description: Describes the primary port your process listens on.
+          $ref: '#/components/schemas/ContainerPort'
+        transportType:
+          type: string
+          enum:
+            - tcp
+            - udp
+            - tls
+          deprecated: true
+        containerPort:
+          type: number
+          format: double
+          deprecated: true
+        createdAt:
+          description: When the deployment was created.
+          type: string
+          format: date-time
+        createdBy:
+          description: UserId or email address for the user that created the deployment.
+          type: string
+          example: google-oauth2|107030234048588177467
+        requestedMemoryMB:
+          description: The amount of memory allocated to your process.
+          type: integer
+          format: int32
+          example: 1024
+        requestedCPU:
+          description: The number of cores allocated to your process.
+          type: number
+          format: double
+          example: 0.5
+        deploymentId:
+          $ref: '#/components/schemas/DeploymentId'
+        buildId:
+          $ref: '#/components/schemas/BuildId'
+        appId:
+          $ref: '#/components/schemas/AppId'
+      required:
+        - env
+        - roomsPerProcess
+        - planName
+        - additionalContainerPorts
+        - defaultContainerPort
+        - transportType
+        - containerPort
+        - createdAt
+        - createdBy
+        - requestedMemoryMB
+        - requestedCPU
+        - deploymentId
+        - buildId
+        - appId
+      type: object
+    BuildStatus:
+      type: string
+      enum:
+        - created
+        - running
+        - succeeded
+        - failed
+    Region:
+      type: string
+      enum:
+        - Seattle
+        - Los_Angeles
+        - Washington_DC
+        - Chicago
+        - London
+        - Frankfurt
+        - Mumbai
+        - Singapore
+        - Tokyo
+        - Sydney
+        - Sao_Paulo
+    BuildTag:
+      description: >-
+        Tag to associate an external version with a build. It is accessible via
+        [`GetBuildInfo()`](https://hathora.dev/api#tag/BuildV1/operation/GetBuildInfo).
+      type: string
+      example: 0.1.14-14c793
+      maxLength: 1000
+    Build:
+      description: A build represents a game server artifact and its associated metadata.
+      properties:
+        buildTag:
+          allOf:
+            - $ref: '#/components/schemas/BuildTag'
+          nullable: true
+        regionalContainerTags:
+          items:
+            properties:
+              containerTag:
+                type: string
+              region:
+                $ref: '#/components/schemas/Region'
+            required:
+              - containerTag
+              - region
+            type: object
+          type: array
+          deprecated: true
+        imageSize:
+          description: The size (in bytes) of the Docker image built by Hathora.
+          type: integer
+          format: int64
+        status:
+          description: >-
+            Current status of your build.
+
+
+            `created`: a build was created but not yet run
+
+
+            `running`: the build process is actively executing
+
+
+            `succeeded`: the game server artifact was successfully built and
+            stored in the Hathora registries
+
+
+            `failed`: the build process was unsuccessful, most likely due to an
+            error with the `Dockerfile`
+          $ref: '#/components/schemas/BuildStatus'
+        deletedAt:
+          description: When the build was deleted.
+          type: string
+          format: date-time
+          nullable: true
+        finishedAt:
+          description: >-
+            When
+            [`RunBuild()`](https://hathora.dev/api#tag/BuildV1/operation/RunBuild)
+            finished executing.
+          type: string
+          format: date-time
+          nullable: true
+        startedAt:
+          description: >-
+            When
+            [`RunBuild()`](https://hathora.dev/api#tag/BuildV1/operation/RunBuild)
+            is called.
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          description: >-
+            When
+            [`CreateBuild()`](https://hathora.dev/api#tag/BuildV1/operation/CreateBuild)
+            is called.
+          type: string
+          format: date-time
+        createdBy:
+          description: UserId or email address for the user that created the build.
+          type: string
+          example: google-oauth2|107030234048588177467
+        buildId:
+          $ref: '#/components/schemas/BuildId'
+        appId:
+          $ref: '#/components/schemas/AppId'
+      required:
+        - regionalContainerTags
+        - imageSize
+        - status
+        - deletedAt
+        - finishedAt
+        - startedAt
+        - createdAt
+        - createdBy
+        - buildId
+        - appId
+      type: object
+    ApplicationWithLatestDeploymentAndBuild:
+      allOf:
+        - $ref: '#/components/schemas/Application'
+        - properties:
+            deployment:
+              allOf:
+                - $ref: '#/components/schemas/Deployment'
+                - properties:
+                    build:
+                      $ref: '#/components/schemas/Build'
+                  required:
+                    - build
+                  type: object
+          type: object
+    AppConfig:
+      properties:
+        authConfiguration:
+          $ref: '#/components/schemas/AuthConfiguration'
+        appName:
+          $ref: '#/components/schemas/AppName'
+      required:
+        - authConfiguration
+        - appName
+      type: object
+    ApiError:
+      properties:
+        message:
+          type: string
+      required:
+        - message
+      type: object
+    LoginResponse:
+      properties:
+        token:
+          description: A unique Hathora-signed JWT player token.
+          type: string
+          example: >-
+            eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0eXBlIjoiYW5vbnltb3VzIiwiaWQiOiJ3aDA4eWN3eTJwOSIsIm5hbWUiOiJqaXR0ZXJ5LXNhbG1vbi1ndWxsIiwiaWF0IjoxNjg5MzQ5MTk3fQ.-LzlPhZw2tw0ycZ229IRHwwmINGKWNPFMDrXOphLjEk
+      required:
+        - token
+      type: object
+    LoginNicknameRequest:
+      properties:
+        nickname:
+          description: An alias to represent a player.
+          type: string
+          example: squiddytwoshoes
+      required:
+        - nickname
+      type: object
+    LoginGoogleRequest:
+      properties:
+        idToken:
+          description: >-
+            A Google-signed OIDC ID token representing a player's authenticated
+            identity. Learn how to get an `idToken`
+            [here](https://cloud.google.com/docs/authentication/get-id-token).
+          type: string
+          example: >-
+            eyJhbGciOiJSUzI1NiIsImtpZCI6ImZkNDhhNzUxMzhkOWQ0OGYwYWE2MzVlZjU2OWM0ZTE5NmY3YWU4ZDYiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJhY2NvdW50cy5nb29nbGUuY29tIiwiYXpwIjoiODQ4NDEyODI2Nzg4LW00bXNyYjZxNDRkbTJ1ZTNrZ3Z1aTBmcTdrZGE1NWxzLmFwcHMuZ29vZ2xldXNlcmNvbnRlbnQuY29tIiwiYXVkIjoiODQ4NDEyODI2Nzg4LW00bXNyYjZxNDRkbTJ1ZTNrZ3Z1aTBmcTdrZGE1NWxzLmFwcHMuZ29vZ2xldXNlcmNvbnRlbnQuY29tIiwic3ViIjoiMTE0NTQyMzMwNzI3MTU2MTMzNzc2IiwiZW1haWwiOiJocGFdkeivmeuzQGdtYWlsLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJhdF9oYXNoIjoidno1NGhhdTNxbnVR
+      required:
+        - idToken
+      type: object
+    CardBrand:
+      type: string
+      enum:
+        - amex
+        - cartes_bancaires
+        - diners
+        - discover
+        - jcb
+        - mastercard
+        - visa
+        - unionpay
+        - card
+    CardPaymentMethod:
+      properties:
+        last4:
+          type: string
+        brand:
+          $ref: '#/components/schemas/CardBrand'
+      required:
+        - last4
+        - brand
+      type: object
+    AchPaymentMethod:
+      properties:
+        last4:
+          type: string
+        bankName:
+          type: string
+      type: object
+    LinkPaymentMethod:
+      properties:
+        email:
+          type: string
+      type: object
+    Partial__card-CardPaymentMethod--ach-AchPaymentMethod--link-LinkPaymentMethod--__:
+      description: Make all properties in T optional
+      properties:
+        card:
+          $ref: '#/components/schemas/CardPaymentMethod'
+        ach:
+          $ref: '#/components/schemas/AchPaymentMethod'
+        link:
+          $ref: '#/components/schemas/LinkPaymentMethod'
+      type: object
+    CustomerPortalUrl:
+      properties:
+        returnUrl:
+          type: string
+      required:
+        - returnUrl
+      type: object
+    InvoiceStatus:
+      type: string
+      enum:
+        - pending
+        - paid
+        - overdue
+    Invoice:
+      properties:
+        status:
+          $ref: '#/components/schemas/InvoiceStatus'
+        amountDue:
+          type: number
+          format: double
+        pdfUrl:
+          type: string
+        dueDate:
+          type: string
+          format: date-time
+        year:
+          type: number
+          format: double
+        month:
+          type: number
+          format: double
+        id:
+          type: string
+      required:
+        - status
+        - amountDue
+        - pdfUrl
+        - dueDate
+        - year
+        - month
+        - id
+      type: object
+    CreateBuildParams:
+      properties:
+        buildTag:
+          $ref: '#/components/schemas/BuildTag'
+      type: object
+    DeploymentConfig:
+      description: User specified deployment configuration for your application at runtime.
+      properties:
+        idleTimeoutEnabled:
+          description: >-
+            Option to shut down processes that have had no new connections or
+            rooms
+
+            for five minutes.
+          type: boolean
+          default: 'true'
+        env:
+          description: >-
+            The environment variable that our process will have access to at
+            runtime.
+          items:
+            properties:
+              value:
+                type: string
+                example: 'TRUE'
+                maxLength: 5000
+              name:
+                type: string
+                example: EULA
+                minLength: 1
+                maxLength: 100
+                pattern: ^[a-zA-Z_][a-zA-Z0-9_]*$
+            required:
+              - value
+              - name
+            type: object
+          type: array
+          maxItems: 100
+        roomsPerProcess:
+          $ref: '#/components/schemas/NumRoomsPerProcess'
+        planName:
+          $ref: '#/components/schemas/PlanName'
+        additionalContainerPorts:
+          description: Additional ports your server listens on.
+          items:
+            $ref: '#/components/schemas/ContainerPort'
+          type: array
+          maxItems: 2
+        transportType:
+          $ref: '#/components/schemas/TransportType'
+        containerPort:
+          description: Default port the server listens on.
+          type: integer
+          format: int32
+          example: 4000
+          minimum: 1
+          maximum: 65535
+      required:
+        - env
+        - roomsPerProcess
+        - planName
+        - transportType
+        - containerPort
+      type: object
+    DiscoveryResponse:
+      items:
+        properties:
+          port:
+            type: number
+            format: double
+          host:
+            type: string
+          region:
+            $ref: '#/components/schemas/Region'
+        required:
+          - port
+          - host
+          - region
+        type: object
+      type: array
+      example:
+        - region: Seattle
+          host: ping.hathora.dev
+          port: 2000
+    RoomId:
+      description: >-
+        Unique identifier to a game session or match. Use the default system
+        generated ID or overwrite it with your own.
+
+        Note: error will be returned if `roomId` is not globally unique.
+      type: string
+      example: 2swovpy1fnunu
+      minLength: 1
+      maxLength: 100
+      pattern: ^[a-zA-Z0-9_-]*$
+    LobbyVisibility:
+      description: >-
+        Types of lobbies a player can create.
+
+
+        `private`: the player who created the room must share the roomId with
+        their friends
+
+
+        `public`: visible in the public lobby list, anyone can join
+
+
+        `local`: for testing with a server running locally
+      type: string
+      enum:
+        - private
+        - public
+        - local
+      example: private
+    LobbyInitialConfig:
+      description: >-
+        User input to initialize the game state. Object must be smaller than
+        64KB.
+      type: object
+    ShortCode:
+      description: User-defined identifier for a lobby.
+      type: string
+      example: LFG4
+      maxLength: 100
+    Lobby:
+      description: A lobby object allows you to store and manage metadata for your rooms.
+      properties:
+        shortCode:
+          allOf:
+            - $ref: '#/components/schemas/ShortCode'
+          nullable: true
+        state:
+          description: JSON blob to store metadata for a room. Must be smaller than 1MB.
+          type: object
+          nullable: true
+        initialConfig:
+          $ref: '#/components/schemas/LobbyInitialConfig'
+        createdAt:
+          description: When the lobby was created.
+          type: string
+          format: date-time
+        createdBy:
+          description: UserId or email address for the user that created the lobby.
+          type: string
+          example: google-oauth2|107030234048588177467
+        local:
+          type: boolean
+          deprecated: true
+        visibility:
+          $ref: '#/components/schemas/LobbyVisibility'
+        region:
+          $ref: '#/components/schemas/Region'
+        roomId:
+          $ref: '#/components/schemas/RoomId'
+        appId:
+          $ref: '#/components/schemas/AppId'
+      required:
+        - shortCode
+        - initialConfig
+        - createdAt
+        - createdBy
+        - local
+        - visibility
+        - region
+        - roomId
+        - appId
+      type: object
+    CreateLobbyParams:
+      properties:
+        visibility:
+          $ref: '#/components/schemas/LobbyVisibility'
+        initialConfig:
+          $ref: '#/components/schemas/LobbyInitialConfig'
+        region:
+          $ref: '#/components/schemas/Region'
+      required:
+        - visibility
+        - initialConfig
+        - region
+      type: object
+    SetLobbyStateParams:
+      properties:
+        state:
+          description: JSON blob to store metadata for a room. Must be smaller than 1MB.
+          type: object
+      required:
+        - state
+      type: object
+    RoomConfig:
+      description: >-
+        Optional configuration parameters for the room. Can be any string
+        including stringified JSON. It is accessible from the room via
+        [`GetRoomInfo()`](https://hathora.dev/api#tag/RoomV2/operation/GetRoomInfo).
+      type: string
+      example: '{"name":"my-room"}'
+      maxLength: 10000
+    LobbyV3:
+      description: A lobby object allows you to store and manage metadata for your rooms.
+      properties:
+        shortCode:
+          description: User defined identifier for a lobby, defaults to `roomId`
+          $ref: '#/components/schemas/ShortCode'
+        createdAt:
+          description: When the lobby was created.
+          type: string
+          format: date-time
+        createdBy:
+          description: UserId or email address for the user that created the lobby.
+          type: string
+          example: google-oauth2|107030234048588177467
+        roomConfig:
+          allOf:
+            - $ref: '#/components/schemas/RoomConfig'
+          nullable: true
+        visibility:
+          $ref: '#/components/schemas/LobbyVisibility'
+        region:
+          $ref: '#/components/schemas/Region'
+        roomId:
+          description: >-
+            Hathora generated identifier for a room, unique for a given
+            application (including stopped rooms)
+          $ref: '#/components/schemas/RoomId'
+        appId:
+          $ref: '#/components/schemas/AppId'
+      required:
+        - shortCode
+        - createdAt
+        - createdBy
+        - roomConfig
+        - visibility
+        - region
+        - roomId
+        - appId
+      type: object
+    CreateLobbyV3Params:
+      properties:
+        visibility:
+          $ref: '#/components/schemas/LobbyVisibility'
+        roomConfig:
+          $ref: '#/components/schemas/RoomConfig'
+        region:
+          $ref: '#/components/schemas/Region'
+      required:
+        - visibility
+        - region
+      type: object
+    LogsFollow:
+      description: Stream logs in realtime.
+      type: boolean
+      default: 'false'
+    TailLines:
+      description: Number of lines to return from most recent logs history.
+      type: integer
+      format: int32
+      default: '100'
+      example: 100
+      minimum: 1
+      maximum: 5000
+    ProcessId:
+      description: >-
+        System generated unique identifier to a runtime instance of your game
+        server.
+      type: string
+      example: cbfcddd2-0006-43ae-996c-995fff7bed2e
+    VerificationEmailResponse:
+      properties:
+        status:
+          type: string
+          enum:
+            - success
+          nullable: false
+      required:
+        - status
+      type: object
+    VerificationEmailRequest:
+      properties:
+        userId:
+          type: string
+      required:
+        - userId
+      type: object
+    MetricValue:
+      properties:
+        value:
+          type: number
+          format: double
+        timestamp:
+          type: number
+          format: double
+      required:
+        - value
+        - timestamp
+      type: object
+    Record_Partial_MetricName_.MetricValue-Array_:
+      description: Construct a type with a set of properties K of type T
+      properties:
+        cpu:
+          items:
+            $ref: '#/components/schemas/MetricValue'
+          type: array
+        memory:
+          items:
+            $ref: '#/components/schemas/MetricValue'
+          type: array
+        rate_egress:
+          items:
+            $ref: '#/components/schemas/MetricValue'
+          type: array
+        total_egress:
+          items:
+            $ref: '#/components/schemas/MetricValue'
+          type: array
+        active_connections:
+          items:
+            $ref: '#/components/schemas/MetricValue'
+          type: array
+      type: object
+    MetricName:
+      description: Available metrics to query over time.
+      type: string
+      enum:
+        - cpu
+        - memory
+        - rate_egress
+        - total_egress
+        - active_connections
+    MetricsStep:
+      description: Width of time in seconds to group data.
+      type: integer
+      format: int32
+      default: '60'
+    ExposedPort:
+      description: Connection details for an active process.
+      properties:
+        transportType:
+          $ref: '#/components/schemas/TransportType'
+        port:
+          type: integer
+          format: int32
+        host:
+          type: string
+        name:
+          type: string
+      required:
+        - transportType
+        - port
+        - host
+        - name
+      type: object
+      example:
+        host: 1.proxy.hathora.dev
+        name: default
+        port: 34567
+        transportType: tcp
+    Process:
+      description: >-
+        A process object represents a runtime instance of your game server and
+        its metadata.
+      properties:
+        egressedBytes:
+          description: Measures network traffic leaving the process in bytes.
+          type: integer
+          format: int32
+          example: 435
+        idleSince:
+          type: string
+          format: date-time
+          nullable: true
+          deprecated: true
+        activeConnectionsUpdatedAt:
+          type: string
+          format: date-time
+          deprecated: true
+        activeConnections:
+          description: Tracks the number of active connections to a process.
+          type: integer
+          format: int32
+          example: 10
+          deprecated: true
+        roomsAllocatedUpdatedAt:
+          type: string
+          format: date-time
+        roomsAllocated:
+          description: Tracks the number of rooms that have been allocated to the process.
+          type: integer
+          format: int32
+          example: 1
+        roomSlotsAvailableUpdatedAt:
+          type: string
+          format: date-time
+          deprecated: true
+        roomSlotsAvailable:
+          type: number
+          format: double
+          deprecated: true
+        draining:
+          description: Process in drain will not accept any new rooms.
+          type: boolean
+        terminatedAt:
+          description: When the process has been terminated.
+          type: string
+          format: date-time
+          nullable: true
+        stoppingAt:
+          description: >-
+            When the process is issued to stop. We use this to determine when we
+            should stop billing.
+          type: string
+          format: date-time
+          nullable: true
+        startedAt:
+          description: >-
+            When the process bound to the specified port. We use this to
+            determine when we should start billing.
+          type: string
+          format: date-time
+          nullable: true
+        startingAt:
+          description: When the process started being provisioned.
+          type: string
+          format: date-time
+        roomsPerProcess:
+          $ref: '#/components/schemas/NumRoomsPerProcess'
+        additionalExposedPorts:
+          items:
+            $ref: '#/components/schemas/ExposedPort'
+          type: array
+          example:
+            - host: 1.proxy.hathora.dev
+              name: debug
+              port: 72941
+              transportType: tcp
+          maxItems: 2
+        exposedPort:
+          allOf:
+            - $ref: '#/components/schemas/ExposedPort'
+          nullable: true
+        port:
+          type: number
+          format: double
+          deprecated: true
+        host:
+          type: string
+          deprecated: true
+        region:
+          $ref: '#/components/schemas/Region'
+        processId:
+          $ref: '#/components/schemas/ProcessId'
+        deploymentId:
+          $ref: '#/components/schemas/DeploymentId'
+        appId:
+          $ref: '#/components/schemas/AppId'
+      required:
+        - egressedBytes
+        - idleSince
+        - activeConnectionsUpdatedAt
+        - activeConnections
+        - roomsAllocatedUpdatedAt
+        - roomsAllocated
+        - roomSlotsAvailableUpdatedAt
+        - roomSlotsAvailable
+        - draining
+        - terminatedAt
+        - stoppingAt
+        - startedAt
+        - startingAt
+        - roomsPerProcess
+        - additionalExposedPorts
+        - exposedPort
+        - port
+        - host
+        - region
+        - processId
+        - deploymentId
+        - appId
+      type: object
+    RoomStatus:
+      description: >-
+        The allocation status of a room.
+
+
+        `scheduling`: a process is not allocated yet and the room is waiting to
+        be scheduled
+
+
+        `active`: ready to accept connections
+
+
+        `suspended`: room is unallocated from the process but can be rescheduled
+        later with the same `roomId`
+
+
+        `destroyed`: all associated metadata is deleted
+      type: string
+      enum:
+        - scheduling
+        - active
+        - suspended
+        - destroyed
+      example: active
+    RoomAllocationId:
+      description: System generated unique identifier to an allocated instance of a room.
+      type: string
+      example: e3a0aa32-1711-4036-acfa-008b96061a78
+    RoomAllocation:
+      description: Metadata on an allocated instance of a room.
+      properties:
+        unscheduledAt:
+          type: string
+          format: date-time
+          nullable: true
+        scheduledAt:
+          type: string
+          format: date-time
+        processId:
+          $ref: '#/components/schemas/ProcessId'
+        roomAllocationId:
+          $ref: '#/components/schemas/RoomAllocationId'
+      required:
+        - unscheduledAt
+        - scheduledAt
+        - processId
+        - roomAllocationId
+      type: object
+    Pick_Room.Exclude_keyofRoom.allocations__:
+      description: From T, pick a set of properties whose keys are in the union K
+      properties:
+        appId:
+          $ref: '#/components/schemas/AppId'
+        roomId:
+          $ref: '#/components/schemas/RoomId'
+        roomConfig:
+          allOf:
+            - $ref: '#/components/schemas/RoomConfig'
+          nullable: true
+        status:
+          $ref: '#/components/schemas/RoomStatus'
+        currentAllocation:
+          allOf:
+            - $ref: '#/components/schemas/RoomAllocation'
+          nullable: true
+      required:
+        - appId
+        - roomId
+        - roomConfig
+        - status
+        - currentAllocation
+      type: object
+    Omit_Room.allocations_:
+      description: Construct a type with the properties of T except for those in type K.
+      $ref: '#/components/schemas/Pick_Room.Exclude_keyofRoom.allocations__'
+    ProcessWithRooms:
+      allOf:
+        - $ref: '#/components/schemas/Process'
+        - properties:
+            rooms:
+              items:
+                $ref: '#/components/schemas/Omit_Room.allocations_'
+              type: array
+            totalRooms:
+              type: integer
+              format: int32
+          required:
+            - rooms
+            - totalRooms
+          type: object
+    ProcessStatus:
+      type: string
+      enum:
+        - starting
+        - running
+        - draining
+        - stopping
+        - stopped
+        - failed
+    ProcessV2:
+      properties:
+        status:
+          description: Process in drain will not accept any new rooms.
+          $ref: '#/components/schemas/ProcessStatus'
+        roomsAllocated:
+          description: Tracks the number of rooms that have been allocated to the process.
+          type: integer
+          format: int32
+          example: 1
+        terminatedAt:
+          description: When the process has been terminated.
+          type: string
+          format: date-time
+          nullable: true
+        stoppingAt:
+          description: >-
+            When the process is issued to stop. We use this to determine when we
+            should stop billing.
+          type: string
+          format: date-time
+          nullable: true
+        startedAt:
+          description: >-
+            When the process bound to the specified port. We use this to
+            determine when we should start billing.
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          description: When the process started being provisioned.
+          type: string
+          format: date-time
+        roomsPerProcess:
+          $ref: '#/components/schemas/NumRoomsPerProcess'
+        additionalExposedPorts:
+          items:
+            $ref: '#/components/schemas/ExposedPort'
+          type: array
+          example:
+            - host: 1.proxy.hathora.dev
+              name: debug
+              port: 72941
+              transportType: tcp
+          maxItems: 2
+        exposedPort:
+          allOf:
+            - $ref: '#/components/schemas/ExposedPort'
+          nullable: true
+        region:
+          $ref: '#/components/schemas/Region'
+        processId:
+          $ref: '#/components/schemas/ProcessId'
+        deploymentId:
+          $ref: '#/components/schemas/DeploymentId'
+        appId:
+          $ref: '#/components/schemas/AppId'
+      required:
+        - status
+        - roomsAllocated
+        - terminatedAt
+        - stoppingAt
+        - startedAt
+        - createdAt
+        - roomsPerProcess
+        - additionalExposedPorts
+        - exposedPort
+        - region
+        - processId
+        - deploymentId
+        - appId
+      type: object
+    CreateRoomParams:
+      properties:
+        roomConfig:
+          $ref: '#/components/schemas/RoomConfig'
+        region:
+          $ref: '#/components/schemas/Region'
+      required:
+        - region
+      type: object
+    Room:
+      description: A room object represents a game session or match.
+      properties:
+        currentAllocation:
+          allOf:
+            - $ref: '#/components/schemas/RoomAllocation'
+          nullable: true
+        status:
+          $ref: '#/components/schemas/RoomStatus'
+        allocations:
+          items:
+            $ref: '#/components/schemas/RoomAllocation'
+          type: array
+        roomConfig:
+          allOf:
+            - $ref: '#/components/schemas/RoomConfig'
+          nullable: true
+        roomId:
+          $ref: '#/components/schemas/RoomId'
+        appId:
+          $ref: '#/components/schemas/AppId'
+      required:
+        - currentAllocation
+        - status
+        - allocations
+        - roomConfig
+        - roomId
+        - appId
+      type: object
+    StartingConnectionInfo:
+      properties:
+        status:
+          type: string
+          enum:
+            - starting
+          nullable: false
+        roomId:
+          $ref: '#/components/schemas/RoomId'
+      required:
+        - status
+        - roomId
+      type: object
+    ActiveConnectionInfo:
+      properties:
+        status:
+          type: string
+          enum:
+            - active
+          nullable: false
+        transportType:
+          $ref: '#/components/schemas/TransportType'
+        port:
+          type: number
+          format: double
+        host:
+          type: string
+        roomId:
+          $ref: '#/components/schemas/RoomId'
+      required:
+        - status
+        - transportType
+        - port
+        - host
+        - roomId
+      type: object
+    ConnectionInfo:
+      description: Connection information to the default port.
+      anyOf:
+        - $ref: '#/components/schemas/StartingConnectionInfo'
+        - $ref: '#/components/schemas/ActiveConnectionInfo'
+    ConnectionInfoV2:
+      description: Connection information for the default and additional ports.
+      properties:
+        additionalExposedPorts:
+          items:
+            $ref: '#/components/schemas/ExposedPort'
+          type: array
+          example:
+            - host: 1.proxy.hathora.dev
+              name: debug
+              port: 72941
+              transportType: tcp
+          maxItems: 2
+        exposedPort:
+          $ref: '#/components/schemas/ExposedPort'
+        status:
+          description: >-
+            `exposedPort` will only be available when the `status` of a room is
+            "active".
+          type: string
+          enum:
+            - starting
+            - active
+          example: active
+        roomId:
+          $ref: '#/components/schemas/RoomId'
+      required:
+        - additionalExposedPorts
+        - status
+        - roomId
+      type: object
+    CreateRoomResponse:
+      allOf:
+        - $ref: '#/components/schemas/ConnectionInfoV2'
+        - properties:
+            processId:
+              $ref: '#/components/schemas/ProcessId'
+          required:
+            - processId
+          type: object
+    UpdateRoomConfigParams:
+      properties:
+        roomConfig:
+          $ref: '#/components/schemas/RoomConfig'
+      required:
+        - roomConfig
+      type: object
+    OrgTokenId:
+      description: System generated unique identifier for an organization token.
+      type: string
+      example: org-token-af469a92-5b45-4565-b3c4-b79878de67d2
+    OrgTokenName:
+      description: Readable name for a token. Must be unique within an organization.
+      type: string
+      example: ci-token
+      maxLength: 64
+    OrgTokenStatus:
+      type: string
+      enum:
+        - active
+        - revoked
+    OrgToken:
+      properties:
+        createdAt:
+          type: string
+          format: date-time
+        createdBy:
+          type: string
+        lastFourCharsOfKey:
+          type: string
+        status:
+          $ref: '#/components/schemas/OrgTokenStatus'
+        name:
+          $ref: '#/components/schemas/OrgTokenName'
+        orgId:
+          type: string
+        orgTokenId:
+          $ref: '#/components/schemas/OrgTokenId'
+      required:
+        - createdAt
+        - createdBy
+        - lastFourCharsOfKey
+        - status
+        - name
+        - orgId
+        - orgTokenId
+      type: object
+    ListOrgTokens:
+      properties:
+        tokens:
+          items:
+            $ref: '#/components/schemas/OrgToken'
+          type: array
+      required:
+        - tokens
+      type: object
+    CreatedOrgToken:
+      properties:
+        plainTextToken:
+          type: string
+        orgToken:
+          $ref: '#/components/schemas/OrgToken'
+      required:
+        - plainTextToken
+        - orgToken
+      type: object
+    CreateOrgToken:
+      properties:
+        name:
+          $ref: '#/components/schemas/OrgTokenName'
+      required:
+        - name
+      type: object
+    BuildV1BuildServerArtifactRequest:
+      type: object
+      properties:
+        file:
+          type: string
+          format: binary
+      required:
+        - file
+    LobbyV2CreatePrivateLobbyRequest:
+      properties:
+        initialConfig:
+          $ref: '#/components/schemas/LobbyInitialConfig'
+        region:
+          $ref: '#/components/schemas/Region'
+      required:
+        - initialConfig
+        - region
+      type: object
+    LobbyV2CreatePublicLobbyRequest:
+      properties:
+        initialConfig:
+          $ref: '#/components/schemas/LobbyInitialConfig'
+        region:
+          $ref: '#/components/schemas/Region'
+      required:
+        - initialConfig
+        - region
+      type: object
+    LobbyV2CreateLocalLobbyRequest:
+      properties:
+        initialConfig:
+          $ref: '#/components/schemas/LobbyInitialConfig'
+        region:
+          $ref: '#/components/schemas/Region'
+      required:
+        - initialConfig
+        - region
+      type: object
+    AppV1GetAppListResponse:
+      items:
+        $ref: '#/components/schemas/ApplicationWithLatestDeploymentAndBuild'
+      type: array
+    BillingV1GetBalanceResponse:
+      type: number
+      format: double
+    BillingV1CreateCustomerPortalUrlResponse:
+      type: string
+    BillingV1ListInvoicesResponse:
+      items:
+        $ref: '#/components/schemas/Invoice'
+      type: array
+    BuildV1GetApplicationBuildsResponse:
+      items:
+        $ref: '#/components/schemas/Build'
+      type: array
+    BuildV1BuildServerArtifactResponse:
+      type: string
+      format: byte
+    DeploymentV1ListDeploymentsByAppIdResponse:
+      items:
+        $ref: '#/components/schemas/Deployment'
+      type: array
+    LobbyV1ListLobbiesByAppIdResponse:
+      items:
+        $ref: '#/components/schemas/Lobby'
+      type: array
+    LobbyV2ListPublicLobbiesResponse:
+      items:
+        $ref: '#/components/schemas/Lobby'
+      type: array
+    LobbyV3ListPublicLobbiesResponse:
+      items:
+        $ref: '#/components/schemas/LobbyV3'
+      type: array
+    LogV1GetAllLogsResponse:
+      type: string
+      format: byte
+    LogV1StreamLogsForProcessResponse:
+      type: string
+      format: byte
+    LogV1DownloadLogForProcessResponse:
+      type: string
+      format: byte
+    LogV1GetLogStreamResponse:
+      type: string
+      format: byte
+    ProcessesV1ListRunningProcessesResponse:
+      items:
+        $ref: '#/components/schemas/ProcessWithRooms'
+      type: array
+    ProcessesV1GetRecentlyStoppedProcessesResponse:
+      items:
+        $ref: '#/components/schemas/Process'
+      type: array
+    ProcessesV2GetLatestProcessesListResponse:
+      items:
+        $ref: '#/components/schemas/ProcessV2'
+      type: array
+    RoomV1GetActiveRoomsResponse:
+      items:
+        $ref: '#/components/schemas/Omit_Room.allocations_'
+      type: array
+    RoomV1GetInactiveRoomsResponse:
+      items:
+        $ref: '#/components/schemas/Omit_Room.allocations_'
+      type: array
+    RoomV2ListActiveRoomsResponse:
+      items:
+        $ref: '#/components/schemas/Omit_Room.allocations_'
+      type: array
+    RoomV2ListInactiveRoomsResponse:
+      items:
+        $ref: '#/components/schemas/Omit_Room.allocations_'
+      type: array
+    OrgTokensV1RevokeOrgTokenResponse:
+      type: boolean
+  securitySchemes:
+    hathoraDevToken:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    playerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+x-speakeasy-globals:
+  parameters:
+    - in: path
+      name: appId
+      schema:
+        $ref: '#/components/schemas/AppId'
