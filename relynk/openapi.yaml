@@ -1,0 +1,181 @@
+openapi: 3.0.3
+info:
+  title: Relynk Query API
+  description: >-
+    Relynk empowers PropTech companies by providing seamless access to a
+    commercial building's real-time data. Our easy-to-use API platform connects
+    you to an extensive range of real-time information, including occupancy
+    levels, energy usage, ambient conditions, and more, supercharging your
+    data-driven solutions and giving you the edge you need to succeed. 
+
+
+    With Relynk, tapping into the expansive network of sensors and IoT devices
+    within any commercial building has never been simpler.
+  version: 2.0.0
+servers:
+  - url: https://api.relynk.io/v2.0.0
+tags:
+  - name: Query
+paths:
+  /query:
+    post:
+      tags:
+        - Query
+      summary: Query for point data
+      operationId: Query_pointDataFilters
+      security:
+        - api_key: []
+        - bearer: []
+      description: Query for point data with filters
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QueryParameters'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueryPointDataFiltersResponse'
+components:
+  schemas:
+    QueryFilter:
+      type: object
+      properties:
+        value:
+          oneOf:
+            - type: array
+              items:
+                type: string
+            - type: array
+              items:
+                type: number
+          items:
+            type: object
+        filter_on:
+          type: string
+          enum:
+            - point_id
+            - resource_type
+            - resource_id
+            - resource_external_reference
+            - point_subtype
+      required:
+        - value
+        - filter_on
+    QueryParameters:
+      type: object
+      properties:
+        filters:
+          example:
+            - filter_on: point_subtype
+              value:
+                - https://brickschema.org/schema/Brick#Air_Temperature_Sensor
+          type: array
+          items:
+            $ref: '#/components/schemas/QueryFilter'
+        group_on:
+          enum:
+            - https://w3id.org/rec#Desk
+            - https://w3id.org/rec#Room
+            - https://w3id.org/rec#Level
+            - https://w3id.org/rec#Zone
+            - https://w3id.org/rec#Building
+            - https://w3id.org/rec#Facade
+            - https://brickschema.org/schema/Brick#Point
+            - None
+          type: string
+          example: https://w3id.org/rec#Building
+        to:
+          format: date-time
+          type: string
+          example: '2020-01-01T00:00:00.000Z'
+        from:
+          format: date-time
+          type: string
+          example: '2020-01-02T00:00:00.000Z'
+        resolution:
+          type: string
+          enum:
+            - raw
+            - 30 minute
+            - 1 hour
+            - 1 day
+            - 1 week
+            - 1 month
+            - 1 year
+        is_timeseries:
+          type: boolean
+        only_latest_value:
+          type: boolean
+        limit:
+          type: number
+        offset:
+          type: number
+      required:
+        - filters
+        - resolution
+        - is_timeseries
+        - only_latest_value
+    QueryResponseDataPoint:
+      type: object
+      properties:
+        point_subtype:
+          type: string
+          example: https://brickschema.org/schema/Brick#Air_Temperature_Sensor
+        unit_type:
+          type: string
+          example: http://qudt.org/vocab/unit/DEG_C
+        group_resource_id:
+          type: string
+        group_resource_name:
+          type: string
+        group_resource_type:
+          enum:
+            - https://w3id.org/rec#Desk
+            - https://w3id.org/rec#Room
+            - https://w3id.org/rec#Level
+            - https://w3id.org/rec#Zone
+            - https://w3id.org/rec#Building
+            - https://w3id.org/rec#Facade
+          type: string
+          example: https://w3id.org/rec#Building
+        group_point_id:
+          type: string
+        group_point_name:
+          type: string
+        value:
+          type: number
+          example: 24.5
+        average_value:
+          type: number
+          example: 22.5
+        time_weighted_average_value:
+          type: number
+          example: 22.7
+        count_value:
+          type: number
+          example: null
+        sum_value:
+          type: number
+          example: null
+        min_value:
+          type: number
+          example: 18.5
+        max_value:
+          type: number
+          example: 24.7
+        date_time:
+          format: date-time
+          type: string
+      required:
+        - point_subtype
+        - unit_type
+        - date_timemeasurement_typea
+    QueryPointDataFiltersResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/QueryResponseDataPoint'
