@@ -1,0 +1,638 @@
+openapi: 3.0.1
+info:
+  title: Localizely API
+  description: >-
+    <h2>Getting started</h2><p>Localizely API is built on <a
+    href="https://en.wikipedia.org/wiki/Representational_state_transfer"
+    target="_blank">REST</a>. <br>You can use this API for importing & exporting
+    your localization files in order to automate the process with `curl` scripts
+    or external <a href="https://en.wikipedia.org/wiki/Continuous_integration"
+    target="_blank">CI</a> tools. <br>Response is returned in JSON form even in
+    case of error. <br></p><p>If you Authenticate with your API token on this
+    page by clicking "Authorize" button, you can make API calls directly from
+    here with "Try it out", and generate such `curl` examples. </p><h2>API
+    Authentication</h2><p>Authenticate your account by sending your API token as
+    a request header `X-Api-Token`. <br>The token can be found under <a
+    href="https://app.localizely.com/account" target="_blank">My Profile</a>
+    page. <br>A user must have an Admin role in the project in order to access
+    the project with his token. <br>API requests without authentication will
+    fail.</p><p><b>Base url:</b> `https://api.localizely.com`</p>
+  version: 1.2.1
+  termsOfService: https://localizely.com/terms-of-service/
+servers:
+  - description: Generated server url
+    url: https://api.localizely.com
+tags:
+  - name: Upload API
+  - name: Branch API
+  - name: Translation Status API
+  - name: Download API
+paths:
+  /v1/projects/{project_id}/files/upload:
+    post:
+      tags:
+        - Upload API
+      summary: Upload translations for a language
+      operationId: UploadApi_languageTranslationsUpload
+      security:
+        - API auth: []
+      parameters:
+        - description: Project ID - Can be found on 'My projects' page
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - description: >-
+            Name of the branch to upload file into. Only in case of activated
+            branching feature.
+          name: branch
+          in: query
+          required: false
+          schema:
+            type: string
+        - description: >-
+            Language to upload, specified as language code. e.g. `en`, `en_GB`
+            or `en-GB`
+          name: lang_code
+          in: query
+          required: true
+          schema:
+            type: string
+        - description: >-
+            If translation in given language should be overwritten with modified
+            translation from uploading file.
+          name: overwrite
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
+        - description: >-
+            If uploading translations, that are added, should be marked as
+            Reviewed. For uploading translations that are only modified it will
+            have effect only if `overwrite` is set to `true`.
+          name: reviewed
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
+        - description: >-
+            Optional list of tags to add to new translations from uploading
+            file. <br><br>Multiple tags can be defined in a following way:
+            `&tag_added_keys=NEW&tag_added_keys=NEW_SPRINT05`
+          name: tag_added
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - description: >-
+            Optional list of tags to add to updated translations from uploading
+            file. <br><br>Multiple tags can be defined in a following way:
+            `&tag_updated_keys=UPDATED&tag_updated_keys=UPDATED_SPRINT05`
+          name: tag_updated
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - description: >-
+            Optional list of tags to add to removed translations from uploading
+            file. <br><br>Multiple tags can be defined in a following way:
+            `&tag_removed_keys=REMOVED&tag_removed_keys=REMOVED_SPRINT05`
+          name: tag_removed
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UploadApiLanguageTranslationsUploadRequest'
+      responses:
+        '200':
+          description: OK, file uploaded
+        '400':
+          description: >-
+            Error codes:<br />&nbsp;<br />- `invalid_import_file` when file
+            invalid. Returned with `errors` list<br />-
+            `max_upload_size_exceeded` when uploading file exceeds size limit<br
+            />- `upgrade_required` when uploading more string keys than accepted
+            by owner's account plan limit<br />- `projects_limit_read_only` when
+            project is in read-only state due to exceeded projects limit
+
+            `'bad_request'` when request generally is not well formed
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/InvalidImportFileErrorDto'
+        '404':
+          description: Not Found
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ErrorDto'
+  /v1/projects/{project_id}/branches/{branch}:
+    post:
+      tags:
+        - Branch API
+      summary: Create a new branch
+      operationId: BranchApi_createNewBranch
+      security:
+        - API auth: []
+      parameters:
+        - description: Project ID - Can be found on 'My projects' page
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - description: Name of the branch to be created
+          name: branch
+          in: path
+          required: true
+          schema:
+            maxLength: 200
+            minLength: 0
+            type: string
+        - description: Name of the source branch from which new branch will be created
+          name: source_branch
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK, created
+        '400':
+          description: >-
+            Error codes:<br />&nbsp;<br />- `bad_request` when request generally
+            is not well formed<br />- `limit_reached` when project already has
+            max allowed number of branches<br />- `projects_limit_read_only`
+            when project is in read-only state due to exceeded projects limit
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ErrorDto'
+        '404':
+          description: Not Found
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ErrorDto'
+  /v1/projects/{project_id}/status:
+    get:
+      tags:
+        - Translation Status API
+      summary: Get Translation Status for the project
+      operationId: TranslationStatusApi_getProjectStatus
+      security:
+        - API auth: []
+      parameters:
+        - description: Project ID - Can be found on 'My projects' page
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - description: >-
+            Name of the branch to get translation status for. Only in case of
+            activated branching feature.
+          name: branch
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK, data returned
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ProjectStatusDto'
+        '400':
+          description: >-
+            Error codes:<br />&nbsp;<br />- `bad_request` when request generally
+            is not well formed
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ErrorDto'
+        '404':
+          description: Not Found
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ErrorDto'
+  /v1/projects/{project_id}/files/download:
+    get:
+      tags:
+        - Download API
+      summary: Download translations for a language in a specified file format
+      operationId: DownloadApi_translationsDownload
+      security:
+        - API auth: []
+      description: >-
+        <b>Note:</b> This endpoint is intended for getting translation files to
+        your source-code. This endpoint should not be called directly from you
+        app in runtime, as it has <b>rate-limiting</b>. <br/>For over-the-air
+        translation updates please consider using our <a
+        href="https://localizely.com/flutter-over-the-air/" target="_blank">SDK
+        for Flutter</a> or <a href="https://localizely.com/aws-s3-integration/"
+        target="_blank">integrate with AWS S3 bucket</a>.
+      parameters:
+        - description: Project ID - Can be found on 'My projects' page
+          name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - description: >-
+            Name of the branch to download file from. Only in case of activated
+            branching feature.
+          name: branch
+          in: query
+          required: false
+          schema:
+            type: string
+        - description: >-
+            Language to download, specified as language code. e.g. `en`, `en_GB`
+            or `en-GB`. For multiple languages use comma separator. If omitted,
+            all languages are downloaded.
+          name: lang_codes
+          in: query
+          required: false
+          schema:
+            type: string
+        - description: File format
+          name: type
+          in: query
+          required: true
+          schema:
+            type: string
+            enum:
+              - android_xml
+              - ios_strings
+              - ios_stringsdict
+              - java_properties
+              - rails_yaml
+              - angular_xlf
+              - flutter_arb
+              - dotnet_resx
+              - po
+              - pot
+              - json
+              - csv
+              - xlsx
+        - description: >-
+            (Only for Java .properties files download) Character encoding.
+            Default is `latin_1`.
+          name: java_properties_encoding
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - utf_8
+              - latin_1
+        - description: >-
+            Optional list of tags to be downloaded. <br>If not set, all string
+            keys will be considered for download. <br><br>Multiple tags can be
+            defined in a following way:
+            `&include_tags=ANDROID&include_tags=ANDROID_SPRINT05`.
+          name: include_tags
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - description: >-
+            Optional list of tags to be excluded from download. <br>If not set,
+            all string keys will be considered for download. <br><br> Multiple
+            tags can be defined in a following way:
+            `&exclude_tags=REMOVED&exclude_tags=REMOVED_SPRINT05`.
+          name: exclude_tags
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+        - description: >-
+            Optional. How you would like empty translations to be exported.
+            Allowed values are `empty` to keep empty, `main` to replace with the
+            main language value, or `skip` to omit.
+          name: export_empty_as
+          in: query
+          required: false
+          schema:
+            type: string
+            default: empty
+            enum:
+              - empty
+              - main
+              - skip
+      responses:
+        '200':
+          description: OK, file returned
+        '400':
+          description: >-
+            Error codes:<br />&nbsp;<br />- `invalid_export_data_rails_yaml`
+            when data collision for yaml download<br />- `bad_request` when
+            request generally is not well formed
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ErrorDto'
+        '404':
+          description: Not Found
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ErrorDto'
+components:
+  schemas:
+    ErrorDto:
+      type: object
+      properties:
+        errorCode:
+          type: string
+          enum:
+            - already_exists
+            - too_long
+            - too_many_requests
+            - bad_request
+            - not_configured
+            - bad_captcha
+            - bad_turnstile
+            - bad_url
+            - confirmation_invalid
+            - forbidden_email
+            - main_locale_invalid
+            - branching_disabled
+            - not_activated
+            - invalid_password
+            - invalid_import_file
+            - invalid_export_data_rails_yaml
+            - forbidden
+            - internal_error
+            - not_found
+            - upgrade_required
+            - subscription_change_disabled_in_past_due
+            - subscription_creation_still_processing
+            - order_creation_still_processing
+            - branching_not_supported
+            - ota_not_supported
+            - string_keys_limit
+            - projects_limit
+            - projects_limit_read_only
+            - limit_reached
+            - import_keys_limit_exceeded
+            - max_upload_size_exceeded
+            - prevention_limit_reached
+            - tags_prevention_limit_reached
+            - string_key_not_found
+            - merge_outdated
+            - mt_locale_not_supported
+            - mt_main_translation_empty
+            - mt_main_translation_not_supported
+            - mt_source_translation_too_long
+            - mt_chars_missing
+            - mt_no_selected_strings
+            - tm_upload_file_invalid
+            - tm_upload_file_max_entries_exceeded
+            - tm_upload_file_version_not_supported
+            - tm_max_total_entries_exceeded
+            - tm_max_total_memories_exceeded
+            - glossary_locale_cant_remove
+            - glossary_upload_file_invalid
+            - glossary_upload_file_column_separator_invalid
+            - glossary_upload_file_headers_invalid
+            - glossary_upload_file_max_terms_exceeded
+            - glossary_max_total_terms_exceeded
+            - glossary_max_total_glossaries_exceeded
+            - order_oversize
+            - github_not_supported
+            - github_token_invalid
+            - github_token_scope_invalid
+            - github_url_invalid
+            - github_branch_invalid
+            - github_repo_invalid
+            - github_config_file_missing
+            - github_config_file_invalid
+            - github_push_no_changes
+            - gitlab_not_supported
+            - gitlab_token_invalid
+            - gitlab_token_scope_invalid
+            - gitlab_url_invalid
+            - gitlab_branch_invalid
+            - gitlab_repo_invalid
+            - gitlab_config_file_missing
+            - gitlab_config_file_invalid
+            - gitlab_push_no_changes
+            - bitbucket_not_supported
+            - bitbucket_token_invalid
+            - bitbucket_token_scope_invalid
+            - bitbucket_url_invalid
+            - bitbucket_branch_invalid
+            - bitbucket_repo_invalid
+            - bitbucket_config_file_missing
+            - bitbucket_config_file_invalid
+            - bitbucket_push_no_changes
+            - aws_s3_not_supported
+            - aws_s3_credentials_invalid
+            - aws_s3_permissions_invalid
+            - aws_s3_bucket_invalid
+            - aws_s3_region_invalid
+            - expired
+            - unauthorized
+            - unexpected_error
+            - service_unavailable
+        errorMessage:
+          type: string
+        errorData:
+          type: object
+          additionalProperties:
+            type: object
+    ImportFileError:
+      type: object
+      properties:
+        line:
+          type: integer
+          format: int32
+        position:
+          type: integer
+          format: int32
+        errorMessage:
+          type: string
+    InvalidImportFileErrorDto:
+      type: object
+      properties:
+        errorCode:
+          type: string
+          enum:
+            - already_exists
+            - too_long
+            - too_many_requests
+            - bad_request
+            - not_configured
+            - bad_captcha
+            - bad_turnstile
+            - bad_url
+            - confirmation_invalid
+            - forbidden_email
+            - main_locale_invalid
+            - branching_disabled
+            - not_activated
+            - invalid_password
+            - invalid_import_file
+            - invalid_export_data_rails_yaml
+            - forbidden
+            - internal_error
+            - not_found
+            - upgrade_required
+            - subscription_change_disabled_in_past_due
+            - subscription_creation_still_processing
+            - order_creation_still_processing
+            - branching_not_supported
+            - ota_not_supported
+            - string_keys_limit
+            - projects_limit
+            - projects_limit_read_only
+            - limit_reached
+            - import_keys_limit_exceeded
+            - max_upload_size_exceeded
+            - prevention_limit_reached
+            - tags_prevention_limit_reached
+            - string_key_not_found
+            - merge_outdated
+            - mt_locale_not_supported
+            - mt_main_translation_empty
+            - mt_main_translation_not_supported
+            - mt_source_translation_too_long
+            - mt_chars_missing
+            - mt_no_selected_strings
+            - tm_upload_file_invalid
+            - tm_upload_file_max_entries_exceeded
+            - tm_upload_file_version_not_supported
+            - tm_max_total_entries_exceeded
+            - tm_max_total_memories_exceeded
+            - glossary_locale_cant_remove
+            - glossary_upload_file_invalid
+            - glossary_upload_file_column_separator_invalid
+            - glossary_upload_file_headers_invalid
+            - glossary_upload_file_max_terms_exceeded
+            - glossary_max_total_terms_exceeded
+            - glossary_max_total_glossaries_exceeded
+            - order_oversize
+            - github_not_supported
+            - github_token_invalid
+            - github_token_scope_invalid
+            - github_url_invalid
+            - github_branch_invalid
+            - github_repo_invalid
+            - github_config_file_missing
+            - github_config_file_invalid
+            - github_push_no_changes
+            - gitlab_not_supported
+            - gitlab_token_invalid
+            - gitlab_token_scope_invalid
+            - gitlab_url_invalid
+            - gitlab_branch_invalid
+            - gitlab_repo_invalid
+            - gitlab_config_file_missing
+            - gitlab_config_file_invalid
+            - gitlab_push_no_changes
+            - bitbucket_not_supported
+            - bitbucket_token_invalid
+            - bitbucket_token_scope_invalid
+            - bitbucket_url_invalid
+            - bitbucket_branch_invalid
+            - bitbucket_repo_invalid
+            - bitbucket_config_file_missing
+            - bitbucket_config_file_invalid
+            - bitbucket_push_no_changes
+            - aws_s3_not_supported
+            - aws_s3_credentials_invalid
+            - aws_s3_permissions_invalid
+            - aws_s3_bucket_invalid
+            - aws_s3_region_invalid
+            - expired
+            - unauthorized
+            - unexpected_error
+            - service_unavailable
+        errorMessage:
+          type: string
+        errorData:
+          type: object
+          additionalProperties:
+            type: object
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/ImportFileError'
+    ProjectLocaleStatsDto:
+      description: Translation status per language
+      type: object
+      properties:
+        langCode:
+          description: Language code (ie `en` or `en-US`)
+          type: string
+        langName:
+          description: Language name (ie `English` or `English (US)`)
+          type: string
+        strings:
+          description: Total number of string keys in the project
+          type: integer
+          format: int32
+        reviewed:
+          description: Number of reviewed string keys for a language
+          type: integer
+          format: int32
+        reviewedProgress:
+          description: Reviewed progress for a language, in percentage
+          type: integer
+          format: int32
+    ProjectStatusDto:
+      type: object
+      properties:
+        strings:
+          description: Total number of string keys in the project
+          type: integer
+          format: int32
+        reviewedProgress:
+          description: Total reviewed progress across all languages, in percentage
+          type: integer
+          format: int32
+        languages:
+          description: Translation status per language
+          type: array
+          items:
+            $ref: '#/components/schemas/ProjectLocaleStatsDto'
+    UploadApiLanguageTranslationsUploadRequest:
+      required:
+        - file
+      type: object
+      properties:
+        file:
+          description: >-
+            Uploading file. Supported following formats: `Flutter ARB, Android
+            XML, iOS strings, iOS stringsdict, Angular XLF, Gettext PO, Gettext
+            POT, Java properties, Ruby on Rails yaml, .NET resx, flat json, csv,
+            Excel .xlsx, Excel .xls`
+          type: string
+          format: binary
+  securitySchemes:
+    API auth:
+      type: apiKey
+      name: X-Api-Token
+      in: header
