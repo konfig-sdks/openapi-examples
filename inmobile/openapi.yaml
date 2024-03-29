@@ -1,0 +1,3402 @@
+openapi: 3.0.0
+info:
+  title: inMobile REST API
+  description: "\r\n# Introduction\r\n\r\nThis document is a technical description of our REST API used for external systems to send sms messages and to retrieve a status for each sms message sent and to maintain lists and blacklists.\r\n\r\nIn order to call our API, you need an api key. Log in to your account at https://mm.inmobile.dk, go to the \"API\" menu section and your api key will be available here.\r\n\r\nNOTE: It is required for clients to support tls 1.2 or higher.\r\n\r\n\r\n# Firewall openings\r\n\r\nThis is relevant for status callbacks and incoming SMS messages.\r\n\r\nYou can expect callbacks from one of the following IP ranges:\r\n\r\n* 46.36.205.80/28\r\n* 185.221.37.96/28\r\n\r\nThese are also the ip addresses which will be used for api.inmobile.com and mm.inmobile.dk - ensure access to these 2 ranges are opened in your firewall."
+  version: version 4
+  x-konfig-ignore:
+    potential-incorrect-type: true
+servers:
+  - url: https://api.inmobile.com
+tags:
+  - name: Lists
+  - name: Sms - Outgoing
+  - name: Blacklist
+  - name: Email
+  - name: Email Templates
+  - name: Templates
+  - name: Sms - Incoming
+  - name: Gdpr
+  - name: Tools
+paths:
+  /v4/blacklist:
+    get:
+      tags:
+        - Blacklist
+      summary: Returns all blacklists (Paged result. Follow _links.next to fetch all)
+      operationId: Blacklist_GetAll
+      parameters:
+        - description: How many records to return (must be between 1 and 250)
+          name: pageLimit
+          in: query
+          schema:
+            type: integer
+            format: int32
+          x-position: 1
+      responses:
+        '200':
+          description: A list of all blacklists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiPageModelOfBlacklistOutputApiModel'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+    post:
+      tags:
+        - Blacklist
+      summary: Create an entry in blacklist
+      operationId: Blacklist_Create
+      requestBody:
+        x-name: blacklist
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BlacklistCreateApiModel'
+        required: true
+        x-position: 1
+      responses:
+        '200':
+          description: The created blacklist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BlacklistOutputApiModel'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+  /v4/blacklist/{blackListId}:
+    get:
+      tags:
+        - Blacklist
+      summary: Get entry by id
+      operationId: Blacklist_Get
+      parameters:
+        - description: Id of the blacklist
+          name: blackListId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: guid
+          x-position: 1
+      responses:
+        '200':
+          description: A blacklist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BlacklistOutputApiModel'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+    delete:
+      tags:
+        - Blacklist
+      summary: Delete entry by id
+      operationId: Blacklist_Delete
+      parameters:
+        - description: Id of the blacklist
+          name: blackListId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: guid
+          x-position: 1
+      responses:
+        '204':
+          description: ''
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+  /v4/blacklist/ByNumber:
+    get:
+      tags:
+        - Blacklist
+      summary: Get entry by number
+      operationId: Blacklist_GetByNumber
+      parameters:
+        - name: countryCode
+          in: query
+          schema:
+            type: string
+          x-position: 1
+        - name: phoneNumber
+          in: query
+          schema:
+            type: string
+          x-position: 2
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BlacklistOutputApiModel'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+    delete:
+      tags:
+        - Blacklist
+      summary: Delete entry by number
+      operationId: Blacklist_DeleteByNumber
+      parameters:
+        - name: countryCode
+          in: query
+          schema:
+            type: string
+          x-position: 1
+        - name: phoneNumber
+          in: query
+          schema:
+            type: string
+          x-position: 2
+      responses:
+        '204':
+          description: ''
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+  /v4/email/outgoing/sendusingtemplate:
+    post:
+      tags:
+        - Email
+      summary: Send an email using a template
+      operationId: EmailOutgoing_SendUsingTemplate
+      requestBody:
+        x-name: request
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailOutgoingTemplatePostRequest'
+        required: true
+        x-position: 1
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailOutgoingTemplatePostReply'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+  /v4/email/outgoing:
+    post:
+      tags:
+        - Email
+      summary: Send an email
+      operationId: EmailOutgoing_Send
+      requestBody:
+        x-name: request
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailOutgoingPostRequest'
+        required: true
+        x-position: 1
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailOutgoingBasePostReply'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+  /v4/email/outgoing/events:
+    get:
+      tags:
+        - Email
+      summary: Get email events
+      operationId: EmailOutgoing_GetEvents
+      description: >-
+        Each event will only be returned once. Once called, the event has been
+        removed from our side and cannot be retrieved again using this method.
+      parameters:
+        - description: How many events to return (must be between 1 and 250)
+          name: limit
+          in: query
+          schema:
+            type: integer
+            format: int32
+          x-position: 1
+      responses:
+        '200':
+          description: A list of email events
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailEventListModel'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+  /v4/email/templates:
+    get:
+      tags:
+        - Email Templates
+      summary: Get all email templates
+      operationId: EmailTemplates_GetAllEmailTemplates
+      description: >-
+        This response is a paged result and will contain the property
+        '_links.next'.
+
+        If there are more pages, the next page in the paged result will be
+        provided here.
+      parameters:
+        - description: How many records to return (must be between 1 and 250)
+          name: pageLimit
+          in: query
+          schema:
+            type: integer
+            format: int32
+          x-position: 1
+      responses:
+        '200':
+          description: A list of email templates
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiPageModelOfEmailTemplateOutputApiModel'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+  /v4/email/templates/{id}:
+    get:
+      tags:
+        - Email Templates
+      summary: Get email template by id
+      operationId: EmailTemplates_GetEmailTemplate
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          x-position: 1
+      responses:
+        '200':
+          description: An email template
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailTemplateOutputApiModel'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+  /v4/sms/gdpr/deletionrequests:
+    post:
+      tags:
+        - Gdpr
+      summary: Create information Deletion Request
+      operationId: Gdpr_DeletionRequests
+      requestBody:
+        x-name: deletionRequest
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeletionRequestCreateInfo'
+        required: true
+        x-position: 1
+      responses:
+        '200':
+          description: The created information Deletion Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RequestDeletionOutputApiModel'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+  /v4/lists:
+    get:
+      tags:
+        - Lists
+      summary: Get all lists
+      operationId: Lists_GetAllLists
+      description: >-
+        This response is a paged result and will contain the property
+        '_links.next'.
+
+        If there are more pages, the next page in the paged result will be
+        provided here.
+      parameters:
+        - description: How many records to return (must be between 1 and 250)
+          name: pageLimit
+          in: query
+          schema:
+            type: integer
+            format: int32
+          x-position: 1
+      responses:
+        '200':
+          description: A list of lists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiPageModelOfGroupOutputApiModel'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+    post:
+      tags:
+        - Lists
+      summary: Create list
+      operationId: Lists_CreateList
+      requestBody:
+        x-name: list
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupInputApiModel'
+        required: true
+        x-position: 1
+      responses:
+        '200':
+          description: The created list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupOutputApiModel'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+  /v4/lists/{listId}:
+    get:
+      tags:
+        - Lists
+      summary: Get list
+      operationId: Lists_GetList
+      parameters:
+        - description: Id of the list
+          name: listId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: guid
+          x-position: 1
+      responses:
+        '200':
+          description: A list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupOutputApiModel'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+    delete:
+      tags:
+        - Lists
+      summary: Delete list
+      operationId: Lists_DeleteList
+      parameters:
+        - description: Id of the list
+          name: listId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: guid
+          x-position: 1
+      responses:
+        '204':
+          description: ''
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+    put:
+      tags:
+        - Lists
+      summary: Update list
+      operationId: Lists_UpdateList
+      parameters:
+        - description: The id of the list
+          name: listId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: guid
+          x-position: 1
+      requestBody:
+        description: The list object
+        x-name: list
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupInputApiModel'
+        required: true
+        x-position: 2
+      responses:
+        '200':
+          description: The updated list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupOutputApiModel'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+  /v4/lists/{listId}/recipients:
+    get:
+      tags:
+        - Lists
+      summary: Get all recipients in a list
+      operationId: Lists_GetAllRecipient
+      description: >-
+        This response is a paged result and will contain the property
+        '_links.next'.
+
+        If there are more pages, the next page in the paged result will be
+        provided here.
+      parameters:
+        - description: Id of the list
+          name: listId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: guid
+          x-position: 1
+        - description: How many records to return (must be between 1 and 250)
+          name: pageLimit
+          in: query
+          schema:
+            type: integer
+            format: int32
+          x-position: 2
+      responses:
+        '200':
+          description: A list of recipients
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiPageModelOfRecipientOutputApiModel'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+    post:
+      tags:
+        - Lists
+      summary: Create recipient
+      operationId: Lists_CreateRecipient
+      parameters:
+        - description: Id of the list
+          name: listId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: guid
+          x-position: 1
+      requestBody:
+        x-name: recipient
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecipientCreateApiModel'
+        required: true
+        x-position: 2
+      responses:
+        '200':
+          description: The created recipient
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecipientOutputApiModel'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+  /v4/lists/{listId}/recipients/all:
+    delete:
+      tags:
+        - Lists
+      summary: Deletes all recipients from a list
+      operationId: Lists_DeleteAllRecipients
+      parameters:
+        - description: Id of the list
+          name: listId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: guid
+          x-position: 1
+      responses:
+        '204':
+          description: The affected count
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+  /v4/lists/{listId}/recipients/{recipientId}:
+    get:
+      tags:
+        - Lists
+      summary: Get recipient by id
+      operationId: Lists_GetRecipient
+      parameters:
+        - description: Id of the list
+          name: listId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: guid
+          x-position: 1
+        - description: Id of the recipient
+          name: recipientId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: guid
+          x-position: 2
+      responses:
+        '200':
+          description: A recipient
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecipientOutputApiModel'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+    delete:
+      tags:
+        - Lists
+      summary: Delete recipient by id
+      operationId: Lists_DeleteRecipient
+      parameters:
+        - description: Id of the list
+          name: listId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: guid
+          x-position: 1
+        - description: Id of the recipient
+          name: recipientId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: guid
+          x-position: 2
+      responses:
+        '204':
+          description: ''
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+    put:
+      tags:
+        - Lists
+      summary: Update recipient
+      operationId: Lists_UpdateRecipient
+      description: >-
+        Only mentioned fields are updated, e.g. leave out fields["email"] if you
+        do not want to update this field. On the other hand, set fields["email"]
+        = null in case you want to erase the existing value.
+      parameters:
+        - description: Id of the list
+          name: listId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: guid
+          x-position: 1
+        - name: recipientId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: guid
+          x-position: 2
+      requestBody:
+        x-name: recipient
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecipientUpdateApiModel'
+        required: true
+        x-position: 3
+      responses:
+        '200':
+          description: The updated recipient
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecipientOutputApiModel'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+  /v4/lists/{listId}/recipients/ByNumber:
+    get:
+      tags:
+        - Lists
+      summary: Get recipient by number
+      operationId: Lists_GetRecipientByNumber
+      parameters:
+        - description: Id of the list
+          name: listId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: guid
+          x-position: 1
+        - description: Target countryCode
+          name: countryCode
+          in: query
+          schema:
+            type: string
+          x-position: 2
+        - description: Target phoneNumber
+          name: phoneNumber
+          in: query
+          schema:
+            type: string
+          x-position: 3
+      responses:
+        '200':
+          description: A recipient
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecipientOutputApiModel'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+    delete:
+      tags:
+        - Lists
+      summary: Delete recipient by number
+      operationId: Lists_DeleteRecipientByNumber
+      parameters:
+        - description: Id of the list
+          name: listId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: guid
+          x-position: 1
+        - description: Target countryCode
+          name: countryCode
+          in: query
+          schema:
+            type: string
+          x-position: 2
+        - description: Target phoneNumber
+          name: phoneNumber
+          in: query
+          schema:
+            type: string
+          x-position: 3
+      responses:
+        '204':
+          description: ''
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+    post:
+      tags:
+        - Lists
+      summary: Create or update recipient by number
+      operationId: Lists_CreateOrUpdateRecipientByNumber
+      parameters:
+        - description: Id of the list
+          name: listId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: guid
+          x-position: 1
+        - description: Target countryCode
+          name: countryCode
+          in: query
+          schema:
+            type: string
+          x-position: 2
+        - description: Target phoneNumber
+          name: phoneNumber
+          in: query
+          schema:
+            type: string
+          x-position: 3
+      requestBody:
+        x-name: recipient
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecipientCreateOrUpdateApiModel'
+        required: true
+        x-position: 4
+      responses:
+        '200':
+          description: The created or updated recipient
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecipientOutputApiModel'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+  /v4/sms/incoming/messages:
+    get:
+      tags:
+        - Sms - Incoming
+      summary: Get incoming sms messages.
+      operationId: SmsIncoming_GetMessages
+      description: >-
+        Each message will only be returned once. Once called, the message has
+        been marked as read from our side and cannot be retrieved again using
+        this method.
+
+        Using api callbacks in combination with this call does not conflict.
+      parameters:
+        - description: How many records to return (must be between 1 and 250)
+          name: limit
+          in: query
+          schema:
+            type: integer
+            format: int32
+          x-position: 1
+      responses:
+        '200':
+          description: A list of messages
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IncomingMessageListModel'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+  /v4/sms/outgoing:
+    post:
+      tags:
+        - Sms - Outgoing
+      summary: Send sms messages.
+      operationId: SmsOutgoing_Create
+      requestBody:
+        x-name: request
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SmsOutgoingPostRequest'
+        required: true
+        x-position: 1
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SmsOutgoingPostReply'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+      callbacks:
+        status:
+          https://[your_domain]/your/desired/path:
+            post:
+              summary: Status callback url (Webhook)
+              description: >-
+                The status callback url to receive status information on when
+                sms messages are delivered (or if they fail).
+
+                This is a call done by us to you and the url to be called, is
+                the one specified when sending the messages.
+                            
+                Only messages with 100% identical message callbacks will be
+                grouped together into the same call. Messages with different
+                callback urls will never be grouped together in a single
+                callback.
+              requestBody:
+                x-name: payload
+                content:
+                  application/json:
+                    schema:
+                      $ref: '#/components/schemas/StatusReportListModel'
+                required: true
+                x-position: 1
+              responses:
+                '200':
+                  description: ''
+  /v4/sms/outgoing/sendusingquery:
+    get:
+      tags:
+        - Sms - Outgoing
+      summary: Send sms messages using query parameters.
+      operationId: SmsOutgoing_SendUsingQueryGET
+      description: >-
+        It is strongly recommended to use the POST version instead of this
+        version to send text messages. This endpoint is only a emergency
+        fallback option for systems that are not capable of doing an HTTP post.
+      parameters:
+        - description: >-
+            The text message.
+
+            If the max length is exceeded, the message text is truncated and
+            sent.
+          name: Text
+          in: query
+          schema:
+            type: string
+            maxLength: 10000
+            minLength: 1
+            example: This is a message text to be sent
+          x-position: 1
+        - description: >-
+            The sender. This can either be a 3-11 chars text sender or an up to
+            14 digit long sender number.
+
+            If the max length is exceeded, the string is truncated.
+          name: From
+          in: query
+          schema:
+            type: string
+            example: PetShop
+          x-position: 2
+        - description: >-
+            If true, the message will be shown as a flash message (also known as
+            a class0 message) on the target phone. If false, it will be received
+            as a standard text message.
+
+            Default: false
+          name: Flash
+          in: query
+          schema:
+            type: boolean
+            nullable: true
+            example: false
+          x-position: 3
+        - description: >-
+            The encoding of the message. Can be either "gsm7", "ucs2" or "auto".
+
+            "gsm7" is the default alfabet for text messages and when using gsm7,
+            a single sms message can contain 160 characters. If the length
+            exceeeds 160 characters, the message is actually split up into parts
+            of 153 characters and charged according to this. Please note, that a
+            few, specific characters fill up 2 bytes and count for 2 letters.
+            Ref: https://en.wikipedia.org/wiki/GSM_03.38
+
+            "ucs2"" allows for more non-roman characters to be used along with
+            smileys. When using this encoding, a single message can consist of
+            70 characters. If the message exceeds 70 characters, the final
+            message is actually split into parts of 67 characters.
+
+            "auto" can be used in case the sender wishes to support non-roman
+            characters but wants to save the expenses on all the trafic that
+            only contains gsm characters anyway.
+
+            Default: "gsm7"
+          name: Encoding
+          in: query
+          schema:
+            type: string
+            example: gsm7
+          x-position: 4
+        - description: >-
+            The msisdn (country code and number) to send to. (Remember to
+            include countrycode in all numbers, e.g. 4512345678).
+
+            If max length is exceeded, the entire api call will fail.
+          name: To
+          in: query
+          schema:
+            type: string
+            maxLength: 20
+            minLength: 0
+            example: '4512345678'
+          x-position: 5
+        - description: >-
+            For optimal phone number validation, we encourage you to provide us
+            with a country code. This can be the numeric country code (like 44)
+            or the two-letter suffix (like GB). If this field is empty it is
+            important that you add the country code (e.g 44) in front of the
+            phone number in “to”.
+          name: CountryHint
+          in: query
+          schema:
+            type: string
+            maxLength: 50
+            minLength: 0
+            example: '45'
+          x-position: 6
+        - description: >-
+            An optional message id used to identify the message.
+
+            If no message id is provided, a new message id is generated and
+            assigned to the message. This id must be unique across all messages
+            created on the same account.
+
+            (In case a previous message has been deleted according to GDPR
+            deletion rules setup on the specific account, the messageId is
+            allowed to be reused)
+
+            If max length is exceeded, the entire api call will fail.
+          name: MessageId
+          in: query
+          schema:
+            type: string
+            maxLength: 50
+            minLength: 1
+            example: PetShop
+          x-position: 7
+        - description: >-
+            If true, this message will be blocked from sending if the target
+            number is on the account's blacklist. If false, the message will be
+            sent no matter blacklist settings.
+
+            Default: true
+          name: RespectBlacklist
+          in: query
+          schema:
+            type: boolean
+            nullable: true
+            example: true
+          x-position: 8
+        - description: >-
+            The validity period in seconds. Minimum is 60 seconds and maximum is
+            172800 (48 hours).
+
+            If not specified, the messages is attempted to be delivered in 48
+            hours. A typical use of validityPeriod is for messages that makes no
+            sense to delivery efter er certain time frame, in the case the phone
+            is turned of, e.g. two factor codes.
+
+            Please note, that messages are still charged even though the
+            operator is cancelling the delivery attempt due to an exceeded
+            validity period.
+          name: ValidityPeriodInSeconds
+          in: query
+          schema:
+            type: integer
+            format: int32
+            maximum: 172800
+            minimum: 60
+            nullable: true
+            example: 90
+          x-position: 9
+        - description: >-
+            In case you would like a callback from us when the message is
+            delivered, you can specify it here and we will call it when we have
+            new message statuses.
+
+            The callback payload will be an array of status objects.
+
+            Api calls sending messages with the same apikey will be subject to
+            being bulked together.
+          name: StatusCallbackUrl
+          in: query
+          schema:
+            type: string
+            maxLength: 500
+            minLength: 0
+            example: https://[your_domain]/your/desired/path
+          x-position: 10
+        - name: SendTime.UtcTime
+          in: query
+          schema:
+            type: string
+            format: date-time
+          x-position: 11
+        - name: SendTime.LocalServerTime
+          in: query
+          schema:
+            type: string
+            format: date-time
+          x-position: 12
+        - description: >-
+            If set, the message will be cancelled if the same mobile number
+            already have received a SMS within this specified time period.
+
+            Fx. used to prevent spamming a mobile number.
+
+            Minimum 60 minutes (1 hour) and maximum is 43200 minutes (30 days).
+          name: MsisdnCooldownInMinutes
+          in: query
+          schema:
+            type: integer
+            format: int32
+            maximum: 43200
+            minimum: 60
+            nullable: true
+            example: 1440
+          x-position: 13
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SmsOutgoingPostReply'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+      callbacks:
+        status:
+          https://[your_domain]/your/desired/path:
+            post:
+              summary: Status callback url (Webhook)
+              description: >-
+                The status callback url to receive status information on when
+                sms messages are delivered (or if they fail).
+
+                This is a call done by us to you and the url to be called, is
+                the one specified when sending the messages.
+                            
+                Only messages with 100% identical message callbacks will be
+                grouped together into the same call. Messages with different
+                callback urls will never be grouped together in a single
+                callback.
+              requestBody:
+                x-name: payload
+                content:
+                  application/json:
+                    schema:
+                      $ref: '#/components/schemas/StatusReportListModel'
+                required: true
+                x-position: 1
+              responses:
+                '200':
+                  description: ''
+    post:
+      tags:
+        - Sms - Outgoing
+      summary: Send sms messages using query parameters.
+      operationId: SmsOutgoing_SendUsingQueryPOST
+      description: >-
+        It is strongly recommended to use the POST version instead of this
+        version to send text messages. This endpoint is only a emergency
+        fallback option for systems that are not capable of doing an HTTP post.
+      parameters:
+        - description: >-
+            The text message.
+
+            If the max length is exceeded, the message text is truncated and
+            sent.
+          name: Text
+          in: query
+          schema:
+            type: string
+            maxLength: 10000
+            minLength: 1
+            example: This is a message text to be sent
+          x-position: 1
+        - description: >-
+            The sender. This can either be a 3-11 chars text sender or an up to
+            14 digit long sender number.
+
+            If the max length is exceeded, the string is truncated.
+          name: From
+          in: query
+          schema:
+            type: string
+            example: PetShop
+          x-position: 2
+        - description: >-
+            If true, the message will be shown as a flash message (also known as
+            a class0 message) on the target phone. If false, it will be received
+            as a standard text message.
+
+            Default: false
+          name: Flash
+          in: query
+          schema:
+            type: boolean
+            nullable: true
+            example: false
+          x-position: 3
+        - description: >-
+            The encoding of the message. Can be either "gsm7", "ucs2" or "auto".
+
+            "gsm7" is the default alfabet for text messages and when using gsm7,
+            a single sms message can contain 160 characters. If the length
+            exceeeds 160 characters, the message is actually split up into parts
+            of 153 characters and charged according to this. Please note, that a
+            few, specific characters fill up 2 bytes and count for 2 letters.
+            Ref: https://en.wikipedia.org/wiki/GSM_03.38
+
+            "ucs2"" allows for more non-roman characters to be used along with
+            smileys. When using this encoding, a single message can consist of
+            70 characters. If the message exceeds 70 characters, the final
+            message is actually split into parts of 67 characters.
+
+            "auto" can be used in case the sender wishes to support non-roman
+            characters but wants to save the expenses on all the trafic that
+            only contains gsm characters anyway.
+
+            Default: "gsm7"
+          name: Encoding
+          in: query
+          schema:
+            type: string
+            example: gsm7
+          x-position: 4
+        - description: >-
+            The msisdn (country code and number) to send to. (Remember to
+            include countrycode in all numbers, e.g. 4512345678).
+
+            If max length is exceeded, the entire api call will fail.
+          name: To
+          in: query
+          schema:
+            type: string
+            maxLength: 20
+            minLength: 0
+            example: '4512345678'
+          x-position: 5
+        - description: >-
+            For optimal phone number validation, we encourage you to provide us
+            with a country code. This can be the numeric country code (like 44)
+            or the two-letter suffix (like GB). If this field is empty it is
+            important that you add the country code (e.g 44) in front of the
+            phone number in “to”.
+          name: CountryHint
+          in: query
+          schema:
+            type: string
+            maxLength: 50
+            minLength: 0
+            example: '45'
+          x-position: 6
+        - description: >-
+            An optional message id used to identify the message.
+
+            If no message id is provided, a new message id is generated and
+            assigned to the message. This id must be unique across all messages
+            created on the same account.
+
+            (In case a previous message has been deleted according to GDPR
+            deletion rules setup on the specific account, the messageId is
+            allowed to be reused)
+
+            If max length is exceeded, the entire api call will fail.
+          name: MessageId
+          in: query
+          schema:
+            type: string
+            maxLength: 50
+            minLength: 1
+            example: PetShop
+          x-position: 7
+        - description: >-
+            If true, this message will be blocked from sending if the target
+            number is on the account's blacklist. If false, the message will be
+            sent no matter blacklist settings.
+
+            Default: true
+          name: RespectBlacklist
+          in: query
+          schema:
+            type: boolean
+            nullable: true
+            example: true
+          x-position: 8
+        - description: >-
+            The validity period in seconds. Minimum is 60 seconds and maximum is
+            172800 (48 hours).
+
+            If not specified, the messages is attempted to be delivered in 48
+            hours. A typical use of validityPeriod is for messages that makes no
+            sense to delivery efter er certain time frame, in the case the phone
+            is turned of, e.g. two factor codes.
+
+            Please note, that messages are still charged even though the
+            operator is cancelling the delivery attempt due to an exceeded
+            validity period.
+          name: ValidityPeriodInSeconds
+          in: query
+          schema:
+            type: integer
+            format: int32
+            maximum: 172800
+            minimum: 60
+            nullable: true
+            example: 90
+          x-position: 9
+        - description: >-
+            In case you would like a callback from us when the message is
+            delivered, you can specify it here and we will call it when we have
+            new message statuses.
+
+            The callback payload will be an array of status objects.
+
+            Api calls sending messages with the same apikey will be subject to
+            being bulked together.
+          name: StatusCallbackUrl
+          in: query
+          schema:
+            type: string
+            maxLength: 500
+            minLength: 0
+            example: https://[your_domain]/your/desired/path
+          x-position: 10
+        - name: SendTime.UtcTime
+          in: query
+          schema:
+            type: string
+            format: date-time
+          x-position: 11
+        - name: SendTime.LocalServerTime
+          in: query
+          schema:
+            type: string
+            format: date-time
+          x-position: 12
+        - description: >-
+            If set, the message will be cancelled if the same mobile number
+            already have received a SMS within this specified time period.
+
+            Fx. used to prevent spamming a mobile number.
+
+            Minimum 60 minutes (1 hour) and maximum is 43200 minutes (30 days).
+          name: MsisdnCooldownInMinutes
+          in: query
+          schema:
+            type: integer
+            format: int32
+            maximum: 43200
+            minimum: 60
+            nullable: true
+            example: 1440
+          x-position: 13
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SmsOutgoingPostReply'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+      callbacks:
+        status:
+          https://[your_domain]/your/desired/path:
+            post:
+              summary: Status callback url (Webhook)
+              description: >-
+                The status callback url to receive status information on when
+                sms messages are delivered (or if they fail).
+
+                This is a call done by us to you and the url to be called, is
+                the one specified when sending the messages.
+                            
+                Only messages with 100% identical message callbacks will be
+                grouped together into the same call. Messages with different
+                callback urls will never be grouped together in a single
+                callback.
+              requestBody:
+                x-name: payload
+                content:
+                  application/json:
+                    schema:
+                      $ref: '#/components/schemas/StatusReportListModel'
+                required: true
+                x-position: 1
+              responses:
+                '200':
+                  description: ''
+  /v4/sms/outgoing/sendusingtemplate:
+    post:
+      tags:
+        - Sms - Outgoing
+      summary: Send sms messages using a template.
+      operationId: SmsOutgoing_SendUsingTemplate
+      requestBody:
+        x-name: request
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SmsOutgoingTemplatePostRequest'
+        required: true
+        x-position: 1
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SmsOutgoingTemplatePostReply'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+      callbacks:
+        status:
+          https://[your_domain]/your/desired/path:
+            post:
+              summary: Status callback url (Webhook)
+              description: >-
+                The status callback url to receive status information on when
+                sms messages are delivered (or if they fail).
+
+                This is a call done by us to you and the url to be called, is
+                the one specified when sending the messages.
+                            
+                Only messages with 100% identical message callbacks will be
+                grouped together into the same call. Messages with different
+                callback urls will never be grouped together in a single
+                callback.
+              requestBody:
+                x-name: payload
+                content:
+                  application/json:
+                    schema:
+                      $ref: '#/components/schemas/StatusReportListModel'
+                required: true
+                x-position: 1
+              responses:
+                '200':
+                  description: ''
+  /v4/sms/outgoing/cancel:
+    post:
+      tags:
+        - Sms - Outgoing
+      summary: Cancel sms messages
+      operationId: SmsOutgoing_Cancel
+      requestBody:
+        x-name: request
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SmsOutgoingCancelPostRequest'
+        required: true
+        x-position: 1
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SmsOutgoingCancelPostReply'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+  /v4/sms/outgoing/reports:
+    get:
+      tags:
+        - Sms - Outgoing
+      summary: Get sms status reports.
+      operationId: SmsOutgoing_GetReports
+      description: >-
+        Each report will only be returned once. Once called, the status has been
+        removed from our side and cannot be retrieved again using this method.
+
+        Using api callbacks in combination with this call does not conflict.
+      parameters:
+        - description: How many records to return (must be between 1 and 250)
+          name: limit
+          in: query
+          schema:
+            type: integer
+            format: int32
+          x-position: 1
+      responses:
+        '200':
+          description: A list of status reports
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusReportListModel'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+  /v4/sms/templates:
+    get:
+      tags:
+        - Templates
+      summary: Get all templates
+      operationId: Templates_GetAllTemplates
+      description: >-
+        This response is a paged result and will contain the property
+        '_links.next'.
+
+        If there are more pages, the next page in the paged result will be
+        provided here.
+      parameters:
+        - description: How many records to return (must be between 1 and 250)
+          name: pageLimit
+          in: query
+          schema:
+            type: integer
+            format: int32
+          x-position: 1
+      responses:
+        '200':
+          description: A list of templates
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiPageModelOfStandardTextOutputApiModel'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+  /v4/sms/templates/{id}:
+    get:
+      tags:
+        - Templates
+      summary: Get template by id
+      operationId: Templates_GetTemplate
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          x-position: 1
+      responses:
+        '200':
+          description: A template
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardTextOutputApiModel'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+  /v4/tools/parsephonenumbers:
+    post:
+      tags:
+        - Tools
+      summary: Parse phone numbers
+      operationId: Tools_ParsePhoneNumbers
+      requestBody:
+        x-name: request
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ParsePhoneNumberPostRequest'
+        required: true
+        x-position: 1
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParsePhoneNumberPostReply'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorMessage'
+components:
+  schemas:
+    ApiPageModelOfBlacklistOutputApiModel:
+      allOf:
+        - $ref: '#/components/schemas/OutputListApiModelOfBlacklistOutputApiModel'
+        - type: object
+          properties:
+            _links:
+              $ref: '#/components/schemas/ApiPageLinks'
+    ApiPageLinks:
+      type: object
+      properties:
+        next:
+          description: The link to the next page, e.g. /Feature/Something/cAw2WeS3rdf
+          type: string
+          example: /Feature/Something/cAw2WeS3rdf
+        isLastPage:
+          description: >-
+            true if this is the last page, false if there are more pages.
+            NextPageUrl is always defined when this is false and never defined
+            when it is true.
+          type: boolean
+    OutputListApiModelOfBlacklistOutputApiModel:
+      type: object
+      properties:
+        entries:
+          type: array
+          items:
+            $ref: '#/components/schemas/BlacklistOutputApiModel'
+    BlacklistOutputApiModel:
+      allOf:
+        - $ref: '#/components/schemas/BlacklistApiModelbase'
+        - type: object
+          properties:
+            id:
+              description: The id of the blacklist entry
+              type: string
+              format: guid
+              example: 683862c7-c814-40cc-a74d-048d9f2f8cb7
+            created:
+              description: >-
+                When the blacklist entry was created e.g. 2001-02-30T14:50:23Z
+                (UTC time)
+              type: string
+              example: '2001-02-30T14:50:23Z'
+            reasonCode:
+              description: Why the blacklist was created
+              example: 5
+              oneOf:
+                - $ref: '#/components/schemas/BlacklistReason'
+            reasonCodeDescription:
+              description: Text version of the ReasonCode
+              type: string
+              example: AddFromApi
+    BlacklistReason:
+      description: |-
+        1 = CustomerSpecificUnsubscription
+        2 = SharedUnsubscription
+        3 = CountryBanLaw
+        4 = AddWithUserInterface
+        5 = AddFromApi
+        6 = Custom
+        7 = AddFromCrm
+        8 = RecipientSyncRemoval
+        9 = Autoblacklist
+        10 = SpamLimit
+        11 = UnsubscribeForm
+        12 = CustomDomain
+      type: integer
+      x-enumNames:
+        - CustomerSpecificUnsubscription
+        - SharedUnsubscription
+        - CountryBanLaw
+        - AddWithUserInterface
+        - AddFromApi
+        - Custom
+        - AddFromCrm
+        - RecipientSyncRemoval
+        - Autoblacklist
+        - SpamLimit
+        - UnsubscribeForm
+        - CustomDomain
+      enum:
+        - 1
+        - 2
+        - 3
+        - 4
+        - 5
+        - 6
+        - 7
+        - 8
+        - 9
+        - 10
+        - 11
+        - 12
+    BlacklistApiModelbase:
+      type: object
+      x-abstract: true
+      required:
+        - numberInfo
+      properties:
+        numberInfo:
+          $ref: '#/components/schemas/NumberInfo'
+        comment:
+          description: A comment describing the specific blacklisting (optional).
+          type: string
+          maxLength: 200
+          minLength: 0
+          example: Some text provided when created
+    NumberInfo:
+      type: object
+      required:
+        - countryCode
+        - phoneNumber
+      properties:
+        countryCode:
+          description: The country code part of the number
+          type: string
+          minLength: 1
+          example: '45'
+        phoneNumber:
+          description: The local phonenumber part of the number
+          type: string
+          minLength: 1
+          example: '12345678'
+    ApiErrorMessage:
+      type: object
+      properties:
+        errorMessage:
+          description: An overall description of the error.
+          type: string
+        details:
+          description: If available, more details will be provided here.
+          type: array
+          items:
+            type: string
+    BlacklistCreateApiModel:
+      allOf:
+        - $ref: '#/components/schemas/BlacklistApiModelbase'
+        - type: object
+          properties:
+            removeFromAllLists:
+              description: >-
+                If true, the number will also be removed from all lists.
+                Default: false
+              type: boolean
+              nullable: true
+              example: false
+    EmailOutgoingTemplatePostReply:
+      allOf:
+        - $ref: '#/components/schemas/EmailOutgoingBasePostReply'
+        - type: object
+          properties:
+            usedPlaceholderKeys:
+              description: A list of used placeholder keys
+              type: array
+              example:
+                - '{name}'
+                - '{lastname}'
+              items:
+                type: string
+            notUsedPlaceholderKeys:
+              description: A list of not used placeholder keys
+              type: array
+              example:
+                - '{name}'
+                - '{lastname}'
+              items:
+                type: string
+    EmailOutgoingBasePostReply:
+      type: object
+      properties:
+        messageId:
+          description: >-
+            An optional message id used to identify the message.
+
+            If no message id is provided, a new message id is generated and
+            assigned to the message. This id must be unique across all messages
+            created on the same account.
+
+            (In case a previous message has been deleted according to GDPR
+            deletion rules setup on the specific account, the messageId is
+            allowed to be reused)
+
+            If max length is exceeded, the entire api call will fail.
+          type: string
+          example: 8fe266b2-56e9-4b5f-938f-cc5e22530721
+        to:
+          description: The list of created Receivers
+          type: array
+          items:
+            $ref: '#/components/schemas/EmailRecipient'
+    EmailRecipient:
+      type: object
+      required:
+        - emailAddress
+        - displayName
+      properties:
+        emailAddress:
+          description: The email address of the recipient
+          type: string
+          minLength: 1
+          example: roy@tomlinson.com
+        displayName:
+          description: The display name to use for the recipient
+          type: string
+          minLength: 1
+          example: Roy Tomlinson
+    EmailOutgoingTemplatePostRequest:
+      allOf:
+        - $ref: '#/components/schemas/EmailOutgoingApiBaseCreateModel'
+        - type: object
+          required:
+            - templateId
+          properties:
+            templateId:
+              description: The id of the template to use.
+              type: string
+              minLength: 1
+              example: ecdcb257-c1e9-4b44-8a4e-f05822372d82
+            placeholders:
+              description: >-
+                A key-value list of placeholders to replace in the template
+                html, text and subject. Keys must be encapsulated with {}. E.g.
+                {NAME}.
+              example:
+                '{name}': Ray
+                '{lastname}': Tomlinson
+              oneOf:
+                - $ref: '#/components/schemas/ApiPlaceholderValueCollection'
+    ApiPlaceholderValueCollection:
+      type: object
+      additionalProperties:
+        type: string
+    EmailOutgoingApiBaseCreateModel:
+      type: object
+      required:
+        - from
+        - to
+      properties:
+        from:
+          description: The from info of the message.
+          oneOf:
+            - $ref: '#/components/schemas/EmailRecipient'
+        to:
+          description: >-
+            A list of receiver objects. Allowed to contain between 1 and 100
+            elements.
+          type: array
+          maxItems: 100
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/EmailRecipient'
+        replyTo:
+          description: A list of optional Reply To objects.
+          type: array
+          maxItems: 100
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/EmailRecipient'
+        messageId:
+          description: >-
+            An optional message id used to identify the message.
+
+            If no message id is provided, a new message id is generated and
+            assigned to the message. This id must be unique across all messages
+            created on the same account.
+
+            (In case a previous message has been deleted according to GDPR
+            deletion rules setup on the specific account, the messageId is
+            allowed to be reused)
+
+            If max length is exceeded, the entire api call will fail.
+          type: string
+          maxLength: 50
+          minLength: 1
+          example: 8fe266b2-56e9-4b5f-938f-cc5e22530721
+        sendTime:
+          description: >-
+            If set, this defines to time in the future for the message to be
+            sent. e.g. 2001-02-30T14:50:23Z (UTC time).
+          type: string
+          example: '2001-02-30T14:50:23Z'
+        tracking:
+          description: >-
+            If true, this will add Open and Click tracking to your email.
+            Default: true.
+          type: boolean
+          example: false
+    EmailOutgoingPostRequest:
+      allOf:
+        - $ref: '#/components/schemas/EmailOutgoingApiBaseCreateModel'
+        - type: object
+          required:
+            - subject
+            - html
+          properties:
+            subject:
+              description: |-
+                The subject of the email.
+                If max length is exceeded, the entire api call will fail.
+              type: string
+              maxLength: 255
+              minLength: 0
+              example: This is the subject of the email
+            html:
+              description: |-
+                The HTML body of the email. Max size of 2 MB.
+                If max size is exceeded, the entire api call will fail.
+              type: string
+              minLength: 1
+              example: >-
+                <!DOCTYPE html><html><head></head><body><p>This is an email to
+                be sent</p></body></html>
+            text:
+              description: >-
+                The text body of the email. If none is provided this will be
+                generated from the HTML. Max size of 2 MB.
+
+                If max size is exceeded, the entire api call will fail.
+              type: string
+              example: This is the text version of the email
+    EmailEventListModel:
+      type: object
+      properties:
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/EmailEvent'
+    EmailEvent:
+      type: object
+      properties:
+        messageId:
+          description: The id of the message.
+          type: string
+          example: id1
+        eventType:
+          description: Contains a code for what event type the event is.
+          example: 3
+          oneOf:
+            - $ref: '#/components/schemas/EmailEventType'
+        eventTypeDescription:
+          description: A text description of the event type
+          type: string
+          example: Delivered
+        eventTimestamp:
+          description: When the event happened e.g. 2001-02-30T14:50:23Z (UTC time)
+          type: string
+          example: '2001-02-30T14:50:23Z'
+    EmailEventType:
+      description: |-
+        0 = Undefined
+        1 = Clicked
+        2 = Complained
+        3 = Delivered
+        4 = Opened
+        5 = PermanentFail
+        6 = TemporaryFail
+        7 = Unsubscribed
+        8 = Queued
+        9 = Attempt
+      type: integer
+      x-enumNames:
+        - Undefined
+        - Clicked
+        - Complained
+        - Delivered
+        - Opened
+        - PermanentFail
+        - TemporaryFail
+        - Unsubscribed
+        - Queued
+        - Attempt
+      enum:
+        - 0
+        - 1
+        - 2
+        - 3
+        - 4
+        - 5
+        - 6
+        - 7
+        - 8
+        - 9
+    ApiPageModelOfEmailTemplateOutputApiModel:
+      allOf:
+        - $ref: '#/components/schemas/OutputListApiModelOfEmailTemplateOutputApiModel'
+        - type: object
+          properties:
+            _links:
+              $ref: '#/components/schemas/ApiPageLinks'
+    OutputListApiModelOfEmailTemplateOutputApiModel:
+      type: object
+      properties:
+        entries:
+          type: array
+          items:
+            $ref: '#/components/schemas/EmailTemplateOutputApiModel'
+    EmailTemplateOutputApiModel:
+      type: object
+      properties:
+        id:
+          description: The id of the email template
+          type: string
+          example: c9b6c7a8-aa22-4a59-b6d5-fdbbeced27bc
+        name:
+          description: The name of the email template
+          type: string
+          example: My email template
+        html:
+          description: The Html of the email template
+          type: string
+          example: >-
+            <!DOCTYPE html><html><head></head><body><p>Hello {name} {lastname}.
+            This is an email to be sent</p></body></html>
+        text:
+          description: The text version of the Html
+          type: string
+          example: Hello {name} This is the text version of the email
+        subject:
+          description: The subject of the email template
+          type: string
+          example: Hello {lastname} This is the subject of the email
+        preheader:
+          description: The preheader of the email
+          type: string
+          example: This is the preheader of the email
+        placeholders:
+          description: >-
+            A list of the placeholders found in the template html, text and
+            subject.
+          type: array
+          example:
+            - '{name}'
+            - '{lastname}'
+          items:
+            type: string
+        created:
+          description: >-
+            When the email template was created e.g. 2001-02-30T14:50:23Z (UTC
+            time)
+          type: string
+          example: '2001-02-30T14:50:23Z'
+        lastUpdated:
+          description: >-
+            When the email template was last updated e.g. 2001-02-30T14:50:23Z
+            (UTC time)
+          type: string
+          example: '2001-02-30T14:50:23Z'
+    RequestDeletionOutputApiModel:
+      type: object
+      properties:
+        id:
+          description: The Id of the Deletion request
+          type: string
+          example: cf97f715-63d4-41df-92a1-34eb87b866b5
+    DeletionRequestCreateInfo:
+      type: object
+      properties:
+        numberInfo:
+          $ref: '#/components/schemas/NumberInfo'
+    ApiPageModelOfGroupOutputApiModel:
+      allOf:
+        - $ref: '#/components/schemas/OutputListApiModelOfGroupOutputApiModel'
+        - type: object
+          properties:
+            _links:
+              $ref: '#/components/schemas/ApiPageLinks'
+    OutputListApiModelOfGroupOutputApiModel:
+      type: object
+      properties:
+        entries:
+          type: array
+          items:
+            $ref: '#/components/schemas/GroupOutputApiModel'
+    GroupOutputApiModel:
+      type: object
+      properties:
+        id:
+          description: The id of the list
+          type: string
+          format: guid
+          example: a80e5daa-1bf9-48ca-b67e-ff79eeab1c39
+        name:
+          description: The name of the list
+          type: string
+          example: My list
+        created:
+          description: When the list was created e.g. 2001-02-30T14:50:23Z (UTC time)
+          type: string
+          example: '2001-02-30T14:50:23Z'
+    GroupInputApiModel:
+      type: object
+      properties:
+        name:
+          type: string
+    ApiPageModelOfRecipientOutputApiModel:
+      allOf:
+        - $ref: '#/components/schemas/OutputListApiModelOfRecipientOutputApiModel'
+        - type: object
+          properties:
+            _links:
+              $ref: '#/components/schemas/ApiPageLinks'
+    OutputListApiModelOfRecipientOutputApiModel:
+      type: object
+      properties:
+        entries:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecipientOutputApiModel'
+    RecipientOutputApiModel:
+      allOf:
+        - $ref: '#/components/schemas/RecipientBaseApiModel'
+        - type: object
+          properties:
+            id:
+              description: The id of the recipient
+              type: string
+              format: guid
+              example: 99e0543f-b059-4127-9b50-c42112f19cc9
+            listId:
+              description: The id of the list that the recipient belongs to
+              type: string
+              format: guid
+              example: 4a5f91d5-3aa4-4419-890e-f7b103406dbf
+            created:
+              description: >-
+                When the recipient was created e.g. 2001-02-30T14:50:23Z (UTC
+                time)
+              type: string
+              example: '2001-02-30T14:50:23Z'
+    RecipientBaseApiModel:
+      type: object
+      x-abstract: true
+      properties:
+        externalCreated:
+          description: >-
+            When the recipient was created in an external system e.g.
+            2001-02-30T14:50:23Z (UTC time)
+          type: string
+          example: '2001-02-30T14:50:23Z'
+        numberInfo:
+          $ref: '#/components/schemas/NumberInfo'
+        fields:
+          description: The fields to update in the given recipient.
+          example:
+            firstname: Friedhelm
+            lastname: Hillebrand
+            birthday: '1945-04-30'
+            custom1: Custom1
+            custom2: Custom2
+            custom3: Custom3
+            custom4: Custom4
+            custom5: Custom5
+            custom6: Custom6
+            email: test@test.dk
+            zipCode: '8000'
+            address: testroad 12
+            companyName: test company
+          oneOf:
+            - $ref: '#/components/schemas/RecipientFieldsCollection'
+    RecipientFieldsCollection:
+      type: object
+      additionalProperties:
+        type: string
+    RecipientCreateOrUpdateApiModel:
+      allOf:
+        - $ref: '#/components/schemas/RecipientBaseApiModel'
+        - type: object
+    RecipientUpdateApiModel:
+      allOf:
+        - $ref: '#/components/schemas/RecipientBaseApiModel'
+        - type: object
+    RecipientCreateApiModel:
+      allOf:
+        - $ref: '#/components/schemas/RecipientBaseApiModel'
+        - type: object
+    IncomingMessageListModel:
+      type: object
+      properties:
+        messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/IncomingMessage'
+    IncomingMessage:
+      type: object
+      properties:
+        from:
+          $ref: '#/components/schemas/IncomingMessageSender'
+        to:
+          $ref: '#/components/schemas/IncomingMessageTarget'
+        text:
+          type: string
+        receivedAt:
+          type: string
+          example: '2001-02-30T14:50:23Z'
+    IncomingMessageSender:
+      type: object
+      properties:
+        countryCode:
+          type: string
+        phoneNumber:
+          type: string
+        rawSource:
+          type: string
+        isValidMsisdn:
+          type: boolean
+    IncomingMessageTarget:
+      type: object
+      properties:
+        countryCode:
+          type: string
+        phoneNumber:
+          type: string
+        msisdn:
+          type: string
+    SmsOutgoingPostReply:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/SmsOutgoingApiCreateResultModel'
+    SmsOutgoingApiCreateResultModel:
+      type: object
+      properties:
+        numberDetails:
+          description: >-
+            The parsed details about the msisdn provided in the to-field of the
+            request (msisdn is a number with a countrycode e.g. 4512345678)
+          oneOf:
+            - $ref: '#/components/schemas/NumberDetails'
+        text:
+          description: The text message
+          type: string
+          example: This is a message text to be sent
+        from:
+          description: The sender.
+          type: string
+          example: PetShop
+        smsCount:
+          description: >-
+            The number of sms messages this message will be split into when sent
+            to the operator. Charging will also be done according to this
+            number.
+          type: integer
+          format: int32
+          example: 1
+        messageId:
+          description: >-
+            An optional message id used to identify the message.
+
+            If no message id is provided, a new message id is generated and
+            assigned to the message. This id must be unique across all messages
+            created on the same account.
+
+            (In case a previous message has been deleted according to GDPR
+            deletion rules setup on the specific account, the messageId is
+            allowed to be reused)
+          type: string
+          example: PetShop
+        encoding:
+          description: >-
+            The encoding of the message. Can be either "gsm7" or "ucs2". In case
+            the message was submitted with encoding "auto", this report will
+            reveal the final encoding based on the characters in the message
+            text.
+
+            "gsm7" is the default alfabet for text messages and when using gsm7,
+            a single sms message can contain 160 characters. If the length
+            exceeeds 160 characters, the message is actually split up into parts
+            of 153 characters and charged according to this. Please note, that a
+            few, specific characters fill up 2 bytes and count for 2 letters.
+            Ref: https://en.wikipedia.org/wiki/GSM_03.38
+
+            "ucs2"" allows for more non-roman characters to be used along with
+            smileys. When using this encoding, a single message can consist of
+            70 characters. If the message exceeds 70 characters, the final
+            message is actually split into parts of 67 characters.
+          type: string
+          example: gsm7
+    NumberDetails:
+      type: object
+      properties:
+        countryCode:
+          description: The country code part of the msisdn, e.g. 45.
+          type: string
+          example: '45'
+        phoneNumber:
+          description: The phone number part of the msisdn, e.g. 12345678.
+          type: string
+          example: '12345678'
+        rawMsisdn:
+          description: >-
+            The input msisdn in its unaltered format. This is the value provided
+            when sending the text message.
+          type: string
+          example: 45 12 34 56 78
+        msisdn:
+          description: The final cleaned msisdn
+          type: string
+          example: '4512345678'
+        isValidMsisdn:
+          description: True if the input msisdn was valid.
+          type: boolean
+          example: true
+        countryHint:
+          description: The country code hint if provided in the request
+          type: string
+    SmsOutgoingPostRequest:
+      type: object
+      required:
+        - messages
+      properties:
+        messages:
+          description: >-
+            A list of the sms messages to be sent. Allowed to contain between 1
+            and 250 elements.
+          type: array
+          maxItems: 250
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/SmsOutgoingApiCreateModel'
+    SmsOutgoingApiCreateModel:
+      allOf:
+        - $ref: '#/components/schemas/SmsOutgoingBaseApiModel'
+        - type: object
+          required:
+            - text
+            - from
+          properties:
+            text:
+              description: >-
+                The text message.
+
+                If the max length is exceeded, the message text is truncated and
+                sent.
+              type: string
+              maxLength: 10000
+              minLength: 1
+              example: This is a message text to be sent
+            from:
+              description: >-
+                The sender. This can either be a 3-11 chars text sender or an up
+                to 14 digit long sender number.
+
+                If the max length is exceeded, the string is truncated.
+              type: string
+              minLength: 1
+              example: PetShop
+            flash:
+              description: >-
+                If true, the message will be shown as a flash message (also
+                known as a class0 message) on the target phone. If false, it
+                will be received as a standard text message.
+
+                Default: false
+              type: boolean
+              nullable: true
+              example: false
+            encoding:
+              description: >-
+                The encoding of the message. Can be either "gsm7", "ucs2" or
+                "auto".
+
+                "gsm7" is the default alfabet for text messages and when using
+                gsm7, a single sms message can contain 160 characters. If the
+                length exceeeds 160 characters, the message is actually split up
+                into parts of 153 characters and charged according to this.
+                Please note, that a few, specific characters fill up 2 bytes and
+                count for 2 letters. Ref:
+                https://en.wikipedia.org/wiki/GSM_03.38
+
+                "ucs2"" allows for more non-roman characters to be used along
+                with smileys. When using this encoding, a single message can
+                consist of 70 characters. If the message exceeds 70 characters,
+                the final message is actually split into parts of 67 characters.
+
+                "auto" can be used in case the sender wishes to support
+                non-roman characters but wants to save the expenses on all the
+                trafic that only contains gsm characters anyway.
+
+                Default: "gsm7"
+              type: string
+              example: gsm7
+    SmsOutgoingBaseApiModel:
+      type: object
+      required:
+        - to
+      properties:
+        to:
+          description: >-
+            The msisdn (country code and number) to send to. (Remember to
+            include countrycode in all numbers, e.g. 4512345678).
+
+            If max length is exceeded, the entire api call will fail.
+          type: string
+          maxLength: 20
+          minLength: 0
+          example: '4512345678'
+        countryHint:
+          description: >-
+            For optimal phone number validation, we encourage you to provide us
+            with a country code. This can be the numeric country code (like 44)
+            or the two-letter suffix (like GB). If this field is empty it is
+            important that you add the country code (e.g 44) in front of the
+            phone number in “to”.
+          type: string
+          maxLength: 50
+          minLength: 0
+          example: '45'
+        messageId:
+          description: >-
+            An optional message id used to identify the message.
+
+            If no message id is provided, a new message id is generated and
+            assigned to the message. This id must be unique across all messages
+            created on the same account.
+
+            (In case a previous message has been deleted according to GDPR
+            deletion rules setup on the specific account, the messageId is
+            allowed to be reused)
+
+            If max length is exceeded, the entire api call will fail.
+          type: string
+          maxLength: 50
+          minLength: 1
+          example: PetShop
+        respectBlacklist:
+          description: >-
+            If true, this message will be blocked from sending if the target
+            number is on the account's blacklist. If false, the message will be
+            sent no matter blacklist settings.
+
+            Default: true
+          type: boolean
+          nullable: true
+          example: true
+        validityPeriodInSeconds:
+          description: >-
+            The validity period in seconds. Minimum is 60 seconds and maximum is
+            172800 (48 hours).
+
+            If not specified, the messages is attempted to be delivered in 48
+            hours. A typical use of validityPeriod is for messages that makes no
+            sense to delivery efter er certain time frame, in the case the phone
+            is turned of, e.g. two factor codes.
+
+            Please note, that messages are still charged even though the
+            operator is cancelling the delivery attempt due to an exceeded
+            validity period.
+          type: integer
+          format: int32
+          maximum: 172800
+          minimum: 60
+          nullable: true
+          example: 90
+        statusCallbackUrl:
+          description: >-
+            In case you would like a callback from us when the message is
+            delivered, you can specify it here and we will call it when we have
+            new message statuses.
+
+            The callback payload will be an array of status objects.
+
+            Api calls sending messages with the same apikey will be subject to
+            being bulked together.
+          type: string
+          maxLength: 500
+          minLength: 0
+          example: https://[your_domain]/your/desired/path
+        sendTime:
+          description: >-
+            If set, this defines to time in the future for the message to be
+            sent. e.g. 2001-02-30T14:50:23Z (UTC time).
+          type: string
+          example: '2001-02-30T14:50:23Z'
+        msisdnCooldownInMinutes:
+          description: >-
+            If set, the message will be cancelled if the same mobile number
+            already have received a SMS within this specified time period.
+
+            Fx. used to prevent spamming a mobile number.
+
+            Minimum 60 minutes (1 hour) and maximum is 43200 minutes (30 days).
+          type: integer
+          format: int32
+          maximum: 43200
+          minimum: 60
+          nullable: true
+          example: 1440
+    StatusReportListModel:
+      type: object
+      properties:
+        reports:
+          type: array
+          items:
+            $ref: '#/components/schemas/StatusReport'
+    StatusReport:
+      type: object
+      properties:
+        messageId:
+          description: The id of the message.
+          type: string
+          example: id1
+        numberDetails:
+          $ref: '#/components/schemas/StatusReportNumberDetails'
+        deliveryInfo:
+          $ref: '#/components/schemas/DeliveryInfo'
+        chargeInfo:
+          $ref: '#/components/schemas/ChargeInfo'
+    StatusReportNumberDetails:
+      allOf:
+        - $ref: '#/components/schemas/NumberDetails'
+        - type: object
+          properties:
+            isAnonymized:
+              description: Specifies whether the message has been anonymized or not.
+              type: boolean
+              example: false
+    DeliveryInfo:
+      type: object
+      properties:
+        stateCode:
+          description: >-
+            Contains a code indicating whether a message is delivered, failed or
+            cancelled.
+          example: -1
+          oneOf:
+            - $ref: '#/components/schemas/MessageStateCode'
+        stateDescription:
+          description: A text description of the state code
+          type: string
+          example: Failed
+        sendTime:
+          description: When the message was sent e.g. 2001-02-30T14:50:23Z (UTC time)
+          type: string
+          example: '2001-02-30T14:50:23Z'
+        doneTime:
+          description: >-
+            When the delivery of the message fails, is cancelled, or is
+            delivered. If the operator does not support reporting the actual
+            delivery time, this will be the time when the delivery report is
+            received from the operator.
+
+            In some cases where the message is not sent, this value can be null.
+          type: string
+          example: '2001-02-30T14:50:23Z'
+        errorCode:
+          $ref: '#/components/schemas/ErrorCode'
+        errorDescription:
+          description: A text description of the error code
+          type: string
+          example: Undeliverable message
+    MessageStateCode:
+      description: |-
+        0 = Unknown
+        1 = Delivered
+        -2 = Cancelled
+        -1 = Failed
+      type: integer
+      x-enumNames:
+        - Unknown
+        - Delivered
+        - Cancelled
+        - Failed
+      enum:
+        - 0
+        - 1
+        - -2
+        - -1
+    ErrorCode:
+      description: "A code describing the error if the state is not Delivered. This property will be absent in case the state is Delivered.\n\r-1 = Undeliverable message\n\r-2 = Msisdn blacklisted by operator\n\r-3 = Invalid mobile number\n\r-4 = Country not available\n\r-5 = Delivery timeout\n\r-6 = Not delivered removed from gateway\n\r-8 = Insufficient funds\n\r-9 = Authorize failed\n\r-10 = Capture failed\n\r-11 = Overcharge donation limit exceeded\n\r-12 = Overcharge type not activated\n\r-13 = Overcharge settings not valid\n\r-14 = Sender name blocked\n\r-15 = Route not available\n\r-16 = Refund not available\n\r-17 = Refund not possible for message\n\r-18 = Refund failed\n\r-19 = Refund not possible for pending message\n\r-20 = Refund not possible for failed message\n\r-21 = Refund failed already refunded\n\r-22 = Delivery timeout before sent\n\r-23 = Message queue full at operator\n\r-80 = Imported from other system\n\r-99 = Submit failed\n\r-100 = Communication error\n\r-101 = Unknown id\n\r-102 = Cancelled\n\r-103 = Unknown error processing message\n\r-104 = Unknown id at operator\n\r-105 = Msisdn blacklisted on account\n\r-106 = Mobile number cooldown\n\r-201 = Suspicious sms content\n\r-202 = Account deactivated\n\r-300 = Pdu sequence incomplete\n\r-301 = Pdu sequence invalid\n\r"
+      type: integer
+      format: integer
+      example: -1
+    ChargeInfo:
+      type: object
+      properties:
+        isCharged:
+          description: True if the message will be charged.
+          type: boolean
+          example: true
+        smsCount:
+          description: >-
+            The total sms count in the message. If IsCharged is true, this is
+            the number of sms'es that will be charged.
+          type: integer
+          format: int32
+          example: 2
+        encoding:
+          description: >-
+            The encoding of the message. Can be either "gsm7" or "ucs2". In case
+            the message was submitted with encoding "auto", this report will
+            reveal the final encoding based on the characters in the message
+            text.
+
+            "gsm7" is the default alfabet for text messages and when using gsm7,
+            a single sms message can contain 160 characters. If the length
+            exceeeds 160 characters, the message is actually split up into parts
+            of 153 characters and charged according to this. Please note, that a
+            few, specific characters fill up 2 bytes and count for 2 letters.
+            Ref: https://en.wikipedia.org/wiki/GSM_03.38
+
+            "ucs2"" allows for more non-roman characters to be used along with
+            smileys. When using this encoding, a single message can consist of
+            70 characters. If the message exceeds 70 characters, the final
+            message is actually split into parts of 67 characters.
+          type: string
+          example: gsm7
+    SmsOutgoingTemplatePostReply:
+      type: object
+      properties:
+        usedPlaceholderKeys:
+          description: A list of used used placeholder keys
+          type: array
+          example:
+            - '{name}'
+            - '{lastname}'
+          items:
+            type: string
+        notUsedPlaceholderKeys:
+          description: A list of not used placeholder keys
+          type: array
+          example:
+            - '{name}'
+            - '{lastname}'
+          items:
+            type: string
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/SmsOutgoingApiCreateResultModel'
+    SmsOutgoingTemplatePostRequest:
+      type: object
+      required:
+        - templateId
+        - messages
+      properties:
+        templateId:
+          description: The id of the template to use
+          type: string
+          minLength: 1
+          example: ecdcb257-c1e9-4b44-8a4e-f05822372d82
+        messages:
+          description: >-
+            A list of the sms messages to be sent. Allowed to contain between 1
+            and 250 elements.
+          type: array
+          maxItems: 250
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/SmsOutgoingTemplateApiCreateModel'
+    SmsOutgoingTemplateApiCreateModel:
+      allOf:
+        - $ref: '#/components/schemas/SmsOutgoingBaseApiModel'
+        - type: object
+          properties:
+            placeholders:
+              description: >-
+                A key-value list of placeholders to replace in the template
+                text. Keys must be encapsulated with {}. E.g. {NAME}.
+              example:
+                '{name}': Friedhelm
+                '{lastname}': Hillebrand
+              oneOf:
+                - $ref: '#/components/schemas/ApiPlaceholderValueCollection'
+    SmsOutgoingCancelPostReply:
+      type: object
+      properties:
+        results:
+          description: A list of results
+          type: array
+          items:
+            $ref: '#/components/schemas/SmsOutgoingCancelPostReplyResultModel'
+    SmsOutgoingCancelPostReplyResultModel:
+      type: object
+      properties:
+        messageId:
+          description: The MessageId of the message that was attempted cancelled.
+          type: string
+          example: 8fe266b2-56e9-4b5f-938f-cc5e22530721
+        resultCode:
+          description: A value indicating if the message was cancelled.
+          example: 1
+          oneOf:
+            - $ref: '#/components/schemas/CancelResultCode'
+        resultDescription:
+          description: A description of the result.
+          type: string
+          example: Success
+    CancelResultCode:
+      description: |-
+        0 = Unknown
+        1 = Success
+        -2 = MessageNotFound
+        -1 = NotCancelled
+      type: integer
+      x-enumNames:
+        - Unknown
+        - Success
+        - MessageNotFound
+        - NotCancelled
+      enum:
+        - 0
+        - 1
+        - -2
+        - -1
+    SmsOutgoingCancelPostRequest:
+      type: object
+      required:
+        - messageIds
+      properties:
+        messageIds:
+          description: >-
+            A list of the sms message ids to be cancelled. Allowed to contain
+            between 1 and 250 elements.
+          type: array
+          maxItems: 250
+          minItems: 1
+          example:
+            - id1
+            - id2
+          items:
+            type: string
+    ApiPageModelOfStandardTextOutputApiModel:
+      allOf:
+        - $ref: '#/components/schemas/OutputListApiModelOfStandardTextOutputApiModel'
+        - type: object
+          properties:
+            _links:
+              $ref: '#/components/schemas/ApiPageLinks'
+    OutputListApiModelOfStandardTextOutputApiModel:
+      type: object
+      properties:
+        entries:
+          type: array
+          items:
+            $ref: '#/components/schemas/StandardTextOutputApiModel'
+    StandardTextOutputApiModel:
+      type: object
+      properties:
+        id:
+          description: The id of the template
+          type: string
+          example: c7114ec3-8f89-4e26-8048-686585c1da2a
+        name:
+          description: The name of the template
+          type: string
+          example: My template
+        text:
+          description: The template text
+          type: string
+          example: My template text {name} {lastname}
+        senderName:
+          description: The sendername to use with this template
+          type: string
+          example: My sendername
+        encoding:
+          description: >-
+            The encoding of the message. Can be either "gsm7" or "ucs2"
+
+            "gsm7" is the default alfabet for text messages and when using gsm7,
+            a single sms message can contain 160 characters. If the length
+            exceeeds 160 characters, the message is actually split up into parts
+            of 153 characters and charged according to this. Please note, that a
+            few, specific characters fill up 2 bytes and count for 2 letters.
+            Ref: https://en.wikipedia.org/wiki/GSM_03.38
+
+            "ucs2"" allows for more non-roman characters to be used along with
+            smileys. When using this encoding, a single message can consist of
+            70 characters. If the message exceeds 70 characters, the final
+            message is actually split into parts of 67 characters.
+          type: string
+          example: gsm7
+        placeholders:
+          description: >-
+            A list of the placeholders found in the template html, text and
+            subject.
+          type: array
+          example:
+            - '{name}'
+            - '{lastname}'
+          items:
+            type: string
+        created:
+          description: When the template was created e.g. 2001-02-30T14:50:23Z (UTC time)
+          type: string
+          example: '2001-02-30T14:50:23Z'
+        lastUpdated:
+          description: >-
+            When the template was last updated e.g. 2001-02-30T14:50:23Z (UTC
+            time)
+          type: string
+          example: '2001-02-30T14:50:23Z'
+    ParsePhoneNumberPostReply:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/NumberDetails'
+    ParsePhoneNumberPostRequest:
+      type: object
+      required:
+        - numbersToParse
+      properties:
+        numbersToParse:
+          description: A list of the numbersToParse and country hints to be parsed
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/RawMsisdnAndCountryHint'
+    RawMsisdnAndCountryHint:
+      type: object
+      properties:
+        countryHint:
+          description: The country part of the msisdn, e.g. 45 or DK.
+          type: string
+          example: '45'
+        rawMsisdn:
+          description: >-
+            The input msisdn in its unaltered format. This is the value provided
+            when sending the text message.
+          type: string
+          example: +45 12 34 56 78
+  securitySchemes:
+    BasicAuth:
+      description: >-
+        Provide Basic Authentiation with an arbitrary username and your api key
+        as password, e.g. some_value_to_be_ignored:your_api_key_here
+      type: http
+      scheme: basic
+    QueryParameter:
+      description: >-
+        Specify your apikey in the url as
+        https://api.inmobile.com/some/path?apikey=your_api_key_here. This method
+        is only recommended if basic authorization is not possible.
+      type: apiKey
+      name: apikey
+      in: query
+security:
+  - BasicAuth: []
+  - QueryParameter: []
+x-generator: NSwag v13.20.0.0 (NJsonSchema v10.9.0.0 (Newtonsoft.Json v13.0.0.0))
